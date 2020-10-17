@@ -1,0 +1,3 @@
+[submodule "vendor/lottie"]
+	path = vendor/lottie
+	url = https://github.com/kbroulik/lottie-qml.git

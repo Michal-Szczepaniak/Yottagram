@@ -1,0 +1,5 @@
+{
+  "dependencies": [
+    "net.zlib@0.0.1"
+  ]
+}
