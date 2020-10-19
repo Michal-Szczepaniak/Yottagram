@@ -945,7 +945,7 @@ Page {
                         anchors.topMargin: inputItem.editReplyPanel
                         anchors.right: voiceMessageButton.left
                         anchors.left: parent.left
-                        placeholderText: "Say something..."
+                        placeholderText: qsTr("Type the text...")
                         color: Theme.primaryColor
                         focusOutBehavior: FocusBehavior.KeepFocus
                         height: if (!visible) 0
