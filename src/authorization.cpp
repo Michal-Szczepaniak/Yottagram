@@ -185,7 +185,7 @@ void Authorization::authorizationStateWaitPassword()
 void Authorization::authorizationStateWaitPhoneNumber()
 {
     qDebug()<<"authorizationStateWaitPhoneNumber";
-    emit waitingForPhoneNumber();;
+    emit waitingForPhoneNumber();
 }
 
 void Authorization::authorizationStateWaitEncryptionKey()
@@ -197,15 +197,16 @@ void Authorization::authorizationStateWaitEncryptionKey()
 void Authorization::authorizationStateWaitTdlibParameters()
 {
     qDebug()<<"authorizationStateWaitTdlibParameters";
+    qDebug() << QDir::homePath() + "/.local/share/Yottagram";
     auto parameters = td_api::make_object<td_api::tdlibParameters>();
-    parameters->database_directory_ = "/home/nemo/.local/share/Yottagram";
+    parameters->database_directory_ = QDir::homePath().toStdString() + "/.local/share/Yottagram";
     parameters->use_message_database_ = true;
     parameters->use_chat_info_database_ = true;
     parameters->use_file_database_ = true;
     parameters->use_secret_chats_ = true;
     parameters->use_test_dc_ = false;
-    parameters->api_id_ = 0; // API KEY
-    parameters->api_hash_ = ""; // api hash
+    parameters->api_id_ = 709091; // API KEY
+    parameters->api_hash_ = "b365d31d0c4f2f30150a082347d0b534"; // api hash
     parameters->system_language_code_ = "en";
     parameters->device_model_ = "SailfishOS";
     parameters->system_version_ = "SailfishOS";

@@ -4,9 +4,3 @@ X-Nemo-Application-Type=generic
 Icon=yottagram
 Exec=dbus-send --type="method_call" --dest=com.verdanditeam.yottagram / com.verdanditeam.yottagram.openApp
 Name=yottagram
-# translation example:
-# your app name in German locale (de)
-#
-# Remember to comment out the following line, if you do not want to use
-# a different app name in German locale (de).
-Name[de]=yottagram

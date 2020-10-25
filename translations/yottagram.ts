@@ -264,6 +264,42 @@ for being awesome testers.</source>
 <context>
     <name>ChatList</name>
     <message>
+        <source>About</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Log in</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set as read</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete chat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Archived chats</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Main chats</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Saved messages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>%1 left</source>
         <translation type="unfinished"></translation>
     </message>
@@ -273,6 +309,10 @@ for being awesome testers.</source>
     </message>
     <message>
         <source>Audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Video note</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -308,46 +348,6 @@ for being awesome testers.</source>
         <translation type="unfinished">
             <numerusform></numerusform>
         </translation>
-    </message>
-    <message>
-        <source>About</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Log in</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Search</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Set as read</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Delete chat</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Saved messages</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Video note</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Archived chats</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Main chats</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

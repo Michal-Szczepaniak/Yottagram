@@ -1,3 +1,23 @@
+/*
+
+This file is part of Yottagram.
+Copyright 2020, Michał Szczepaniak <m.szczepaniak.000@gmail.com>
+
+Yottagram is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Yottagram is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import SortFilterProxyModel 0.2
@@ -45,6 +65,7 @@ Page {
 
     SilicaFlickable {
         anchors.fill: parent
+        contentHeight: parent.height
 
         PullDownMenu {
             MenuItem {
@@ -82,8 +103,6 @@ Page {
             }
         }
 
-        contentHeight: parent.height
-
         SortFilterProxyModel {
             id: chatListProxyModel
             sourceModel: chatList
@@ -120,10 +139,7 @@ Page {
             model: chatListProxyModel
             cacheBuffer: 0
             delegate: ListItem {
-                id: listItem
                 contentHeight: Theme.itemSizeLarge
-                contentWidth: listView.width
-                width: contentWidth
 
                 menu: Component {
                     ContextMenu {
@@ -151,82 +167,66 @@ Page {
                     }
                 }
 
-                Loader {
-                    id: avatarLoader
+                Avatar {
+                    id: avatar
+                    userName: name
+                    avatarPhoto: if (hasPhoto) photo
+                    height: Theme.itemSizeLarge - Theme.paddingMedium*2
+                    width: height
                     anchors.top: parent.top
-                    anchors.bottom: parent.bottom
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.paddingLarge
                     anchors.topMargin: Theme.paddingMedium
-                    anchors.bottomMargin: Theme.paddingMedium
-                    width: Theme.itemSizeLarge - Theme.paddingMedium*2
-                    sourceComponent: avatarComponent
-                    asynchronous: true
                 }
 
-                Component {
-                    id: avatarComponent
-
-                    Avatar {
-                        id: avatar
-                        userName: name
-                        avatarPhoto: if (hasPhoto) photo
-                        height: parent.height
-                        width: height
-//                        onAvatarPhotoChanged: if (hasPhoto && photo && !photo.isDownloading && !photo.isDownloaded) photo.download()
-                    }
-                }
-
-                Row {
-                    anchors.top: parent.top
-                    anchors.topMargin: Theme.paddingMedium
-                    anchors.left: avatarLoader.right
+                Column {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: avatar.right
                     anchors.leftMargin: Theme.paddingLarge
                     anchors.right: unread.visible ? unread.left : parent.right
                     anchors.rightMargin: Theme.paddingMedium
-                    spacing: Theme.paddingSmall
+                    spacing: Theme.paddingMedium
 
-                    Icon {
-                        id: secretChatIndicator
-                        anchors.verticalCenter: parent.verticalCenter
-                        source: "image://theme/icon-s-secure"
-                        color: secretChatState === "pending" ? "yellow" : (secretChatState === "ready" ? "green" : "red")
-                        visible: secretChatState !== ""
+                    Row {
+                        spacing: Theme.paddingSmall
+                        width: parent.width
+
+                        Icon {
+                            id: secretChatIndicator
+                            anchors.verticalCenter: parent.verticalCenter
+                            source: "image://theme/icon-s-secure"
+                            color: secretChatState === "pending" ? "yellow" : (secretChatState === "ready" ? "green" : "red")
+                            visible: secretChatState !== ""
+                        }
+
+                        Label {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: isSelf ? qsTr("Saved messages") : name
+                            truncationMode: TruncationMode.Fade
+                            width: parent.width - (secretChatIndicator.visible ? (Theme.paddingSmall + secretChatIndicator.width) : 0)
+                        }
                     }
 
-                    Label {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: isSelf ? qsTr("Saved messages") : name
-                        truncationMode: TruncationMode.Fade
-                        width: parent.width - (secretChatIndicator.visible ? (Theme.paddingSmall + secretChatIndicator.width) : 0)
-                    }
-                }
+                    Row {
+                        width: parent.width
+                        Label {
+                            id: lastMessageAuthorLabel
+                            text: lastMessageAuthor
+                            font.pixelSize: Theme.fontSizeSmall
+                            color: Theme.highlightColor
+                            truncationMode: TruncationMode.Fade
+                            width: Math.min(implicitWidth, Theme.itemSizeHuge)
+                        }
 
-                Row {
-                    anchors.left: avatarLoader.right
-                    anchors.leftMargin: Theme.paddingLarge
-                    anchors.right: unread.visible ? unread.left : parent.right
-                    anchors.rightMargin: Theme.paddingLarge
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: Theme.paddingMedium
-
-                    Label {
-                        id: lastMessageAuthorLabel
-                        text: lastMessageAuthor
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: Theme.highlightColor
-                        truncationMode: TruncationMode.Fade
-                        width: Math.min(implicitWidth, Theme.itemSizeHuge)
-                    }
-
-                    Label {
-                        text: lastMessage
-                        maximumLineCount: 1
-                        truncationMode: TruncationMode.Fade
-                        clip: true
-                        width: parent.width - lastMessageAuthorLabel.width
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: Theme.secondaryColor
+                        Label {
+                            text: lastMessage
+                            maximumLineCount: 1
+                            truncationMode: TruncationMode.Fade
+                            clip: true
+                            width: parent.width - lastMessageAuthorLabel.width
+                            font.pixelSize: Theme.fontSizeSmall
+                            color: Theme.secondaryColor
+                        }
                     }
                 }
 
@@ -245,6 +245,67 @@ Page {
                     pageStack.push(Qt.resolvedUrl("Chat.qml"), { chat: chat })
                 }
             }
+
+//            delegate: ListItem {
+//                id: listItem
+//                contentHeight: Theme.itemSizeLarge
+//                contentWidth: listView.width
+//                width: contentWidth
+
+//                Row {
+//                    anchors.top: parent.top
+//                    anchors.topMargin: Theme.paddingMedium
+//                    anchors.left: avatar.right
+//                    anchors.leftMargin: Theme.paddingLarge
+//                    anchors.right: unread.visible ? unread.left : parent.right
+//                    anchors.rightMargin: Theme.paddingMedium
+//                    spacing: Theme.paddingSmall
+
+//                    Icon {
+//                        id: secretChatIndicator
+//                        anchors.verticalCenter: parent.verticalCenter
+//                        source: "image://theme/icon-s-secure"
+//                        color: secretChatState === "pending" ? "yellow" : (secretChatState === "ready" ? "green" : "red")
+//                        visible: secretChatState !== ""
+//                    }
+
+//                    Label {
+//                        anchors.verticalCenter: parent.verticalCenter
+//                        text: isSelf ? qsTr("Saved messages") : name
+//                        truncationMode: TruncationMode.Fade
+//                        width: parent.width - (secretChatIndicator.visible ? (Theme.paddingSmall + secretChatIndicator.width) : 0)
+//                    }
+//                }
+
+//                Row {
+//                    anchors.left: avatar.right
+//                    anchors.leftMargin: Theme.paddingLarge
+//                    anchors.right: unread.visible ? unread.left : parent.right
+//                    anchors.rightMargin: Theme.paddingLarge
+//                    anchors.bottom: parent.bottom
+//                    anchors.bottomMargin: Theme.paddingMedium
+
+//                    Label {
+//                        id: lastMessageAuthorLabel
+//                        text: lastMessageAuthor
+//                        font.pixelSize: Theme.fontSizeSmall
+//                        color: Theme.highlightColor
+//                        truncationMode: TruncationMode.Fade
+//                        width: Math.min(implicitWidth, Theme.itemSizeHuge)
+//                    }
+
+//                    Label {
+//                        text: lastMessage
+//                        maximumLineCount: 1
+//                        truncationMode: TruncationMode.Fade
+//                        clip: true
+//                        width: parent.width - lastMessageAuthorLabel.width
+//                        font.pixelSize: Theme.fontSizeSmall
+//                        color: Theme.secondaryColor
+//                    }
+//                }
+
+//            }
         }
     }
 }
