@@ -84,13 +84,18 @@ void Notifications::updateNotificationGroup(td_api::updateNotificationGroup *upd
             shared_ptr<User> user = _users->getUser(message.getSenderUserId());
             if (user == nullptr) continue;
 
+            QString textFrom = "";
+            if (chat->getChatType() == "group" || chat->getChatType() == "supergroup") {
+                textFrom = user->getName() + ": ";
+            }
+
             Notification* newNotification = new Notification;
             newNotification->setCategory("x-verdanditeam.yottagram.im");
             newNotification->setAppName("Yottagram");
-            newNotification->setPreviewSummary(tr("New message from %1").arg(user->getName()));
-            newNotification->setPreviewBody(message.getText().left(30));
-            newNotification->setSummary(tr("New message from %1").arg(user->getName()));
-            newNotification->setBody(message.getText());
+            newNotification->setPreviewSummary(tr("New message from %1").arg(chat->getTitle()));
+            newNotification->setPreviewBody(textFrom + message.getText().left(30));
+            newNotification->setSummary(tr("New message from %1").arg(chat->getTitle()));
+            newNotification->setBody(textFrom + message.getText());
             newNotification->setReplacesId(static_cast<quint32>(notification->id_));
             newNotification->setTimestamp(QDateTime::fromTime_t(static_cast<uint>(notification->date_)));
             QVariantList arguments;

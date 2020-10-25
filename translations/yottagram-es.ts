@@ -267,53 +267,6 @@ por ser unos testeadores fantásticos.</translation>
 <context>
     <name>ChatList</name>
     <message>
-        <source>%1 left</source>
-        <translation>%1 salió</translation>
-    </message>
-    <message>
-        <source>%1 joined</source>
-        <translation>%1 se unió</translation>
-    </message>
-    <message>
-        <source>Audio</source>
-        <translation>Audio</translation>
-    </message>
-    <message>
-        <source>Voice note</source>
-        <translation>Nota de voz</translation>
-    </message>
-    <message>
-        <source>Photo</source>
-        <translation>Foto</translation>
-    </message>
-    <message>
-        <source>Sticker</source>
-        <translation>Sticker</translation>
-    </message>
-    <message>
-        <source>Video</source>
-        <translation>Vídeo</translation>
-    </message>
-    <message>
-        <source>Document</source>
-        <translation>Documento</translation>
-    </message>
-    <message>
-        <source>GIF</source>
-        <translation>GIF</translation>
-    </message>
-    <message>
-        <source>Poll</source>
-        <translation>Encuesta</translation>
-    </message>
-    <message numerus="yes">
-        <source>Self-destruct timer set to %n second(s)</source>
-        <translation>
-            <numerusform>Autodestrucción en %n segundo</numerusform>
-            <numerusform>Autodestrucción en %n segundos</numerusform>
-        </translation>
-    </message>
-    <message>
         <source>About</source>
         <translation>Acerca de</translation>
     </message>
@@ -347,11 +300,58 @@ por ser unos testeadores fantásticos.</translation>
     </message>
     <message>
         <source>Saved messages</source>
-        <translation>Mensajes guardados</translation>
+        <translation type="unfinished">Mensajes guardados</translation>
+    </message>
+    <message>
+        <source>%1 left</source>
+        <translation type="unfinished">%1 salió</translation>
+    </message>
+    <message>
+        <source>%1 joined</source>
+        <translation type="unfinished">%1 se unió</translation>
+    </message>
+    <message>
+        <source>Audio</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Video note</source>
-        <translation>Nota de vídeo</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Voice note</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Photo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Video</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Document</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>GIF</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Poll</source>
+        <translation type="unfinished">Encuesta</translation>
+    </message>
+    <message numerus="yes">
+        <source>Self-destruct timer set to %n second(s)</source>
+        <translation type="unfinished">
+            <numerusform>Autodestrucción en %n segundo</numerusform>
+            <numerusform>Autodestrucción en %n segundos</numerusform>
+        </translation>
     </message>
 </context>
 <context>

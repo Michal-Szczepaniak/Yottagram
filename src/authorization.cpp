@@ -185,7 +185,7 @@ void Authorization::authorizationStateWaitPassword()
 void Authorization::authorizationStateWaitPhoneNumber()
 {
     qDebug()<<"authorizationStateWaitPhoneNumber";
-    emit waitingForPhoneNumber();;
+    emit waitingForPhoneNumber();
 }
 
 void Authorization::authorizationStateWaitEncryptionKey()
@@ -197,8 +197,9 @@ void Authorization::authorizationStateWaitEncryptionKey()
 void Authorization::authorizationStateWaitTdlibParameters()
 {
     qDebug()<<"authorizationStateWaitTdlibParameters";
+    qDebug() << QDir::homePath() + "/.local/share/Yottagram";
     auto parameters = td_api::make_object<td_api::tdlibParameters>();
-    parameters->database_directory_ = "/home/nemo/.local/share/Yottagram";
+    parameters->database_directory_ = QDir::homePath().toStdString() + "/.local/share/Yottagram";
     parameters->use_message_database_ = true;
     parameters->use_chat_info_database_ = true;
     parameters->use_file_database_ = true;
