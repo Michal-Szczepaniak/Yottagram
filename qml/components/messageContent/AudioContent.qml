@@ -26,9 +26,21 @@ import com.verdanditeam.thumbnail 1.0
 
 Row {
     spacing: Theme.paddingMedium
-    Audio {
-        id: audioPlayer
-        source: file.audio.localPath
+
+    Loader {
+        id: audioLoader
+        sourceComponent: audioPlayerComponent
+        active: false
+    }
+
+    Component {
+        id: audioPlayerComponent
+
+        Audio {
+            id: audioPlayer
+            autoPlay: true
+            source: file.audio.localPath
+        }
     }
 
     Thumbnail {
@@ -62,24 +74,26 @@ Row {
 
                 IconButton {
                     anchors.fill: parent
+                    icon.asynchronous: true
                     icon.source: {
                         if (!file.audio.isDownloaded && !file.audio.isDownloading) {
                             return "image://theme/icon-m-cloud-download"
                         }
 
-                        if (audioPlayer.playbackState == MediaPlayer.PlayingState) {
-                            return "image://theme/icon-m-pause"
-                        } else {
+                        if (!audioLoader.active || audioLoader.item.playbackState !== MediaPlayer.PlayingState) {
                             return "image://theme/icon-m-play"
+                        } else {
+                            return "image://theme/icon-m-pause"
                         }
                     }
                     onClicked: {
+                        audioLoader.active = true
                         if (file && file.audio) {
                             if (file.audio.isDownloaded || file.audio.isDownloading) {
-                                if (audioPlayer.playbackState == MediaPlayer.PlayingState) {
-                                    audioPlayer.pause()
+                                if (audioLoader.item.playbackState === MediaPlayer.PlayingState) {
+                                    audioLoader.item.pause()
                                 } else {
-                                    audioPlayer.play()
+                                    audioLoader.item.play()
                                 }
                             } else {
                                 file.audio.download()

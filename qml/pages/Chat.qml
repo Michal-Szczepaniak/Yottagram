@@ -77,13 +77,6 @@ Page {
         onStateChanged: if (Qt.application.state === Qt.ApplicationInactive) chatList.closeChat(chat.id); else if (Qt.application.state === Qt.ApplicationActive) chatList.openChat(chat.id)
     }
 
-    function addZero(i) {
-        if (i < 10) {
-            i = "0" + i;
-        }
-        return i;
-    }
-
     SortFilterProxyModel {
         id: chatProxyModel
         sourceModel: chat
@@ -114,14 +107,19 @@ Page {
             PullDownMenu {
                 MenuItem {
                     text: qsTr("Clear history")
-                    onClicked: chat.clearHistory()
+                    onClicked: Remorse.popupAction(root, "", function() {
+                        chat.clearHistory()
+                    })
                     visible: !chatPage.selectionActive
                 }
 
                 MenuItem {
                     text: qsTr("Open secret chat")
                     visible: chat.getChatType() === "private" && !chatPage.selectionActive
-                    onClicked: chat.openSecretChat()
+                    onClicked: {
+                        chat.openSecretChat()
+                        pageStack.pop()
+                    }
                 }
 
                 MenuItem {
@@ -174,7 +172,7 @@ Page {
                     anchors.fill: parent
                     color: Theme.primaryColor
                     text: TimeFormat.formatAutoDestruct(chat.ttl)
-                    font.pixelSize: Theme.fontSizeExtraSmall
+                    font.pixelSize: Theme.fontSizeTiny
                     verticalAlignment: Text.AlignVCenter
                     horizontalAlignment: Text.AlignHCenter
                     elide: Text.ElideRight
@@ -306,7 +304,7 @@ Page {
                     ListItem {
                         id: item
                         width: parent.width
-                        contentHeight: Math.max(column.height, Theme.itemSizeMedium)
+                        contentHeight: Math.max(column.height, Theme.itemSizeExtraSmall)
                         contentWidth: width
                         property bool displayAvatar: received && (type === "group" || type === "supergroup")
                         readonly property var user: users.getUserAsVariant(authorId)
@@ -392,21 +390,12 @@ Page {
                             }
                         }
 
-        //                MessageBubble {
-        //                    id: bubble
-        //                    anchors.fill: parent
-        //                    leftSide: received
-        //                    source: "qrc:///icons/icons/corner.svg"
-        //                    color: Theme.highlightBackgroundColor
-        //                    bubbleOpacity: Theme.highlightBackgroundOpacity
-        //                }
-
                         Avatar {
                             id: avatarPhoto
                             width: Theme.itemSizeExtraSmall
                             height: width
                             anchors.left: parent.left
-                            anchors.leftMargin: Theme.horizontalPageMargin
+                            anchors.leftMargin: Theme.paddingMedium
                             anchors.bottom: parent.bottom
                             anchors.bottomMargin: Theme.paddingMedium
                             visible: displayAvatar && chat.getAuthorByIndex(chatProxyModel.mapToSource(index-1)) !== authorId
@@ -417,16 +406,17 @@ Page {
                         Column {
                             id: column
                             spacing: 0
-                            padding: Theme.paddingSmall
-                            anchors.left: if (received) parent.left
-                            anchors.leftMargin: Theme.horizontalPageMargin + (displayAvatar ? (Theme.itemSizeExtraSmall + Theme.paddingMedium) : 0)
-                            anchors.right: if (!received) parent.right
+                            anchors.left: if (received || isService) parent.left
+                            anchors.leftMargin: isService ? 0 : Theme.paddingMedium + (displayAvatar ? (Theme.itemSizeExtraSmall + Theme.paddingMedium) : 0)
+                            anchors.right: if (!received || isService) parent.right
                             anchors.rightMargin: if (!received) Theme.horizontalPageMargin
+                            width: parent.width/chatPage.messageWidth
 
                             Label {
                                 id: name
                                 text: !isForwarded ? (chat.getChatType() === "channel" ? chat.title : user.name) : qsTr("Forwarded from %1").arg(getName())
                                 font.pixelSize: Theme.fontSizeMedium
+                                font.bold: true
                                 horizontalAlignment: received ? Text.AlignLeft : Text.AlignRight
                                 color: Theme.highlightColor
                                 visible: ((displayAvatar && chat.getAuthorByIndex(chatProxyModel.mapToSource(index+1)) !== authorId) ||  isForwarded || chat.getChatType() === "channel") && !serviceMessage.visible
@@ -440,8 +430,10 @@ Page {
 
                             Loader {
                                 id: replyLoader
-                                asynchronous: true
+                                height: (replyMessageId !== 0) ? Theme.itemSizeSmall : 0
+                                anchors.right: if (!received) parent.right
                                 sourceComponent: if (replyMessageId !== 0) replyComponent
+                                Component.onCompleted: if (replyMessageId !== 0 && chat.getMessageIndex(replyMessageId) === -1) chat.getMessage(replyMessageId)
                             }
 
                             Component {
@@ -449,6 +441,7 @@ Page {
 
                                 Row {
                                     id: replyMessage
+                                    width: Math.max(textField.width, Theme.itemSizeHuge, contentLoader.width)
                                     visible: replyMessageId !== 0
 
                                     Rectangle {
@@ -467,6 +460,8 @@ Page {
                                         Label {
                                             id: replyName
                                             text: replyMessageId !== 0 ? users.getUserAsVariant(replyMessage.getReplyData("authorId")).name : ""
+                                            font.bold: true
+                                            font.pixelSize: Theme.fontSizeSmall
                                             truncationMode: TruncationMode.Fade
 
                                             MouseArea {
@@ -476,6 +471,8 @@ Page {
                                         }
                                         Label {
                                             id: replyText
+                                            width: replyMessage.width - Theme.paddingLarge
+                                            font.pixelSize: Theme.fontSizeSmall
                                             text: replyMessageId === 0 ? "" :
                                                       (replyMessage.getReplyData("messageType") === "text" ? replyMessage.getReplyData("messageText").trim().replace(/\r?\n|\r/g, " ")
                                                                                                            : replyMessage.getReplyData("messageType"))
@@ -488,21 +485,6 @@ Page {
                                         }
                                     }
 
-                                    states: [
-                                        State {
-                                            name: "wide reply"
-                                            when: replyText.text.length > 28
-                                            PropertyChanges {
-                                                target: replyMessage
-                                                width: chatPage.width/chatPage.messageWidth
-                                            }
-                                            PropertyChanges {
-                                                target: replyText
-                                                width: chatPage.width/chatPage.messageWidth - Theme.paddingLarge
-                                            }
-                                        }
-                                    ]
-
                                     function getReplyData(roleName) {
                                         var result = chatProxyModel.data(chatProxyModel.index(chatProxyModel.mapFromSource(chat.getMessageIndex(replyMessageId)), 0), chatProxyModel.roleForName(roleName))
                                         if (result === void(0)) return "";
@@ -513,7 +495,52 @@ Page {
 
                             Loader {
                                 id: contentLoader
-                                asynchronous: true
+                                width: {
+                                    switch(messageType) {
+                                    case "photo":
+                                        if (file.biggestPhotoSize.width === 0) return Theme.itemSizeLarge
+                                        return Math.min(Theme.itemSizeHuge, file.biggestPhotoSize.width)
+                                    case "sticker":
+                                        return Theme.itemSizeHuge*1.5
+                                    case "video":
+                                        if (file.size.width === 0) return Theme.itemSizeHuge
+                                        return Math.min(Theme.itemSizeHuge, file.size.width)
+                                    case "animation":
+                                        return chatPage.width/2.5
+                                    case "audio":
+                                        return Theme.itemSizeSmall + Theme.itemSizeHuge*2 + Theme.paddingMedium
+                                    case "voiceNote":
+                                        return Theme.itemSizeSmall + Theme.itemSizeHuge*2
+                                    case "videoNote":
+                                        return chatPage.width/2.5
+                                    case "document":
+                                        return Theme.itemSizeMedium + Theme.itemSizeHuge*2
+                                    }
+                                }
+                                height: {
+                                    switch(messageType) {
+                                    case "photo":
+                                        if (file.biggestPhotoSize.height === 0) return Theme.itemSizeLarge
+                                        return width * file.biggestPhotoSize.height/file.biggestPhotoSize.width;
+                                    case "sticker":
+                                        return Theme.itemSizeHuge*1.5
+                                    case "video":
+                                        if (file.size.height === 0) return Theme.itemSizeHuge
+                                        return width * file.size.height/file.size.width;
+                                    case "animation":
+                                        return (file.size.width > 0 && file.size.height > 0) ? (width * (file.size.height/file.size.width)) : Theme.itemSizeLarge
+                                    case "audio":
+                                        return Theme.itemSizeSmall
+                                    case "voiceNote":
+                                        return Theme.itemSizeSmall
+                                    case "videoNote":
+                                        return chatPage.width/2.5
+                                    case "document":
+                                        return Theme.paddingMedium
+                                    }
+                                }
+
+                                anchors.right: if (!received) parent.right
                                 sourceComponent: {
                                     switch(messageType) {
                                     case "photo":
@@ -604,8 +631,10 @@ Page {
 
                             Label {
                                 id: serviceMessage
-                                width: chatPage.width/chatPage.messageWidth
+                                width: chatPage.width
+                                height: Theme.itemSizeMedium
                                 horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
                                 text: messageText.trim()
                                 color: Theme.highlightColor
                                 visible: isService
@@ -616,17 +645,11 @@ Page {
                                 plainText: messageText.trim()
                                 font.pixelSize: Theme.fontSizeMedium
                                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                                width: Math.min(parent.width, implicitWidth)
+                                anchors.right: if (!received) parent.right
                                 color: Theme.primaryColor
                                 linkColor: Theme.highlightColor
                                 visible: messageText !== "" && !serviceMessage.visible
-                            }
-
-                            Text {
-                                id: dummy_text
-                                text: messageText.trim()
-                                width: messageType === "photo" ? contentLoader.width: undefined
-                                font.pixelSize: Theme.fontSizeMedium
-                                visible: false
                             }
 
                             Loader {
@@ -677,6 +700,7 @@ Page {
                                             truncationMode: TruncationMode.Fade
                                             font.family: Theme.fontFamilyHeading
                                             font.bold: true
+                                            font.pixelSize: Theme.fontSizeSmall
                                             color: Theme.highlightColor
 
                                             MouseArea {
@@ -690,6 +714,7 @@ Page {
                                             width: webPageDescription.width
                                             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                                             font.bold: true
+                                            font.pixelSize: Theme.fontSizeSmall
                                             truncationMode: TruncationMode.Fade
 
                                             MouseArea {
@@ -700,34 +725,20 @@ Page {
                                         Label {
                                             id: webPageDescription
                                             text: webPage.description
+                                            width: chatPage.width/chatPage.messageWidth - Theme.paddingLarge
                                             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                                             maximumLineCount: 5
+                                            font.pixelSize: Theme.fontSizeSmall
 
                                             MouseArea {
                                                 anchors.fill: parent
                                             }
                                         }
                                     }
-
-                                    states: [
-                                        State {
-                                            name: "wide reply"
-                                            when: webPageDescription.text.length > 28
-                                            PropertyChanges {
-                                                target: webPageDescription
-                                                width: chatPage.width/chatPage.messageWidth
-                                            }
-                                            PropertyChanges {
-                                                target: webPageDescription
-                                                width: chatPage.width/chatPage.messageWidth - Theme.paddingLarge
-                                            }
-                                        }
-                                    ]
                                 }
                             }
 
                             Row {
-        //                        width: Math.max(textField.width, replyLoader.width, contentLoader.width, time.width + readIcon.width)
                                 anchors.right: if (!received) parent.right
                                 anchors.left: if (received) parent.left
                                 spacing: Theme.paddingSmall
@@ -735,7 +746,6 @@ Page {
                                 Label {
                                     id: time
                                     text: (edited ? qsTr("Edited") + " ": "") + timestamp
-        //                            horizontalAlignment: received ? Text.AlignLeft : Text.AlignRight
                                     anchors.verticalCenter: parent.verticalCenter
                                     color: Theme.secondaryColor
                                     font.pixelSize: Theme.fontSizeExtraSmall
@@ -749,27 +759,6 @@ Page {
                                     source: isRead ? "image://theme/icon-s-checkmark" : "image://theme/icon-s-time"
                                 }
                             }
-
-                            states: [
-                                State {
-                                    name: "wide text"
-                                    when: dummy_text.text.length > 30
-                                    PropertyChanges {
-                                        target: textField
-                                        width: chatPage.width/chatPage.messageWidth
-                                        height: textField.paintedHeight
-                                    }
-                                },
-                                State {
-                                    name: "not wide text"
-                                    when: dummy_text.text.length <= 30
-                                    PropertyChanges {
-                                        target: textField
-                                        width: dummy_text.paintedWidth
-                                        height: dummy_text.paintedHeight
-                                    }
-                                }
-                            ]
                         }
                     }
 

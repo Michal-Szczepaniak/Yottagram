@@ -51,7 +51,7 @@ Page {
             }
 
             Label {
-                text: "Yottagram 1.0 Alpha"
+                text: "Yottagram 0.1.1 Alpha"
                 font.pixelSize: Theme.fontSizeExtraLarge
                 anchors.horizontalCenter: parent.horizontalCenter
                 wrapMode: Text.WordWrap
@@ -161,6 +161,19 @@ Page {
 
             Text {
                 text: "<a href=\"https://www.paypal.me/MisterMagister\">paypal.me/MisterMagister</a>"
+                color: "white"
+                textFormat: Text.StyledText
+                font.pixelSize: Theme.fontSizeSmall
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: parent.width - Theme.paddingLarge*2
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                horizontalAlignment: Text.AlignHCenter
+                linkColor: Theme.highlightColor
+                onLinkActivated: Qt.openUrlExternally(link)
+            }
+
+            Text {
+                text: "<a href=\"https://www.patreon.com/Mister_Magister\">patreon.com/Mister_Magister</a>"
                 color: "white"
                 textFormat: Text.StyledText
                 font.pixelSize: Theme.fontSizeSmall

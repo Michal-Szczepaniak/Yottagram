@@ -1019,7 +1019,6 @@ void Chat::onMessageContentChanged(qint64 messageId)
 
 void Chat::onMessageIdChanged(qint64 oldMessageId, qint64 newMessageId)
 {
-    qDebug() << oldMessageId << " " << newMessageId;
     auto index = getMessageIndex(oldMessageId);
     _message_ids[index] = newMessageId;
     _messages[newMessageId] = _messages.take(oldMessageId);

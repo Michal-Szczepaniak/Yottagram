@@ -260,6 +260,10 @@ for being awesome testers.</source>
         <source>%L1 forwarded messages</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Type the text...</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
@@ -777,7 +781,7 @@ for being awesome testers.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>%L1d</source>
+        <source>%L1w</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -185,7 +185,6 @@ Page {
                     anchors.leftMargin: Theme.paddingLarge
                     anchors.right: unread.visible ? unread.left : parent.right
                     anchors.rightMargin: Theme.paddingMedium
-                    spacing: Theme.paddingMedium
 
                     Row {
                         spacing: Theme.paddingSmall

@@ -31,7 +31,6 @@ Item {
 
     Loader {
         id: videoLoader
-        asynchronous: true
         active: false
         sourceComponent: videoComponent
     }
