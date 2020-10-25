@@ -37,12 +37,12 @@ function appendSpace(value) {
 
 function formatAutoDestruct(value) {
     if (value == 0) return "";
-    if (value > 0 && value < 60) return qsTr("%L1").arg(muteFor);
-    var minuteMuteFor = Math.floor(muteFor/60);
-    if (minuteMuteFor < 60) return qsTr("%L1m").arg(minuteMuteFor);
-    var hourMuteFor = Math.floor(minuteMuteFor/60);
-    if (hourMuteFor < 24) return qsTr("%L1h").arg(hourMuteFor);
-    var dayMuteFor = Math.floor(hourMuteFor/24);
-    if (dayMuteFor > 2) return ""
-    return qsTr("%L1d").arg(dayMuteFor);
+    if (value > 0 && value < 60) return qsTr("%L1").arg(value);
+    var minuteDestruct = Math.floor(value/60);
+    if (minuteDestruct < 60) return qsTr("%L1m").arg(minuteDestruct);
+    var hourDestruct = Math.floor(minuteDestruct/60);
+    if (hourDestruct < 24) return qsTr("%L1h").arg(hourDestruct);
+    var dayDestruct = Math.floor(hourDestruct/24);
+    if (dayDestruct >= 7)
+        return qsTr("%L1w").arg(Math.floor(dayDestruct/7));
 }

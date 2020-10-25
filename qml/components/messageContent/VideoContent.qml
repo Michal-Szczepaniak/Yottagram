@@ -26,11 +26,12 @@ import com.verdanditeam.thumbnail 1.0
 
 Item {
     width: chatPage.width/2.5
-    height: videoLoader.active ? videoLoader.height : ((file.size.width > 0 && file.size.height > 0) ? (width * (file.size.height/file.size.width)) : Theme.itemSizeLarge)
+    height: (file.size.width > 0 && file.size.height > 0) ? (width * (file.size.height/file.size.width)) : Theme.itemSizeHuge
 
     Loader {
         id: videoLoader
-        asynchronous: true
+        width: parent.width
+        height: parent.height
         active: false
         sourceComponent: videoComponent
     }
@@ -42,17 +43,14 @@ Item {
             fillMode: VideoOutput.PreserveAspectFit
             muted: true
             autoPlay: true
-        //                                autoLoad: true
+            source: file.video.localPath
             onStopped: {
                 videoPlayer.seek(0)
                 videoPlayer.play()
             }
 
             width: chatPage.width/2.5
-            source: file.video.localPath
-            height: metaData.resolution ?
-                        (width * (metaData.resolution.height/metaData.resolution.width)) :
-                        ((file.size.width > 0 && file.size.height > 0) ? (width * (file.size.height/file.size.width)) : Theme.itemSizeLarge)
+            height: (file.size.width > 0 && file.size.height > 0) ? (width * (file.size.height/file.size.width)) : Theme.itemSizeHuge
         }
     }
 

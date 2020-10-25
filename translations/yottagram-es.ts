@@ -263,6 +263,10 @@ por ser unos testeadores fantásticos.</translation>
         <source>%L1 forwarded messages</source>
         <translation>%L1 mensajes reenviados</translation>
     </message>
+    <message>
+        <source>Type the text...</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
@@ -782,8 +786,8 @@ por ser unos testeadores fantásticos.</translation>
         <translation>%L1h</translation>
     </message>
     <message>
-        <source>%L1d</source>
-        <translation>%L1d</translation>
+        <source>%L1w</source>
+        <translation type="unfinished">%L1d {1w?}</translation>
     </message>
 </context>
 </TS>
