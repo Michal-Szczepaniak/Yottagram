@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>Made by Michał Szczepaniak. Based on tdlib.</source>
-        <translation>开发者为 Michał Szczepaniak ，基于 tdlib 。</translation>
+        <translation>由 Michał Szczepaniak 开发，基于 tdlib 。</translation>
     </message>
     <message>
         <source>Licensed under GPLv3</source>
@@ -29,26 +29,27 @@
     </message>
     <message>
         <source>Carmen F. B. for spanish translation.</source>
-        <translation>Carmen F. B 提供西班牙语翻译。</translation>
+        <translation>Carmen F. B. 提供西班牙语翻译</translation>
     </message>
     <message>
         <source>Fernando Lanero, Mika, Leszek Lesner,
 A. Madani, Timo Könnecke, Rudi Timmermans
 for being awesome testers.</source>
         <translation>Fernando Lanero, Mika, Leszek Lesner,
-A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
+A. Madani, Timo Könnecke, Rudi Timmermans 等人进行测试。</translation>
     </message>
     <message>
         <source>Everyone in my 
 &lt;a href=&quot;https://t.me/SFOSFanclub&quot;&gt;SFOS Fanclub&lt;/a&gt; group&lt;br/&gt;for keeping me motivated!</source>
-        <translation>每个位于我的 &lt;a href=&quot;https://t.me/SFOS Fanclub&quot;&gt;SFOS Fanclub&lt;/a&gt; 群组&lt;br/&gt; 的人使用我保持动力！</translation>
+        <translation>每个位于我的
+&lt;a href=&quot;https://t.me/SFOSFanclub&quot;&gt;SFOS Fanclub&lt;/a&gt; 群组&lt;br/&gt;的成员使我充满动力！</translation>
     </message>
 </context>
 <context>
     <name>AuthorizationCode</name>
     <message>
         <source>UI Template</source>
-        <translation>UI 模板</translation>
+        <translation>UI 示例</translation>
     </message>
     <message>
         <source>Code</source>
@@ -59,18 +60,18 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     <name>AuthorizationNumber</name>
     <message>
         <source>UI Template</source>
-        <translation>UI 模板</translation>
+        <translation>UI 示例</translation>
     </message>
     <message>
         <source>Number with +XXX</source>
-        <translation>手机号前附加国际区号+XXX</translation>
+        <translation>请在手机号码前添加国际区号 +XXX</translation>
     </message>
 </context>
 <context>
     <name>AuthorizationPassword</name>
     <message>
         <source>UI Template</source>
-        <translation>UI 模板</translation>
+        <translation>UI 示例</translation>
     </message>
     <message>
         <source>Password</source>
@@ -81,27 +82,27 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     <name>AutoDownloadSettings</name>
     <message>
         <source>Load slow preset</source>
-        <translation>加载低质量</translation>
-    </message>
-    <message>
-        <source>Load medium preset</source>
         <translation>低速加载</translation>
     </message>
     <message>
-        <source>Load high preset</source>
+        <source>Load medium preset</source>
         <translation>中速加载</translation>
     </message>
     <message>
-        <source>Auto download settings</source>
+        <source>Load high preset</source>
         <translation>高速加载</translation>
     </message>
     <message>
+        <source>Auto download settings</source>
+        <translation>自动下载设置</translation>
+    </message>
+    <message>
         <source>Enable auto download</source>
-        <translation>启用自动下载</translation>
+        <translation>开启自动下载</translation>
     </message>
     <message>
         <source>Maximum Photo File Size</source>
-        <translation最大图片文件大小></translation>
+        <translation>最大图片缓存</translation>
     </message>
     <message>
         <source>%L1B</source>
@@ -117,7 +118,7 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     </message>
     <message>
         <source>Maximum Video File Size</source>
-        <translation>最大视频大小</translation>
+        <translation>最大视频文件大小</translation>
     </message>
     <message>
         <source>Maximum Other File Size</source>
@@ -172,7 +173,7 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     </message>
     <message>
         <source>Mute for 2 days</source>
-        <translation>静音2天</translation>
+        <translation>静音2小时</translation>
     </message>
     <message>
         <source>Customize</source>
@@ -195,11 +196,11 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     </message>
     <message>
         <source>Clear history</source>
-        <translation>清空历史记录</translation>
+        <translation>清空历史</translation>
     </message>
     <message>
         <source>Open secret chat</source>
-        <translation>开启私密对话</translation>
+        <translation>打开私密对话</translation>
     </message>
     <message>
         <source>Close secret chat</source>
@@ -207,11 +208,11 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     </message>
     <message>
         <source>Set self-destruct timer</source>
-        <translation>设置自动销毁定时器</translation>
+        <translation>设置自毁计时器</translation>
     </message>
     <message>
         <source>Saved messages</source>
-        <translation>已存储消息</translation>
+        <translation>储存消息</translation>
     </message>
     <message>
         <source>%1 members</source>
@@ -261,9 +262,49 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
         <source>%L1 forwarded messages</source>
         <translation>%L1 条转发消息</translation>
     </message>
+    <message>
+        <source>Type the text...</source>
+        <translation>输入文本…</translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
+    <message>
+        <source>About</source>
+        <translation>关于</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation>设置</translation>
+    </message>
+    <message>
+        <source>Log in</source>
+        <translation>登录</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation>搜索</translation>
+    </message>
+    <message>
+        <source>Set as read</source>
+        <translation>设为默认</translation>
+    </message>
+    <message>
+        <source>Delete chat</source>
+        <translation>删除对话</translation>
+    </message>
+    <message>
+        <source>Archived chats</source>
+        <translation>存档对话</translation>
+    </message>
+    <message>
+        <source>Main chats</source>
+        <translation>主对话</translation>
+    </message>
+    <message>
+        <source>Saved messages</source>
+        <translation>储存消息</translation>
+    </message>
     <message>
         <source>%1 left</source>
         <translation>%1 离开</translation>
@@ -277,16 +318,20 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
         <translation>音频</translation>
     </message>
     <message>
+        <source>Video note</source>
+        <translation>视频消息</translation>
+    </message>
+    <message>
         <source>Voice note</source>
-        <translation>语音留言</translation>
+        <translation>语言消息</translation>
     </message>
     <message>
         <source>Photo</source>
-        <translation>照片</translation>
+        <translation>图片</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation>表情贴图</translation>
+        <translation>贴图</translation>
     </message>
     <message>
         <source>Video</source>
@@ -307,48 +352,8 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     <message numerus="yes">
         <source>Self-destruct timer set to %n second(s)</source>
         <translation>
-            <numerusform>自毁定时器设置为 %n 秒</numerusform>
+            <numerusform>自毁计时器设定为 %n 秒</numerusform>
         </translation>
-    </message>
-    <message>
-        <source>About</source>
-        <translation>关于</translation>
-    </message>
-    <message>
-        <source>Settings</source>
-        <translation>设置</translation>
-    </message>
-    <message>
-        <source>Log in</source>
-        <translation>登录</translation>
-    </message>
-    <message>
-        <source>Search</source>
-        <translation>搜索</translation>
-    </message>
-    <message>
-        <source>Set as read</source>
-        <translation>标记为已读</translation>
-    </message>
-    <message>
-        <source>Delete chat</source>
-        <translation>删除对话</translation>
-    </message>
-    <message>
-        <source>Saved messages</source>
-        <translation>已保存消息</translation>
-    </message>
-    <message>
-        <source>Video note</source>
-        <translation>视频留言</translation>
-    </message>
-    <message>
-        <source>Archived chats</source>
-        <translation>已存档对话</translation>
-    </message>
-    <message>
-        <source>Main chats</source>
-        <translation>主要对话</translation>
     </message>
 </context>
 <context>
@@ -363,7 +368,7 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     </message>
     <message>
         <source>These settings will override global values in settings.</source>
-        <translation>这些设置会覆盖全局设置。</translation>
+        <translation>这些设置会覆盖全局设置内容。</translation>
     </message>
     <message>
         <source>Mentions and replies</source>
@@ -371,7 +376,7 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     </message>
     <message>
         <source>Pinned messages</source>
-        <translation>已钉住消息</translation>
+        <translation>钉住消息</translation>
     </message>
     <message>
         <source>Default</source>
@@ -382,14 +387,14 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     <name>CoverPage</name>
     <message>
         <source>Yottagram (dev)</source>
-        <translation>Yottagram (开发状态)</translation>
+        <translation>Yottagram(开发版)</translation>
     </message>
 </context>
 <context>
     <name>Loading</name>
     <message>
         <source>Waiting for connection...</source>
-        <translation>等待网络连接……</translation>
+        <translation>等待网络连接…</translation>
     </message>
 </context>
 <context>
@@ -400,17 +405,17 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     </message>
     <message>
         <source>%1 joined</source>
-        <translation>%1 加入</translation>
+        <translation></translation>
     </message>
     <message numerus="yes">
         <source>Self-destruct timer set to %n second(s)</source>
         <translation>
-            <numerusform>自毁定时器设置为 %n 秒</numerusform>
+            <numerusform>自毁计时器设定为 %1 秒</numerusform>
         </translation>
     </message>
     <message>
         <source>%1 pinned message</source>
-        <translation>%1 已钉住消息</translation>
+        <translation>%1 条钉住消息</translation>
     </message>
 </context>
 <context>
@@ -467,7 +472,7 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     </message>
     <message>
         <source>Select answers</source>
-        <translation>私密对话</translation>
+        <translation>选择回答</translation>
     </message>
     <message>
         <source>Anonymous</source>
@@ -529,7 +534,7 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     </message>
     <message>
         <source>Pinned messages</source>
-        <translation>已钉住消息</translation>
+        <translation>钉住消息</translation>
     </message>
 </context>
 <context>
@@ -556,7 +561,7 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     </message>
     <message>
         <source>30 seconds</source>
-        <translation>30天</translation>
+        <translation>30秒</translation>
     </message>
 </context>
 <context>
@@ -571,7 +576,7 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     </message>
     <message>
         <source>Private chat notification global settings</source>
-        <translation>私密对话通知全局设置</translation>
+        <translation>私人对话通知全局设置</translation>
     </message>
     <message>
         <source>Mute for 1 hour</source>
@@ -591,7 +596,7 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     </message>
     <message>
         <source>Group notification global settings</source>
-        <translation>群组消息全局设置</translation>
+        <translation>群组通知全局设置</translation>
     </message>
     <message>
         <source>Channel notification global settings</source>
@@ -607,7 +612,7 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     </message>
     <message>
         <source>Roaming auto download settings</source>
-        <translation>漫游自动下载设置</translation>
+        <translation>漫游时自动下载设置</translation>
     </message>
     <message>
         <source>Other auto download settings</source>
@@ -618,7 +623,7 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     <name>SupergroupInfo</name>
     <message>
         <source>Channel info</source>
-        <translation>群组信息</translation>
+        <translation>频道信息</translation>
     </message>
     <message>
         <source>Group info</source>
@@ -673,11 +678,11 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     <name>User</name>
     <message>
         <source>Last seen within month</source>
-        <translation>上次在线，一月之内</translation>
+        <translation>上次在线时间，一月内</translation>
     </message>
     <message>
         <source>Last seen within week</source>
-        <translation>上次在线，一周之内</translation>
+        <translation>上次在线时间，一周内</translation>
     </message>
     <message>
         <source>Offline</source>
@@ -693,7 +698,7 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
     </message>
     <message>
         <source>Never seen</source>
-        <translation>从未在线</translation>
+        <translation>完全离线</translation>
     </message>
 </context>
 <context>
@@ -778,8 +783,8 @@ A. Madani, Timo Könnecke, Rudi Timmermans 试用该软件。</translation>
         <translation>%L1h</translation>
     </message>
     <message>
-        <source>%L1d</source>
-        <translation>%L1d</translation>
+        <source>%L1w</source>
+        <translation>%L1w</translation>
     </message>
 </context>
 </TS>
