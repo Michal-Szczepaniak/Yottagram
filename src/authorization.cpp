@@ -197,7 +197,6 @@ void Authorization::authorizationStateWaitEncryptionKey()
 void Authorization::authorizationStateWaitTdlibParameters()
 {
     qDebug()<<"authorizationStateWaitTdlibParameters";
-    qDebug() << QDir::homePath() + "/.local/share/Yottagram";
     auto parameters = td_api::make_object<td_api::tdlibParameters>();
     parameters->database_directory_ = QDir::homePath().toStdString() + "/.local/share/Yottagram";
     parameters->use_message_database_ = true;

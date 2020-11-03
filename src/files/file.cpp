@@ -69,7 +69,7 @@ QString File::localPath()
 
 void File::download()
 {
-    _manager->sendQuery(new td_api::downloadFile(getId(), 32, 0, 0, false));
+    _manager->sendQuery(new td_api::downloadFile(getId(), 1, 0, 0, false));
 }
 
 bool File::isDownloaded()

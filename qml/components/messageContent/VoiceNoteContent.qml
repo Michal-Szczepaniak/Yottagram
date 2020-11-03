@@ -88,10 +88,16 @@ Row {
             }
         }
     }
+
+    Item {
+        width: Theme.paddingMedium
+        height: 1
+    }
+
     Column {
         Label {
             text: Format.formatDuration(file.duration, ((file.duration) > 3600 ? Formatter.DurationLong : Formatter.DurationShort))
-            width: Theme.itemSizeHuge*2
+            width: Theme.itemSizeHuge*2 - Theme.paddingMedium
             truncationMode: TruncationMode.Fade
             color: Theme.secondaryColor
         }

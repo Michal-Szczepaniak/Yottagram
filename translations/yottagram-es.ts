@@ -236,14 +236,6 @@ por ser unos testeadores fantásticos.</translation>
         <translation>Borrar</translation>
     </message>
     <message>
-        <source>Forwarded from %1</source>
-        <translation>Reenviado desde %1</translation>
-    </message>
-    <message>
-        <source>Edited</source>
-        <translation>Editado</translation>
-    </message>
-    <message>
         <source>Deselect</source>
         <translation>Borrar selección</translation>
     </message>
@@ -265,6 +257,62 @@ por ser unos testeadores fantásticos.</translation>
     </message>
     <message>
         <source>Type the text...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Video</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Document</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Poll</source>
+        <translation type="unfinished">Encuesta</translation>
+    </message>
+    <message>
+        <source>Sticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Voice Note</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save to gallery</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pin message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Notify members</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Press and hold record button to record voice note.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Forwarded from %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Edited</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -301,10 +349,6 @@ por ser unos testeadores fantásticos.</translation>
     <message>
         <source>Delete chat</source>
         <translation>Borrar chat</translation>
-    </message>
-    <message>
-        <source>Saved messages</source>
-        <translation type="unfinished">Mensajes guardados</translation>
     </message>
     <message>
         <source>%1 left</source>
@@ -356,6 +400,22 @@ por ser unos testeadores fantásticos.</translation>
             <numerusform>Autodestrucción en %n segundo</numerusform>
             <numerusform>Autodestrucción en %n segundos</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Unpin from top</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pin to top</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 pinned message</source>
+        <translation type="unfinished">%1 fijó un mensaje</translation>
+    </message>
+    <message>
+        <source>Saved messages</source>
+        <translation type="unfinished">Mensajes guardados</translation>
     </message>
 </context>
 <context>
@@ -620,6 +680,10 @@ por ser unos testeadores fantásticos.</translation>
     <message>
         <source>Other auto download settings</source>
         <translation>Otros ajustes de autodescarga</translation>
+    </message>
+    <message>
+        <source>Send button</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

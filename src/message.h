@@ -43,6 +43,9 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 class Message : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QString text READ getText NOTIFY messageChanged)
+    Q_PROPERTY(QString type READ getType NOTIFY messageChanged)
+    Q_PROPERTY(qint32 senderUserId READ getSenderUserId NOTIFY messageChanged)
 public:
     explicit Message(QObject *parent = nullptr);
     ~Message();
@@ -71,6 +74,7 @@ public:
     td_api::messageForwardInfo* getForwardedInfo();
     qint32 getSenderUserId();
     QString getFormattedTimestamp();
+    QString getFormattedForwardTimestamp();
 
     bool hasWebPage() const;
     WebPage* getWebPage() const;
@@ -92,6 +96,7 @@ public:
 signals:
     void contentChanged(qint64 messageId);
     void messageIdChanged(qint64 oldMessageId, qint64 newMessageId);
+    void messageChanged();
 
 public slots:
     void updateMessageSendSucceeded(td_api::updateMessageSendSucceeded *updateMessageSendSucceeded);

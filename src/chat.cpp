@@ -219,6 +219,16 @@ QString Chat::getSecretChatState() const
     }
 }
 
+bool Chat::isPinned() const
+{
+    return _chat->is_pinned_;
+}
+
+void Chat::setIsPinned(bool isPinned)
+{
+    _chat->is_pinned_ = isPinned;
+}
+
 qint32 Chat::getTtl() const
 {
     if (_secretChat == nullptr) return 0;
@@ -377,10 +387,57 @@ bool Chat::getDefaultDisableMentionNotifications() const
 qint64 Chat::getPinnedMessageId()
 {
     if (_chat->pinned_message_id_ != 0 && !_messages.contains(_chat->pinned_message_id_)) {
-        getMessage(_chat->pinned_message_id_);
+        fetchMessage(_chat->pinned_message_id_);
     }
 
     return _chat->pinned_message_id_;
+}
+
+Message *Chat::getPinnedMessage()
+{
+    if (_chat->pinned_message_id_ == 0 || !_messages.contains(_chat->pinned_message_id_)) return nullptr;
+
+    return _messages[_chat->pinned_message_id_];
+}
+
+bool Chat::getCanSendMessages() const
+{
+    return _chat->permissions_->can_send_messages_;
+}
+
+bool Chat::getCanSendMediaMessages() const
+{
+    return _chat->permissions_->can_send_media_messages_;
+}
+
+bool Chat::getCanSendPolls() const
+{
+    return _chat->permissions_->can_send_polls_;
+}
+
+bool Chat::getCanSendOtherMessages() const
+{
+    return _chat->permissions_->can_send_other_messages_;
+}
+
+bool Chat::getCanAddWebPagePreviews() const
+{
+    return _chat->permissions_->can_add_web_page_previews_;
+}
+
+bool Chat::getCanChangeInfo() const
+{
+    return _chat->permissions_->can_change_info_;
+}
+
+bool Chat::getCanInviteUsers() const
+{
+    return _chat->permissions_->can_invite_users_;
+}
+
+bool Chat::getCanPinMessages() const
+{
+    return _chat->permissions_->can_pin_messages_;
 }
 
 void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
@@ -399,7 +456,8 @@ void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), SIGNAL(myIdChanged(qint32)), this, SIGNAL(isSelfChanged()));
     connect(_manager.get(), SIGNAL(updateChatNotificationSettings(td_api::updateChatNotificationSettings*)), this, SLOT(updateChatNotificationSettings(td_api::updateChatNotificationSettings*)));
     connect(_manager.get(), SIGNAL(updateChatPinnedMessage(td_api::updateChatPinnedMessage*)), this, SLOT(updateChatPinnedMessage(td_api::updateChatPinnedMessage*)));
-    connect(_manager.get(), SIGNAL(message(td_api::message*)), this, SLOT(gotMessage(td_api::message*)));
+    connect(_manager.get(), SIGNAL(message(td_api::message*)), this, SLOT(onGotMessage(td_api::message*)));
+    connect(_manager.get(), SIGNAL(updateChatPermissions(td_api::updateChatPermissions*)), this, SLOT(updateChatPermissions(td_api::updateChatPermissions*)));
 }
 
 void Chat::setUsers(shared_ptr<Users> users)
@@ -415,7 +473,7 @@ void Chat::setFiles(shared_ptr<Files> files)
 int Chat::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
-    return _messages.size();
+    return _message_ids.size();
 }
 
 QVariant Chat::data(const QModelIndex &index, int role) const
@@ -467,6 +525,8 @@ QVariant Chat::data(const QModelIndex &index, int role) const
         }
         return 0;
     }
+    case MessageRoles::ForwardTimeRole:
+        return message->getFormattedForwardTimestamp();
     case MessageRoles::FileRole:
     {
         switch (message->getContentType()) {
@@ -561,9 +621,9 @@ QVariant Chat::data(const QModelIndex &index, int role) const
         QQmlEngine::setObjectOwnership(poll, QQmlEngine::CppOwnership);
         return QVariant::fromValue(poll);
     }
-    default:
-        return QVariant();
     }
+
+    return QVariant();
 }
 
 QHash<int, QByteArray> Chat::roleNames() const
@@ -579,6 +639,7 @@ QHash<int, QByteArray> Chat::roleNames() const
     roles[ForwardUserRole] = "forwardUserId";
     roles[ForwardUsernameRole] = "forwardUsername";
     roles[ForwardChannelRole] = "forwardChannelId";
+    roles[ForwardTimeRole] = "forwardTimestamp";
     roles[FileRole] = "file";
     roles[TimeRole] = "timestamp";
     roles[AuthorIdRole] = "authorId";
@@ -603,7 +664,7 @@ td_api::chat *Chat::getChat()
 
 int Chat::getMessageIndex(qint64 messageId)
 {
-    if(rowCount() <= 0) return -1;
+    if(rowCount() <= 0) return 0;
 
     auto it = std::find(_message_ids.begin(), _message_ids.end(), messageId);
 
@@ -611,7 +672,18 @@ int Chat::getMessageIndex(qint64 messageId)
         return std::distance(_message_ids.begin(), it);
     }
 
-    return -1;
+    return 0;
+}
+
+qint64 Chat::getLatestMessageId() const
+{
+    auto max = std::max_element(_message_ids.begin(), _message_ids.end());
+
+    if (_message_ids.end() != max) {
+        return *max;
+    }
+
+    return 0;
 }
 
 td_api::message *Chat::getLastMessage()
@@ -619,15 +691,23 @@ td_api::message *Chat::getLastMessage()
     return _chat->last_message_.get();
 }
 
+qint64 Chat::getLastMessageId() const
+{
+    if (_chat->last_message_ == nullptr) return 0;
+
+    return _chat->last_message_->id_;
+}
+
 void Chat::setLastMessage(td_api::object_ptr<td_api::message> lastMessage)
 {
     _chat->last_message_ = move(lastMessage);
+
+    emit lastMessageIdChanged(_chat->last_message_->id_);
 }
 
-void Chat::newMessage(td_api::object_ptr<td_api::message> message)
+void Chat::newMessage(td_api::object_ptr<td_api::message> message, bool addToList)
 {
     if (false == _messages.contains(message->id_)) {
-        beginInsertRows(QModelIndex(), rowCount(), rowCount());
         auto newMessage = new Message();
         newMessage->setTelegramManager(_manager);
         newMessage->setUsers(_users);
@@ -637,9 +717,18 @@ void Chat::newMessage(td_api::object_ptr<td_api::message> message)
         connect(newMessage, SIGNAL(contentChanged(qint64)), this, SLOT(onMessageContentChanged(qint64)));
         connect(newMessage, SIGNAL(messageIdChanged(qint64,qint64)), this, SLOT(onMessageIdChanged(qint64,qint64)));
         _messages[newMessage->getId()] = newMessage;
-        _message_ids.append(newMessage->getId());
-        endInsertRows();
+
+        if (addToList) {
+            beginInsertRows(QModelIndex(), rowCount(), rowCount());
+            _message_ids.append(newMessage->getId());
+            endInsertRows();
+        }
+
         if (newMessage->getId() == _chat->pinned_message_id_) emit pinnedMessageIdChanged();
+    } else if (!_message_ids.contains(message->id_) && addToList) {
+        beginInsertRows(QModelIndex(), rowCount(), rowCount());
+        _message_ids.append(message->id_);
+        endInsertRows();
     }
 }
 
@@ -686,9 +775,17 @@ void Chat::getMoreChatHistory()
     auto min = std::min_element(_message_ids.begin(), _message_ids.end());
 
     if (_message_ids.end() != min) {
-        auto index = std::distance(_message_ids.begin(), min);
 
-        this->getChatHistory(_message_ids[index]);
+        this->getChatHistory(*min, 30);
+    }
+}
+
+void Chat::getMoreChatMessages()
+{
+    auto max = std::max_element(_message_ids.begin(), _message_ids.end());
+
+    if (_message_ids.end() != max) {
+        this->getChatHistory(*max, 30, -30);
     }
 }
 
@@ -912,26 +1009,44 @@ void Chat::clearHistory(bool deleteChat)
 
 }
 
+void Chat::saveToGallery(QString filePath)
+{
+    QFile::copy(filePath, QStandardPaths::writableLocation(QStandardPaths::PicturesLocation) + filePath.split('/').last());
+}
+
+void Chat::pinMessage(qint64 messageId, bool notify)
+{
+    _manager->sendQuery(new td_api::pinChatMessage(getId(), messageId, !notify));
+}
+
 void Chat::setTtl(qint32 ttl)
 {
     _manager->sendQuery(new td_api::sendChatSetTtlMessage(getId(), ttl));
 }
 
-void Chat::getChatHistory(qint64 from_message, int limit, bool localOnly)
+void Chat::getChatHistory(qint64 from_message, int limit, int offset, bool localOnly)
 {
     auto getChatHistoryQuery = new td_api::getChatHistory();
     getChatHistoryQuery->chat_id_ = _chat->id_;
     getChatHistoryQuery->from_message_id_ = from_message;
-    getChatHistoryQuery->offset_ = 0;
+    getChatHistoryQuery->offset_ = offset;
     getChatHistoryQuery->limit_ = limit;
     getChatHistoryQuery->only_local_ = localOnly;
 
     _manager->sendQuery(getChatHistoryQuery);
 }
 
-void Chat::getMessage(qint64 messageId)
+void Chat::fetchMessage(qint64 messageId)
 {
     _manager->sendQuery(new td_api::getMessage(getId(), messageId));
+}
+
+QVariant Chat::getMessage(qint64 messageId)
+{
+    if (!_messages.contains(messageId)) return QVariant();
+    auto message = _messages[messageId];
+    QQmlEngine::setObjectOwnership(message, QQmlEngine::CppOwnership);
+    return QVariant::fromValue(message);
 }
 
 bool Chat::hasPhoto()
@@ -972,17 +1087,52 @@ void Chat::updateChatReadOutbox(td_api::updateChatReadOutbox *updateChatReadOutb
 
 void Chat::messages(td_api::messages *messages)
 {
+    if (messages->total_count_ == 0 || messages->messages_.front() == nullptr || messages->messages_.front()->chat_id_ != getId()) return;
+
+    int addedMessages = 0;
     for(auto &message: messages->messages_) {
-        if (message.get() != nullptr && message->chat_id_ == this->getId()) {
-            this->newMessage(move(message));
+        if (message != nullptr && message->chat_id_ == getId()) {
+            if (false == _messages.contains(message->id_)) {
+                addedMessages++;
+            } else if (!_message_ids.contains(message->id_)) {
+                addedMessages++;
+            }
         }
     }
+
+    beginInsertRows(QModelIndex(), rowCount(), rowCount()+addedMessages-1);
+    for(auto &message: messages->messages_) {
+        if (message != nullptr && message->chat_id_ == getId()) {
+            if (false == _messages.contains(message->id_)) {
+                auto newMessage = new Message();
+                newMessage->setTelegramManager(_manager);
+                newMessage->setUsers(_users);
+                newMessage->setFiles(_files);
+                newMessage->setMessage(message.release());
+                newMessage->setChatId(this->getId());
+                connect(newMessage, SIGNAL(contentChanged(qint64)), this, SLOT(onMessageContentChanged(qint64)));
+                connect(newMessage, SIGNAL(messageIdChanged(qint64,qint64)), this, SLOT(onMessageIdChanged(qint64,qint64)));
+                _messages[newMessage->getId()] = newMessage;
+
+                _message_ids.append(newMessage->getId());
+
+                if (newMessage->getId() == _chat->pinned_message_id_) emit pinnedMessageIdChanged();
+            } else if (!_message_ids.contains(message->id_)) {
+                _message_ids.append(message->id_);
+            }
+        }
+    }
+    endInsertRows();
 }
 
 void Chat::updateNewMessage(td_api::updateNewMessage *updateNewMessage)
 {
-    if (updateNewMessage->message_.get() != nullptr && updateNewMessage->message_->chat_id_ == this->getId()) {
-        this->newMessage(move(updateNewMessage->message_));
+    if (updateNewMessage->message_ != nullptr && updateNewMessage->message_->chat_id_ == this->getId()) {
+        qint64 lastMessageId = getLatestMessageId();
+
+        bool hasAllMessages = (lastMessageId == getLastMessageId());
+
+        this->newMessage(move(updateNewMessage->message_), hasAllMessages);
     }
 }
 
@@ -999,7 +1149,7 @@ void Chat::updateDeleteMessages(td_api::updateDeleteMessages *updateDeleteMessag
     if (updateDeleteMessages->chat_id_ == this->getId()) {
         for (auto messageId : updateDeleteMessages->message_ids_) {
             auto index = getMessageIndex(messageId);
-            if (-1 != index) {
+            if (0 != index) {
                 beginRemoveRows(QModelIndex(), index, index);
                 delete _messages.take(messageId);
                 _message_ids.remove(index);
@@ -1012,7 +1162,7 @@ void Chat::onMessageContentChanged(qint64 messageId)
 {
     auto index = getMessageIndex(messageId);
 
-    if (-1 != index) {
+    if (0 != index) {
         emit dataChanged(createIndex(index, 0), createIndex(index, 0), {FileRole, MessageRole, HasWebPageRole, WebPageRole, PollRole});
     }
 }
@@ -1075,12 +1225,28 @@ void Chat::updateChatPinnedMessage(td_api::updateChatPinnedMessage *updateChatPi
 {
     if (updateChatPinnedMessage->chat_id_ == getId()) {
         _chat->pinned_message_id_ = updateChatPinnedMessage->pinned_message_id_;
+
+        if (_chat->pinned_message_id_ != 0 && !_messages.contains(_chat->pinned_message_id_)) {
+            fetchMessage(_chat->pinned_message_id_);
+        }
+
+        emit pinnedMessageIdChanged();
     }
 }
 
-void Chat::gotMessage(td_api::message *message)
+void Chat::onGotMessage(td_api::message *message)
 {
     if (message->chat_id_ == getId()) {
-        newMessage(td_api::object_ptr<td_api::message>(message));
+        qint64 messageId = message->id_;
+        newMessage(td_api::object_ptr<td_api::message>(message), false);
+        emit gotMessage(messageId);
     }
+}
+
+void Chat::updateChatPermissions(td_api::updateChatPermissions *updateChatPermissions)
+{
+    if (updateChatPermissions->chat_id_ != getId()) return;
+
+    _chat->permissions_ = move(updateChatPermissions->permissions_);
+    emit permissionsChanged();
 }

@@ -241,7 +241,32 @@ qint32 Message::getSenderUserId()
 
 QString Message::getFormattedTimestamp()
 {
-    return QDateTime::fromTime_t(static_cast<uint>(_message->date_)).toString("hh:mm");
+    QString format;
+    QDateTime current(QDateTime::currentDateTime());
+
+    if (current.toTime_t() - _message->date_ >= 86400) {
+        format = "yyyy MMMM dd hh:mm";
+    } else {
+        format = "hh:mm";
+    }
+
+    return QDateTime::fromTime_t(static_cast<uint>(_message->date_)).toString(format);
+}
+
+QString Message::getFormattedForwardTimestamp()
+{
+    if (_message->forward_info_ == nullptr) return "";
+
+    QString format;
+    QDateTime current(QDateTime::currentDateTime());
+
+    if (current.toTime_t() - _message->forward_info_->date_ >= 86400) {
+        format = "yyyy MMMM dd hh:mm";
+    } else {
+        format = "hh:mm";
+    }
+
+    return QDateTime::fromTime_t(static_cast<uint>(_message->forward_info_->date_)).toString(format);
 }
 
 bool Message::hasWebPage() const
@@ -414,6 +439,7 @@ void Message::updateMessageSendSucceeded(td_api::updateMessageSendSucceeded *upd
         handleMessageContent(std::move(_message->content_));
         emit messageIdChanged(updateMessageSendSucceeded->old_message_id_, getId());
         emit contentChanged(getId());
+        emit messageChanged();
     }
 }
 

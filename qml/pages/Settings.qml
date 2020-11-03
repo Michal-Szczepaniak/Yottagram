@@ -20,13 +20,20 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import org.nemomobile.configuration 1.0
 import "../components"
-
 
 Page {
     id: settingsPage
 
     allowedOrientations: Orientation.All
+
+    ConfigurationGroup {
+        id: settings
+        path: "/apps/yottagram"
+
+        property bool sendButton: false
+    }
 
     SilicaFlickable {
         anchors.fill: parent
@@ -50,6 +57,13 @@ Page {
                 text: qsTr("Daemon")
                 checked: chatList.daemonEnabled
                 onCheckedChanged: chatList.daemonEnabled = checked
+            }
+
+            TextSwitch {
+                width: parent.width
+                text: qsTr("Send button")
+                checked: settings.sendButton
+                onCheckedChanged: settings.sendButton = checked
             }
 
             TextSwitchWithMenu {

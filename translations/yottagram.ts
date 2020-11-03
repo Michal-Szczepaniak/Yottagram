@@ -233,14 +233,6 @@ for being awesome testers.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Forwarded from %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Edited</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Deselect</source>
         <translation type="unfinished"></translation>
     </message>
@@ -262,6 +254,62 @@ for being awesome testers.</source>
     </message>
     <message>
         <source>Type the text...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Video</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Document</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Poll</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Voice Note</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save to gallery</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pin message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Notify members</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Press and hold record button to record voice note.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Forwarded from %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Edited</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -297,10 +345,6 @@ for being awesome testers.</source>
     </message>
     <message>
         <source>Main chats</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Saved messages</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -352,6 +396,22 @@ for being awesome testers.</source>
         <translation type="unfinished">
             <numerusform></numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Unpin from top</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pin to top</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 pinned message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Saved messages</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -614,6 +674,10 @@ for being awesome testers.</source>
     </message>
     <message>
         <source>Other auto download settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send button</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

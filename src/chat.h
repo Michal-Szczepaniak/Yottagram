@@ -47,6 +47,8 @@ class Chat : public QAbstractListModel
     Q_PROPERTY(bool hasPhoto READ hasPhoto NOTIFY chatPhotoChanged)
     Q_PROPERTY(qint64 lastReadInboxMessageId READ lastReadInboxMessageId NOTIFY lastReadInboxMessageIdChanged)
     Q_PROPERTY(qint64 lastReadOutboxMessageId READ lastReadOutboxMessageId NOTIFY lastReadOutboxMessageIdChanged)
+    Q_PROPERTY(qint64 lastMessageId READ getLatestMessageId NOTIFY lastMessageIdChanged)
+    Q_PROPERTY(qint32 unreadCount READ getUnreadCount NOTIFY unreadCountChanged)
     Q_PROPERTY(bool isSelf READ isSelf NOTIFY isSelfChanged)
     Q_PROPERTY(QString secretChatState READ getSecretChatState NOTIFY secretChatChanged)
     Q_PROPERTY(qint32 ttl READ getTtl WRITE setTtl NOTIFY ttlChanged)
@@ -59,6 +61,15 @@ class Chat : public QAbstractListModel
     Q_PROPERTY(bool disableMentionNotifications READ getDisableMentionNotifications WRITE setDisableMentionNotifications NOTIFY chatNotificationSettingsChanged)
     Q_PROPERTY(bool defaultDisableMentionNotifications READ getDefaultDisableMentionNotifications NOTIFY chatNotificationSettingsChanged)
     Q_PROPERTY(qint64 pinnedMessageId READ getPinnedMessageId NOTIFY pinnedMessageIdChanged)
+    Q_PROPERTY(Message* pinnedMessage READ getPinnedMessage NOTIFY pinnedMessageIdChanged)
+    Q_PROPERTY(bool canSendMessages READ getCanSendMessages NOTIFY permissionsChanged)
+    Q_PROPERTY(bool canSendMediaMessages READ getCanSendMediaMessages NOTIFY permissionsChanged)
+    Q_PROPERTY(bool canSendPolls READ getCanSendPolls NOTIFY permissionsChanged)
+    Q_PROPERTY(bool canSendOtherMessages READ getCanSendOtherMessages NOTIFY permissionsChanged)
+    Q_PROPERTY(bool canAddWebPagePreviews READ getCanAddWebPagePreviews NOTIFY permissionsChanged)
+    Q_PROPERTY(bool canChangeInfo READ getCanChangeInfo NOTIFY permissionsChanged)
+    Q_PROPERTY(bool canInviteUsers READ getCanInviteUsers NOTIFY permissionsChanged)
+    Q_PROPERTY(bool canPinMessages READ getCanPinMessages NOTIFY permissionsChanged)
 public:
     enum MessageRoles {
         TypeRole = Qt::UserRole + 1,
@@ -71,6 +82,7 @@ public:
         ForwardUserRole,
         ForwardUsernameRole,
         ForwardChannelRole,
+        ForwardTimeRole,
         FileRole,
         TimeRole,
         AuthorIdRole,
@@ -84,7 +96,7 @@ public:
         ReadRole,
         HasWebPageRole,
         WebPageRole,
-        PollRole
+        PollRole,
     };
 
     enum ChatList {
@@ -118,6 +130,8 @@ public:
     bool isOpen() const;
     void setSecretChat(td_api::secretChat* secretChat);
     QString getSecretChatState() const;
+    bool isPinned() const;
+    void setIsPinned(bool isPinned);
     qint32 getTtl() const;
     qint32 getMuteFor() const;
     void setMuteFor(qint32 muteFor);
@@ -132,6 +146,15 @@ public:
     void setDisableMentionNotifications(bool disableMentionNotifications);
     bool getDefaultDisableMentionNotifications() const;
     qint64 getPinnedMessageId();
+    Message* getPinnedMessage();
+    bool getCanSendMessages() const;
+    bool getCanSendMediaMessages() const;
+    bool getCanSendPolls() const;
+    bool getCanSendOtherMessages() const;
+    bool getCanAddWebPagePreviews() const;
+    bool getCanChangeInfo() const;
+    bool getCanInviteUsers() const;
+    bool getCanPinMessages() const;
 
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setUsers(shared_ptr<Users> users);
@@ -143,16 +166,20 @@ public:
 
     td_api::chat* getChat();
     Q_INVOKABLE int getMessageIndex(qint64 messageId);
+    qint64 getLatestMessageId() const;
     td_api::message* getLastMessage();
+    qint64 getLastMessageId() const;
     void setLastMessage(td_api::object_ptr<td_api::message> lastMessage);
-    void newMessage(td_api::object_ptr<td_api::message> message);
+    void newMessage(td_api::object_ptr<td_api::message> message, bool addToList = true);
     std::vector<std::int32_t> splitToIntVector(QString string, QString separator);
     std::vector<std::string> splitToVector(QString string, QString separator);
 
     Q_INVOKABLE void sendMessage(QString message, qint64 replyToMessageId);
-    Q_INVOKABLE void getChatHistory(qint64 from_message, int limit = 20, bool localOnly = false);
-    Q_INVOKABLE void getMessage(qint64 messageId);
+    Q_INVOKABLE void getChatHistory(qint64 from_message, int limit = 20, int offset = 0, bool localOnly = false);
+    Q_INVOKABLE void fetchMessage(qint64 messageId);
+    Q_INVOKABLE QVariant getMessage(qint64 messageId);
     Q_INVOKABLE void getMoreChatHistory();
+    Q_INVOKABLE void getMoreChatMessages();
     Q_INVOKABLE qint64 getAuthorByIndex(qint32 index);
     Q_INVOKABLE void setMessageAsRead(qint64 messageId);
     Q_INVOKABLE void sendPhoto(QString path, qint64 replyToMessageId);
@@ -170,6 +197,8 @@ public:
     Q_INVOKABLE void openSecretChat();
     Q_INVOKABLE void closeSecretChat();
     Q_INVOKABLE void clearHistory(bool deleteChat = false);
+    Q_INVOKABLE void saveToGallery(QString filePath);
+    Q_INVOKABLE void pinMessage(qint64 messageId, bool notify);
     void setTtl(qint32 ttl);
 
     bool hasPhoto();
@@ -191,6 +220,9 @@ signals:
     void ttlChanged(qint32 ttl);
     void chatNotificationSettingsChanged();
     void pinnedMessageIdChanged();
+    void permissionsChanged();
+    void gotMessage(qint64 messageId);
+    void lastMessageIdChanged(qint64 lastMessageId);
 
 public slots:
     void updateChatReadInbox(td_api::updateChatReadInbox *updateChatReadInbox);
@@ -207,7 +239,8 @@ public slots:
     void updateChatNotificationSettings(td_api::updateChatNotificationSettings *updateChatNotificationSettings);
     void scopeNotificationSettingsChanged(td_api::scopeNotificationSettings *scopeNotificationSettings);
     void updateChatPinnedMessage(td_api::updateChatPinnedMessage *updateChatPinnedMessage);
-    void gotMessage(td_api::message *message);
+    void onGotMessage(td_api::message *message);
+    void updateChatPermissions(td_api::updateChatPermissions *updateChatPermissions);
 
 private:
     qint32 _smallPhotoId;

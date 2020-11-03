@@ -72,7 +72,7 @@ void Notifications::updateNotificationGroup(td_api::updateNotificationGroup *upd
     Chat* chat = _chatList->getChat(updateNotificationGroup->chat_id_);
 
     for (auto& notification : updateNotificationGroup->added_notifications_) {
-        if (chat->isOpen() || notification->is_silent_) continue;
+        if (chat->isOpen() || notification->is_silent_ || _notifications.contains(notification->id_)) continue;
         switch (notification->type_.get()->get_id()) {
         case td_api::notificationTypeNewMessage::ID:
         {

@@ -49,6 +49,7 @@ void ChatList::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), SIGNAL(updateChatOrder(td_api::updateChatOrder*)), this, SLOT(updateChatOrder(td_api::updateChatOrder*)));
     connect(_manager.get(), SIGNAL(updateSecretChat(td_api::updateSecretChat*)), this, SLOT(updateSecretChat(td_api::updateSecretChat*)));
     connect(_manager.get(), SIGNAL(updateScopeNotificationSettings(td_api::updateScopeNotificationSettings*)), this, SLOT(updateScopeNotificationSettings(td_api::updateScopeNotificationSettings*)));
+    connect(_manager.get(), SIGNAL(updateChatIsPinned(td_api::updateChatIsPinned*)), this, SLOT(updateChatIsPinned(td_api::updateChatIsPinned*)));
 }
 
 void ChatList::setUsers(shared_ptr<Users> users)
@@ -170,6 +171,18 @@ QVariant ChatList::data(const QModelIndex &index, int role) const
         case td_api::messageChatSetTtl::ID:
             lastMessageInfo += tr("Self-destruct timer set to %n second(s)", "", static_cast<td_api::messageChatSetTtl*>(message->content_.get())->ttl_);
             break;
+        case td_api::messagePinMessage::ID:
+        {
+            auto user = _users->getUser(message->sender_user_id_);
+            QString name;
+            if(user != nullptr) {
+                name = user->getName();
+            } else {
+                name = chatNode->getTitle();
+            }
+            lastMessageInfo += tr("%1 pinned message").arg(name);
+        }
+            break;
         default:
             lastMessageInfo += "Message UNSUPPORTED >:3";
             break;
@@ -199,6 +212,8 @@ QVariant ChatList::data(const QModelIndex &index, int role) const
         return chatNode->isSelf();
     case ChatElementRoles::SecretChatStateRole:
         return chatNode->getSecretChatState();
+    case ChatElementRoles::IsPinnedRole:
+        return chatNode->isPinned();
     default:
         return QVariant();
     }
@@ -219,6 +234,7 @@ QHash<int, QByteArray> ChatList::roleNames() const
     roles[LastMessageRole] = "lastMessage";
     roles[IsSelfRole] = "isSelf";
     roles[SecretChatStateRole] = "secretChatState";
+    roles[IsPinnedRole] = "isPinned";
     return roles;
 }
 
@@ -350,6 +366,11 @@ QVariant ChatList::getPrivateNotificationSettings()
     return QVariant::fromValue(settings);
 }
 
+void ChatList::togglePinnedChat(qint64 chatId)
+{
+    _manager->sendQuery(new td_api::toggleChatIsPinned(chatId, !getChat(chatId)->isPinned()));
+}
+
 void ChatList::onIsAuthorizedChanged(bool isAuthorized)
 {
     _isAuthorized = isAuthorized;
@@ -428,6 +449,13 @@ void ChatList::updateChatLastMessage(td_api::updateChatLastMessage *updateChatLa
         _chats[updateChatLastMessage->chat_id_]->setLastMessage(move(updateChatLastMessage->last_message_));
         updateChat(updateChatLastMessage->chat_id_, {LastMessageRole, LastMessageAuthorRole});
     }
+}
+
+void ChatList::updateChatIsPinned(td_api::updateChatIsPinned *updateChatIsPinned)
+{
+    if (!_chats.contains(updateChatIsPinned->chat_id_)) return;
+    getChat(updateChatIsPinned->chat_id_)->setIsPinned(updateChatIsPinned->is_pinned_);
+    setChatOrder(updateChatIsPinned->chat_id_, updateChatIsPinned->order_);
 }
 
 void ChatList::updateChatOrder(td_api::updateChatOrder *updateChatOrder)

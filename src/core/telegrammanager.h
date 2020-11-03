@@ -77,6 +77,8 @@ signals:
     void updateInstalledStickerSets(td_api::updateInstalledStickerSets *updateInstalledStickerSets);
     void stickerSets(td_api::stickerSets *stickerSets);
     void stickerSet(td_api::stickerSet *stickerSet);
+    void updateChatIsPinned(td_api::updateChatIsPinned *updateChatIsPinned);
+    void updateChatPermissions(td_api::updateChatPermissions *updateChatPermissions);
 
     void myIdChanged(qint32 myId);
 

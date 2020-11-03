@@ -47,6 +47,7 @@ Item {
                 videoPlayer.seek(0)
                 videoPlayer.play()
             }
+            Component.onCompleted: console.log(file.animation.localPath)
 
             width: chatPage.width/2.5
             source: file.animation.localPath
@@ -70,7 +71,7 @@ Item {
     Thumbnail {
         id: thumbnail
         image: file.thumbnail
-        visible: videoLoader.item.playbackState === MediaPlayer.StoppedState
+        visible: videoLoader.active && videoLoader.item.playbackState === MediaPlayer.StoppedState
         anchors.fill: parent
     }
 
@@ -79,7 +80,7 @@ Item {
         source: thumbnail
         radius: 32
         cached: true
-        visible: videoLoader.item.playbackState === MediaPlayer.StoppedState
+        visible: videoLoader.active && videoLoader.item.playbackState === MediaPlayer.StoppedState
     }
 
     Rectangle {
@@ -92,7 +93,7 @@ Item {
 
         IconButton {
             id: downloadButton
-            visible: !file.animation.isDownloaded || videoLoader.item.playbackState === MediaPlayer.StoppedState
+            visible: !file.animation.isDownloaded || !videoLoader.active || videoLoader.item.playbackState === MediaPlayer.StoppedState
             icon.source: (!file.animation.isDownloaded) ? "image://theme/icon-m-cloud-download" : "image://theme/icon-m-play"
             icon.asynchronous: true
             width: Theme.itemSizeMedium

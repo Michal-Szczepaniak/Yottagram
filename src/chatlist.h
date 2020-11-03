@@ -47,7 +47,8 @@ public:
         LastMessageRole,
         LastMessageAuthorRole,
         IsSelfRole,
-        SecretChatStateRole
+        SecretChatStateRole,
+        IsPinnedRole
     };
 
     ChatList();
@@ -78,6 +79,7 @@ public:
     Q_INVOKABLE QVariant getChannelNotificationSettings();
     Q_INVOKABLE QVariant getGroupNotificationSettings();
     Q_INVOKABLE QVariant getPrivateNotificationSettings();
+    Q_INVOKABLE void togglePinnedChat(qint64 chatId);
 
 signals:
     void channelNotificationSettingsChanged(td_api::scopeNotificationSettings* scopeNotificationSettings);
@@ -94,6 +96,7 @@ public slots:
     void newChat(td_api::updateNewChat *updateNewChat);
     void updateChatPhoto(td_api::updateChatPhoto *updateChatPhoto);
     void updateChatLastMessage(td_api::updateChatLastMessage *updateChatLastMessage);
+    void updateChatIsPinned(td_api::updateChatIsPinned *updateChatIsPinned);
     void updateChatOrder(td_api::updateChatOrder *updateChatOrder);
     void updateSecretChat(td_api::updateSecretChat *updateSecretChat);
     void secretChatStateChanged(qint64 chatId);

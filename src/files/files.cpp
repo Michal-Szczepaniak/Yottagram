@@ -69,7 +69,7 @@ void Files::considerAutoDownloading(qint32 fileId, QString fileType)
 {
     shared_ptr<File> file = getFile(fileId);
 
-    if (file->isDownloading() || file->isDownloaded() || !getActiveAutoDownloadSetting()->getIsAutoDownloadEnabled()) return;
+    if (file->isDownloading() || file->isDownloaded() || (!getActiveAutoDownloadSetting()->getIsAutoDownloadEnabled() && fileType != "avatar" && fileType != "sticker")) return;
 
     if (fileType == "photo" && file->getExpectedSize() <= getActiveAutoDownloadSetting()->getMaxPhotoFileSize()) file->download();
     if (fileType == "video" && file->getExpectedSize() <= getActiveAutoDownloadSetting()->getMaxVideoFileSize()) file->download();

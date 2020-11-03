@@ -21,11 +21,22 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import SortFilterProxyModel 0.2
+import org.nemomobile.configuration 1.0
 
 Item {
     id: root
     property var page
     property int stickerFileId: 0
+
+    ConfigurationGroup {
+        id: settings
+        path: "/apps/yottagram"
+
+        property real stickerPickerPostition: 0
+        property int stickerPickerPickedPack: 0
+
+        Component.onCompleted: stickerSetGridView.model = stickerSetsProxyModel.data(stickerSetsProxyModel.index(settings.stickerPickerPickedPack, 0), 267)
+    }
 
     Connections {
         target: authorization
@@ -62,7 +73,9 @@ Item {
             model: stickerSetsProxyModel
             orientation: Qt.Horizontal
             layoutDirection: Qt.LeftToRight
-            onCountChanged: if (count > 0) stickerSetGridView.model = stickerSetsProxyModel.data(stickerSetsProxyModel.index(0, 0), 267)
+            contentX: settings.stickerPickerPostition
+            onContentXChanged: settings.stickerPickerPostition = contentX
+            Component.onCompleted: contentX = contentX
             delegate: ListItem {
                 width: Theme.itemSizeLarge
                 height: Theme.itemSizeLarge
@@ -75,7 +88,10 @@ Item {
                     source: thumbnail.localPath
                 }
 
-                onClicked: stickerSetGridView.model = stickerSet
+                onClicked: {
+                    settings.stickerPickerPickedPack = index
+                    stickerSetGridView.model = stickerSet
+                }
             }
         }
 

@@ -23,8 +23,7 @@ import Sailfish.Silica 1.0
 
 Row {
     id: pinnedMessage
-    height: Theme.itemSizeMedium
-    visible: chat.pinnedMessageId !== 0
+    signal closed()
 
     Item {
         height: 1
@@ -43,11 +42,13 @@ Row {
     }
 
     Column {
+        width: pinnedMessage.width - closeButton.width - Theme.paddingLarge*2
 
         Label {
             id: pinnedName
-            text: chat.pinnedMessageId !== 0 ? users.getUserAsVariant(pinnedMessage.getPinnedData("authorId")).name : ""
+            text: chat.pinnedMessageId !== 0 ? users.getUserAsVariant(chat.pinnedMessage.senderUserId).name : ""
             truncationMode: TruncationMode.Fade
+            width: parent.width
 
             MouseArea {
                 anchors.fill: parent
@@ -56,10 +57,10 @@ Row {
         }
         Label {
             id: pinnedText
-            width: pinnedMessage - Theme.paddingLarge
             text: chat.pinnedMessageId === 0 ? "" :
-                      (pinnedMessage.getPinnedData("messageType") === "text" ? pinnedMessage.getPinnedData("messageText").trim().replace(/\r?\n|\r/g, " ")
-                                                                           : pinnedMessage.getPinnedData("messageType"))
+                      (chat.pinnedMessage.type === "text" ? chat.pinnedMessage.text.trim().replace(/\r?\n|\r/g, " ")
+                                                                           : chat.pinnedMessage.type)
+            width: parent.width
             truncationMode: TruncationMode.Fade
 
             MouseArea {
@@ -69,9 +70,11 @@ Row {
         }
     }
 
-    function getPinnedData(roleName) {
-        var result = chatProxyModel.data(chatProxyModel.index(chatProxyModel.mapFromSource(chat.getMessageIndex(chat.pinnedMessageId)), 0), chatProxyModel.roleForName(roleName))
-        if (result === void(0)) return "";
-        return result
+    IconButton {
+        id: closeButton
+        icon.asynchronous: true
+        icon.source: "image://theme/icon-m-close"
+        anchors.verticalCenter: parent.verticalCenter
+        onClicked: pinnedMessage.closed()
     }
 }

@@ -61,6 +61,7 @@ Item {
         cache: true
         layer.enabled: root.maskEnabled
         layer.effect: OpacityMask {
+            cached: true
             maskSource: chatPhotoMask
         }
     }

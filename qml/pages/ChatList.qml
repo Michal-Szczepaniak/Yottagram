@@ -145,6 +145,13 @@ Page {
                     ContextMenu {
                         id: contextMenu
                         MenuItem {
+                            text: isPinned ? qsTr("Unpin from top") : qsTr("Pin to top")
+                            onClicked: {
+                                chatList.togglePinnedChat(id)
+                            }
+                        }
+
+                        MenuItem {
                             text: qsTr("Set as read")
                             onClicked: {
                                 chatList.markChatAsRead(id)
@@ -194,6 +201,8 @@ Page {
                             id: secretChatIndicator
                             anchors.verticalCenter: parent.verticalCenter
                             source: "image://theme/icon-s-secure"
+                            asynchronous: true
+                            cache: true
                             color: secretChatState === "pending" ? "yellow" : (secretChatState === "ready" ? "green" : "red")
                             visible: secretChatState !== ""
                         }
@@ -207,6 +216,7 @@ Page {
                     }
 
                     Row {
+                        height: lastMessageAuthorLabel.height
                         width: parent.width
                         Label {
                             id: lastMessageAuthorLabel
@@ -244,67 +254,6 @@ Page {
                     pageStack.push(Qt.resolvedUrl("Chat.qml"), { chat: chat })
                 }
             }
-
-//            delegate: ListItem {
-//                id: listItem
-//                contentHeight: Theme.itemSizeLarge
-//                contentWidth: listView.width
-//                width: contentWidth
-
-//                Row {
-//                    anchors.top: parent.top
-//                    anchors.topMargin: Theme.paddingMedium
-//                    anchors.left: avatar.right
-//                    anchors.leftMargin: Theme.paddingLarge
-//                    anchors.right: unread.visible ? unread.left : parent.right
-//                    anchors.rightMargin: Theme.paddingMedium
-//                    spacing: Theme.paddingSmall
-
-//                    Icon {
-//                        id: secretChatIndicator
-//                        anchors.verticalCenter: parent.verticalCenter
-//                        source: "image://theme/icon-s-secure"
-//                        color: secretChatState === "pending" ? "yellow" : (secretChatState === "ready" ? "green" : "red")
-//                        visible: secretChatState !== ""
-//                    }
-
-//                    Label {
-//                        anchors.verticalCenter: parent.verticalCenter
-//                        text: isSelf ? qsTr("Saved messages") : name
-//                        truncationMode: TruncationMode.Fade
-//                        width: parent.width - (secretChatIndicator.visible ? (Theme.paddingSmall + secretChatIndicator.width) : 0)
-//                    }
-//                }
-
-//                Row {
-//                    anchors.left: avatar.right
-//                    anchors.leftMargin: Theme.paddingLarge
-//                    anchors.right: unread.visible ? unread.left : parent.right
-//                    anchors.rightMargin: Theme.paddingLarge
-//                    anchors.bottom: parent.bottom
-//                    anchors.bottomMargin: Theme.paddingMedium
-
-//                    Label {
-//                        id: lastMessageAuthorLabel
-//                        text: lastMessageAuthor
-//                        font.pixelSize: Theme.fontSizeSmall
-//                        color: Theme.highlightColor
-//                        truncationMode: TruncationMode.Fade
-//                        width: Math.min(implicitWidth, Theme.itemSizeHuge)
-//                    }
-
-//                    Label {
-//                        text: lastMessage
-//                        maximumLineCount: 1
-//                        truncationMode: TruncationMode.Fade
-//                        clip: true
-//                        width: parent.width - lastMessageAuthorLabel.width
-//                        font.pixelSize: Theme.fontSizeSmall
-//                        color: Theme.secondaryColor
-//                    }
-//                }
-
-//            }
         }
     }
 }

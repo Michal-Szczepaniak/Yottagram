@@ -187,6 +187,12 @@ void TelegramManager::messageReceived(quint64 id, td_api::Object* message)
             [this](td_api::stickerSet &stickerSet) {
                 emit this->stickerSet(&stickerSet);
             },
+            [this](td_api::updateChatIsPinned &updateChatIsPinned) {
+                emit this->updateChatIsPinned(&updateChatIsPinned);
+            },
+            [this](td_api::updateChatPermissions &updateChatPermissions) {
+                emit this->updateChatPermissions(&updateChatPermissions);
+            },
             [](auto &update) { Q_UNUSED(update) }
         )
     );
