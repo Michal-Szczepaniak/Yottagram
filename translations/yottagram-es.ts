@@ -29,7 +29,7 @@
     </message>
     <message>
         <source>Carmen F. B. for spanish translation.</source>
-        <translation>Carme F. B. por la traducción al español.</translation>
+        <translation>Carmen F. B. por la traducción al español.</translation>
     </message>
     <message>
         <source>Fernando Lanero, Mika, Leszek Lesner,
@@ -130,15 +130,15 @@ por ser unos testeadores fantásticos.</translation>
     <name>BasicGroupInfo</name>
     <message>
         <source>Channel info</source>
-        <translation>Info canal</translation>
+        <translation>Info. del canal</translation>
     </message>
     <message>
         <source>Group info</source>
-        <translation>Info grupo</translation>
+        <translation>Info. del grupo</translation>
     </message>
     <message>
         <source>Info</source>
-        <translation>Info</translation>
+        <translation>Información</translation>
     </message>
     <message>
         <source>%1 members</source>
@@ -236,6 +236,14 @@ por ser unos testeadores fantásticos.</translation>
         <translation>Borrar</translation>
     </message>
     <message>
+        <source>Forwarded from %1</source>
+        <translation>Reenviado desde %1</translation>
+    </message>
+    <message>
+        <source>Edited</source>
+        <translation>Editado</translation>
+    </message>
+    <message>
         <source>Deselect</source>
         <translation>Borrar selección</translation>
     </message>
@@ -257,63 +265,55 @@ por ser unos testeadores fantásticos.</translation>
     </message>
     <message>
         <source>Type the text...</source>
-        <translation type="unfinished"></translation>
+        <translation>Escribe texto...</translation>
     </message>
     <message>
         <source>Image</source>
-        <translation type="unfinished"></translation>
+        <translation>Imagen</translation>
     </message>
     <message>
         <source>Video</source>
-        <translation type="unfinished"></translation>
+        <translation>Vídeo</translation>
     </message>
     <message>
         <source>Audio</source>
-        <translation type="unfinished"></translation>
+        <translation>Audio</translation>
     </message>
     <message>
         <source>Document</source>
-        <translation type="unfinished"></translation>
+        <translation>Doc.</translation>
     </message>
     <message>
         <source>File</source>
-        <translation type="unfinished"></translation>
+        <translation>Archivo</translation>
     </message>
     <message>
         <source>Poll</source>
-        <translation type="unfinished">Encuesta</translation>
+        <translation>Encuesta</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation type="unfinished"></translation>
+        <translation>Sticker</translation>
     </message>
     <message>
         <source>Voice Note</source>
-        <translation type="unfinished"></translation>
+        <translation>Nota voz</translation>
     </message>
     <message>
         <source>Save to gallery</source>
-        <translation type="unfinished"></translation>
+        <translation>Guardar en galería</translation>
     </message>
     <message>
         <source>Pin message</source>
-        <translation type="unfinished"></translation>
+        <translation>Fijar mensaje</translation>
     </message>
     <message>
         <source>Notify members</source>
-        <translation type="unfinished"></translation>
+        <translation>Notificar a los miembros</translation>
     </message>
     <message>
         <source>Press and hold record button to record voice note.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Forwarded from %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Edited</source>
-        <translation type="unfinished"></translation>
+        <translation>Mantén pulsado el botón de grabar para grabar nota de voz.</translation>
     </message>
 </context>
 <context>
@@ -351,71 +351,71 @@ por ser unos testeadores fantásticos.</translation>
         <translation>Borrar chat</translation>
     </message>
     <message>
+        <source>Saved messages</source>
+        <translation>Mensajes guardados</translation>
+    </message>
+    <message>
         <source>%1 left</source>
-        <translation type="unfinished">%1 salió</translation>
+        <translation>%1 salió</translation>
     </message>
     <message>
         <source>%1 joined</source>
-        <translation type="unfinished">%1 se unió</translation>
+        <translation>%1 se unió</translation>
     </message>
     <message>
         <source>Audio</source>
-        <translation type="unfinished"></translation>
+        <translation>Audio</translation>
     </message>
     <message>
         <source>Video note</source>
-        <translation type="unfinished"></translation>
+        <translation>Nota de vídeo</translation>
     </message>
     <message>
         <source>Voice note</source>
-        <translation type="unfinished"></translation>
+        <translation>Nota de voz</translation>
     </message>
     <message>
         <source>Photo</source>
-        <translation type="unfinished"></translation>
+        <translation>Foto</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation type="unfinished"></translation>
+        <translation>Sticker</translation>
     </message>
     <message>
         <source>Video</source>
-        <translation type="unfinished"></translation>
+        <translation>Vídeo</translation>
     </message>
     <message>
         <source>Document</source>
-        <translation type="unfinished"></translation>
+        <translation>Documento</translation>
     </message>
     <message>
         <source>GIF</source>
-        <translation type="unfinished"></translation>
+        <translation>GIF</translation>
     </message>
     <message>
         <source>Poll</source>
-        <translation type="unfinished">Encuesta</translation>
+        <translation>Encuesta</translation>
     </message>
     <message numerus="yes">
         <source>Self-destruct timer set to %n second(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Autodestrucción en %n segundo</numerusform>
             <numerusform>Autodestrucción en %n segundos</numerusform>
         </translation>
     </message>
     <message>
         <source>Unpin from top</source>
-        <translation type="unfinished"></translation>
+        <translation>Desfijar del inicio</translation>
     </message>
     <message>
         <source>Pin to top</source>
-        <translation type="unfinished"></translation>
+        <translation>Fijar al inicio</translation>
     </message>
     <message>
         <source>%1 pinned message</source>
-        <translation type="unfinished">%1 fijó un mensaje</translation>
-    </message>
-    <message>
-        <source>Saved messages</source>
-        <translation type="unfinished">Mensajes guardados</translation>
+        <translation>%1 fijó un mensaje</translation>
     </message>
 </context>
 <context>
@@ -635,7 +635,7 @@ por ser unos testeadores fantásticos.</translation>
     </message>
     <message>
         <source>Daemon</source>
-        <translation>Ejecución en segundo plano</translation>
+        <translation>Conexión en segundo plano</translation>
     </message>
     <message>
         <source>Private chat notification global settings</source>
@@ -667,15 +667,15 @@ por ser unos testeadores fantásticos.</translation>
     </message>
     <message>
         <source>Wifi auto download settings</source>
-        <translation>Ajustes de autodescarga con Wifi</translation>
+        <translation>Autodescarga con Wifi</translation>
     </message>
     <message>
         <source>Cellular auto download settings</source>
-        <translation>Ajustes de autodescarga con datos móviles</translation>
+        <translation>Autodescarga con datos móviles</translation>
     </message>
     <message>
         <source>Roaming auto download settings</source>
-        <translation>Ajustes de autodescarga con roaming</translation>
+        <translation>Autodescarga con roaming</translation>
     </message>
     <message>
         <source>Other auto download settings</source>
@@ -683,18 +683,18 @@ por ser unos testeadores fantásticos.</translation>
     </message>
     <message>
         <source>Send button</source>
-        <translation type="unfinished"></translation>
+        <translation>Botón enviar</translation>
     </message>
 </context>
 <context>
     <name>SupergroupInfo</name>
     <message>
         <source>Channel info</source>
-        <translation>Info canal</translation>
+        <translation>Info. del canal</translation>
     </message>
     <message>
         <source>Group info</source>
-        <translation>Info grupo</translation>
+        <translation>Info. del grupo</translation>
     </message>
     <message>
         <source>%1 members</source>
@@ -702,7 +702,7 @@ por ser unos testeadores fantásticos.</translation>
     </message>
     <message>
         <source>Info</source>
-        <translation>Info</translation>
+        <translation>Información</translation>
     </message>
     <message>
         <source>Description</source>
@@ -780,11 +780,11 @@ por ser unos testeadores fantásticos.</translation>
     </message>
     <message>
         <source>User info</source>
-        <translation>Info usuario</translation>
+        <translation>Info. del usuario</translation>
     </message>
     <message>
         <source>Info</source>
-        <translation>Info</translation>
+        <translation>Información</translation>
     </message>
     <message>
         <source>Username</source>
@@ -851,7 +851,7 @@ por ser unos testeadores fantásticos.</translation>
     </message>
     <message>
         <source>%L1w</source>
-        <translation type="unfinished">%L1d {1w?}</translation>
+        <translation>%L1w</translation>
     </message>
 </context>
 </TS>
