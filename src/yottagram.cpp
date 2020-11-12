@@ -22,6 +22,9 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <sailfishapp.h>
 #include <QDebug>
 #include "core.h"
+#include "tgsioplugin/tgsioplugin.h"
+
+Q_IMPORT_PLUGIN(TgsIOPlugin)
 
 int main(int argc, char *argv[])
 {

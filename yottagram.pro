@@ -10,6 +10,8 @@ QMAKE_CXXFLAGS += -std=c++14 -O0
 
 PKGCONFIG += zlib openssl nemonotifications-qt5 connman-qt5 vorbisfile
 
+DEFINES += QT_STATICPLUGIN
+
 SOURCES += src/core.cpp \
     src/components/audiorecorder.cpp \
     src/components/autodownloadsettings.cpp \
@@ -34,6 +36,8 @@ SOURCES += src/core.cpp \
     src/poll.cpp \
     src/stickerset.cpp \
     src/stickersets.cpp \
+    src/tgsioplugin/tgsioplugin.cpp \
+    src/tgsioplugin/tgsiohandler.cpp \
     src/user.cpp \
     src/users.cpp \
     src/webpage.cpp \
@@ -58,6 +62,7 @@ DISTFILES += qml/yottagram.qml \
     qml/components/chatInfo/SupergroupInfo.qml \
     qml/components/chatInfo/UserInfo.qml \
     qml/components/functions/muteFormat.js \
+    qml/components/messageContent/AnimatedStickerContent.qml \
     qml/components/messageContent/AnimationContent.qml \
     qml/components/messageContent/AudioContent.qml \
     qml/components/Avatar.qml \
@@ -132,6 +137,8 @@ HEADERS += \
     src/poll.h \
     src/stickerset.h \
     src/stickersets.h \
+    src/tgsioplugin/tgsioplugin.h \
+    src/tgsioplugin/tgsiohandler.h \
     src/user.h \
     src/users.h \
     src/webpage.h
@@ -139,7 +146,6 @@ HEADERS += \
 LIBS = -lssl -pthread /usr/lib/libtdclient.so.1.6.0 /usr/lib/libtdcore.a /usr/lib/libtdutils.a
 
 RESOURCES += \
-    lottie.qrc \
     qml/resources/icons.qrc
 
 dbus.files = com.verdanditeam.yottagram.service
@@ -149,3 +155,67 @@ notificationcategories.files=x-verdanditeam.yottagram.im.conf
 notificationcategories.path=/usr/share/lipstick/notificationcategories
 
 INSTALLS += dbus notificationcategories
+
+# https://github.com/Samsung/rlottie.git
+
+RLOTTIE_CONFIG = $${PWD}/vendor/rlottie/src/vector/config.h
+PRE_TARGETDEPS += $${RLOTTIE_CONFIG}
+QMAKE_EXTRA_TARGETS += rlottie_config
+
+rlottie_config.target = $${RLOTTIE_CONFIG}
+rlottie_config.commands = touch $${RLOTTIE_CONFIG} # Empty config is fine
+
+DEFINES += LOTTIE_THREAD_SUPPORT
+
+INCLUDEPATH += \
+    vendor/rlottie/inc \
+    vendor/rlottie/src/vector \
+    vendor/rlottie/src/vector/freetype
+
+SOURCES += \
+    vendor/rlottie/src/lottie/lottieanimation.cpp \
+    vendor/rlottie/src/lottie/lottieitem.cpp \
+    vendor/rlottie/src/lottie/lottieitem_capi.cpp \
+    vendor/rlottie/src/lottie/lottiekeypath.cpp \
+    vendor/rlottie/src/lottie/lottieloader.cpp \
+    vendor/rlottie/src/lottie/lottiemodel.cpp \
+    vendor/rlottie/src/lottie/lottieparser.cpp
+
+SOURCES += \
+    vendor/rlottie/src/vector/freetype/v_ft_math.cpp \
+    vendor/rlottie/src/vector/freetype/v_ft_raster.cpp \
+    vendor/rlottie/src/vector/freetype/v_ft_stroker.cpp \
+    vendor/rlottie/src/vector/stb/stb_image.cpp \
+    vendor/rlottie/src/vector/varenaalloc.cpp \
+    vendor/rlottie/src/vector/vbezier.cpp \
+    vendor/rlottie/src/vector/vbitmap.cpp \
+    vendor/rlottie/src/vector/vbrush.cpp \
+    vendor/rlottie/src/vector/vdasher.cpp \
+    vendor/rlottie/src/vector/vdrawable.cpp \
+    vendor/rlottie/src/vector/vdrawhelper.cpp \
+    vendor/rlottie/src/vector/vdrawhelper_common.cpp \
+    vendor/rlottie/src/vector/vdrawhelper_neon.cpp \
+    vendor/rlottie/src/vector/vdrawhelper_sse2.cpp \
+    vendor/rlottie/src/vector/vmatrix.cpp \
+    vendor/rlottie/src/vector/vimageloader.cpp \
+    vendor/rlottie/src/vector/vinterpolator.cpp \
+    vendor/rlottie/src/vector/vpainter.cpp \
+    vendor/rlottie/src/vector/vpath.cpp \
+    vendor/rlottie/src/vector/vpathmesure.cpp \
+    vendor/rlottie/src/vector/vraster.cpp \
+    vendor/rlottie/src/vector/vrle.cpp
+
+NEON = $$system(g++ -dM -E -x c++ - < /dev/null | grep __ARM_NEON__)
+SSE2 = $$system(g++ -dM -E -x c++ - < /dev/null | grep __SSE2__)
+
+!isEmpty(NEON) {
+    message(Using NEON render functions)
+    SOURCES += vendor/rlottie/src/vector/pixman/pixman-arm-neon-asm.S
+} else {
+    !isEmpty(SSE2) {
+        message(Using SSE2 render functions)
+        SOURCES += vendor/rlottie/src/vector/vdrawhelper_sse2.cpp
+    } else {
+        message(Using default render functions)
+    }
+}

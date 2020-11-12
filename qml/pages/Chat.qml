@@ -641,7 +641,11 @@ Page {
                                 case "photo":
                                     return imageComponent;
                                 case "sticker":
-                                    return stickerComponent;
+                                    if (file.isAnimated) {
+                                        return animatedStickerComponent;
+                                    } else {
+                                        return stickerComponent;
+                                    }
                                 case "video":
                                     return videoComponent;
                                 case "animation":
@@ -658,24 +662,6 @@ Page {
                             }
                         }
 
-    //                    LottieAnimation {
-    //                        id: animatedSticker
-    //                        source:  sticker
-    //                        visible: (sticker !== "" && stickerIsAnimated)
-    //                        width: chatPage.width/chatPage.messageWidth
-    ////                        running: true
-    //                        fillMode: Image.PreserveAspectFit
-    //                        loops: Animation.Infinite
-    //                        speed: 0.001
-    //                        clearBeforeRendering: false
-
-    //                        MouseArea {
-    //                            anchors.fill: parent
-
-    //                            onClicked: animatedSticker.start()
-    //                        }
-    //                    }
-
                         Component {
                             id: imageComponent
 
@@ -686,6 +672,11 @@ Page {
                             id: stickerComponent
 
                             StickerContent { }
+                        }
+
+                        Component {
+                            id: animatedStickerComponent
+                            AnimatedStickerContent { }
                         }
 
                         Component {

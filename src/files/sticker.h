@@ -48,8 +48,6 @@ public:
     QString getEmoji() const;
     bool isAnimated() const;
     bool isMask() const;
-    void unpackSticker(shared_ptr<File> file);
-    bool gzipDecompress(QByteArray input, QByteArray &output);
 
 signals:
     void stickerChanged();

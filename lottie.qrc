@@ -1,8 +1,0 @@
-<RCC>
-    <qresource prefix="/vendor">
-        <file>vendor/lottie/src/qml/LottieAnimation.qml</file>
-        <file>vendor/lottie/src/qml/3rdparty/lottie.min.js</file>
-        <file>vendor/lottie/src/qml/private/HtmlImg.qml</file>
-        <file>vendor/lottie/src/qml/private/lottie_shim.js</file>
-    </qresource>
-</RCC>
