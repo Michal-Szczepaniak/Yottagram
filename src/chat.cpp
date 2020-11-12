@@ -664,7 +664,7 @@ td_api::chat *Chat::getChat()
 
 int Chat::getMessageIndex(qint64 messageId)
 {
-    if(rowCount() <= 0) return 0;
+    if(rowCount() <= 0) return -1;
 
     auto it = std::find(_message_ids.begin(), _message_ids.end(), messageId);
 
@@ -672,7 +672,7 @@ int Chat::getMessageIndex(qint64 messageId)
         return std::distance(_message_ids.begin(), it);
     }
 
-    return 0;
+    return -1;
 }
 
 qint64 Chat::getLatestMessageId() const
@@ -721,6 +721,7 @@ void Chat::newMessage(td_api::object_ptr<td_api::message> message, bool addToLis
         if (addToList) {
             beginInsertRows(QModelIndex(), rowCount(), rowCount());
             _message_ids.append(newMessage->getId());
+            emit lastMessageIdChanged(newMessage->getId());
             endInsertRows();
         }
 
@@ -728,6 +729,7 @@ void Chat::newMessage(td_api::object_ptr<td_api::message> message, bool addToLis
     } else if (!_message_ids.contains(message->id_) && addToList) {
         beginInsertRows(QModelIndex(), rowCount(), rowCount());
         _message_ids.append(message->id_);
+        emit lastMessageIdChanged(message->id_);
         endInsertRows();
     }
 }
@@ -1036,6 +1038,14 @@ void Chat::getChatHistory(qint64 from_message, int limit, int offset, bool local
     _manager->sendQuery(getChatHistoryQuery);
 }
 
+void Chat::scrollToMessage(qint64 messageId)
+{
+    beginResetModel();
+    _message_ids.clear();
+    getChatHistory(messageId, 40, -20);
+    endResetModel();
+}
+
 void Chat::fetchMessage(qint64 messageId)
 {
     _manager->sendQuery(new td_api::getMessage(getId(), messageId));
@@ -1088,6 +1098,7 @@ void Chat::updateChatReadOutbox(td_api::updateChatReadOutbox *updateChatReadOutb
 void Chat::messages(td_api::messages *messages)
 {
     if (messages->total_count_ == 0 || messages->messages_.front() == nullptr || messages->messages_.front()->chat_id_ != getId()) return;
+    qDebug() << __PRETTY_FUNCTION__;
 
     int addedMessages = 0;
     for(auto &message: messages->messages_) {
@@ -1099,6 +1110,7 @@ void Chat::messages(td_api::messages *messages)
             }
         }
     }
+    qDebug() << __PRETTY_FUNCTION__ << " " << addedMessages;
 
     beginInsertRows(QModelIndex(), rowCount(), rowCount()+addedMessages-1);
     for(auto &message: messages->messages_) {
@@ -1149,9 +1161,10 @@ void Chat::updateDeleteMessages(td_api::updateDeleteMessages *updateDeleteMessag
     if (updateDeleteMessages->chat_id_ == this->getId()) {
         for (auto messageId : updateDeleteMessages->message_ids_) {
             auto index = getMessageIndex(messageId);
-            if (0 != index) {
+            if (-1 != index) {
                 beginRemoveRows(QModelIndex(), index, index);
                 delete _messages.take(messageId);
+                qDebug() << "remove";
                 _message_ids.remove(index);
                 endRemoveRows();
             }

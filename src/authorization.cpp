@@ -22,6 +22,9 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "overloaded.h"
 #include <QDebug>
 
+#define STR(x) #x
+#define STRINGIFY(x) STR(x)
+
 Authorization::Authorization(QObject *parent) : QObject(parent)
 {
 
@@ -204,8 +207,8 @@ void Authorization::authorizationStateWaitTdlibParameters()
     parameters->use_file_database_ = true;
     parameters->use_secret_chats_ = true;
     parameters->use_test_dc_ = false;
-    parameters->api_id_ = 0; // API KEY
-    parameters->api_hash_ = ""; // api hash
+    parameters->api_id_ = APP_TD_API_ID; // API KEY
+    parameters->api_hash_ = STRINGIFY(APP_TD_API_HASH); // API HASH
     parameters->system_language_code_ = "en";
     parameters->device_model_ = "SailfishOS";
     parameters->system_version_ = "SailfishOS";

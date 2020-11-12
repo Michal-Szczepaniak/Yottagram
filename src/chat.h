@@ -47,7 +47,8 @@ class Chat : public QAbstractListModel
     Q_PROPERTY(bool hasPhoto READ hasPhoto NOTIFY chatPhotoChanged)
     Q_PROPERTY(qint64 lastReadInboxMessageId READ lastReadInboxMessageId NOTIFY lastReadInboxMessageIdChanged)
     Q_PROPERTY(qint64 lastReadOutboxMessageId READ lastReadOutboxMessageId NOTIFY lastReadOutboxMessageIdChanged)
-    Q_PROPERTY(qint64 lastMessageId READ getLatestMessageId NOTIFY lastMessageIdChanged)
+    Q_PROPERTY(qint64 latestMessageId READ getLatestMessageId NOTIFY latestMessageIdChanged)
+    Q_PROPERTY(qint64 lastMessageId READ getLastMessageId NOTIFY lastMessageIdChanged)
     Q_PROPERTY(qint32 unreadCount READ getUnreadCount NOTIFY unreadCountChanged)
     Q_PROPERTY(bool isSelf READ isSelf NOTIFY isSelfChanged)
     Q_PROPERTY(QString secretChatState READ getSecretChatState NOTIFY secretChatChanged)
@@ -176,6 +177,7 @@ public:
 
     Q_INVOKABLE void sendMessage(QString message, qint64 replyToMessageId);
     Q_INVOKABLE void getChatHistory(qint64 from_message, int limit = 20, int offset = 0, bool localOnly = false);
+    Q_INVOKABLE void scrollToMessage(qint64 messageId);
     Q_INVOKABLE void fetchMessage(qint64 messageId);
     Q_INVOKABLE QVariant getMessage(qint64 messageId);
     Q_INVOKABLE void getMoreChatHistory();
@@ -223,6 +225,7 @@ signals:
     void permissionsChanged();
     void gotMessage(qint64 messageId);
     void lastMessageIdChanged(qint64 lastMessageId);
+    void latestMessageIdChanged(qint64 lastMessageId);
 
 public slots:
     void updateChatReadInbox(td_api::updateChatReadInbox *updateChatReadInbox);

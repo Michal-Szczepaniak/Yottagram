@@ -22,6 +22,7 @@ BuildRequires:  pkgconfig(Qt5Quick)
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  pkgconfig(connman-qt5)
 BuildRequires:  pkgconfig(vorbisfile)
+BuildRequires:  pkgconfig(nemonotifications-qt5)
 BuildRequires:  tdlib
 BuildRequires:  desktop-file-utils
 

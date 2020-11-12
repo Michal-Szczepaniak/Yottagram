@@ -50,6 +50,7 @@ DISTFILES += qml/yottagram.qml \
     qml/components/ChatNotifications.qml \
     qml/components/PinnedMessage.qml \
     qml/components/ScopeNotificationSettings.qml \
+    qml/components/SilicaSignalListView.qml \
     qml/components/StickerPicker.qml \
     qml/components/SubpageElement.qml \
     qml/components/SwitchButton.qml \
@@ -72,6 +73,13 @@ DISTFILES += qml/yottagram.qml \
     qml/components/messageContent/VideoContent.qml \
     qml/components/messageContent/VideoNoteContent.qml \
     qml/components/messageContent/VoiceNoteContent.qml \
+    qml/components/private/BoundsBehavior.qml \
+    qml/components/private/FastScrollAnimation.js \
+    qml/components/private/FastScrollAnimation.qml \
+    qml/components/private/QuickScroll.qml \
+    qml/components/private/QuickScrollArea.qml \
+    qml/components/private/QuickScrollButton.qml \
+    qml/components/private/HighlightImage.qml \
     qml/cover/CoverPage.qml \
     qml/dialogs/PollDialog.qml \
     qml/dialogs/SetTtlDialog.qml \
@@ -89,15 +97,9 @@ DISTFILES += qml/yottagram.qml \
 
 SAILFISHAPP_ICONS = 86x86 108x108 128x128 172x172
 
-# to disable building translations every time, comment out the
-# following CONFIG line
 CONFIG += sailfishapp_i18n
 
-# German translation is enabled as an example. If you aren't
-# planning to localize your app, remember to comment out the
-# following TRANSLATIONS line. And also do not forget to
-# modify the localized app name in the the .desktop file.
- TRANSLATIONS += translations/yottagram-es.ts
+TRANSLATIONS += translations/yottagram-es.ts
 
 HEADERS += \
     src/components/audiorecorder.h \
