@@ -313,42 +313,28 @@ Page {
                 cacheBuffer: 0
                 property var chatHistoryTime: (new Date()).getTime()
                 property var chatMessagesTime: (new Date()).getTime()
-                property var oldCount: 0
+                property var oldContentHeight: 0
                 property var historyBrowsing: 0
 
                 onScrollingToBottom: {
                     if (chat.lastMessageId !== chatProxyModel.get(0).messageId) {
-                        console.log("Juuuuuumpu")
+                        console.log("JUUUMP")
                         historyBrowsing = 0
                         chat.scrollToMessage(chat.unreadCount > 0 && chat.lastMessageId !== 0 ? chat.lastReadInboxMessageId : chat.lastMessageId)
                     }
                 }
 
-                onCountChanged: {
-                    if (count === 0) oldCount = 0
-                    if (oldCount === 0 && count !== 0) {
-                        console.log(oldCount, count)
+                onContentHeightChanged: {
+                    if (oldContentHeight === 0 && contentHeight !== 0) {
                         if (historyBrowsing !== 0) {
-                            console.log("historyyy", chat.getMessageIndex(historyBrowsing), chatProxyModel.mapFromSource(chat.getMessageIndex(historyBrowsing)))
-                            console.log(messages.contentY)
-                            console.log(contentHeight)
-                            messages.contentY = -8000
-                            console.log(messages.contentY)
-//                            chat.getMoreChatMessages();
+                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(historyBrowsing)), ListView.SnapPosition)
                         } else {
-                            console.log("normal")
-                            console.log(messages.contentY)
                             messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId)), ListView.SnapPosition)
-                            console.log(messages.contentY)
                         }
-                        oldCount = count
                     }
-                    if (count != 0 && count < 20 && historyBrowsing === 0) chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
+                    oldContentHeight = contentHeight
 
-                    if (atYEnd) {
-                        var item = chatProxyModel.get(indexAt(0, contentY + height - Theme.paddingSmall))
-                        if (!item.isRead && item.received) chat.setMessageAsRead(item.messageId)
-                    }
+                    if (count != 0 && count < 20 && historyBrowsing === 0) chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
                 }
 
                 onAtYBeginningChanged: if (atYBeginning) chat.getMoreChatHistory()
@@ -358,13 +344,11 @@ Page {
                 }
 
                 onContentYChanged: {
-                    console.log(contentY)
                     var item = chatProxyModel.get(indexAt(0, contentY + height - Theme.paddingSmall))
                     if (!item.isRead && item.received) chat.setMessageAsRead(item.messageId)
                     if (((contentHeight + originY) - (contentY + height)) < Theme.itemSizeHuge && ((new Date()).getTime() - chatMessagesTime) > 300 && count > 0) {
-                        console.log("eeee")
                         chatMessagesTime = (new Date()).getTime();
-//                        chat.getMoreChatMessages()
+                        chat.getMoreChatMessages()
                     }
 
                     if ((contentY - originY) < 5000 && ((new Date()).getTime() - chatHistoryTime) > 300) {

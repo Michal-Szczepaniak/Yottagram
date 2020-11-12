@@ -32,7 +32,6 @@ AnimatedImage {
     asynchronous: true
     paused: !Qt.application.active
     cache: false
-    Component.onCompleted: console.log(paused)
 
     MouseArea {
         anchors.fill: parent

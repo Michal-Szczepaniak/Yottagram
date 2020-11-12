@@ -1098,7 +1098,6 @@ void Chat::updateChatReadOutbox(td_api::updateChatReadOutbox *updateChatReadOutb
 void Chat::messages(td_api::messages *messages)
 {
     if (messages->total_count_ == 0 || messages->messages_.front() == nullptr || messages->messages_.front()->chat_id_ != getId()) return;
-    qDebug() << __PRETTY_FUNCTION__;
 
     int addedMessages = 0;
     for(auto &message: messages->messages_) {
@@ -1110,7 +1109,6 @@ void Chat::messages(td_api::messages *messages)
             }
         }
     }
-    qDebug() << __PRETTY_FUNCTION__ << " " << addedMessages;
 
     beginInsertRows(QModelIndex(), rowCount(), rowCount()+addedMessages-1);
     for(auto &message: messages->messages_) {

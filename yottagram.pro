@@ -8,7 +8,7 @@ CONFIG +=  c++11 c++14 link_pkgconfig sailfishapp iostream
 
 QMAKE_CXXFLAGS += -std=c++14 -O0
 
-PKGCONFIG += zlib openssl nemonotifications-qt5 connman-qt5 vorbisfile
+PKGCONFIG += zlib openssl nemonotifications-qt5 connman-qt5 vorbisfile systemsettings
 
 DEFINES += QT_STATICPLUGIN
 

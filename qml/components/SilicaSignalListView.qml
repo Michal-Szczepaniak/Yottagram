@@ -55,12 +55,12 @@ ListView {
     signal scrollingToTop
 
     function scrollToTop() {
-        listView.scrollingToTop()
         FastScroll.scrollToTop(listView, quickScrollItem)
+        listView.scrollingToTop()
     }
     function scrollToBottom() {
+        FastScroll.scrollToBottom(listView, quickScrollItem)
         listView.scrollingToBottom()
-//        FastScroll.scrollToBottom(listView, quickScrollItem)
     }
 
     pixelAligned: true

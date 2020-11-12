@@ -20,6 +20,8 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 #include "authorization.h"
 #include "overloaded.h"
+#include "aboutsettings.h"
+#include "deviceinfo.h"
 #include <QDebug>
 
 #define STR(x) #x
@@ -200,6 +202,10 @@ void Authorization::authorizationStateWaitEncryptionKey()
 void Authorization::authorizationStateWaitTdlibParameters()
 {
     qDebug()<<"authorizationStateWaitTdlibParameters";
+
+    AboutSettings aboutSettings;
+    DeviceInfo deviceInfo;
+
     auto parameters = td_api::make_object<td_api::tdlibParameters>();
     parameters->database_directory_ = QDir::homePath().toStdString() + "/.local/share/Yottagram";
     parameters->use_message_database_ = true;
@@ -210,9 +216,9 @@ void Authorization::authorizationStateWaitTdlibParameters()
     parameters->api_id_ = APP_TD_API_ID; // API KEY
     parameters->api_hash_ = STRINGIFY(APP_TD_API_HASH); // API HASH
     parameters->system_language_code_ = "en";
-    parameters->device_model_ = "SailfishOS";
-    parameters->system_version_ = "SailfishOS";
-    parameters->application_version_ = "1.0";
+    parameters->device_model_ = (deviceInfo.manufacturer() + " " + deviceInfo.prettyName()).toStdString();
+    parameters->system_version_ = (aboutSettings.localizedOperatingSystemName() + " " + aboutSettings.localizedSoftwareVersion()).toStdString();
+    parameters->application_version_ = "0.1.3";
     parameters->enable_storage_optimizer_ = true;
     _manager->sendQuery(new td_api::setTdlibParameters(std::move(parameters)));
 }
