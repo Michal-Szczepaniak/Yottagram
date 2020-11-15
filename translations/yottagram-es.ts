@@ -45,6 +45,10 @@
         <source>Greg Goncharov (@gregguh at telegram) for icons.</source>
         <translation>Greg. Goncharov (@gregguh en telegram) por los iconos.</translation>
     </message>
+    <message>
+        <source>dashinfantry for chinese translation.</source>
+        <translation>dashinfantry por la traducción al chino.</translation>
+    </message>
 </context>
 <context>
     <name>AuthorizationCode</name>
