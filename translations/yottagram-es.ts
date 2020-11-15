@@ -34,16 +34,16 @@
     <message>
         <source>Everyone in my 
 &lt;a href=&quot;https://t.me/SFOSFanclub&quot;&gt;SFOS Fanclub&lt;/a&gt; group&lt;br/&gt;for keeping me motivated!</source>
-        <translation>¡A todo el mundo de mi grupo 
+        <translation>¡Todo el mundo de mi grupo 
 &lt;a href=&quot;https://t.me/SFOSFanclub&quot;&gt;SFOS Fanclub&lt;/a&gt;&lt;br/&gt;por mantenerme motivado!</translation>
     </message>
     <message>
         <source>Fernando Lanero, Mika, Leszek Lesner, A. Madani, Timo Könnecke, Rudi Timmermans for being awesome testers.</source>
-        <translation type="unfinished"></translation>
+        <translation>Fernando Lanero, Mika, Leszek Lesner, A. Madani, Timo Könnecke, Rudi Timmermans por ser unos testeadores fantásticos.</translation>
     </message>
     <message>
         <source>Greg Goncharov (@gregguh at telegram) for icons.</source>
-        <translation type="unfinished"></translation>
+        <translation>Greg. Goncharov (@gregguh en telegram) por los iconos.</translation>
     </message>
 </context>
 <context>
@@ -403,11 +403,11 @@
     </message>
     <message>
         <source>Unpin from top</source>
-        <translation>Desfijar del inicio</translation>
+        <translation>Desfijar del principio</translation>
     </message>
     <message>
         <source>Pin to top</source>
-        <translation>Fijar al inicio</translation>
+        <translation>Fijar al principio</translation>
     </message>
     <message>
         <source>%1 pinned message</source>
@@ -445,15 +445,15 @@
     <name>CoverPage</name>
     <message>
         <source>Unread chats: %L1</source>
-        <translation type="unfinished"></translation>
+        <translation>Chats sin leer: %L1</translation>
     </message>
     <message>
         <source>Yottagram</source>
-        <translation type="unfinished"></translation>
+        <translation>Yottagram</translation>
     </message>
     <message>
         <source>New messages: %L1</source>
-        <translation type="unfinished"></translation>
+        <translation>Mensajes nuevos: %L1</translation>
     </message>
 </context>
 <context>
@@ -691,15 +691,15 @@
     </message>
     <message>
         <source>Animated stickers</source>
-        <translation type="unfinished"></translation>
+        <translation>Stickers animados</translation>
     </message>
     <message>
         <source>Include muted chats in unread chats and messages counts</source>
-        <translation type="unfinished"></translation>
+        <translation>Incluir los chats silenciados en recuento de mensajes y chats sin leer</translation>
     </message>
     <message>
         <source>Message font size</source>
-        <translation type="unfinished"></translation>
+        <translation>Tamaño de fuente</translation>
     </message>
 </context>
 <context>
