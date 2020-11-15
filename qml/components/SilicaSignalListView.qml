@@ -46,20 +46,25 @@ ListView {
     property alias quickScrollEnabled: quickScrollItem.quickScroll
     property alias quickScroll: quickScrollItem.quickScroll
     property alias quickScrollAnimating : quickScrollItem.quickScrollAnimating
+    property bool fastScrollEnabled: true
     property Item pullDownMenu
     property Item pushUpMenu
     property QtObject _scrollAnimation
     property bool _pulleyDimmerActive: pullDownMenu && pullDownMenu._activeDimmer || pushUpMenu && pushUpMenu._activeDimmer
     property Item __silica_contextmenu_instance
-    signal scrollingToBottom
+    signal beforeScrollingToTop
     signal scrollingToTop
+    signal beforeScrollingToBottom
+    signal scrollingToBottom
 
     function scrollToTop() {
-        FastScroll.scrollToTop(listView, quickScrollItem)
+        listView.beforeScrollingToTop()
+        if (fastScrollEnabled) FastScroll.scrollToTop(listView, quickScrollItem)
         listView.scrollingToTop()
     }
     function scrollToBottom() {
-        FastScroll.scrollToBottom(listView, quickScrollItem)
+        listView.beforeScrollingToBottom()
+        if (fastScrollEnabled) FastScroll.scrollToBottom(listView, quickScrollItem)
         listView.scrollingToBottom()
     }
 

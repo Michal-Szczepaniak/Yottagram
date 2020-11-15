@@ -61,47 +61,60 @@ Row {
             visible: false
         }
 
-        FastBlur {
-            anchors.fill: parent
-            source: thumbnail
-            radius: 32
-            cached: true
+        IconButton {
+            id: downloadButton
+            anchors.centerIn: background
+            icon.asynchronous: true
+            icon.source: {
+                if (file.audio.isUploading) {
+                    return "image://theme/icon-m-cancel"
+                }
 
-            Rectangle {
-                anchors.fill: parent
-                color: Theme.rgba(Theme.highlightBackgroundColor, 0.2)
+                if (!file.audio.isDownloaded && !file.audio.isDownloading) {
+                    return "image://theme/icon-m-cloud-download"
+                }
 
+                if (!audioLoader.active || audioLoader.item.playbackState !== MediaPlayer.PlayingState) {
+                    return "image://theme/icon-m-play"
+                } else {
+                    return "image://theme/icon-m-pause"
+                }
+            }
+            width: Theme.itemSizeMedium
+            height: width
 
-                IconButton {
-                    anchors.fill: parent
-                    icon.asynchronous: true
-                    icon.source: {
-                        if (!file.audio.isDownloaded && !file.audio.isDownloading) {
-                            return "image://theme/icon-m-cloud-download"
-                        }
-
-                        if (!audioLoader.active || audioLoader.item.playbackState !== MediaPlayer.PlayingState) {
-                            return "image://theme/icon-m-play"
+            onClicked: {
+                audioLoader.active = true
+                if (file && file.audio) {
+                    if (chatList.fileExists(file.audio.localPath) && (file.audio.isDownloaded || file.audio.isDownloading)) {
+                        if (audioLoader.item.playbackState === MediaPlayer.PlayingState) {
+                            audioLoader.item.pause()
                         } else {
-                            return "image://theme/icon-m-pause"
+                            audioLoader.item.play()
                         }
-                    }
-                    onClicked: {
-                        audioLoader.active = true
-                        if (file && file.audio) {
-                            if (file.audio.isDownloaded || file.audio.isDownloading) {
-                                if (audioLoader.item.playbackState === MediaPlayer.PlayingState) {
-                                    audioLoader.item.pause()
-                                } else {
-                                    audioLoader.item.play()
-                                }
-                            } else {
-                                file.audio.download()
-                            }
-                        }
+                    } else if (file.audio.isUploading) {
+                        file.audio.cancelUpload()
+                        chat.deleteMessage(messageId)
+                    } else {
+                        file.audio.download()
                     }
                 }
             }
+        }
+
+        ProgressCircle {
+            id: progress
+            anchors.centerIn: background
+            width: Theme.itemSizeMedium
+            visible: file.audio.isDownloading || file.audio.isUploading
+            value: file.audio.isUploading ? file.audio.uploadedSize / file.audio.downloadedSize : file.audio.downloadedSize / file.audio.uploadedSize
+        }
+
+        Rectangle {
+            id: background
+            anchors.fill: parent
+            color: downloadButton.down ? Theme.rgba(Theme.highlightColor, Theme.highlightBackgroundOpacity) : Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity)
+
         }
     }
 

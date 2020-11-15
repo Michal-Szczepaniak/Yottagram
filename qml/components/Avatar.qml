@@ -27,6 +27,7 @@ Item {
 
     property var avatarPhoto
     property string userName
+    property bool self: false
     property bool maskEnabled: true
 
     Rectangle {
@@ -35,10 +36,11 @@ Item {
         color: Theme.highlightColor
         width: height
         radius: maskEnabled ? 90 : 0
-        visible: !root.avatarPhoto
+        visible: !root.avatarPhoto || root.self
 
         Label {
             anchors.centerIn: parent
+            visible: !root.self
             text: {
                 if (root.userName === "") return "DA";
                 var n = root.userName.split(' ')
@@ -53,10 +55,14 @@ Item {
 
     Image {
         id: chatPhoto
-        anchors.fill: parent
+        anchors.centerIn: parent
+        width: root.self ? Theme.itemSizeMedium/1.5 : parent.width
+        height: width
+        sourceSize.width: width
+        sourceSize.height: height
         fillMode: Image.PreserveAspectFit
-        source: root.avatarPhoto ? root.avatarPhoto.localPath : ""
-        visible: typeof root.avatarPhoto !== "undefined"
+        source: root.avatarPhoto ? root.avatarPhoto.localPath : (root.self ? "qrc:///icons/icon-s-bookmark.svg" : "")
+        visible: typeof root.avatarPhoto !== "undefined" || root.self
         asynchronous: true
         cache: true
         layer.enabled: root.maskEnabled

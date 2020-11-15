@@ -32,14 +32,16 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Fernando Lanero, Mika, Leszek Lesner,
-A. Madani, Timo Könnecke, Rudi Timmermans
-for being awesome testers.</source>
+        <source>Everyone in my 
+&lt;a href=&quot;https://t.me/SFOSFanclub&quot;&gt;SFOS Fanclub&lt;/a&gt; group&lt;br/&gt;for keeping me motivated!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Everyone in my 
-&lt;a href=&quot;https://t.me/SFOSFanclub&quot;&gt;SFOS Fanclub&lt;/a&gt; group&lt;br/&gt;for keeping me motivated!</source>
+        <source>Fernando Lanero, Mika, Leszek Lesner, A. Madani, Timo Könnecke, Rudi Timmermans for being awesome testers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Greg Goncharov (@gregguh at telegram) for icons.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -324,10 +326,6 @@ for being awesome testers.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Log in</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
@@ -444,7 +442,15 @@ for being awesome testers.</source>
 <context>
     <name>CoverPage</name>
     <message>
-        <source>Yottagram (dev)</source>
+        <source>Unread chats: %L1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Yottagram</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New messages: %L1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -678,6 +684,18 @@ for being awesome testers.</source>
     </message>
     <message>
         <source>Send button</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Animated stickers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Include muted chats in unread chats and messages counts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Message font size</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

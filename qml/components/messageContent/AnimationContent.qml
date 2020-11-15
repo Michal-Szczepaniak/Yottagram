@@ -26,7 +26,7 @@ import com.verdanditeam.thumbnail 1.0
 
 Item {
     width: chatPage.width/2.5
-    height: videoLoader.active ? videoLoader.height : ((file.size.width > 0 && file.size.height > 0) ? (width * (file.size.height/file.size.width)) : Theme.itemSizeLarge)
+    height: videoLoader.active ? videoLoader.height : ((file.size.width > 0 && file.size.height > 0) ? (width * (file.size.height/file.size.width)) : Theme.itemSizeHuge*1.5)
 
     Loader {
         id: videoLoader
@@ -47,7 +47,6 @@ Item {
                 videoPlayer.seek(0)
                 videoPlayer.play()
             }
-            Component.onCompleted: console.log(file.animation.localPath)
 
             width: chatPage.width/2.5
             source: file.animation.localPath
@@ -84,30 +83,45 @@ Item {
     }
 
     Rectangle {
+        id: background
         color: downloadButton.down ? Theme.rgba(Theme.highlightColor, Theme.highlightBackgroundOpacity) : Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity)
         anchors.centerIn: parent
         width: downloadButton.width
         height: downloadButton.height
-        visible: downloadButton.visible
+        visible: !file.animation.isDownloading && !file.animation.isUploading && (!videoLoader.active || videoLoader.item.playbackState !== MediaPlayer.PlayingState)
         radius: 90
+    }
 
-        IconButton {
-            id: downloadButton
-            visible: !file.animation.isDownloaded || !videoLoader.active || videoLoader.item.playbackState === MediaPlayer.StoppedState
-            icon.source: (!file.animation.isDownloaded) ? "image://theme/icon-m-cloud-download" : "image://theme/icon-m-play"
-            icon.asynchronous: true
-            width: Theme.itemSizeMedium
-            height: Theme.itemSizeMedium
-            onClicked: {
-                if (file && file.animation) {
-                    if (!file.animation.isDownloading && !file.animation.isDownloaded) file.animation.download()
-                    if (file.animation.isDownloaded) {
-                        if (!videoLoader.active) {
-                            videoLoader.active = true
-                            return
-                        } else {
-                            videoLoader.item.play()
-                        }
+    ProgressCircle {
+        id: progress
+        anchors.centerIn: background
+        visible: file.animation.isDownloading || file.animation.isUploading
+        value : file.animation.isUploading ? file.animation.uploadedSize / file.animation.downloadedSize : file.animation.downloadedSize / file.animation.uploadedSize
+    }
+
+    IconButton {
+        id: downloadButton
+        visible: !file.animation.isDownloaded || !file.animation.isUploaded || !videoLoader.active || videoLoader.item.playbackState !== MediaPlayer.PlayingState
+        icon.source: (file.animation.isDownloading || file.animation.isUploading) ? "image://theme/icon-m-cancel" : (!file.animation.isDownloaded ? "image://theme/icon-m-cloud-download" : "image://theme/icon-m-play")
+        icon.asynchronous: true
+        width: Theme.itemSizeMedium
+        height: Theme.itemSizeMedium
+        anchors.centerIn: background
+        onClicked: {
+            if (file && file.animation) {
+                if (file.animation.isDownloading) {
+                    file.animation.cancelDownload()
+                } else if (file.animation.isUploading) {
+                    file.animation.cancelUpload()
+                    chat.deleteMessage(messageId)
+                } else if (!file.animation.isDownloaded) {
+                    file.animation.download()
+                } else if (file.animation.isDownloaded) {
+                    if (!videoLoader.active) {
+                        videoLoader.active = true
+                        return
+                    } else {
+                        videoLoader.item.play()
                     }
                 }
             }

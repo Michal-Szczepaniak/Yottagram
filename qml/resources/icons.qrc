@@ -1,5 +1,10 @@
 <RCC>
-    <qresource prefix="/icons">
+    <qresource prefix="/">
         <file>icons/corner.svg</file>
+        <file>icons/icon-s-pinned.svg</file>
+        <file>icons/icon-s-read.svg</file>
+        <file>icons/icon-s-sending.svg</file>
+        <file>icons/icon-s-sent.svg</file>
+        <file>icons/icon-s-bookmark.svg</file>
     </qresource>
 </RCC>

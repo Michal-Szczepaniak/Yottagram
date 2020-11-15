@@ -18,8 +18,9 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-import QtQuick 2.6
+import QtQuick 2.0
 import Sailfish.Silica 1.0
+import QtGraphicalEffects 1.0
 import SortFilterProxyModel 0.2
 import org.nemomobile.configuration 1.0
 
@@ -35,7 +36,7 @@ Item {
         property real stickerPickerPostition: 0
         property int stickerPickerPickedPack: 0
 
-        Component.onCompleted: stickerSetGridView.model = stickerSetsProxyModel.data(stickerSetsProxyModel.index(settings.stickerPickerPickedPack, 0), 267)
+        Component.onCompleted: stickerSetGridView.model = stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 267)
     }
 
     Connections {
@@ -43,17 +44,6 @@ Item {
         onIsAuthorizedChanged: {
             stickerSets.getStickerSets()
         }
-    }
-
-    SortFilterProxyModel {
-        id: stickerSetsProxyModel
-        sourceModel: stickerSets
-        filters: [
-            ValueFilter {
-                roleName: "isAnimated"
-                value: false
-            }
-        ]
     }
 
     Column {
@@ -70,7 +60,7 @@ Item {
             id: stickerSetsListView
             width: parent.width
             height: Theme.itemSizeLarge
-            model: stickerSetsProxyModel
+            model: stickerSets
             orientation: Qt.Horizontal
             layoutDirection: Qt.LeftToRight
             contentX: settings.stickerPickerPostition

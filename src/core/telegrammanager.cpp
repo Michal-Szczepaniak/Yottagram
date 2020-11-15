@@ -163,6 +163,12 @@ void TelegramManager::messageReceived(quint64 id, td_api::Object* message)
             [this](td_api::updateOption &updateOption) {
                 emit this->updateOption(&updateOption);
             },
+            [this](td_api::updateBasicGroup &updateBasicGroup) {
+                emit this->updateBasicGroup(&updateBasicGroup);
+            },
+            [this](td_api::updateSupergroup &updateSupergroup) {
+                emit this->updateSupergroup(&updateSupergroup);
+            },
             [this](td_api::updateSecretChat &updateSecretChat) {
                 emit this->updateSecretChat(&updateSecretChat);
             },
@@ -192,6 +198,15 @@ void TelegramManager::messageReceived(quint64 id, td_api::Object* message)
             },
             [this](td_api::updateChatPermissions &updateChatPermissions) {
                 emit this->updateChatPermissions(&updateChatPermissions);
+            },
+            [this](td_api::updateUnreadChatCount &updateUnreadChatCount) {
+                emit this->updateUnreadChatCount(&updateUnreadChatCount);
+            },
+            [this](td_api::updateUnreadMessageCount &updateUnreadMessageCount) {
+                emit this->updateUnreadMessageCount(&updateUnreadMessageCount);
+            },
+            [this](td_api::chatMembers &chatMembers) {
+//                emit this->chatMembers(&chatMembers);
             },
             [](auto &update) { Q_UNUSED(update) }
         )

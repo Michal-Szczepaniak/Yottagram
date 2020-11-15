@@ -33,6 +33,9 @@ Page {
         path: "/apps/yottagram"
 
         property bool sendButton: false
+        property bool animatedStickers: true
+        property bool combineWithMuted: false
+        property int fontSize: Theme.fontSizeMedium
     }
 
     SilicaFlickable {
@@ -64,6 +67,81 @@ Page {
                 text: qsTr("Send button")
                 checked: settings.sendButton
                 onCheckedChanged: settings.sendButton = checked
+            }
+
+            TextSwitch {
+                width: parent.width
+                text: qsTr("Animated stickers")
+                checked: settings.animatedStickers
+                onCheckedChanged: settings.animatedStickers = checked
+            }
+
+            TextSwitch {
+                width: parent.width
+                text: qsTr("Include muted chats in unread chats and messages counts")
+                checked: settings.combineWithMuted
+                onCheckedChanged: settings.combineWithMuted = checked
+            }
+
+            ComboBox {
+                width: parent.width
+                label: qsTr("Message font size")
+                currentIndex: {
+                    switch (settings.fontSize) {
+                    case Theme.fontSizeHuge:
+                        return 0;
+                    case Theme.fontSizeExtraLarge:
+                        return 1;
+                    case Theme.fontSizeLarge:
+                        return 2;
+                    case Theme.fontSizeMedium:
+                        return 3;
+                    case Theme.fontSizeSmall:
+                        return 4;
+                    case Theme.fontSizeExtraSmall:
+                        return 5;
+                    case Theme.fontSizeTiny:
+                        return 6;
+                    default:
+                        return 3;
+                    }
+                }
+
+                menu: ContextMenu {
+                    MenuItem { text: "Huge" }
+                    MenuItem { text: "Extra large" }
+                    MenuItem { text: "Large" }
+                    MenuItem { text: "Medium" }
+                    MenuItem { text: "Small" }
+                    MenuItem { text: "Extra small" }
+                    MenuItem { text: "Tiny" }
+                }
+
+                onCurrentIndexChanged: {
+                    switch (currentIndex) {
+                    case 0:
+                        settings.fontSize = Theme.fontSizeHuge
+                        break;
+                    case 1:
+                        settings.fontSize = Theme.fontSizeExtraLarge
+                        break;
+                    case 2:
+                        settings.fontSize = Theme.fontSizeLarge
+                        break;
+                    case 3:
+                        settings.fontSize = Theme.fontSizeMedium
+                        break;
+                    case 4:
+                        settings.fontSize = Theme.fontSizeSmall
+                        break;
+                    case 5:
+                        settings.fontSize = Theme.fontSizeExtraSmall
+                        break;
+                    case 6:
+                        settings.fontSize = Theme.fontSizeTiny
+                        break;
+                    }
+                }
             }
 
             TextSwitchWithMenu {

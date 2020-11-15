@@ -62,12 +62,13 @@ void Files::appendFile(td_api::object_ptr<td_api::file> file, QString fileType)
         _files.insert(filePointer->getId(), filePointer);
     }
 
-    considerAutoDownloading(fileId, fileType);
+    if (fileType == "avatar" || fileType == "sticker") considerAutoDownloading(fileId, fileType);
 }
 
 void Files::considerAutoDownloading(qint32 fileId, QString fileType)
 {
     shared_ptr<File> file = getFile(fileId);
+    if (file == nullptr) return;
 
     if (file->isDownloading() || file->isDownloaded() || (!getActiveAutoDownloadSetting()->getIsAutoDownloadEnabled() && fileType != "avatar" && fileType != "sticker")) return;
 

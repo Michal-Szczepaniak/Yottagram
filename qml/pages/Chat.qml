@@ -58,7 +58,7 @@ Page {
             switch (chat.getChatType()) {
             case "private":
             case "secret":
-                pageStack.pushAttached(Qt.resolvedUrl("../components/chatInfo/UserInfo.qml"), {chat: chat})
+                pageStack.pushAttached(Qt.resolvedUrl("../components/chatInfo/UserInfo.qml"), {chat: chat, userId: chat.getChatType() === "secret" ? chat.secretChatInfo.userId : chat.idFromType})
                 break;
             case "group":
                 pageStack.pushAttached(Qt.resolvedUrl("../components/chatInfo/BasicGroupInfo.qml"), {chat: chat})
@@ -82,6 +82,8 @@ Page {
         path: "/apps/yottagram"
 
         property bool sendButton: false
+        property bool animatedStickers: true
+        property int fontSize: Theme.fontSizeMedium
     }
 
     ConfigurationGroup {
@@ -186,7 +188,8 @@ Page {
             anchors.verticalCenter: pageHeader.verticalCenter
             anchors.leftMargin: Theme.paddingLarge
             userName: chat.title
-            avatarPhoto: chat.smallPhoto
+            self: chat.isSelf
+            avatarPhoto: if (!chat.isSelf) chat.smallPhoto
         }
 
         Row {
@@ -214,8 +217,8 @@ Page {
                 id: secretChatIndicator
                 anchors.verticalCenter: parent.verticalCenter
                 source: "image://theme/icon-s-secure"
-                color: chat.secretChatState === "pending" ? "yellow" : (chat.secretChatState === "ready" ? "green" : "red")
-                visible: chat.secretChatState !== ""
+                color: chat.secretChatInfo.state === "pending" ? "yellow" : (chat.secretChatInfo.state === "ready" ? "green" : "red")
+                visible: chat.getChatType() === "secret"
             }
         }
 
@@ -229,9 +232,13 @@ Page {
             layoutDirection: Qt.RightToLeft
 
             Label {
-                text: (chat.getChatType() === "supergroup" || chat.getChatType() === "channel") ? qsTr("%1 members").arg(chat.supergroupFullInfo.memberCount) :
-                                                                                                         (chat.getChatType() === "group") ? qsTr("%1 members").arg(chat.basicGroupFullInfo.rowCount()) :
-                                                                                                                                            users.getUserAsVariant(chat.idFromType).statusText
+                text: {
+                    var type = chat.getChatType()
+                    if (type === "supergroup" || type === "channel") return qsTr("%1 members").arg(chat.supergroupFullInfo.memberCount)
+                    else if (type === "group") return qsTr("%1 members").arg(chat.basicGroupFullInfo.rowCount())
+                    else if (type === "secret") return users.getUserAsVariant(chat.secretChatInfo.userId).statusText
+                    else return users.getUserAsVariant(chat.idFromType).statusText
+                }
                 truncationMode: TruncationMode.Fade
                 width: Math.min(implicitWidth, parent.width - (secretChatIndicator.visible ? (Theme.paddingSmall + secretChatIndicator.width) : 0))
                 height: parent.height
@@ -315,10 +322,32 @@ Page {
                 property var chatMessagesTime: (new Date()).getTime()
                 property var oldContentHeight: 0
                 property var historyBrowsing: 0
+                property var originMessage: 0
+
+                Timer {
+                    id: getHistoryTimer
+                    interval: 1000
+                    repeat: false
+                    onTriggered: chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
+                }
+
+                onBeforeScrollingToBottom: {
+                    if (originMessage !== 0) {
+                        var messageIndex = chat.getMessageIndex(originMessage)
+                        if (messageIndex === -1) {
+                            chat.scrollToMessage(originMessage)
+                        } else {
+                            messages.fastScrollEnabled = false
+                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(messageIndex), ListView.SnapPosition)
+                        }
+                    }
+                }
 
                 onScrollingToBottom: {
-                    if (chat.lastMessageId !== chatProxyModel.get(0).messageId) {
-                        console.log("JUUUMP")
+                    messages.fastScrollEnabled = true
+                    if (originMessage !== 0) {
+                        if (count !== 0) originMessage = 0
+                    } else if (chat.lastMessageId !== chatProxyModel.get(0).messageId) {
                         historyBrowsing = 0
                         chat.scrollToMessage(chat.unreadCount > 0 && chat.lastMessageId !== 0 ? chat.lastReadInboxMessageId : chat.lastMessageId)
                     }
@@ -327,26 +356,35 @@ Page {
                 onContentHeightChanged: {
                     if (oldContentHeight === 0 && contentHeight !== 0) {
                         if (historyBrowsing !== 0) {
-                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(historyBrowsing)), ListView.SnapPosition)
+                            if (originMessage !== 0 && chat.getMessageIndex(originMessage) !== -1) {
+                                messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(originMessage)), ListView.SnapPosition)
+                                originMessage = 0
+                            } else {
+                                messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(historyBrowsing)), ListView.SnapPosition)
+                            }
                         } else {
                             messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId)), ListView.SnapPosition)
                         }
                     }
                     oldContentHeight = contentHeight
 
-                    if (count != 0 && count < 20 && historyBrowsing === 0) chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
+                    if (count != 0 && count < 20 && historyBrowsing === 0) {
+                        chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
+                    }
                 }
 
                 onAtYBeginningChanged: if (atYBeginning) chat.getMoreChatHistory()
+                onAtYEndChanged: if (atYEnd) chat.getMoreChatMessages()
 
                 Component.onCompleted: {
                     chat.getChatHistory((chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
+                    getHistoryTimer.start()
                 }
 
                 onContentYChanged: {
                     var item = chatProxyModel.get(indexAt(0, contentY + height - Theme.paddingSmall))
                     if (!item.isRead && item.received) chat.setMessageAsRead(item.messageId)
-                    if (((contentHeight + originY) - (contentY + height)) < Theme.itemSizeHuge && ((new Date()).getTime() - chatMessagesTime) > 300 && count > 0) {
+                    if (((contentHeight + originY) - (contentY + height)) < Theme.itemSizeHuge*3 && ((new Date()).getTime() - chatMessagesTime) > 300 && count > 0) {
                         chatMessagesTime = (new Date()).getTime();
                         chat.getMoreChatMessages()
                     }
@@ -360,7 +398,7 @@ Page {
                 delegate:
                 ListItem {
                     id: item
-                    width: parent.width
+                    width: chatPage.width
                     contentHeight: Math.max(column.height + Theme.paddingSmall, Theme.itemSizeExtraSmall)
                     contentWidth: width
                     readonly property var user: users.getUserAsVariant(authorId)
@@ -369,6 +407,13 @@ Page {
                     highlighted: selection.indexOf(messageId) !== -1
 
                     onClicked: {
+                        if (doubleClickTimer.running) {
+                            doubleClicked(mouse)
+                            return
+                        } else {
+                            doubleClickTimer.start()
+                        }
+
                         if (!chatPage.selectionActive) return
                         if (selection.indexOf(messageId) === -1) {
                             selection.push(messageId)
@@ -377,6 +422,17 @@ Page {
                             if (chatPage.selectionActive === true && chatPage.selection.length == 0) chatPage.selectionActive = false
                         }
                         highlighted = selection.indexOf(messageId) !== -1
+                    }
+
+                    Timer {
+                        id: doubleClickTimer
+                        interval: 500
+                        repeat: false
+                    }
+
+                    onDoubleClicked: {
+                        chatPage.editMessageId = 0
+                        chatPage.replyMessageId = messageId
                     }
 
                     function remove() {
@@ -406,8 +462,21 @@ Page {
                             }
 
                             MenuItem {
+                                text: qsTr("Pin message")
+                                visible: {
+                                    if (messageId === chat.pinnedMessageId) return false
+
+                                    var type = chat.getChatType()
+                                    if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canPinMessages
+                                    if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canPinMessages
+                                    return chat.canPinMessages
+                                }
+                                onClicked: pageStack.push(pinMessageDialog, {messageId: messageId})
+                            }
+
+                            MenuItem {
                                 text: qsTr("Edit")
-                                visible: chat.canBeEdited && chatList.selection.length === 0
+                                visible: canBeEdited && chatList.selection.length === 0
                                 onClicked: {
                                     textInput.text = messageText
                                     chatPage.editMessageId = messageId
@@ -421,8 +490,23 @@ Page {
                             }
 
                             MenuItem {
+                                text: qsTr("Forward")
+                                onClicked: {
+                                    selection.push(messageId)
+                                    chatList.selection = []
+                                    chatPage.selection.forEach(function (element) {
+                                        var tmp = chatList.selection
+                                        tmp.push(element)
+                                        chatList.selection = tmp
+                                    })
+                                    chatList.forwardedFrom = chat.id
+                                    pageStack.navigateBack()
+                                }
+                            }
+
+                            MenuItem {
                                 text: qsTr("Delete")
-                                visible: chat.canBeDeleted
+                                visible: canBeDeleted
                                 onClicked: remove()
                             }
 
@@ -439,12 +523,6 @@ Page {
                                     }
                                     item.highlighted = selection.indexOf(messageId) !== -1
                                 }
-                            }
-
-                            MenuItem {
-                                text: qsTr("Pin message")
-                                visible: chat.canPinMessages && messageId !== chat.pinnedMessageId
-                                onClicked: pageStack.push(pinMessageDialog, {messageId: messageId})
                             }
                         }
                     }
@@ -495,6 +573,7 @@ Page {
                             asynchronous: true
                             height: (replyMessageId !== 0) ? Theme.itemSizeSmall : 0
                             anchors.right: if (!received) parent.right
+                            anchors.left: if (received) parent.left
                             sourceComponent: if (replyMessageId !== 0) replyComponent
                             active: replyMessageId !== 0 && typeof chat.getMessage(replyMessageId) !== "undefined"
                             Component.onCompleted: {
@@ -533,6 +612,7 @@ Page {
                                 Column {
                                     id: replyColumn
                                     function scrollToReply() {
+                                        messages.originMessage = messageId
                                         var messageIndex = chat.getMessageIndex(replyMessageId)
                                         if (messageIndex === -1) {
                                             messages.historyBrowsing = replyMessageId
@@ -576,13 +656,13 @@ Page {
                             width: {
                                 switch(messageType) {
                                 case "photo":
-                                    if (file.biggestPhotoSize.width === 0) return Theme.itemSizeLarge
-                                    return Math.min(Theme.itemSizeHuge, file.biggestPhotoSize.width)
+                                    if (file.biggestPhotoSize.width === 0) return Theme.itemSizeHuge*2
+                                    return Math.min(Theme.itemSizeHuge*2, file.biggestPhotoSize.width)
                                 case "sticker":
                                     return Theme.itemSizeHuge*1.5
                                 case "video":
-                                    if (file.size.width === 0) return Theme.itemSizeHuge
-                                    return Math.min(Theme.itemSizeHuge, file.size.width)
+                                    if (file.size.width === 0) return Theme.itemSizeHuge*2
+                                    return Math.min(Theme.itemSizeHuge*2, file.size.width)
                                 case "animation":
                                     return chatPage.width/2.5
                                 case "audio":
@@ -598,12 +678,12 @@ Page {
                             height: {
                                 switch(messageType) {
                                 case "photo":
-                                    if (file.biggestPhotoSize.height === 0) return Theme.itemSizeLarge
+                                    if (file.biggestPhotoSize.height === 0) return Theme.itemSizeHuge*2
                                     return width * file.biggestPhotoSize.height/file.biggestPhotoSize.width;
                                 case "sticker":
                                     return Theme.itemSizeHuge*1.5
                                 case "video":
-                                    if (file.size.height === 0) return Theme.itemSizeHuge
+                                    if (file.size.height === 0) return Theme.itemSizeHuge*2
                                     return width * file.size.height/file.size.width;
                                 case "animation":
                                     return (file.size.width > 0 && file.size.height > 0) ? (width * (file.size.height/file.size.width)) : Theme.itemSizeLarge
@@ -623,25 +703,46 @@ Page {
                             sourceComponent: {
                                 switch(messageType) {
                                 case "photo":
+                                    autoDownloadTimer.start()
                                     return imageComponent;
                                 case "sticker":
+                                    autoDownloadTimer.start()
                                     if (file.isAnimated) {
                                         return animatedStickerComponent;
                                     } else {
                                         return stickerComponent;
                                     }
                                 case "video":
+                                    autoDownloadTimer.start()
                                     return videoComponent;
                                 case "animation":
+                                    autoDownloadTimer.start()
                                     return animationComponent;
                                 case "audio":
+                                    autoDownloadTimer.start()
                                     return audioComponent;
                                 case "voiceNote":
+                                    autoDownloadTimer.start()
                                     return voicenoteComponent;
                                 case "videoNote":
+                                    autoDownloadTimer.start()
                                     return videonoteComponent;
                                 case "document":
+                                    autoDownloadTimer.start()
                                     return documentComponent;
+                                }
+                            }
+
+                            Timer {
+                                id: autoDownloadTimer
+                                interval: 1000
+                                repeat: false
+                                onTriggered: handleAutodownload()
+
+                                function handleAutodownload() {
+                                    if (!chatList.autoDownloadEnabled()) return;
+                                    if (messageType == "photo") chatList.autoDownload(file.biggestPhoto.id, messageType)
+                                    else chatList.autoDownload(file.id, messageType)
                                 }
                             }
                         }
@@ -660,6 +761,7 @@ Page {
 
                         Component {
                             id: animatedStickerComponent
+
                             AnimatedStickerContent { }
                         }
 
@@ -713,10 +815,11 @@ Page {
                         LinkedLabel {
                             id: textField
                             plainText: messageText
-                            font.pixelSize: Theme.fontSizeMedium
+                            font.pixelSize: settings.fontSize
                             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                             width: Math.min(parent.width, implicitWidth)
                             anchors.right: if (!received) parent.right
+                            anchors.left: if (received) parent.left
                             color: Theme.primaryColor
                             linkColor: Theme.highlightColor
                             visible: messageText !== "" && !serviceMessage.visible
@@ -809,10 +912,16 @@ Page {
                         }
 
                         Row {
-                            anchors.right: if (!received) parent.right
-                            anchors.left: if (received) parent.left
+                            id: stamp
                             spacing: Theme.paddingSmall
                             visible: !serviceMessage.visible
+
+                            Item {
+                                height: 1
+                                width: column.width - time.width - readIcon.width - Theme.paddingSmall*2
+                                visible: !received
+                            }
+
                             Label {
                                 id: time
                                 text: (edited ? qsTr("Edited") + " ": "") + timestamp
@@ -826,7 +935,7 @@ Page {
                                 width: Theme.iconSizeExtraSmall
                                 height: Theme.iconSizeExtraSmall
                                 anchors.verticalCenter: parent.verticalCenter
-                                source: isRead ? "image://theme/icon-s-checkmark" : "image://theme/icon-s-time"
+                                source: isRead ? "qrc:///icons/icon-s-read.svg" : "qrc:///icons/icon-s-sent.svg"
                             }
                         }
                     }
@@ -955,8 +1064,8 @@ Page {
                         Label {
                             width: parent.width - Theme.paddingLarge
                             text: chatPage.editMessageId === 0 ? "" :
-                                          (replyRow.getEditData("messageType") === "text" ? replyRow.getEditData("messageText")
-                                                                                               : replyRow.getEditData("messageType"))
+                                          (editRow.getEditData("messageType") === "text" ? editRow.getEditData("messageText")
+                                                                                               : editRow.getEditData("messageType"))
                             truncationMode: TruncationMode.Fade
                         }
                     }
@@ -1018,7 +1127,12 @@ Page {
 
                 TextArea {
                     id: textInput
-                    enabled: chat.canSendMessages
+                    enabled: {
+                        var type = chat.getChatType()
+                        if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canSendMessages
+                        if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canSendMessages
+                        return chat.canSendMessages
+                    }
                     anchors.top: parent.top
                     anchors.topMargin: inputItem.editReplyPanel
                     anchors.right: sendButton.visible ? sendButton.left : parent.right
@@ -1029,8 +1143,10 @@ Page {
                     height: if (!visible) 0
                     visible: !stickerPicker.visible
                     EnterKey.onClicked: {
-                        textInput.text = textInput.text.slice(0,textInput.cursorPosition-1) + textInput.text.slice(textInput.cursorPosition,textInput.text.length)
-                        if (!settings.sendButton) sendMessage()
+                        if (!settings.sendButton) {
+                            textInput.text = textInput.text.slice(0,textInput.cursorPosition-1) + textInput.text.slice(textInput.cursorPosition,textInput.text.length)
+                            sendMessage()
+                        }
                     }
 
                     function sendMessage() {
@@ -1071,7 +1187,12 @@ Page {
                     anchors.top: textInput.bottom
                     spacing: Theme.paddingLarge
                     padding: Theme.paddingLarge
-                    visible: !stickerPicker.visible && chat.canSendMediaMessages
+                    visible: {
+                        if (stickerPicker.visible) return false
+                        if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canSendMediaMessages
+                        if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canSendMediaMessages
+                        return chat.canSendMediaMessages
+                    }
                     height: if (!visible) 0
                     property int columns: 5
                     property real cellWidth: (width-Theme.paddingLarge*2)/columns
@@ -1122,7 +1243,11 @@ Page {
                             text: qsTr("Poll")
                             source: "image://theme/icon-m-events"
                             onClicked: pageStack.push(pollDialog)
-                            visible: chat.getChatType() !== "private" && chat.canSendPolls
+                            visible: {
+                                if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canSendPolls
+                                if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canSendPolls
+                                return chat.canSendPolls
+                            }
                         }
 
                         HighlightLabelIconButton {
@@ -1166,24 +1291,32 @@ Page {
 
         Component {
             id: filePickerPage
-            FilePickerPage {
+            MultiFilePickerDialog {
                 allowedOrientations: Orientation.All
                 title: "Select file"
-                onSelectedContentPropertiesChanged: {
-                    chat.sendFile(selectedContentProperties.filePath, chatPage.replyMessageId)
-                    chatPage.replyMessageId = 0
+                onAccepted: {
+                    var urls = []
+                    for (var i = 0; i < selectedContent.count; ++i) {
+                        chat.sendFile(selectedContent.get(i).filePath, chatPage.replyMessageId)
+                        chatPage.replyMessageId = 0
+                    }
                     uploadFlickable.scrollToTop()
+                    pageStack.navigateBack(PageStackAction.Immediate)
                 }
             }
         }
 
         Component {
             id: imagePickerPage
-            ImagePickerPage {
+            MultiImagePickerDialog {
                 allowedOrientations: Orientation.All
-                title: "Select image"
-                onSelectedContentPropertiesChanged: {
-                    chat.sendPhoto(selectedContentProperties.filePath, chatPage.replyMessageId)
+
+                onAccepted: {
+                    var urls = []
+                    for (var i = 0; i < selectedContent.count; ++i) {
+                        urls.push(selectedContent.get(i).filePath)
+                    }
+                    chat.sendPhotos(urls, chatPage.replyMessageId)
                     chatPage.replyMessageId = 0
                     uploadFlickable.scrollToTop()
                 }
@@ -1192,11 +1325,14 @@ Page {
 
         Component {
             id: videoPickerPage
-            VideoPickerPage {
+            MultiVideoPickerDialog {
                 allowedOrientations: Orientation.All
-                title: "Select video"
-                onSelectedContentPropertiesChanged: {
-                    chat.sendVideo(selectedContentProperties.filePath, chatPage.replyMessageId)
+                onAccepted: {
+                    var urls = []
+                    for (var i = 0; i < selectedContent.count; ++i) {
+                        urls.push(selectedContent.get(i).filePath)
+                    }
+                    chat.sendVideos(urls, chatPage.replyMessageId)
                     chatPage.replyMessageId = 0
                     uploadFlickable.scrollToTop()
                 }
@@ -1205,12 +1341,14 @@ Page {
 
         Component {
             id: musicPickerPage
-            MusicPickerPage {
+            MultiMusicPickerDialog {
                 allowedOrientations: Orientation.All
-                title: "Select music"
-                onSelectedContentPropertiesChanged: {
-                    chat.sendMusic(selectedContentProperties.filePath, chatPage.replyMessageId)
-                    chatPage.replyMessageId = 0
+                onAccepted: {
+                    var urls = []
+                    for (var i = 0; i < selectedContent.count; ++i) {
+                        chat.sendMusic(selectedContent.get(i).filePath, chatPage.replyMessageId)
+                        chatPage.replyMessageId = 0
+                    }
                     uploadFlickable.scrollToTop()
                 }
             }
@@ -1218,12 +1356,14 @@ Page {
 
         Component {
             id: documentPickerPage
-            DocumentPickerPage {
+            MultiDocumentPickerDialog {
                 allowedOrientations: Orientation.All
-                title: "Select document"
-                onSelectedContentPropertiesChanged: {
-                    chat.sendFile(selectedContentProperties.filePath, chatPage.replyMessageId)
-                    chatPage.replyMessageId = 0
+                onAccepted: {
+                    var urls = []
+                    for (var i = 0; i < selectedContent.count; ++i) {
+                        chat.sendFile(selectedContent.get(i).filePath, chatPage.replyMessageId)
+                        chatPage.replyMessageId = 0
+                    }
                     uploadFlickable.scrollToTop()
                 }
             }
@@ -1260,12 +1400,23 @@ Page {
 
         allowedOrientations: Orientation.All
 
-        Video {
-            id: video
+        SilicaFlickable {
             anchors.fill: parent
-            source: parent.path
-            autoPlay: true
-            fillMode: Image.PreserveAspectFit
+
+            PullDownMenu {
+                MenuItem {
+                    text: qsTr("Save to gallery")
+                    onClicked: chat.saveToGallery(bigVideo.path)
+                }
+            }
+
+            Video {
+                id: video
+                anchors.fill: parent
+                source: bigVideo.path
+                autoPlay: true
+                fillMode: Image.PreserveAspectFit
+            }
         }
 
         onDone: {

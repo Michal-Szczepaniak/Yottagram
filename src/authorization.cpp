@@ -172,7 +172,7 @@ void Authorization::authorizationStateClosing()
 void Authorization::authorizationStateClosed()
 {
     qDebug()<<"authorizationStateClosed";
-
+    setIsAuthorized(false);
 }
 
 void Authorization::authorizationStateWaitCode()

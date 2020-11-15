@@ -12,12 +12,27 @@ PKGCONFIG += zlib openssl nemonotifications-qt5 connman-qt5 vorbisfile systemset
 
 DEFINES += QT_STATICPLUGIN
 
+CONFIG -= debug_and_release
+CONFIG(debug, debug|release): {
+    message(Building for debug)
+}
+CONFIG(release, debug|release): {
+    message(Building for release)
+    DEFINES *= QT_NO_DEBUG_OUTPUT
+}
+
 SOURCES += src/core.cpp \
     src/components/audiorecorder.cpp \
     src/components/autodownloadsettings.cpp \
     src/components/basicgroupfullinfo.cpp \
+    src/components/basicgroupinfo.cpp \
+    src/components/basicgroupsinfo.cpp \
     src/components/scopenotificationsettings.cpp \
+    src/components/secretchatinfo.cpp \
+    src/components/secretchatsinfo.cpp \
     src/components/supergroupfullinfo.cpp \
+    src/components/supergroupinfo.cpp \
+    src/components/supergroupsinfo.cpp \
     src/components/thumbnail.cpp \
     src/components/userfullinfo.cpp \
     src/files/animation.cpp \
@@ -104,14 +119,22 @@ SAILFISHAPP_ICONS = 86x86 108x108 128x128 172x172
 
 CONFIG += sailfishapp_i18n
 
-TRANSLATIONS += translations/yottagram-es.ts
+TRANSLATIONS += \
+    translations/yottagram-es.ts \
+    translations/yottagram-zh_CN.ts
 
 HEADERS += \
     src/components/audiorecorder.h \
     src/components/autodownloadsettings.h \
     src/components/basicgroupfullinfo.h \
+    src/components/basicgroupinfo.h \
+    src/components/basicgroupsinfo.h \
     src/components/scopenotificationsettings.h \
+    src/components/secretchatinfo.h \
+    src/components/secretchatsinfo.h \
     src/components/supergroupfullinfo.h \
+    src/components/supergroupinfo.h \
+    src/components/supergroupsinfo.h \
     src/components/thumbnail.h \
     src/components/userfullinfo.h \
     src/core.h \

@@ -49,5 +49,6 @@ public slots:
 private:
     td_api::object_ptr<td_api::supergroupFullInfo> _supergroupFullInfo;
 };
+Q_DECLARE_METATYPE(SupergroupFullInfo*)
 
 #endif // SUPERGROUPFULLINFO_H

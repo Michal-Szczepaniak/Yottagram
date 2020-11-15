@@ -59,6 +59,7 @@ Page {
             TextField {
                 id: code
                 width: column.width
+                inputMethodHints: Qt.ImhDigitsOnly
                 Keys.onReturnPressed: {
                     authorization.sendCode(code.text)
                 }

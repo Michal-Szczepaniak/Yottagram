@@ -26,7 +26,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QQmlEngine>
 #include "overloaded.h"
 
-Chat::Chat(td_api::chat* chat, shared_ptr<Files> files) : _chat(chat), _files(files), _secretChat(nullptr), _notificationSettings(nullptr), _scopeNotificationSettings(nullptr)
+Chat::Chat(td_api::chat* chat, shared_ptr<Files> files) : _smallPhotoId(0), _bigPhotoId(0), _chat(chat), _files(files), _notificationSettings(nullptr), _scopeNotificationSettings(nullptr)
 {
     _basicGroupFullInfo = new BasicGroupFullInfo();
     _supergroupFullInfo = new SupergroupFullInfo();
@@ -42,7 +42,6 @@ Chat::Chat(td_api::chat* chat, shared_ptr<Files> files) : _chat(chat), _files(fi
 
 Chat::~Chat()
 {
-    delete _secretChat;
     delete _chat;
 }
 
@@ -59,7 +58,7 @@ qint32 Chat::getIdFromType() const
     case td_api::chatTypePrivate::ID:
         return static_cast<td_api::chatTypePrivate*>(_chat->type_.get())->user_id_;
     case td_api::chatTypeSecret::ID:
-        return static_cast<td_api::chatTypeSecret*>(_chat->type_.get())->user_id_;
+        return static_cast<td_api::chatTypeSecret*>(_chat->type_.get())->secret_chat_id_;
     case td_api::chatTypeSupergroup::ID:
         return static_cast<td_api::chatTypeSupergroup*>(_chat->type_.get())->supergroup_id_;
     default:
@@ -75,6 +74,33 @@ qint32 Chat::getSecretChatId() const
 QString Chat::getTitle() const
 {
     return QString::fromStdString(_chat->title_);
+}
+
+SecretChatInfo *Chat::getSecretChatInfo() const
+{
+    if (_chat->type_->get_id() != td_api::chatTypeSecret::ID || _secretChatsInfo->getSecretChat(getIdFromType()) == nullptr) return nullptr;
+
+    auto chat = _secretChatsInfo->getSecretChat(getIdFromType());
+    QQmlEngine::setObjectOwnership(chat, QQmlEngine::CppOwnership);
+    return chat;
+}
+
+BasicGroupInfo *Chat::getBasicGroupInfo() const
+{
+    if (_chat->type_->get_id() != td_api::chatTypeBasicGroup::ID || _basicGroupsInfo->getBasicGroup(getIdFromType()) == nullptr) return nullptr;
+
+    auto chat = _basicGroupsInfo->getBasicGroup(getIdFromType());
+    QQmlEngine::setObjectOwnership(chat, QQmlEngine::CppOwnership);
+    return chat;
+}
+
+SupergroupInfo *Chat::getSupergroupInfo() const
+{
+    if (_chat->type_->get_id() != td_api::chatTypeSupergroup::ID || _supergroupsInfo->getSupergroup(getIdFromType()) == nullptr) return nullptr;
+
+    auto chat = _supergroupsInfo->getSupergroup(getIdFromType());
+    QQmlEngine::setObjectOwnership(chat, QQmlEngine::CppOwnership);
+    return chat;
 }
 
 UserFullInfo* Chat::getUserFullInfo() const
@@ -155,14 +181,13 @@ void Chat::setUnreadCount(qint32 unreadCount)
 void Chat::setLastReadInboxMessageId(qint64 messageId)
 {
     _lastReadInboxMessageId = messageId;
-    emit lastReadInboxMessageIdChanged(messageId);
-
+    emit lastReadInboxMessageIdChanged(getId(), messageId);
 }
 
 void Chat::setLastReadOutboxMessageId(qint64 messageId)
 {
     _lastReadOutboxMessageId = messageId;
-    emit lastReadOutboxMessageIdChanged(messageId);
+    emit lastReadOutboxMessageIdChanged(getId(), messageId);
 }
 
 void Chat::setChatPhoto(td_api::object_ptr<td_api::chatPhoto> chatPhoto)
@@ -198,27 +223,6 @@ bool Chat::isOpen() const
     return _isOpen;
 }
 
-void Chat::setSecretChat(td_api::secretChat *secretChat)
-{
-    _secretChat = secretChat;
-}
-
-QString Chat::getSecretChatState() const
-{
-    if (_secretChat == nullptr) return "";
-
-    switch (_secretChat->state_->get_id()) {
-    case td_api::secretChatStateReady::ID:
-        return "ready";
-    case td_api::secretChatStateClosed::ID:
-        return "closed";
-    case td_api::secretChatStatePending::ID:
-        return "pending";
-    default:
-        return "";
-    }
-}
-
 bool Chat::isPinned() const
 {
     return _chat->is_pinned_;
@@ -231,9 +235,13 @@ void Chat::setIsPinned(bool isPinned)
 
 qint32 Chat::getTtl() const
 {
-    if (_secretChat == nullptr) return 0;
+    if (_chat->type_->get_id() != td_api::chatTypeSecret::ID) return 0;
 
-    return _secretChat->ttl_;
+    td_api::secretChat* chat = _secretChatsInfo->getSecretChat(getIdFromType())->getSecretChat();
+
+    if (chat == nullptr) return 0;
+
+    return chat->ttl_;
 }
 
 qint32 Chat::getMuteFor() const
@@ -440,6 +448,11 @@ bool Chat::getCanPinMessages() const
     return _chat->permissions_->can_pin_messages_;
 }
 
+QVector<qint32> Chat::getFoundChatMembers() const
+{
+    return _foundChatMembers;
+}
+
 void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
 {
     _manager = manager;
@@ -452,7 +465,6 @@ void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), SIGNAL(updateDeleteMessages(td_api::updateDeleteMessages*)), this, SLOT(updateDeleteMessages(td_api::updateDeleteMessages*)));
     connect(_manager.get(), SIGNAL(updateBasicGroupFullInfo(td_api::updateBasicGroupFullInfo*)), this, SLOT(updateBasicGroupFullInfo(td_api::updateBasicGroupFullInfo*)));
     connect(_manager.get(), SIGNAL(updateSupergroupFullInfo(td_api::updateSupergroupFullInfo*)), this, SLOT(updateSupergroupFullInfo(td_api::updateSupergroupFullInfo*)));
-    connect(_manager.get(), SIGNAL(updateSecretChat(td_api::updateSecretChat*)), this, SLOT(updateSecretChat(td_api::updateSecretChat*)));
     connect(_manager.get(), SIGNAL(myIdChanged(qint32)), this, SIGNAL(isSelfChanged()));
     connect(_manager.get(), SIGNAL(updateChatNotificationSettings(td_api::updateChatNotificationSettings*)), this, SLOT(updateChatNotificationSettings(td_api::updateChatNotificationSettings*)));
     connect(_manager.get(), SIGNAL(updateChatPinnedMessage(td_api::updateChatPinnedMessage*)), this, SLOT(updateChatPinnedMessage(td_api::updateChatPinnedMessage*)));
@@ -468,6 +480,28 @@ void Chat::setUsers(shared_ptr<Users> users)
 void Chat::setFiles(shared_ptr<Files> files)
 {
     _files = files;
+}
+
+void Chat::setSecretChatsInfo(shared_ptr<SecretChatsInfo> secretChatsInfo)
+{
+    _secretChatsInfo = secretChatsInfo;
+
+    connect(_secretChatsInfo.get(), &SecretChatsInfo::secretChatInfoChanged, [this](qint32 chatId){ if (chatId == getIdFromType()) emit secretChatChanged(getId()); });
+    connect(_secretChatsInfo.get(), &SecretChatsInfo::secretChatInfoChanged, [this](qint32 chatId){ if (chatId == getIdFromType()) emit ttlChanged(_secretChatsInfo->getSecretChat(chatId)->getTtl()); });
+}
+
+void Chat::setBasicGroupsInfo(shared_ptr<BasicGroupsInfo> basicGroupsInfo)
+{
+    _basicGroupsInfo = basicGroupsInfo;
+
+    connect(_basicGroupsInfo.get(), &BasicGroupsInfo::basicGroupInfoChanged, [this](qint32 chatId){ if (chatId == getIdFromType()) emit basicGroupChanged(getId()); });
+}
+
+void Chat::setSupergroupsInfo(shared_ptr<SupergroupsInfo> supergroupsInfo)
+{
+    _supergroupsInfo = supergroupsInfo;
+
+    connect(_supergroupsInfo.get(), &SupergroupsInfo::supergroupInfoChanged, [this](qint32 chatId){ if (chatId == getIdFromType()) emit supergroupChanged(getId()); });
 }
 
 int Chat::rowCount(const QModelIndex &parent) const
@@ -822,6 +856,31 @@ void Chat::sendPhoto(QString path, qint64 replyToMessageId)
     _manager->sendQuery(sendMessage);
 }
 
+void Chat::sendPhotos(QStringList paths, qint64 replyToMessageId)
+{
+    if (paths.empty()) return;
+
+    auto sendMessage = new td_api::sendMessageAlbum();
+    sendMessage->chat_id_ = _chat->id_;
+
+    if (replyToMessageId != 0) {
+        sendMessage->reply_to_message_id_ = replyToMessageId;
+    }
+
+    std::vector<td_api::object_ptr<td_api::InputMessageContent>> contents;
+    for (QString path : paths) {
+        auto messageContent = td_api::make_object<td_api::inputMessagePhoto>();
+        auto inputFile = td_api::make_object<td_api::inputFileLocal>();
+        inputFile->path_ = path.toStdString();
+        messageContent->photo_ = std::move(inputFile);
+        messageContent->caption_ =  td_api::make_object<td_api::formattedText>();
+        contents.emplace_back(std::move(messageContent));
+    }
+    sendMessage->input_message_contents_ = std::move(contents);
+
+    _manager->sendQuery(sendMessage);
+}
+
 void Chat::sendFile(QString path, qint64 replyToMessageId)
 {
     auto sendMessage = new td_api::sendMessage();
@@ -860,6 +919,31 @@ void Chat::sendMusic(QString path, qint64 replyToMessageId)
     _manager->sendQuery(sendMessage);
 }
 
+void Chat::sendMusics(QStringList paths, qint64 replyToMessageId)
+{
+    if (paths.empty()) return;
+
+    auto sendMessage = new td_api::sendMessageAlbum();
+    sendMessage->chat_id_ = _chat->id_;
+
+    if (replyToMessageId != 0) {
+        sendMessage->reply_to_message_id_ = replyToMessageId;
+    }
+
+    std::vector<td_api::object_ptr<td_api::InputMessageContent>> contents;
+    for (QString path : paths) {
+        auto messageContent = td_api::make_object<td_api::inputMessageAudio>();
+        auto inputFile = td_api::make_object<td_api::inputFileLocal>();
+        inputFile->path_ = path.toStdString();
+        messageContent->audio_ = std::move(inputFile);
+        messageContent->caption_ =  td_api::make_object<td_api::formattedText>();
+        contents.emplace_back(std::move(messageContent));
+    }
+    sendMessage->input_message_contents_ = std::move(contents);
+
+    _manager->sendQuery(sendMessage);
+}
+
 void Chat::sendVideo(QString path, qint64 replyToMessageId)
 {
     auto sendMessage = new td_api::sendMessage();
@@ -875,6 +959,31 @@ void Chat::sendVideo(QString path, qint64 replyToMessageId)
     messageContent->video_ = std::move(inputFile);
     messageContent->caption_ =  td_api::make_object<td_api::formattedText>();
     sendMessage->input_message_content_ = std::move(messageContent);
+
+    _manager->sendQuery(sendMessage);
+}
+
+void Chat::sendVideos(QStringList paths, qint64 replyToMessageId)
+{
+    if (paths.empty()) return;
+
+    auto sendMessage = new td_api::sendMessageAlbum();
+    sendMessage->chat_id_ = _chat->id_;
+
+    if (replyToMessageId != 0) {
+        sendMessage->reply_to_message_id_ = replyToMessageId;
+    }
+
+    std::vector<td_api::object_ptr<td_api::InputMessageContent>> contents;
+    for (QString path : paths) {
+        auto messageContent = td_api::make_object<td_api::inputMessageVideo>();
+        auto inputFile = td_api::make_object<td_api::inputFileLocal>();
+        inputFile->path_ = path.toStdString();
+        messageContent->video_ = std::move(inputFile);
+        messageContent->caption_ =  td_api::make_object<td_api::formattedText>();
+        contents.emplace_back(std::move(messageContent));
+    }
+    sendMessage->input_message_contents_ = std::move(contents);
 
     _manager->sendQuery(sendMessage);
 }
@@ -1162,7 +1271,6 @@ void Chat::updateDeleteMessages(td_api::updateDeleteMessages *updateDeleteMessag
             if (-1 != index) {
                 beginRemoveRows(QModelIndex(), index, index);
                 delete _messages.take(messageId);
-                qDebug() << "remove";
                 _message_ids.remove(index);
                 endRemoveRows();
             }
@@ -1207,15 +1315,6 @@ void Chat::updateSupergroupFullInfo(td_api::updateSupergroupFullInfo *updateSupe
             _supergroupFullInfo->setSupergroupFullInfo(std::move(updateSupergroupFullInfo->supergroup_full_info_));
             emit supergroupFullInfoChanged();
         }
-    }
-}
-
-void Chat::updateSecretChat(td_api::updateSecretChat *updateSecretChat)
-{
-    if (_chat->type_->get_id() == td_api::chatTypeSecret::ID && updateSecretChat->secret_chat_ != nullptr && updateSecretChat->secret_chat_->id_ == getSecretChatId()) {
-        _secretChat = updateSecretChat->secret_chat_.release();
-        emit secretChatChanged(getId());
-        emit ttlChanged(_secretChat->ttl_);
     }
 }
 

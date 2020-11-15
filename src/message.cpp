@@ -244,8 +244,10 @@ QString Message::getFormattedTimestamp()
     QString format;
     QDateTime current(QDateTime::currentDateTime());
 
-    if (current.toTime_t() - _message->date_ >= 86400) {
-        format = "yyyy MMMM dd hh:mm";
+    if (current.toTime_t() - _message->date_ >= 604800) {
+        format = "yyyy.MM.dd hh:mm";
+    } else if (current.toTime_t() - _message->date_ >= 86400) {
+        format = "ddd hh:mm";
     } else {
         format = "hh:mm";
     }
@@ -260,8 +262,10 @@ QString Message::getFormattedForwardTimestamp()
     QString format;
     QDateTime current(QDateTime::currentDateTime());
 
-    if (current.toTime_t() - _message->forward_info_->date_ >= 86400) {
-        format = "yyyy MMMM dd hh:mm";
+    if (current.toTime_t() - _message->forward_info_->date_ >= 604800) {
+        format = "yyyy.MM.dd hh:mm";
+    } else if (current.toTime_t() - _message->forward_info_->date_ >= 86400) {
+        format = "ddd hh:mm";
     } else {
         format = "hh:mm";
     }

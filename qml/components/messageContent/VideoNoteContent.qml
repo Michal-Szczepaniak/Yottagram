@@ -40,7 +40,7 @@ Item {
         Video {
             id: videoPlayer
             fillMode: VideoOutput.PreserveAspectFit
-            muted: true
+            muted: false
             autoPlay: true
         //                                autoLoad: true
             onStopped: {
@@ -51,6 +51,10 @@ Item {
             width: chatPage.width/2.5
             source: file.videonote.localPath
             height: width
+            layer.enabled: true
+            layer.effect: OpacityMask {
+                maskSource: videonoteMask
+            }
         }
     }
 
@@ -70,6 +74,10 @@ Item {
         image: file.thumbnail
         visible: videoLoader.item.playbackState === MediaPlayer.StoppedState
         anchors.fill: parent
+        layer.enabled: true
+        layer.effect: OpacityMask {
+            maskSource: videonoteMask
+        }
     }
 
     FastBlur {
@@ -85,35 +93,57 @@ Item {
     }
 
     Rectangle {
-        id: downloadButtonBackground
-        color: downloadButton.down ? Theme.rgba(Theme.highlightColor, Theme.highlightBackgroundOpacity) : Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity)
-        anchors.centerIn: parent
-        width: downloadButton.width
-        height: downloadButton.height
-        visible: !file.videonote.isDownloaded || videoLoader.item.playbackState === MediaPlayer.StoppedState
-        radius: 90
-
-        IconButton {
-            id: downloadButton
-            visible: downloadButtonBackground.visible
-            icon.source: (!file.videonote.isDownloaded) ? "image://theme/icon-m-cloud-download" : "image://theme/icon-m-play"
-            icon.asynchronous: true
-            width: Theme.itemSizeMedium
-            height: Theme.itemSizeMedium
-            onClicked: {
-                if (file && file.videonote) {
-                    if (!file.videonote.isDownloading && !file.videonote.isDownloaded) file.videonote.download()
-                    if (file.videonote.isDownloaded) videoLoader.item.play()
-                }
-            }
-        }
-    }
-
-    Rectangle {
         id: videonoteMask
         width: parent.width
         height: parent.height
         radius: parent.height
         visible: false
+    }
+
+    Rectangle {
+        id: downloadButtonBackground
+        color: downloadButton.down ? Theme.rgba(Theme.highlightColor, Theme.highlightBackgroundOpacity) : Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity)
+        anchors.centerIn: parent
+        width: downloadButton.width
+        height: downloadButton.height
+        visible: !file.videonote.isDownloading && !file.videonote.isUploading && (!videoLoader.active || videoLoader.item.playbackState !== MediaPlayer.PlayingState)
+        radius: 90
+    }
+
+    ProgressCircle {
+        id: progress
+        anchors.centerIn: downloadButtonBackground
+        width: Theme.itemSizeMedium
+        visible: file.videonote.isDownloading || file.videonote.isUploading
+        value: file.videonote.isUploading ? file.videonote.uploadedSize / file.videonote.downloadedSize : file.videonote.downloadedSize / file.videonote.uploadedSize
+    }
+
+    IconButton {
+        id: downloadButton
+        anchors.centerIn: downloadButtonBackground
+        visible: !file.videonote.isDownloaded || !file.videonote.isUploaded || !videoLoader.active || videoLoader.item.playbackState !== MediaPlayer.PlayingState
+        icon.source: file.videonote.isDownloading || file.videonote.isUploading ? "image://theme/icon-m-cancel" : (!file.videonote.isDownloaded ? "image://theme/icon-m-cloud-download" : "image://theme/icon-m-play")
+        icon.asynchronous: true
+        width: Theme.itemSizeMedium
+        height: Theme.itemSizeMedium
+        onClicked: {
+            if (file && file.videonote) {
+                if (file.videonote.isDownloading) {
+                    file.videonote.cancelDownload();
+                } else if (file.videonote.isUploading) {
+                    file.videonote.cancelUpload();
+                    chat.deleteMessage(messageId)
+                } else if (!file.videonote.isDownloaded || !chatList.fileExists(file.videonote.localPath)) {
+                    file.videonote.download()
+                } else if (file.videonote.isDownloaded) {
+                    if (!videoLoader.active) {
+                        videoLoader.active = true
+                        return
+                    } else {
+                        videoLoader.item.play()
+                    }
+                }
+            }
+        }
     }
 }

@@ -55,6 +55,8 @@ public:
     QString getRemoteUniqueId();
     QString localPath();
     Q_INVOKABLE void download();
+    Q_INVOKABLE void cancelDownload();
+    Q_INVOKABLE void cancelUpload();
     bool isDownloaded();
     bool isDownloading();
     bool isUploaded();

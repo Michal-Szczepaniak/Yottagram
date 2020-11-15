@@ -28,20 +28,35 @@ Row {
         icon.source: {
             if (file.document.isDownloaded) {
                 return "image://theme/icon-m-file-document-light"
+            } else if (file.document.isDownloading || file.document.isUploading) {
+                return "image://theme/icon-m-cancel"
             } else {
                 return "image://theme/icon-m-cloud-download"
             }
         }
         width: Theme.itemSizeMedium
-        height: Theme.itemSizeMedium
+        height: width
         onClicked: {
             if (file && file.document) {
-                if (file.document.isDownloaded) {
-                    chat.open(file.document.localPath)
-                } else {
+                if (file.document.isDownloading) {
+                    file.document.cancelDownload()
+                } else if (file.document.isUploading) {
+                    file.document.cancelUpload()
+                    chat.deleteMessage(messageId)
+                } else if (!file.document.isDownloaded || !chatList.fileExists(file.document.localPath)) {
                     file.document.download()
+                } else {
+                    chat.open(file.document.localPath)
                 }
             }
+        }
+
+        ProgressCircle {
+            id: progress
+            anchors.centerIn: parent
+            width: Theme.itemSizeMedium
+            visible: file.document.isDownloading || file.document.isUploading
+            value : file.document.isUploading ? file.document.uploadedSize / file.document.downloadedSize : file.document.downloadedSize / file.document.uploadedSize
         }
     }
 

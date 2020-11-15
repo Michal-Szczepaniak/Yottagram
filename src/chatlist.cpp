@@ -25,6 +25,9 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 ChatList::ChatList() : _channelNotificationSettings(nullptr), _groupNotificationSettings(nullptr), _privateNotificationSettings(nullptr)
 {
+    _secretChatsInfo = std::make_shared<SecretChatsInfo>();
+    _basicGroupsInfo = std::make_shared<BasicGroupsInfo>();
+    _supergroupsInfo = std::make_shared<SupergroupsInfo>();
 }
 
 ChatList::~ChatList()
@@ -41,15 +44,19 @@ void ChatList::setTelegramManager(shared_ptr<TelegramManager> manager)
     _privateNotificationSettings.setTelegramManager(_manager);
     _groupNotificationSettings.setTelegramManager(_manager);
     _channelNotificationSettings.setTelegramManager(_manager);
+    _secretChatsInfo->setTelegramManager(_manager);
+    _basicGroupsInfo->setTelegramManager(_manager);
+    _supergroupsInfo->setTelegramManager(_manager);
 
     connect(_manager.get(), SIGNAL(chats(td_api::chats*)), this, SLOT(newChats(td_api::chats*)));
     connect(_manager.get(), SIGNAL(updateNewChat(td_api::updateNewChat*)), this, SLOT(newChat(td_api::updateNewChat*)));
     connect(_manager.get(), SIGNAL(updateChatPhoto(td_api::updateChatPhoto*)), this, SLOT(updateChatPhoto(td_api::updateChatPhoto*)));
     connect(_manager.get(), SIGNAL(updateChatLastMessage(td_api::updateChatLastMessage*)), this, SLOT(updateChatLastMessage(td_api::updateChatLastMessage*)));
     connect(_manager.get(), SIGNAL(updateChatOrder(td_api::updateChatOrder*)), this, SLOT(updateChatOrder(td_api::updateChatOrder*)));
-    connect(_manager.get(), SIGNAL(updateSecretChat(td_api::updateSecretChat*)), this, SLOT(updateSecretChat(td_api::updateSecretChat*)));
     connect(_manager.get(), SIGNAL(updateScopeNotificationSettings(td_api::updateScopeNotificationSettings*)), this, SLOT(updateScopeNotificationSettings(td_api::updateScopeNotificationSettings*)));
     connect(_manager.get(), SIGNAL(updateChatIsPinned(td_api::updateChatIsPinned*)), this, SLOT(updateChatIsPinned(td_api::updateChatIsPinned*)));
+    connect(_manager.get(), SIGNAL(updateUnreadChatCount(td_api::updateUnreadChatCount*)), this, SLOT(updateUnreadChatCount(td_api::updateUnreadChatCount*)));
+    connect(_manager.get(), SIGNAL(updateUnreadMessageCount(td_api::updateUnreadMessageCount*)), this, SLOT(updateUnreadMessageCount(td_api::updateUnreadMessageCount*)));
 }
 
 void ChatList::setUsers(shared_ptr<Users> users)
@@ -60,6 +67,16 @@ void ChatList::setUsers(shared_ptr<Users> users)
 void ChatList::setFiles(shared_ptr<Files> files)
 {
     _files = files;
+}
+
+bool ChatList::getDaemonEnabled() const
+{
+    return _manager->getDaemonEnabled();
+}
+
+void ChatList::setDaemonEnabled(bool daemonEnabled)
+{
+    _manager->setDaemonEnabled(daemonEnabled);
 }
 
 QStringList ChatList::getSelection() const
@@ -84,6 +101,26 @@ void ChatList::setForwardedFrom(qint64 forwardedFrom)
     _forwardedFrom = forwardedFrom;
 
     emit forwardedFromChanged();
+}
+
+qint32 ChatList::getChatUnreadCount() const
+{
+    return _unreadChatCount.unread_count_;
+}
+
+qint32 ChatList::getChatUnreadUnmutedCount() const
+{
+    return _unreadChatCount.unread_unmuted_count_;
+}
+
+qint32 ChatList::getMessageUnreadCount() const
+{
+    return _unreadMessageCount.unread_count_;
+}
+
+qint32 ChatList::getMessageUnreadUnmutedCount() const
+{
+    return _unreadMessageCount.unread_unmuted_count_;
 }
 
 int ChatList::rowCount(const QModelIndex &parent) const
@@ -211,9 +248,42 @@ QVariant ChatList::data(const QModelIndex &index, int role) const
     case ChatElementRoles::IsSelfRole:
         return chatNode->isSelf();
     case ChatElementRoles::SecretChatStateRole:
-        return chatNode->getSecretChatState();
+    {
+        auto chat = chatNode->getSecretChatInfo();
+        if (chat == nullptr) return "";
+        return chat->getState();
+    }
     case ChatElementRoles::IsPinnedRole:
         return chatNode->isPinned();
+    case ChatElementRoles::IsReadRole:
+    {
+        td_api::message* message = chatNode->getLastMessage();
+        if (message == nullptr) return false;
+
+        if (message->is_outgoing_) {
+            return message->id_ <= chatNode->lastReadOutboxMessageId();
+        }  else {
+            return message->id_ <= chatNode->lastReadInboxMessageId();
+        }
+    }
+    case ChatElementRoles::LastMessageTimestampRole:
+    {
+        td_api::message* message = chatNode->getLastMessage();
+        if (message == nullptr) return "";
+
+        QString format;
+        QDateTime current(QDateTime::currentDateTime());
+
+        if (current.toTime_t() - message->date_ >= 604800) {
+            format = "yyyy.MM.dd";
+        } else if (current.toTime_t() - message->date_ >= 86400) {
+            format = "ddd";
+        } else {
+            format = "hh:mm";
+        }
+
+        return QDateTime::fromTime_t(static_cast<uint>(message->date_)).toString(format);
+    }
     default:
         return QVariant();
     }
@@ -235,6 +305,8 @@ QHash<int, QByteArray> ChatList::roleNames() const
     roles[IsSelfRole] = "isSelf";
     roles[SecretChatStateRole] = "secretChatState";
     roles[IsPinnedRole] = "isPinned";
+    roles[IsReadRole] = "isRead";
+    roles[LastMessageTimestampRole] = "lastMessageTimestamp";
     return roles;
 }
 
@@ -287,16 +359,6 @@ void ChatList::getMainChatList(Chat::ChatList chatList)
     _manager->sendQuery(new td_api::getChats(move(list), offsetOrder, offsetChatId, 20));
 }
 
-bool ChatList::getDaemonEnabled() const
-{
-    return _manager->getDaemonEnabled();
-}
-
-void ChatList::setDaemonEnabled(bool daemonEnabled)
-{
-    _manager->setDaemonEnabled(daemonEnabled);
-}
-
 QVariant ChatList::openChat(qint64 chatId)
 {
     auto chat = getChat(chatId);
@@ -340,8 +402,7 @@ QVariant ChatList::getChatAsVariant(qint64 chatId) const
 
 void ChatList::markChatAsRead(qint64 chatId)
 {
-
-    _manager->sendQuery(new td_api::viewMessages(getChat(chatId)->getId(), {getChat(chatId)->getLastMessage()->id_}, false));
+    _manager->sendQuery(new td_api::viewMessages(getChat(chatId)->getId(), {getChat(chatId)->getLastMessage()->id_}, true));
     _manager->sendQuery(new td_api::toggleChatIsMarkedAsUnread(chatId, false));
 }
 
@@ -369,6 +430,21 @@ QVariant ChatList::getPrivateNotificationSettings()
 void ChatList::togglePinnedChat(qint64 chatId)
 {
     _manager->sendQuery(new td_api::toggleChatIsPinned(chatId, !getChat(chatId)->isPinned()));
+}
+
+bool ChatList::autoDownloadEnabled()
+{
+    return _files->getActiveAutoDownloadSetting()->getIsAutoDownloadEnabled();
+}
+
+void ChatList::autoDownload(qint32 fileId, QString type)
+{
+    _files->considerAutoDownloading(fileId, type);
+}
+
+bool ChatList::fileExists(QString path)
+{
+    return QFile::exists(path);
 }
 
 void ChatList::onIsAuthorizedChanged(bool isAuthorized)
@@ -409,11 +485,15 @@ void ChatList::newChat(td_api::updateNewChat *updateNewChat)
         auto newChat = new Chat(chat, _files);
         newChat->setTelegramManager(_manager);
         newChat->setUsers(_users);
-        if (newChat->getChatType() == "secret") newChat->setSecretChat(_secretChats[newChat->getSecretChatId()]);
+        newChat->setSecretChatsInfo(_secretChatsInfo);
+        newChat->setBasicGroupsInfo(_basicGroupsInfo);
+        newChat->setSupergroupsInfo(_supergroupsInfo);
         QQmlEngine::setObjectOwnership(newChat, QQmlEngine::CppOwnership);
         connect(newChat, SIGNAL(chatPhotoChanged(qint64)), this, SLOT(onChatPhotoChanged(qint64)));
         connect(newChat, SIGNAL(unreadCountChanged(qint64,qint32)), this, SLOT(onUnreadCountChanged(qint64,qint32)));
         connect(newChat, SIGNAL(secretChatChanged(qint64)), this, SLOT(secretChatStateChanged(qint64)));
+        connect(newChat, SIGNAL(lastReadInboxMessageIdChanged(qint64,qint64)), this, SLOT(lastReadInboxMessageIdChanged(qint64,qint64)));
+        connect(newChat, SIGNAL(lastReadOutboxMessageIdChanged(qint64,qint64)), this, SLOT(lastReadOutboxMessageIdChanged(qint64,qint64)));
 
         if (newChat->getChatType() == "channel") {
             connect(this, SIGNAL(channelNotificationSettingsChanged(td_api::scopeNotificationSettings*)), newChat, SLOT(scopeNotificationSettingsChanged(td_api::scopeNotificationSettings*)));
@@ -463,13 +543,6 @@ void ChatList::updateChatOrder(td_api::updateChatOrder *updateChatOrder)
     setChatOrder(updateChatOrder->chat_id_, updateChatOrder->order_);
 }
 
-void ChatList::updateSecretChat(td_api::updateSecretChat *updateSecretChat)
-{
-    if (!_secretChats.contains(updateSecretChat->secret_chat_->id_)) {
-        _secretChats[updateSecretChat->secret_chat_->id_] = updateSecretChat->secret_chat_.release();
-    }
-}
-
 void ChatList::secretChatStateChanged(qint64 chatId)
 {
     updateChat(chatId, {SecretChatStateRole});
@@ -491,4 +564,34 @@ void ChatList::updateScopeNotificationSettings(td_api::updateScopeNotificationSe
         emit privateNotificationSettingsChanged(_privateNotificationSettings.getScopeNotificationSettings());
         return;
     }
+}
+
+void ChatList::lastReadInboxMessageIdChanged(qint64 chatId, qint64 lastReadInboxMessageIdChanged)
+{
+    updateChat(chatId, {IsReadRole});
+}
+
+void ChatList::lastReadOutboxMessageIdChanged(qint64 chatId, qint64 lastReadOutboxMessageIdChanged)
+{
+    updateChat(chatId, {IsReadRole});
+}
+
+void ChatList::updateUnreadChatCount(td_api::updateUnreadChatCount *updateUnreadChatCount)
+{
+    if (updateUnreadChatCount->chat_list_->get_id() != td_api::chatListMain::ID) return;
+
+    _unreadChatCount.total_count_ = updateUnreadChatCount->total_count_;
+    _unreadChatCount.unread_count_ = updateUnreadChatCount->unread_count_;
+    _unreadChatCount.unread_unmuted_count_ = updateUnreadChatCount->unread_unmuted_count_;
+    _unreadChatCount.marked_as_unread_count_ = updateUnreadChatCount->marked_as_unread_count_;
+    _unreadChatCount.marked_as_unread_unmuted_count_ = updateUnreadChatCount->marked_as_unread_unmuted_count_;
+    emit unreadChatCountChanged();
+}
+
+void ChatList::updateUnreadMessageCount(td_api::updateUnreadMessageCount *updateUnreadMessageCount)
+{
+    if (updateUnreadMessageCount->chat_list_->get_id() != td_api::chatListMain::ID) return;
+    _unreadMessageCount.unread_count_ = updateUnreadMessageCount->unread_count_;
+    _unreadMessageCount.unread_unmuted_count_ = updateUnreadMessageCount->unread_unmuted_count_;
+    emit unreadMessageCountChanegd();
 }

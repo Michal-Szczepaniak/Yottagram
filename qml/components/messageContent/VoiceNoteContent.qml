@@ -47,44 +47,55 @@ Row {
             visible: false
         }
 
-        FastBlur {
+        Rectangle {
+            id: background
             anchors.fill: parent
-            source: thumbnail
-            radius: 32
-            cached: true
+            color: downloadButton.down ? Theme.rgba(Theme.highlightColor, Theme.highlightBackgroundOpacity) : Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity)
+            visible: !file.voicenote.isDownloading && !file.voicenote.isUploading
+        }
 
-            Rectangle {
-                anchors.fill: parent
-                color: Theme.rgba(Theme.highlightBackgroundColor, 0.2)
-
-
-                IconButton {
-                    anchors.fill: parent
-                    icon.source: {
-                        if (!file.voicenote.isDownloaded) {
-                            return "image://theme/icon-m-cloud-download"
-                        }
-
-                        if (audioPlayer.playbackState == MediaPlayer.PlayingState) {
-                            return "image://theme/icon-m-pause"
-                        } else {
-                            return "image://theme/icon-m-play"
-                        }
+        IconButton {
+            id: downloadButton
+            anchors.fill: background
+            icon.source: {
+                if (file.voicenote.isDownloaded) {
+                    if (audioPlayer.playbackState == MediaPlayer.PlayingState) {
+                        return "image://theme/icon-m-pause"
+                    } else {
+                        return "image://theme/icon-m-play"
                     }
-                    onClicked: {
-                        if (file && file.voicenote) {
-                            if (file.voicenote.isDownloaded) {
-                                if (audioPlayer.playbackState == MediaPlayer.PlayingState) {
-                                    audioPlayer.pause()
-                                } else {
-                                    audioPlayer.play()
-                                }
-                            } else {
-                                file.voicenote.download()
-                            }
+                } else if (file.voicenote.isDownloading || file.voicenote.isUploading) {
+                    return "image://theme/icon-m-cancel"
+                } else {
+                    return "image://theme/icon-m-cloud-download"
+                }
+            }
+
+            onClicked: {
+                if (file && file.voicenote) {
+                    if (file.voicenote.isDownloading) {
+                        file.voicenote.cancelDownload()
+                    } else if (file.voicenote.isUploading) {
+                        file.voicenote.cancelUpload()
+                        chat.deleteMessage(messageId)
+                    } else if (!file.voicenote.isDownloaded || !chatList.fileExists(file.voicenote.localPath)) {
+                        file.voicenote.download()
+                    } else {
+                        if (audioPlayer.playbackState == MediaPlayer.PlayingState) {
+                            audioPlayer.pause()
+                        } else {
+                            audioPlayer.play()
                         }
                     }
                 }
+            }
+
+            ProgressCircle {
+                id: progress
+                anchors.centerIn: parent
+                width: Theme.itemSizeMedium
+                visible: file.voicenote.isDownloading || file.voicenote.isUploading
+                value : file.voicenote.isUploading ? file.voicenote.uploadedSize / file.voicenote.downloadedSize : file.voicenote.downloadedSize / file.voicenote.uploadedSize
             }
         }
     }

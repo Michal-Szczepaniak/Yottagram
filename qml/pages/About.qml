@@ -123,9 +123,20 @@ Page {
             }
 
             Label {
-                text: qsTr("Fernando Lanero, Mika, Leszek Lesner,\nA. Madani, Timo Könnecke, Rudi Timmermans\nfor being awesome testers.")
+                text: qsTr("Fernando Lanero, Mika, Leszek Lesner, A. Madani, Timo Könnecke, Rudi Timmermans for being awesome testers.")
                 horizontalAlignment: Text.AlignHCenter
                 font.pixelSize: Theme.fontSizeSmall
+                width: parent.width - Theme.horizontalPageMargin*2
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+
+            Label {
+                text: qsTr("Greg Goncharov (@gregguh at telegram) for icons.")
+                horizontalAlignment: Text.AlignHCenter
+                font.pixelSize: Theme.fontSizeSmall
+                width: parent.width - Theme.horizontalPageMargin*2
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 anchors.horizontalCenter: parent.horizontalCenter
             }
 

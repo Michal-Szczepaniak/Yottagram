@@ -32,18 +32,18 @@
         <translation>Carmen F. B. por la traducción al español.</translation>
     </message>
     <message>
-        <source>Fernando Lanero, Mika, Leszek Lesner,
-A. Madani, Timo Könnecke, Rudi Timmermans
-for being awesome testers.</source>
-        <translation>A Fernando Lanero, Mika, Leszek Lesner,
-A. Madani, Timo Könnecke, Rudi Timmermans
-por ser unos testeadores fantásticos.</translation>
-    </message>
-    <message>
         <source>Everyone in my 
 &lt;a href=&quot;https://t.me/SFOSFanclub&quot;&gt;SFOS Fanclub&lt;/a&gt; group&lt;br/&gt;for keeping me motivated!</source>
         <translation>¡A todo el mundo de mi grupo 
 &lt;a href=&quot;https://t.me/SFOSFanclub&quot;&gt;SFOS Fanclub&lt;/a&gt;&lt;br/&gt;por mantenerme motivado!</translation>
+    </message>
+    <message>
+        <source>Fernando Lanero, Mika, Leszek Lesner, A. Madani, Timo Könnecke, Rudi Timmermans for being awesome testers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Greg Goncharov (@gregguh at telegram) for icons.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -327,10 +327,6 @@ por ser unos testeadores fantásticos.</translation>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <source>Log in</source>
-        <translation>Iniciar sesión</translation>
-    </message>
-    <message>
         <source>Archived chats</source>
         <translation>Chats archivados</translation>
     </message>
@@ -448,8 +444,16 @@ por ser unos testeadores fantásticos.</translation>
 <context>
     <name>CoverPage</name>
     <message>
-        <source>Yottagram (dev)</source>
-        <translation>Yottagram (dev)</translation>
+        <source>Unread chats: %L1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Yottagram</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New messages: %L1</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -684,6 +688,18 @@ por ser unos testeadores fantásticos.</translation>
     <message>
         <source>Send button</source>
         <translation>Botón enviar</translation>
+    </message>
+    <message>
+        <source>Animated stickers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Include muted chats in unread chats and messages counts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Message font size</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -30,7 +30,7 @@ AnimatedImage {
     height: width
     fillMode: Image.PreserveAspectFit
     asynchronous: true
-    paused: !Qt.application.active
+    paused: !Qt.application.active || !settings.animatedStickers
     cache: false
 
     MouseArea {

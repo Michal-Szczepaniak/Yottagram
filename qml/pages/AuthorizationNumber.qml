@@ -58,6 +58,7 @@ Page {
             TextField {
                 id: number
                 width: column.width
+                inputMethodHints: Qt.ImhDialableCharactersOnly
                 validator: RegExpValidator { regExp: /^[\+0-9]{1,100}$/ }
                 Keys.onReturnPressed: {
                     authorization.sendNumber(number.text)

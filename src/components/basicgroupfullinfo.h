@@ -60,5 +60,6 @@ public slots:
 private:
     td_api::object_ptr<td_api::basicGroupFullInfo> _basicGroupFullInfo;
 };
+Q_DECLARE_METATYPE(BasicGroupFullInfo*)
 
 #endif // GROUPFULLINFO_H

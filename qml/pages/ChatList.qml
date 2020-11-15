@@ -31,33 +31,47 @@ Page {
     allowedOrientations: Orientation.All
     property int currentChatList: 0
 
-    DBusAdaptor {
-        id: shareDBusInterface
-        service: "com.verdanditeam.yottagram"
-        path: "/"
-        iface: "com.verdanditeam.yottagram"
-        xml: '<interface name="com.verdanditeam.yottagram">
-                          <method name="share"> <arg type="s" name="title" direction="in"/> <arg type="s" name="description" direction="in" /> </method>
-                          <method name="openChat"> <arg type="x" name="chatId" direction="in" /> </method>
-                          <method name="openApp" />
-                      </interface>'
+//    DBusAdaptor {
+//        id: shareDBusInterface
+//        service: "com.verdanditeam.yottagram"
+//        path: "/"
+//        iface: "com.verdanditeam.yottagram"
+//        xml: '<interface name="com.verdanditeam.yottagram">
+//                          <method name="share"> <arg type="s" name="title" direction="in"/> <arg type="s" name="description" direction="in" /> </method>
+//                          <method name="openChat"> <arg type="x" name="chatId" direction="in" /> </method>
+//                          <method name="openApp" />
+//                      </interface>'
 
-        function share(args) {
-            console.log(args.title, args.description);
+//        function share(args) {
+//            console.log(args.title, args.description);
+//        }
+
+//        function openChat(chatId) {
+//            app.activate()
+//            var chat = chatList.openChat(chatId)
+//            if (typeof chat === "undefined" || !chat) return;
+//            if (pageStack.nextPage(page) !== null) pageStack.pop(pageStack.nextPage(page), PageStackAction.Immediate)
+//            pageStack.push(Qt.resolvedUrl("Chat.qml"), { chat: chat })
+//        }
+
+//        function openApp() {
+//            app.activate()
+//        }
+//    }
+
+    Connections {
+        target: authorization
+        onWaitingForPhoneNumber: {
+            pageStack.replace(Qt.resolvedUrl("AuthorizationNumber.qml"));
         }
 
-        function openChat(chatId) {
-            app.activate()
-            var chat = chatList.openChat(chatId)
-            if (typeof chat === "undefined" || !chat) return;
-            if (pageStack.nextPage(page) !== null) pageStack.pop(pageStack.nextPage(page), PageStackAction.Immediate)
-            pageStack.push(Qt.resolvedUrl("Chat.qml"), { chat: chat })
-        }
-
-        function openApp() {
-            app.activate()
+        onIsAuthorizedChanged: {
+            if (!authorization.isAuthorized) {
+                pageStack.replace(Qt.resolvedUrl("AuthorizationNumber.qml"));
+            }
         }
     }
+
 
     onStatusChanged: {
         if (status === PageStatus.Activating) searchField.focus = false
@@ -76,12 +90,6 @@ Page {
             MenuItem {
                 text: qsTr("Settings")
                 onClicked: pageStack.push(Qt.resolvedUrl("Settings.qml"))
-            }
-
-            MenuItem {
-                visible: !authorization.isAuthorized
-                text: qsTr("Log in")
-                onClicked: pageStack.push(Qt.resolvedUrl("AuthorizationNumber.qml"))
             }
 
             MenuItem {
@@ -177,7 +185,8 @@ Page {
                 Avatar {
                     id: avatar
                     userName: name
-                    avatarPhoto: if (hasPhoto) photo
+                    avatarPhoto: if (hasPhoto && !isSelf) photo
+                    self: isSelf
                     height: Theme.itemSizeLarge - Theme.paddingMedium*2
                     width: height
                     anchors.top: parent.top
@@ -190,7 +199,7 @@ Page {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: avatar.right
                     anchors.leftMargin: Theme.paddingLarge
-                    anchors.right: unread.visible ? unread.left : parent.right
+                    anchors.right: unread.left
                     anchors.rightMargin: Theme.paddingMedium
 
                     Row {
@@ -239,14 +248,59 @@ Page {
                     }
                 }
 
-                Label {
+                Column {
                     id: unread
-                    text: unreadCount
-                    visible: unreadCount > 0
-
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.right: parent.right
-                    anchors.rightMargin: Theme.paddingLarge
+                    anchors.rightMargin: Theme.paddingMedium
+                    spacing: Theme.paddingMedium
+
+                    Row {
+                        spacing: Theme.paddingSmall
+
+                        Icon {
+                            id: readIcon
+                            width: Theme.iconSizeExtraSmall
+                            height: Theme.iconSizeExtraSmall
+                            anchors.verticalCenter: parent.verticalCenter
+                            fillMode: Image.PreserveAspectFit
+                            source: isRead ? "qrc:///icons/icon-s-read.svg" : "qrc:///icons/icon-s-sent.svg"
+                            sourceSize.width: width
+                            sourceSize.height: height
+                        }
+
+                        Label {
+                            id: time
+                            text: lastMessageTimestamp
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: Theme.secondaryColor
+                            font.pixelSize: Theme.fontSizeExtraSmall
+                        }
+                    }
+
+                    Row {
+                        anchors.right: parent.right
+
+                        Icon {
+                            id: pinnedIcon
+                            width: Theme.iconSizeExtraSmall
+                            height: Theme.iconSizeExtraSmall
+                            anchors.verticalCenter: parent.verticalCenter
+                            fillMode: Image.PreserveAspectFit
+                            source: "qrc:///icons/icon-s-pinned.svg"
+                            sourceSize.width: width
+                            sourceSize.height: height
+                            opacity: 0.3
+                            visible: unreadCount === 0 && isPinned
+                        }
+
+                        Label {
+                            text: unreadCount > 0 ? unreadCount : " "
+                            font.pixelSize: Theme.fontSizeSmall
+                            height: implicitHeight
+                            visible: unreadCount > 0 || !isPinned
+                        }
+                    }
                 }
 
                 onClicked: {

@@ -70,6 +70,8 @@ signals:
     void updateSupergroupFullInfo(td_api::updateSupergroupFullInfo *updateSupergroupFullInfo);
     void updateOption(td_api::updateOption *updateOption);
     void updateSecretChat(td_api::updateSecretChat *updateSecretChat);
+    void updateBasicGroup(td_api::updateBasicGroup *updateBasicGroup);
+    void updateSupergroup(td_api::updateSupergroup *updateSupergroup);
     void updateChatNotificationSettings(td_api::updateChatNotificationSettings *updateChatNotificationSettings);
     void updateScopeNotificationSettings(td_api::updateScopeNotificationSettings *updateScopeNotificationSettings);
     void autoDownloadSettingsPresets(td_api::autoDownloadSettingsPresets *autoDownloadSettingsPresets);
@@ -79,6 +81,8 @@ signals:
     void stickerSet(td_api::stickerSet *stickerSet);
     void updateChatIsPinned(td_api::updateChatIsPinned *updateChatIsPinned);
     void updateChatPermissions(td_api::updateChatPermissions *updateChatPermissions);
+    void updateUnreadChatCount(td_api::updateUnreadChatCount *updateUnreadChatCount);
+    void updateUnreadMessageCount(td_api::updateUnreadMessageCount *updateUnreadMessageCount);
 
     void myIdChanged(qint32 myId);
 

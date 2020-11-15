@@ -72,6 +72,16 @@ void File::download()
     _manager->sendQuery(new td_api::downloadFile(getId(), 1, 0, 0, false));
 }
 
+void File::cancelDownload()
+{
+    _manager->sendQuery(new td_api::cancelDownloadFile(getId(), false));
+}
+
+void File::cancelUpload()
+{
+    _manager->sendQuery(new td_api::cancelUploadFile(getId()));
+}
+
 bool File::isDownloaded()
 {
     return _file->local_->is_downloading_completed_;

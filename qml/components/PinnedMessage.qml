@@ -25,6 +25,16 @@ Row {
     id: pinnedMessage
     signal closed()
 
+    function scrollToReply() {
+        var messageIndex = chat.getMessageIndex(chat.pinnedMessageId)
+        if (messageIndex === -1) {
+            messages.historyBrowsing = chat.pinnedMessageId
+            chat.scrollToMessage(chat.pinnedMessageId)
+        } else {
+            messages.positionViewAtIndex(chatProxyModel.mapFromSource(messageIndex), ListView.SnapPosition)
+        }
+    }
+
     Item {
         height: 1
         width: Theme.horizontalPageMargin
@@ -52,7 +62,7 @@ Row {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chat.pinnedMessageId)), ListView.SnapPosition)
+                onClicked: pinnedMessage.scrollToReply()
             }
         }
         Label {
@@ -65,7 +75,7 @@ Row {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chat.pinnedMessageId)), ListView.SnapPosition)
+                onClicked: pinnedMessage.scrollToReply()
             }
         }
     }

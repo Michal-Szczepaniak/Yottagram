@@ -28,7 +28,8 @@ Page {
 
     allowedOrientations: Orientation.All
     property var chat
-    property var user: users.getUserAsVariant(chat.idFromType)
+    property var userId
+    readonly property var user: users.getUserAsVariant(userId)
 
     SilicaFlickable {
         anchors.fill: parent

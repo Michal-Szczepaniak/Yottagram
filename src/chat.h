@@ -29,15 +29,22 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "message.h"
 #include <memory>
 #include <QUrl>
+#include <QVector>
 #include "components/userfullinfo.h"
 #include "components/basicgroupfullinfo.h"
 #include "components/supergroupfullinfo.h"
+#include "components/secretchatsinfo.h"
+#include "components/basicgroupsinfo.h"
+#include "components/supergroupsinfo.h"
 
 class Chat : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(qint64 id READ getId NOTIFY idChanged)
     Q_PROPERTY(qint64 idFromType READ getIdFromType NOTIFY idChanged)
+    Q_PROPERTY(SecretChatInfo* secretChatInfo READ getSecretChatInfo NOTIFY secretChatChanged)
+    Q_PROPERTY(BasicGroupInfo* basicGroupInfo READ getBasicGroupInfo NOTIFY basicGroupChanged)
+    Q_PROPERTY(SupergroupInfo* supergroupInfo READ getSupergroupInfo NOTIFY supergroupChanged)
     Q_PROPERTY(UserFullInfo* userFullInfo READ getUserFullInfo NOTIFY idChanged)
     Q_PROPERTY(BasicGroupFullInfo* basicGroupFullInfo READ getBasicGroupFullInfo NOTIFY basicGroupFullInfoChanged)
     Q_PROPERTY(SupergroupFullInfo* supergroupFullInfo READ getSupergroupFullInfo NOTIFY supergroupFullInfoChanged)
@@ -51,7 +58,6 @@ class Chat : public QAbstractListModel
     Q_PROPERTY(qint64 lastMessageId READ getLastMessageId NOTIFY lastMessageIdChanged)
     Q_PROPERTY(qint32 unreadCount READ getUnreadCount NOTIFY unreadCountChanged)
     Q_PROPERTY(bool isSelf READ isSelf NOTIFY isSelfChanged)
-    Q_PROPERTY(QString secretChatState READ getSecretChatState NOTIFY secretChatChanged)
     Q_PROPERTY(qint32 ttl READ getTtl WRITE setTtl NOTIFY ttlChanged)
     Q_PROPERTY(qint32 muteFor READ getMuteFor WRITE setMuteFor NOTIFY chatNotificationSettingsChanged)
     Q_PROPERTY(qint32 defaultMuteFor READ getDefaultMuteFor NOTIFY chatNotificationSettingsChanged)
@@ -71,6 +77,7 @@ class Chat : public QAbstractListModel
     Q_PROPERTY(bool canChangeInfo READ getCanChangeInfo NOTIFY permissionsChanged)
     Q_PROPERTY(bool canInviteUsers READ getCanInviteUsers NOTIFY permissionsChanged)
     Q_PROPERTY(bool canPinMessages READ getCanPinMessages NOTIFY permissionsChanged)
+    Q_PROPERTY(QVector<qint32> foundChatMembers READ getFoundChatMembers NOTIFY foundChatMembersChanged)
 public:
     enum MessageRoles {
         TypeRole = Qt::UserRole + 1,
@@ -112,6 +119,9 @@ public:
     qint32 getIdFromType() const;
     qint32 getSecretChatId() const;
     QString getTitle() const;
+    SecretChatInfo* getSecretChatInfo() const;
+    BasicGroupInfo* getBasicGroupInfo() const;
+    SupergroupInfo* getSupergroupInfo() const;
     UserFullInfo* getUserFullInfo() const;
     BasicGroupFullInfo* getBasicGroupFullInfo() const;
     SupergroupFullInfo* getSupergroupFullInfo() const;
@@ -129,8 +139,6 @@ public:
     bool isSelf() const;
     void setIsOpen(bool isOpen);
     bool isOpen() const;
-    void setSecretChat(td_api::secretChat* secretChat);
-    QString getSecretChatState() const;
     bool isPinned() const;
     void setIsPinned(bool isPinned);
     qint32 getTtl() const;
@@ -156,10 +164,14 @@ public:
     bool getCanChangeInfo() const;
     bool getCanInviteUsers() const;
     bool getCanPinMessages() const;
+    QVector<qint32> getFoundChatMembers() const;
 
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setUsers(shared_ptr<Users> users);
     void setFiles(shared_ptr<Files> files);
+    void setSecretChatsInfo(shared_ptr<SecretChatsInfo> secretChatsInfo);
+    void setBasicGroupsInfo(shared_ptr<BasicGroupsInfo> basicGroupsInfo);
+    void setSupergroupsInfo(shared_ptr<SupergroupsInfo> supergroupsInfo);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = TypeRole) const;
@@ -185,9 +197,12 @@ public:
     Q_INVOKABLE qint64 getAuthorByIndex(qint32 index);
     Q_INVOKABLE void setMessageAsRead(qint64 messageId);
     Q_INVOKABLE void sendPhoto(QString path, qint64 replyToMessageId);
+    Q_INVOKABLE void sendPhotos(QStringList paths, qint64 replyToMessageId);
     Q_INVOKABLE void sendFile(QString path, qint64 replyToMessageId);
     Q_INVOKABLE void sendMusic(QString path, qint64 replyToMessageId);
+    Q_INVOKABLE void sendMusics(QStringList paths, qint64 replyToMessageId);
     Q_INVOKABLE void sendVideo(QString path, qint64 replyToMessageId);
+    Q_INVOKABLE void sendVideos(QStringList paths, qint64 replyToMessageId);
     Q_INVOKABLE void sendPoll(QString question, QStringList options, bool anonymous, bool multipleAnswers, bool quizMode, int validAnswer);
     Q_INVOKABLE void sendVoiceNote(QString path, QString waveform, qint64 duration, qint64 replyToMessageId);
     Q_INVOKABLE void sendSticker(qint32 fileId, qint64 replyToMessageId);
@@ -213,12 +228,14 @@ signals:
     void unreadCountChanged(qint64 chatId, qint32 unreadCount);
     void fileUpdated(td_api::updateFile &update_file);
     void chatPhotoChanged(qint64 chatId);
-    void lastReadInboxMessageIdChanged(qint64 lastReadInboxMessageIdChanged);
-    void lastReadOutboxMessageIdChanged(qint64 lastReadOutboxMessageIdChanged);
+    void lastReadInboxMessageIdChanged(qint64 chatId, qint64 lastReadInboxMessageIdChanged);
+    void lastReadOutboxMessageIdChanged(qint64 chatId, qint64 lastReadOutboxMessageIdChanged);
     void basicGroupFullInfoChanged();
     void supergroupFullInfoChanged();
     void isSelfChanged();
     void secretChatChanged(qint64 chatId);
+    void basicGroupChanged(qint64 chatId);
+    void supergroupChanged(qint64 chatId);
     void ttlChanged(qint32 ttl);
     void chatNotificationSettingsChanged();
     void pinnedMessageIdChanged();
@@ -226,6 +243,7 @@ signals:
     void gotMessage(qint64 messageId);
     void lastMessageIdChanged(qint64 lastMessageId);
     void latestMessageIdChanged(qint64 lastMessageId);
+    void foundChatMembersChanged();
 
 public slots:
     void updateChatReadInbox(td_api::updateChatReadInbox *updateChatReadInbox);
@@ -238,7 +256,6 @@ public slots:
     void onMessageIdChanged(qint64 oldMessageId, qint64 newMessageId);
     void updateBasicGroupFullInfo(td_api::updateBasicGroupFullInfo *updateBasicGroupFullInfo);
     void updateSupergroupFullInfo(td_api::updateSupergroupFullInfo *updateSupergroupFullInfo);
-    void updateSecretChat(td_api::updateSecretChat *updateSecretChat);
     void updateChatNotificationSettings(td_api::updateChatNotificationSettings *updateChatNotificationSettings);
     void scopeNotificationSettingsChanged(td_api::scopeNotificationSettings *scopeNotificationSettings);
     void updateChatPinnedMessage(td_api::updateChatPinnedMessage *updateChatPinnedMessage);
@@ -259,11 +276,14 @@ private:
     shared_ptr<TelegramManager> _manager;
     shared_ptr<Users> _users;
     shared_ptr<Files> _files;
+    shared_ptr<SecretChatsInfo> _secretChatsInfo;
+    shared_ptr<BasicGroupsInfo> _basicGroupsInfo;
+    shared_ptr<SupergroupsInfo> _supergroupsInfo;
     BasicGroupFullInfo* _basicGroupFullInfo;
     SupergroupFullInfo* _supergroupFullInfo;
-    td_api::secretChat* _secretChat;
     td_api::object_ptr<td_api::chatNotificationSettings> _notificationSettings;
     td_api::scopeNotificationSettings* _scopeNotificationSettings;
+    QVector<qint32> _foundChatMembers;
 };
 Q_DECLARE_METATYPE(Chat*)
 

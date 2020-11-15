@@ -29,7 +29,7 @@ Image {
     width: chatPage.width/2.5
     height: (file.biggestPhotoSize.width > 0 && file.biggestPhotoSize.height > 0) ?
                 width * file.biggestPhotoSize.height/file.biggestPhotoSize.width :
-                Math.max(Theme.itemSizeMedium, width * sourceSize.height/sourceSize.width)
+                Math.max(Theme.itemSizeHuge*1.5, width * sourceSize.height/sourceSize.width)
     fillMode: Image.PreserveAspectFit
     asynchronous: true
     cache: true
@@ -56,22 +56,41 @@ Image {
     }
 
     Rectangle {
+        id: background
         color: downloadButton.down ? Theme.rgba(Theme.highlightColor, Theme.highlightBackgroundOpacity) : Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity)
         anchors.centerIn: parent
         width: downloadButton.width
         height: downloadButton.height
-        visible: !file.biggestPhoto.isDownloaded
+        visible: !file.biggestPhoto.isDownloading && !file.biggestPhoto.isUploading && !file.biggestPhoto.isDownloaded && !!file.biggestPhoto.isUploaded
         radius: 90
+    }
 
-        IconButton {
-            id: downloadButton
-            visible: !file.biggestPhoto.isDownloaded
-            icon.source: "image://theme/icon-m-cloud-download"
-            icon.asynchronous: true
-            width: Theme.itemSizeMedium
-            height: Theme.itemSizeMedium
-            onClicked: {
-                if (file && file.biggestPhoto && !file.biggestPhoto.isDownloading && !file.biggestPhoto.isDownloaded) file.biggestPhoto.download()
+    ProgressCircle {
+        id: progress
+        anchors.centerIn: background
+        visible: file.biggestPhoto.isDownloading || file.biggestPhoto.isUploading
+        value : (file.biggestPhoto.isUploading ? file.biggestPhoto.uploadedSize / file.biggestPhoto.downloadedSize : file.biggestPhoto.downloadedSize / file.biggestPhoto.uploadedSize)
+
+    }
+
+    IconButton {
+        id: downloadButton
+        anchors.centerIn: background
+        visible: !file.biggestPhoto.isDownloaded || !file.biggestPhoto.isUploaded
+        icon.source: file.biggestPhoto.isDownloading || file.biggestPhoto.isUploading ? "image://theme/icon-m-cancel" : "image://theme/icon-m-cloud-download"
+        icon.asynchronous: true
+        width: Theme.itemSizeMedium
+        height: Theme.itemSizeMedium
+        onClicked: {
+            if (file && file.biggestPhoto) {
+                if (file.biggestPhoto.isDownloading) {
+                    file.biggestPhoto.cancelDownload();
+                } else if (file.biggestPhoto.isUploading) {
+                    file.biggestPhoto.cancelUpload();
+                    chat.deleteMessage(messageId)
+                } else if (!file.biggestPhoto.isDownloaded || !chatList.fileExists(file.biggestPhoto.localPath)) {
+                    file.biggestPhoto.download()
+                }
             }
         }
     }

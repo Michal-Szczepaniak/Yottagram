@@ -20,11 +20,49 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import org.nemomobile.configuration 1.0
 
 CoverBackground {
-    Label {
-        id: label
+    ConfigurationGroup {
+        id: settings
+        path: "/apps/yottagram"
+
+        property bool combineWithMuted: false
+    }
+
+    Column {
+        width: parent.width - Theme.paddingSmall*2
         anchors.centerIn: parent
-        text: qsTr("Yottagram (dev)")
+
+        Label {
+            id: label
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: qsTr("Yottagram")
+            font.bold: true
+            font.pixelSize: Theme.fontSizeLarge
+        }
+
+        Item {
+            height: Theme.paddingLarge
+            width: 1
+        }
+
+        Label {
+            id: unreadChats
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: qsTr("Unread chats: %L1").arg(chatList.chatUnreadUnmutedCount + (settings.combineWithMuted ? chatList.chatUnreadCount : 0))
+            width: parent.width
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            horizontalAlignment: Text.AlignHCenter
+        }
+
+        Label {
+            id: unreadMessages
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: qsTr("New messages: %L1").arg(chatList.messageUnreadUnmutedCount + (settings.combineWithMuted ? chatList.messageUnreadCount : 0))
+            width: parent.width
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            horizontalAlignment: Text.AlignHCenter
+        }
     }
 }

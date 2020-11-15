@@ -25,7 +25,7 @@ import com.verdanditeam.thumbnail 1.0
 
 Item {
     width: chatPage.width/2.5
-    height: (file.size.width > 0 && file.size.height > 0) ? (width * (file.size.height/file.size.width)) : Theme.itemSizeHuge
+    height: (file.size.width > 0 && file.size.height > 0) ? (width * (file.size.height/file.size.width)) : Theme.itemSizeHuge*1.5
 
     MouseArea {
         anchors.fill: parent
@@ -52,24 +52,41 @@ Item {
     }
 
     Rectangle {
+        id: background
         color: downloadButton.down ? Theme.rgba(Theme.highlightColor, Theme.highlightBackgroundOpacity) : Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity)
         anchors.centerIn: parent
         width: downloadButton.width
         height: downloadButton.height
+        visible: !file.video.isDownloading && !file.video.isUploading
         radius: 90
+    }
 
-        IconButton {
-            id: downloadButton
-            icon.source: (!file.video.isDownloaded) ? "image://theme/icon-m-cloud-download" : "image://theme/icon-m-play"
-            icon.asynchronous: true
-            width: Theme.itemSizeMedium
-            height: Theme.itemSizeMedium
-            onClicked: {
-                if (file && file.video) {
-                    if (!file.video.isDownloading && !file.video.isDownloaded) file.video.download()
-                    if (file.video.isDownloaded) {
-                        onClicked: pageStack.push(bigVideo, {path: file.video.localPath})
-                    }
+    ProgressCircle {
+        id: progress
+        anchors.centerIn: background
+        width: Theme.itemSizeMedium
+        visible: file.video.isDownloading || file.video.isUploading
+        value: file.video.isUploading ? file.video.uploadedSize / file.video.downloadedSize : file.video.downloadedSize / file.video.uploadedSize
+    }
+
+    IconButton {
+        id: downloadButton
+        anchors.centerIn: background
+        icon.source: file.video.isDownloading || file.video.isUploading ? "image://theme/icon-m-cancel" : (!file.video.isDownloaded ? "image://theme/icon-m-cloud-download" : "image://theme/icon-m-play")
+        icon.asynchronous: true
+        width: Theme.itemSizeMedium
+        height: Theme.itemSizeMedium
+        onClicked: {
+            if (file && file.video) {
+                if (file.video.isDownloading) {
+                    file.video.cancelDownload();
+                } else if (file.video.isUploading) {
+                    file.video.cancelUpload();
+                    chat.deleteMessage(messageId)
+                } else if (!file.video.isDownloaded || !chatList.fileExists(file.video.localPath)) {
+                    file.video.download()
+                } else if (file.video.isDownloaded) {
+                    pageStack.push(bigVideo, {path: file.video.localPath})
                 }
             }
         }

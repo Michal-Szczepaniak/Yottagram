@@ -67,7 +67,7 @@ bool StickerSet::getIsAnimated() const
 
 shared_ptr<File> StickerSet::getThumbnail()
 {
-    if (_stickerSet->thumbnail_ == nullptr) {
+    if (_stickerSet->thumbnail_ == nullptr || getIsAnimated()) {
         return _files->getFile(_stickerIds[0]);
     }
 
