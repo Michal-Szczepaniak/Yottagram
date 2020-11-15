@@ -146,6 +146,12 @@ Page {
                 anchors.horizontalCenter: parent.horizontalCenter
             }
 
+            Label {
+                text: qsTr("dashinfantry for chinese translation.")
+                font.pixelSize: Theme.fontSizeSmall
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+
             Text {
                 text: qsTr("Everyone in my \n<a href=\"https://t.me/SFOSFanclub\">SFOS Fanclub</a> group<br/>for keeping me motivated!")
                 horizontalAlignment: Text.AlignHCenter
