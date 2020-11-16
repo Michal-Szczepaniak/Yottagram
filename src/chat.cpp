@@ -448,9 +448,16 @@ bool Chat::getCanPinMessages() const
     return _chat->permissions_->can_pin_messages_;
 }
 
-QVector<qint32> Chat::getFoundChatMembers() const
+QList<qint32> Chat::getFoundChatMembers() const
 {
     return _foundChatMembers;
+}
+
+void Chat::setFoundChatMembers(QList<qint32> members)
+{
+    _foundChatMembers = members;
+
+    emit foundChatMembersChanged();
 }
 
 void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
@@ -1128,6 +1135,18 @@ void Chat::saveToGallery(QString filePath)
 void Chat::pinMessage(qint64 messageId, bool notify)
 {
     _manager->sendQuery(new td_api::pinChatMessage(getId(), messageId, !notify));
+}
+
+void Chat::searchChatMembers(QString query)
+{
+    _manager->sendCallbackQuery(new td_api::searchChatMembers(getId(), query.toStdString(), 200, nullptr), [this](td_api::Object* message) {
+        _foundChatMembers.clear();
+
+        for (auto& member : static_cast<td_api::chatMembers*>(message)->members_) {
+            _foundChatMembers << member->user_id_;
+        }
+        emit foundChatMembersChanged();
+    });
 }
 
 void Chat::setTtl(qint32 ttl)

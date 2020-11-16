@@ -77,7 +77,7 @@ class Chat : public QAbstractListModel
     Q_PROPERTY(bool canChangeInfo READ getCanChangeInfo NOTIFY permissionsChanged)
     Q_PROPERTY(bool canInviteUsers READ getCanInviteUsers NOTIFY permissionsChanged)
     Q_PROPERTY(bool canPinMessages READ getCanPinMessages NOTIFY permissionsChanged)
-    Q_PROPERTY(QVector<qint32> foundChatMembers READ getFoundChatMembers NOTIFY foundChatMembersChanged)
+    Q_PROPERTY(QList<qint32> foundChatMembers READ getFoundChatMembers WRITE setFoundChatMembers NOTIFY foundChatMembersChanged)
 public:
     enum MessageRoles {
         TypeRole = Qt::UserRole + 1,
@@ -164,7 +164,8 @@ public:
     bool getCanChangeInfo() const;
     bool getCanInviteUsers() const;
     bool getCanPinMessages() const;
-    QVector<qint32> getFoundChatMembers() const;
+    QList<qint32> getFoundChatMembers() const;
+    void setFoundChatMembers(QList<qint32> members);
 
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setUsers(shared_ptr<Users> users);
@@ -216,6 +217,7 @@ public:
     Q_INVOKABLE void clearHistory(bool deleteChat = false);
     Q_INVOKABLE void saveToGallery(QString filePath);
     Q_INVOKABLE void pinMessage(qint64 messageId, bool notify);
+    Q_INVOKABLE void searchChatMembers(QString query);
     void setTtl(qint32 ttl);
 
     bool hasPhoto();
@@ -283,7 +285,7 @@ private:
     SupergroupFullInfo* _supergroupFullInfo;
     td_api::object_ptr<td_api::chatNotificationSettings> _notificationSettings;
     td_api::scopeNotificationSettings* _scopeNotificationSettings;
-    QVector<qint32> _foundChatMembers;
+    QList<qint32> _foundChatMembers;
 };
 Q_DECLARE_METATYPE(Chat*)
 

@@ -51,7 +51,11 @@ Page {
     allowedOrientations: Orientation.All
 
     onStatusChanged: {
-        if (status === PageStatus.Deactivating) chatList.closeChat(chat.id)
+        if (status === PageStatus.Deactivating) {
+            console.log("huj")
+            chat.foundChatMembers = []
+            chatList.closeChat(chat.id)
+        }
         if (status === PageStatus.Active) {
             chatList.openChat(chat.id)
 
@@ -217,8 +221,8 @@ Page {
                 id: secretChatIndicator
                 anchors.verticalCenter: parent.verticalCenter
                 source: "image://theme/icon-s-secure"
-                color: chat.secretChatInfo.state === "pending" ? "yellow" : (chat.secretChatInfo.state === "ready" ? "green" : "red")
                 visible: chat.getChatType() === "secret"
+                color: !visible ? "" : chat.secretChatInfo.state === "pending" ? "yellow" : (chat.secretChatInfo.state === "ready" ? "green" : "red")
             }
         }
 
@@ -295,7 +299,7 @@ Page {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            contentHeight: messages.height + inputItem.height
+            contentHeight: height + uploadMediaPanel.height
             clip: true
 
             onMovementEnded: {
@@ -312,7 +316,7 @@ Page {
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: uploadFlickable.height - (stickerPicker.visible ? (Theme.itemSizeLarge + inputItem.editReplyPanel) : (textInput.height + inputItem.editReplyPanel))
+                height: uploadFlickable.contentHeight - inputItem.height
                 width: parent.width
                 verticalLayoutDirection: ListView.BottomToTop
                 clip: true
@@ -944,18 +948,75 @@ Page {
                 VerticalScrollDecorator {}
             }
 
-            Item {
+            Column {
                 id: inputItem
                 anchors.top: messages.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: visible ? uploadMediaPanel.height + textInput.height + editReplyPanel + stickerPicker.height : 0
-                property var editReplyPanel: (replyRow.visible ? replyRow.height : 0) + (editRow.visible ? editRow.height : 0) + (forwardRow.visible ? forwardRow.height : 0)
                 visible: !(chat.getChatType() === "secret" && (chat.secretChatState === "closed" || chat.secretChatState === "pending"))
+
+                SilicaListView {
+                    id: chatMembers
+                    anchors.left: parent.left
+                    anchors.leftMargin: Theme.paddingLarge
+                    anchors.right: parent.right
+                    anchors.rightMargin: Theme.paddingLarge
+                    height: Math.min(Theme.itemSizeSmall*4, contentHeight)
+                    spacing: Theme.paddingSmall
+                    clip: true
+                    model: chat.foundChatMembers.map(function (element) { return element; });
+                    visible: count > 0
+
+                    delegate: ListItem {
+                        width: parent.width
+                        contentHeight: Theme.itemSizeExtraSmall
+                        readonly property var user: users.getUserAsVariant(modelData)
+
+                        Row {
+                            anchors.fill: parent
+                            spacing: Theme.paddingLarge
+
+                            Avatar {
+                                id: avatar
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: height
+                                height: parent.height - Theme.paddingSmall
+                                userName: user.name
+                                avatarPhoto: user.smallPhoto
+                            }
+
+                            DetailItem {
+                                width: parent.width - Theme.paddingLarge - avatar.width - Theme.paddingLarge
+                                anchors.verticalCenter: parent.verticalCenter
+                                label: user.name
+                                value: "@" + user.username
+                                alignment: Qt.AlignLeft
+                                leftMargin: 0
+                                rightMargin: 0
+                            }
+                        }
+
+                        onClicked: {
+                            var txtinput = textInput
+                            var tmpChat = chat
+                            var position = txtinput.cursorPosition
+
+                            var cutText = txtinput.text.slice(0,position)
+                            var result = (/(?:^|\s)\@\S*$/.exec(cutText))[0].trim().slice(1)
+
+                            txtinput.text = txtinput.text.slice(0,position-result.length) + user.username + txtinput.text.slice(position,txtinput.text.length)
+//                            txtinput.text += user.username
+                            txtinput.cursorPosition = position + user.username.length - result.length
+
+                            tmpChat.foundChatMembers = []
+                        }
+                    }
+
+                    VerticalScrollDecorator { }
+                }
 
                 Row {
                     id: forwardRow
-                    anchors.top: parent.topz
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.paddingLarge
                     anchors.right: parent.right
@@ -987,7 +1048,6 @@ Page {
 
                 Row {
                     id: replyRow
-                    anchors.top: parent.topz
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.paddingLarge
                     anchors.right: parent.right
@@ -1034,7 +1094,6 @@ Page {
 
                 Row {
                     id: editRow
-                    anchors.bottom: textInput.top
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.paddingLarge
                     anchors.right: parent.right
@@ -1107,24 +1166,6 @@ Page {
                     }
                 }
 
-                StickerPicker {
-                    id: stickerPicker
-                    height: visible ? Screen.height/2 + Theme.paddingLarge : 0
-                    width: parent.width
-                    anchors.top: parent.top
-                    anchors.topMargin: inputItem.editReplyPanel
-                    visible: false
-                    page: chatPage
-                    opacity: uploadFlickable.contentY/(inputItem.height- Theme.itemSizeLarge)
-                    onStickerFileIdChanged: {
-                        chat.sendSticker(stickerFileId, chatPage.replyMessageId)
-                        stickerPicker.visible = false
-                        chatPage.replyMessageId = 0
-                        stickerFileId = 0
-                        uploadFlickable.scrollToTop()
-                    }
-                }
-
                 TextArea {
                     id: textInput
                     enabled: {
@@ -1133,8 +1174,6 @@ Page {
                         if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canSendMessages
                         return chat.canSendMessages
                     }
-                    anchors.top: parent.top
-                    anchors.topMargin: inputItem.editReplyPanel
                     anchors.right: sendButton.visible ? sendButton.left : parent.right
                     anchors.left: parent.left
                     placeholderText: qsTr("Type the text...")
@@ -1142,6 +1181,17 @@ Page {
                     focusOutBehavior: FocusBehavior.KeepFocus
                     height: if (!visible) 0
                     visible: !stickerPicker.visible
+
+                    onTextChanged: {
+                        var cutText = textInput.text.slice(0,textInput.cursorPosition)
+                        var results = (/(?:^|\s)\@\S*$/.exec(cutText))
+                        if (results !== null) {
+                            chat.searchChatMembers(results[0].trim())
+                        } else {
+                            chat.foundChatMembers = []
+                        }
+                    }
+
                     EnterKey.onClicked: {
                         if (!settings.sendButton) {
                             textInput.text = textInput.text.slice(0,textInput.cursorPosition-1) + textInput.text.slice(textInput.cursorPosition,textInput.text.length)
@@ -1173,8 +1223,6 @@ Page {
 
                 IconButton {
                     id: sendButton
-                    anchors.top: parent.top
-                    anchors.topMargin: inputItem.editReplyPanel
                     anchors.right: parent.right
                     icon.source: "image://theme/icon-m-send"
                     visible: settings.sendButton && !stickerPicker.visible
@@ -1184,21 +1232,38 @@ Page {
                 Column {
                     id: uploadMediaPanel
                     width: parent.width
-                    anchors.top: textInput.bottom
                     spacing: Theme.paddingLarge
-                    padding: Theme.paddingLarge
                     visible: {
-                        if (stickerPicker.visible) return false
                         if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canSendMediaMessages
                         if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canSendMediaMessages
                         return chat.canSendMediaMessages
                     }
                     height: if (!visible) 0
                     property int columns: 5
-                    property real cellWidth: (width-Theme.paddingLarge*2)/columns
-                    Row {
+                    property real cellWidth: (width-Theme.paddingMedium*2)/columns
+                    property bool hidePickers: stickerPicker.visible
+
+                    StickerPicker {
+                        id: stickerPicker
+                        height: visible ? Screen.height/2 + Theme.paddingLarge : 0
                         width: parent.width
+                        visible: false
+                        page: chatPage
+                        opacity: uploadFlickable.contentY/(inputItem.height- Theme.itemSizeLarge)
+                        onStickerFileIdChanged: {
+                            chat.sendSticker(stickerFileId, chatPage.replyMessageId)
+                            stickerPicker.visible = false
+                            chatPage.replyMessageId = 0
+                            stickerFileId = 0
+                            uploadFlickable.scrollToTop()
+                        }
+                    }
+
+                    Row {
+                        x: Theme.paddingMedium
+                        width: parent.width - Theme.paddingMedium*2
                         id: firstRow
+                        visible: !uploadMediaPanel.hidePickers
 
                         HighlightLabelIconButton {
                             width: uploadMediaPanel.cellWidth
@@ -1235,8 +1300,11 @@ Page {
                             onClicked: pageStack.push(filePickerPage)
                         }
                     }
+
                     Row {
-                        width: parent.width
+                        x: Theme.paddingMedium
+                        width: parent.width - Theme.paddingMedium*2
+                        visible: !uploadMediaPanel.hidePickers
 
                         HighlightLabelIconButton {
                             width: uploadMediaPanel.cellWidth
@@ -1257,7 +1325,11 @@ Page {
                             onClicked: {
                                 textInput.focus = false
                                 stickerPicker.visible = true
-                                uploadFlickable.scrollToBottom()
+                                var timer = Qt.createQmlObject("import QtQuick 2.0; Timer {}", root);
+                                timer.interval = 1
+                                timer.repeat = false
+                                timer.triggered.connect(function () {uploadFlickable.scrollToBottom()})
+                                timer.start()
                             }
                         }
 
@@ -1284,6 +1356,13 @@ Page {
                                 previewSummary: qsTr("Press and hold record button to record voice note.")
                             }
                         }
+                    }
+
+                    Row {
+                        x: Theme.horizontalPageMargin
+                        width: parent.width - Theme.horizontalPageMargin*2
+                        height: 1
+                        visible: !uploadMediaPanel.hidePickers
                     }
                 }
             }

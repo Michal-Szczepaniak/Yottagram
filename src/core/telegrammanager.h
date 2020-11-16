@@ -25,6 +25,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QObject>
 #include <QTimer>
 #include <networkmanager.h>
+#include <functional>
 
 using namespace std;
 
@@ -35,7 +36,8 @@ public:
     TelegramManager();
 
     void init();
-    void sendQuery(td_api::Function* message);
+    void sendQuery(td_api::Function* message, quint64 id = 1);
+    void sendCallbackQuery(td_api::Function* message, function<void(td_api::Object*)> callback);
     qint32 getMyId() const;
     bool getDaemonEnabled() const;
     void setDaemonEnabled(bool daemonEnabled);
@@ -98,6 +100,8 @@ private:
     qint32 _myId;
     NetworkManager* _networkManager;
     QString _networkType;
+    quint64 _callbackCallId;
+    QHash<quint64, std::function<void(td_api::Object*)>> _callbacks;
 };
 
 #endif // TELEGRAMSENDER_H

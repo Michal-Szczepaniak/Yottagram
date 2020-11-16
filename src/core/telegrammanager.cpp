@@ -24,7 +24,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QSettings>
 #include <QGuiApplication>
 
-TelegramManager::TelegramManager()
+TelegramManager::TelegramManager(): _callbackCallId(2)
 {
 }
 
@@ -42,9 +42,16 @@ void TelegramManager::init()
     receiver.start();
 }
 
-void TelegramManager::sendQuery(td_api::Function* message)
+void TelegramManager::sendQuery(td_api::Function* message, quint64 id)
 {
-    receiver.client->send({(std::uint64_t)1, std::move(td_api::object_ptr<td_api::Function>(message))});
+    receiver.client->send({id, std::move(td_api::object_ptr<td_api::Function>(message))});
+}
+
+void TelegramManager::sendCallbackQuery(td_api::Function *message, function<void(td_api::Object*)> callback)
+{
+    qDebug() << _callbackCallId;
+    _callbacks[_callbackCallId] = callback;
+    receiver.client->send({_callbackCallId++, std::move(td_api::object_ptr<td_api::Function>(message))});
 }
 
 qint32 TelegramManager::getMyId() const
@@ -88,6 +95,10 @@ QString TelegramManager::getNetworkType() const
 void TelegramManager::messageReceived(quint64 id, td_api::Object* message)
 {
     emit onMessageReceived(id, message);
+
+    if (id >= 2 && _callbacks.contains(id)) {
+        _callbacks.take(id)(message);
+    }
 
     downcast_call(
         *message, overloaded(
@@ -204,9 +215,6 @@ void TelegramManager::messageReceived(quint64 id, td_api::Object* message)
             },
             [this](td_api::updateUnreadMessageCount &updateUnreadMessageCount) {
                 emit this->updateUnreadMessageCount(&updateUnreadMessageCount);
-            },
-            [this](td_api::chatMembers &chatMembers) {
-//                emit this->chatMembers(&chatMembers);
             },
             [](auto &update) { Q_UNUSED(update) }
         )
