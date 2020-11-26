@@ -121,6 +121,7 @@ CONFIG += sailfishapp_i18n
 
 TRANSLATIONS += \
     translations/yottagram-es.ts \
+    translations/yottagram-sv.ts \
     translations/yottagram-zh_CN.ts
 
 HEADERS += \
