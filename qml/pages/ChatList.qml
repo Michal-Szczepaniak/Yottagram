@@ -129,7 +129,7 @@ Page {
                 },
                 RegExpFilter {
                     roleName: "name"
-                    pattern: "^" + searchField.text
+                    pattern: searchField.text
                     caseSensitivity: Qt.CaseInsensitive
                     enabled: searchField.text !== ""
                 }
