@@ -39,11 +39,11 @@
     </message>
     <message>
         <source>Fernando Lanero, Mika, Leszek Lesner, A. Madani, Timo Könnecke, Rudi Timmermans for being awesome testers.</source>
-        <translation type="unfinished"></translation>
+        <translation>Fernando Lanero, Mika, Leszek Lesner, A. Madani, Timo Könnecke, Rudi Timmermans 等人提供测试。</translation>
     </message>
     <message>
         <source>Greg Goncharov (@gregguh at telegram) for icons.</source>
-        <translation type="unfinished"></translation>
+        <translation>Greg Goncharov(Telegram 账号为 @gregguh)提供图标。</translation>
     </message>
 </context>
 <context>
@@ -444,15 +444,15 @@
     <name>CoverPage</name>
     <message>
         <source>Unread chats: %L1</source>
-        <translation type="unfinished"></translation>
+        <translation>未读对话: %L1 则</translation>
     </message>
     <message>
         <source>Yottagram</source>
-        <translation type="unfinished"></translation>
+        <translation>Yottagram</translation>
     </message>
     <message>
         <source>New messages: %L1</source>
-        <translation type="unfinished"></translation>
+        <translation>新消息: %L1 则</translation>
     </message>
 </context>
 <context>
@@ -689,15 +689,15 @@
     </message>
     <message>
         <source>Animated stickers</source>
-        <translation type="unfinished"></translation>
+        <translation>动态表情贴图</translation>
     </message>
     <message>
         <source>Include muted chats in unread chats and messages counts</source>
-        <translation type="unfinished"></translation>
+        <translation>在未读对话及消息计数中包含静音对话</translation>
     </message>
     <message>
         <source>Message font size</source>
-        <translation type="unfinished"></translation>
+        <translation>消息字体大小</translation>
     </message>
 </context>
 <context>
