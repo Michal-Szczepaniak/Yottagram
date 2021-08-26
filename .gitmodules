@@ -1,6 +1,6 @@
-[submodule "vendor/rlottie"]
-	path = vendor/rlottie
-	url = https://github.com/Samsung/rlottie.git
 [submodule "vendor/fr/grecko/sortfilterproxymodel"]
 	path = vendor/fr/grecko/sortfilterproxymodel
 	url = https://github.com/oKcerG/SortFilterProxyModel.git
+[submodule "vendor/rlottie"]
+	path = vendor/rlottie
+	url = https://github.com/Samsung/rlottie.git
