@@ -35,21 +35,21 @@ class ChatList : public QAbstractListModel
     Q_OBJECT
     Q_PROPERTY(bool daemonEnabled READ getDaemonEnabled WRITE setDaemonEnabled)
     Q_PROPERTY(QStringList selection READ getSelection WRITE setSelection NOTIFY selectionChanged)
-    Q_PROPERTY(qint64 forwardedFrom READ getForwardedFrom WRITE setForwardedFrom NOTIFY forwardedFromChanged)
-    Q_PROPERTY(qint32 chatUnreadCount READ getChatUnreadCount NOTIFY unreadChatCountChanged)
-    Q_PROPERTY(qint32 chatUnreadUnmutedCount READ getChatUnreadUnmutedCount NOTIFY unreadChatCountChanged)
-    Q_PROPERTY(qint32 messageUnreadCount READ getMessageUnreadCount NOTIFY unreadMessageCountChanegd)
-    Q_PROPERTY(qint32 messageUnreadUnmutedCount READ getMessageUnreadUnmutedCount NOTIFY unreadMessageCountChanegd)
+    Q_PROPERTY(int64_t forwardedFrom READ getForwardedFrom WRITE setForwardedFrom NOTIFY forwardedFromChanged)
+    Q_PROPERTY(int32_t chatUnreadCount READ getChatUnreadCount NOTIFY unreadChatCountChanged)
+    Q_PROPERTY(int32_t chatUnreadUnmutedCount READ getChatUnreadUnmutedCount NOTIFY unreadChatCountChanged)
+    Q_PROPERTY(int32_t messageUnreadCount READ getMessageUnreadCount NOTIFY unreadMessageCountChanegd)
+    Q_PROPERTY(int32_t messageUnreadUnmutedCount READ getMessageUnreadUnmutedCount NOTIFY unreadMessageCountChanegd)
 public:
     enum ChatElementRoles {
         TypeRole = Qt::UserRole + 1,
         IdRole,
         NameRole,
         OrderRole,
-        ChatListRole,
         HasPhotoRole,
         PhotoRole,
         UnreadCountRole,
+        UnreadMentionCountRole,
         LastMessageRole,
         LastMessageAuthorRole,
         IsSelfRole,
@@ -60,16 +60,16 @@ public:
     };
 
     struct UnreadChatCount {
-        qint32 total_count_;
-        qint32 unread_count_;
-        qint32 unread_unmuted_count_;
-        qint32 marked_as_unread_count_;
-        qint32 marked_as_unread_unmuted_count_;
+        int32_t total_count_;
+        int32_t unread_count_;
+        int32_t unread_unmuted_count_;
+        int32_t marked_as_unread_count_;
+        int32_t marked_as_unread_unmuted_count_;
     };
 
     struct UnreadMessageCount {
-        qint32 unread_count_;
-        qint32 unread_unmuted_count_;
+        int32_t unread_count_;
+        int32_t unread_unmuted_count_;
     };
 
     ChatList();
@@ -81,33 +81,36 @@ public:
     void setDaemonEnabled(bool daemonEnabled);
     QStringList getSelection() const;
     void setSelection(QStringList selection);
-    qint64 getForwardedFrom() const;
-    void setForwardedFrom(qint64 forwardedFrom);
-    qint32 getChatUnreadCount() const;
-    qint32 getChatUnreadUnmutedCount() const;
-    qint32 getMessageUnreadCount() const;
-    qint32 getMessageUnreadUnmutedCount() const;
+    int64_t getForwardedFrom() const;
+    void setForwardedFrom(int64_t forwardedFrom);
+    int32_t getChatUnreadCount() const;
+    int32_t getChatUnreadUnmutedCount() const;
+    int32_t getMessageUnreadCount() const;
+    int32_t getMessageUnreadUnmutedCount() const;
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = TypeRole) const;
     QHash<int, QByteArray> roleNames() const;
 
-    void newChatID(int64_t chat);
-    void setChatOrder(int64_t chat, int64_t order);
-    void getMainChatList(Chat::ChatList chatList = Chat::ChatList::Main);
+    void fetchChatList();
 
-    Q_INVOKABLE QVariant openChat(qint64 chatId);
-    Q_INVOKABLE void closeChat(qint64 chatId);
+    Q_INVOKABLE QVariant openChat(int64_t chatId);
+    Q_INVOKABLE void closeChat(int64_t chatId);
     Chat* getChat(int64_t chatId) const;
-    Q_INVOKABLE QVariant getChatAsVariant(qint64 chatId) const;
-    Q_INVOKABLE void markChatAsRead(qint64 chatId);
+    Q_INVOKABLE QVariant getChatAsVariant(int64_t chatId) const;
+    Q_INVOKABLE void markChatAsRead(int64_t chatId);
     Q_INVOKABLE QVariant getChannelNotificationSettings();
     Q_INVOKABLE QVariant getGroupNotificationSettings();
     Q_INVOKABLE QVariant getPrivateNotificationSettings();
-    Q_INVOKABLE void togglePinnedChat(qint64 chatId);
+    Q_INVOKABLE void togglePinnedChat(int64_t chatId);
     Q_INVOKABLE bool autoDownloadEnabled();
-    Q_INVOKABLE void autoDownload(qint32 fileId, QString type);
+    Q_INVOKABLE void autoDownload(int32_t fileId, QString type);
     Q_INVOKABLE bool fileExists(QString path);
+
+private:
+    QVector<int64_t>* getChatList(td_api::ChatList* list);
+    td_api::object_ptr<td_api::ChatList> getSelectedChatList() const;
+    void setChatPosition(int64_t chatId, td_api::chatPosition* position);
 
 signals:
     void channelNotificationSettingsChanged(td_api::scopeNotificationSettings* scopeNotificationSettings);
@@ -120,20 +123,20 @@ signals:
 
 public slots:
     void onIsAuthorizedChanged(bool isAuthorized);
-    void onChatPhotoChanged(qint64 chatId);
-    void onUnreadCountChanged(qint64 chatId, qint32 unreadCount);
-    void newChats(td_api::chats *_chats);
+    void onChatPhotoChanged(int64_t chatId);
+    void onUnreadCountChanged(int64_t chatId, int32_t unreadCount);
+    void onGotChats(td_api::chats *chats);
     void newChat(td_api::updateNewChat *updateNewChat);
     void updateChatPhoto(td_api::updateChatPhoto *updateChatPhoto);
     void updateChatLastMessage(td_api::updateChatLastMessage *updateChatLastMessage);
-    void updateChatIsPinned(td_api::updateChatIsPinned *updateChatIsPinned);
-    void updateChatOrder(td_api::updateChatOrder *updateChatOrder);
-    void secretChatStateChanged(qint64 chatId);
+    void updateChatPosition(td_api::updateChatPosition *updateChatPosition);
+    void secretChatStateChanged(int64_t chatId);
     void updateScopeNotificationSettings(td_api::updateScopeNotificationSettings *updateScopeNotificationSettings);
-    void lastReadInboxMessageIdChanged(qint64 chatId, qint64 lastReadInboxMessageIdChanged);
-    void lastReadOutboxMessageIdChanged(qint64 chatId, qint64 lastReadOutboxMessageIdChanged);
+    void lastReadInboxMessageIdChanged(int64_t chatId, int64_t lastReadInboxMessageIdChanged);
+    void lastReadOutboxMessageIdChanged(int64_t chatId, int64_t lastReadOutboxMessageIdChanged);
     void updateUnreadChatCount(td_api::updateUnreadChatCount *updateUnreadChatCount);
     void updateUnreadMessageCount(td_api::updateUnreadMessageCount *updateUnreadMessageCount);
+    void updateChatUnreadMentionCount(td_api::updateChatUnreadMentionCount *updateChatUnreadMentionCount);
 
 protected:
     void updateChat(int64_t chat, const QVector<int> &roles = {IdRole, NameRole});
@@ -142,7 +145,10 @@ private:
     int64_t openedChat = -1;
     bool _isAuthorized = false;
     QHash<int64_t, Chat*> _chats;
-    QVector<int64_t> _chats_ids;
+    QVector<int64_t> *_chats_ids;
+    QVector<int64_t> _main_chats_ids;
+    QVector<int64_t> _archive_chats_ids;
+    QHash<int, QVector<int64_t>> _filter_chats_ids;
     std::shared_ptr<TelegramManager> _manager;
     std::shared_ptr<Users> _users;
     std::shared_ptr<Files> _files;
@@ -153,9 +159,11 @@ private:
     ScopeNotificationSettings _groupNotificationSettings;
     ScopeNotificationSettings _privateNotificationSettings;
     QStringList _selection;
-    qint64 _forwardedFrom;
+    int64_t _forwardedFrom;
     UnreadChatCount _unreadChatCount;
     UnreadMessageCount _unreadMessageCount;
+    quint8 _selectedChatList;
+    int32_t _selectedFilterChatList;
 };
 
 #endif // CHATLIST_H

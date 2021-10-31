@@ -49,7 +49,7 @@ QVariant StickerSets::data(const QModelIndex &index, int role) const
     auto stickerSet = _stickerSets[_installedStickerSetIds[index.row()]];
     switch (role) {
     case StickerSetRoles::IdRole:
-        return stickerSet->getId();
+        return QVariant::fromValue(stickerSet->getId());
     case StickerSetRoles::IsAnimatedRole:
         return stickerSet->getIsAnimated();
     case StickerSetRoles::StickerSetRole:

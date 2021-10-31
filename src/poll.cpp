@@ -76,7 +76,7 @@ QHash<int, QByteArray> Poll::roleNames() const
     return roles;
 }
 
-qint64 Poll::getId() const
+int64_t Poll::getId() const
 {
     return _poll->id_;
 }
@@ -86,12 +86,12 @@ QString Poll::getQuestion() const
     return QString::fromStdString(_poll->question_);
 }
 
-qint32 Poll::getTotalVoterCount() const
+int32_t Poll::getTotalVoterCount() const
 {
     return _poll->total_voter_count_;
 }
 
-std::vector<qint32> Poll::getRecentVoterUserIds() const
+std::vector<int32_t> Poll::getRecentVoterUserIds() const
 {
     return _poll->recent_voter_user_ids_;
 }
@@ -137,7 +137,7 @@ bool Poll::getAllowMultipleAnswers() const
     return false;
 }
 
-qint32 Poll::getCorrectOptionId() const
+int32_t Poll::getCorrectOptionId() const
 {
     if (getType() == PollTypes::Quiz) {
         return static_cast<const td_api::pollTypeQuiz &>(*_poll->type_).correct_option_id_;

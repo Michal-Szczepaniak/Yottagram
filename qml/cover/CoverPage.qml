@@ -50,7 +50,7 @@ CoverBackground {
         Label {
             id: unreadChats
             anchors.horizontalCenter: parent.horizontalCenter
-            text: qsTr("Unread chats: %L1").arg(chatList.chatUnreadUnmutedCount + (settings.combineWithMuted ? chatList.chatUnreadCount : 0))
+            text: qsTr("Unread chats: %L1").arg(settings.combineWithMuted ? chatList.chatUnreadCount : chatList.messageUnreadUnmutedCount)
             width: parent.width
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
             horizontalAlignment: Text.AlignHCenter
@@ -59,7 +59,7 @@ CoverBackground {
         Label {
             id: unreadMessages
             anchors.horizontalCenter: parent.horizontalCenter
-            text: qsTr("New messages: %L1").arg(chatList.messageUnreadUnmutedCount + (settings.combineWithMuted ? chatList.messageUnreadCount : 0))
+            text: qsTr("New messages: %L1").arg(settings.combineWithMuted ? chatList.messageUnreadCount : chatList.messageUnreadUnmutedCount)
             width: parent.width
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
             horizontalAlignment: Text.AlignHCenter

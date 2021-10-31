@@ -28,7 +28,6 @@ import Sailfish.Pickers 1.0
 import SortFilterProxyModel 0.2
 import com.verdanditeam.user 1.0
 import com.verdanditeam.audiorecorder 1.0
-//import "qrc:///vendor/vendor/lottie/src/qml/"
 import "../components/functions/muteFormat.js" as TimeFormat
 import "../components"
 import "../components/messageContent"
@@ -45,6 +44,7 @@ Page {
     property var editMessageId: 0
     property variant selection: []
     property bool selectionActive: false
+    property var startMessage: (chat.firstUnreadMention > 0 ? chat.firstUnreadMention : (chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId))
     readonly property double messageWidth: 1.5
     onSelectionActiveChanged: if (selectionActive === false) selection = [];
 
@@ -67,8 +67,23 @@ Page {
             case "channel":
                 pageStack.pushAttached(Qt.resolvedUrl("../components/chatInfo/SupergroupInfo.qml"), {chat: chat})
                 break;
-
             }
+
+            if (messages.count < 20) {
+                console.log("GETCHATHISTORY")
+                chat.getChatHistory(startMessage, 40, -20)
+            }
+        }
+    }
+
+    function scrollToMention() {
+        messages.originMessage = Math.max(0, messages.indexAt(0, messages.contentY + messages.height - Theme.paddingSmall))
+        var messageIndex = chat.getMessageIndex(chat.firstUnreadMention)
+        if (messageIndex === -1) {
+            messages.historyBrowsing = chat.firstUnreadMention
+            chat.scrollToMessage(chat.firstUnreadMention)
+        } else {
+            messages.positionViewAtIndex(chatProxyModel.mapFromSource(messageIndex), ListView.SnapPosition)
         }
     }
 
@@ -106,13 +121,7 @@ Page {
         anchors.fill: parent
 
         PullDownMenu {
-            MenuItem {
-                text: qsTr("Clear history")
-                onClicked: Remorse.popupAction(root, "", function() {
-                    chat.clearHistory()
-                })
-                visible: !chatPage.selectionActive
-            }
+            busy: chat.unreadMentionCount > 0
 
             MenuItem {
                 text: qsTr("Open secret chat")
@@ -155,6 +164,12 @@ Page {
                     pageStack.navigateBack()
                 }
             }
+
+            MenuItem {
+                text: qsTr("Scroll to first unread mention")
+                visible: chat.unreadMentionCount > 0 && chat.firstUnreadMention !== 0 && !chatPage.selectionActive
+                onClicked: scrollToMention()
+            }
         }
 
         Rectangle {
@@ -188,48 +203,63 @@ Page {
             anchors.verticalCenter: pageHeader.verticalCenter
             anchors.leftMargin: Theme.paddingLarge
             userName: chat.title
-            self: chat.isSelf
-            avatarPhoto: if (!chat.isSelf) chat.smallPhoto
+            avatarPhoto: chat.isSelf ? Qt.resolvedUrl("qrc:/icons/icon-s-bookmark.png") : chat.smallPhoto.localPath
         }
 
-        Row {
-            anchors.top: parent.top
-            anchors.topMargin: chatPage.isLandscape ? Theme.paddingMedium : Theme.paddingLarge
-            anchors.right: parent.right
-            anchors.rightMargin: Theme.horizontalPageMargin
-            width: parent.width - (chatPhoto.width + Theme.paddingLarge*3)
-            height: pageHeader.height/2
-            layoutDirection: Qt.RightToLeft
-            spacing: Theme.paddingSmall
 
-            Label {
-                verticalAlignment: Text.AlignVCenter
-                text: chat.isSelf ? qsTr("Saved messages") : chat.title
-                truncationMode: TruncationMode.Fade
-                width: Math.min(implicitWidth, parent.width - (secretChatIndicator.visible ? (Theme.paddingSmall + secretChatIndicator.width) : 0))
-                height: parent.height
-                color: pageHeader.palette.highlightColor
-                font.pixelSize: Theme.fontSizeLarge
-                font.family: Theme.fontFamilyHeading
-            }
+        Rectangle {
+            id: unreadMentionsButton
+            anchors.left: chatPhoto.right
+            anchors.leftMargin: Theme.paddingLarge
+            anchors.verticalCenter: pageHeader.verticalCenter
+            color: Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity)
+            width: Theme.itemSizeSmall
+            height: width
+            visible: chat.unreadMentionCount > 0
+            radius: width*0.5
 
-            Icon {
-                id: secretChatIndicator
-                anchors.verticalCenter: parent.verticalCenter
-                source: "image://theme/icon-s-secure"
-                color: chat.secretChatInfo.state === "pending" ? "yellow" : (chat.secretChatInfo.state === "ready" ? "green" : "red")
-                visible: chat.getChatType() === "secret"
+            IconButton {
+                id: mentionsIcon
+                anchors.fill: parent
+                icon.fillMode: Image.PreserveAspectFit
+                icon.source: "image://theme/icon-m-health"
+                onClicked: scrollToMention()
             }
         }
 
-        Row {
-            anchors.top: parent.top
-            anchors.topMargin: pageHeader.height/2 + Theme.paddingSmall
-            anchors.right: parent.right
-            anchors.rightMargin: Theme.horizontalPageMargin
-            width: parent.width - (chatPhoto.width + Theme.paddingLarge*2)
-            height: pageHeader.height/2
-            layoutDirection: Qt.RightToLeft
+        Column {
+            anchors {
+                right: parent.right
+                left: unreadMentionsButton.visible ? unreadMentionsButton.right : chatPhoto.right
+                rightMargin: Theme.paddingMedium
+                verticalCenter: pageHeader.verticalCenter
+            }
+            rightPadding: Theme.paddingLarge
+
+            Row {
+                width: parent.width
+                layoutDirection: Qt.RightToLeft
+                spacing: Theme.paddingSmall
+
+                Label {
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignRight
+                    text: chat.isSelf ? qsTr("Saved messages") : chat.title
+                    truncationMode: TruncationMode.Fade
+                    width: parent.width - (secretChatIndicator.visible ? (Theme.paddingSmall + secretChatIndicator.width) : 0)
+                    color: pageHeader.palette.highlightColor
+                    font.pixelSize: Theme.fontSizeLarge
+                    font.family: Theme.fontFamilyHeading
+                }
+
+                Icon {
+                    id: secretChatIndicator
+                    anchors.verticalCenter: parent.verticalCenter
+                    source: "image://theme/icon-s-secure"
+                    color: chat.secretChatInfo.state === "pending" ? "yellow" : (chat.secretChatInfo.state === "ready" ? "green" : "red")
+                    visible: chat.getChatType() === "secret"
+                }
+            }
 
             Label {
                 text: {
@@ -240,9 +270,9 @@ Page {
                     else return users.getUserAsVariant(chat.idFromType).statusText
                 }
                 truncationMode: TruncationMode.Fade
-                width: Math.min(implicitWidth, parent.width - (secretChatIndicator.visible ? (Theme.paddingSmall + secretChatIndicator.width) : 0))
-                height: parent.height
+                width: parent.width
                 verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignRight
                 font.pixelSize: Theme.fontSizeSmall
                 color: palette.secondaryHighlightColor
             }
@@ -260,6 +290,8 @@ Page {
             asynchronous: true
             sourceComponent: pinnedComponent
             active: chat.pinnedMessageId !== 0 && chat.pinnedMessageId !== chatSettings.pinnedMessageId && typeof chat.pinnedMessage !== "undefined"
+            visible: active
+            height: active ? Theme.fontSizeMedium*2 : 0
 
             Connections {
                 target: chat
@@ -291,10 +323,12 @@ Page {
 
         SilicaFlickable {
             id: uploadFlickable
-            anchors.top: chat.pinnedMessageId !== 0 ? pinnedMessageLoader.bottom : pageHeader.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
+            anchors{
+                top: pinnedMessageLoader.bottom
+                left: parent.left
+                right: parent.right
+                bottom: parent.bottom
+            }
             contentHeight: messages.height + inputItem.height
             clip: true
 
@@ -318,73 +352,104 @@ Page {
                 clip: true
                 model: chatProxyModel
                 cacheBuffer: 0
+                enabled: initDone
+                property bool initDone: false
+                property bool creationDone: false
                 property var chatHistoryTime: (new Date()).getTime()
                 property var chatMessagesTime: (new Date()).getTime()
-                property var oldContentHeight: 0
-                property var historyBrowsing: 0
-                property var originMessage: 0
-
-                Timer {
-                    id: getHistoryTimer
-                    interval: 1000
-                    repeat: false
-                    onTriggered: chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
-                }
-
-                onBeforeScrollingToBottom: {
-                    if (originMessage !== 0) {
-                        var messageIndex = chat.getMessageIndex(originMessage)
-                        if (messageIndex === -1) {
-                            chat.scrollToMessage(originMessage)
-                        } else {
-                            messages.fastScrollEnabled = false
-                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(messageIndex), ListView.SnapPosition)
-                        }
-                    }
-                }
-
-                onScrollingToBottom: {
-                    messages.fastScrollEnabled = true
-                    if (originMessage !== 0) {
-                        if (count !== 0) originMessage = 0
-                    } else if (chat.lastMessageId !== chatProxyModel.get(0).messageId) {
-                        historyBrowsing = 0
-                        chat.scrollToMessage(chat.unreadCount > 0 && chat.lastMessageId !== 0 ? chat.lastReadInboxMessageId : chat.lastMessageId)
-                    }
-                }
-
-                onContentHeightChanged: {
-                    if (oldContentHeight === 0 && contentHeight !== 0) {
-                        if (historyBrowsing !== 0) {
-                            if (originMessage !== 0 && chat.getMessageIndex(originMessage) !== -1) {
-                                messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(originMessage)), ListView.SnapPosition)
-                                originMessage = 0
-                            } else {
-                                messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(historyBrowsing)), ListView.SnapPosition)
-                            }
-                        } else {
-                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId)), ListView.SnapPosition)
-                        }
-                    }
-                    oldContentHeight = contentHeight
-
-                    if (count != 0 && count < 20 && historyBrowsing === 0) {
-                        chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
-                    }
-                }
-
-                onAtYBeginningChanged: if (atYBeginning) chat.getMoreChatHistory()
-                onAtYEndChanged: if (atYEnd) chat.getMoreChatMessages()
+//                property var oldContentHeight: 0
+//                property var historyBrowsing: 0
+//                property var originMessage: 0
+                property var blinkMessage: -1
 
                 Component.onCompleted: {
-                    chat.getChatHistory((chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
-                    getHistoryTimer.start()
+                    creationDone = true
+
+                    countChanged(count)
                 }
 
+                Connections {
+                    target: chat
+                    onGotChatHistory: {
+                        console.log("got chat history ", chat.rowCount(), messages.creationDone)
+                        messages.countChanged(chat.rowCount())
+                    }
+                }
+
+                function countChanged(chagedCount) {
+                    console.log(initDone, chagedCount, creationDone, chagedCount === 1)
+                    if (initDone || !creationDone) return;
+                    if (chagedCount <= 1) {
+                        chat.getChatHistory(chatPage.startMessage, 40, -20)
+                    } else {
+                        messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.startMessage)), ListView.SnapPosition)
+                        initDone = true
+                    }
+                }
+
+//                Timer {
+//                    id: getHistoryTimer
+//                    interval: 1000
+//                    repeat: false
+//                    onTriggered: chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
+//                }
+
+//                onBeforeScrollingToBottom: {
+//                    if (originMessage !== 0) {
+//                        var messageIndex = chat.getMessageIndex(originMessage)
+//                        if (messageIndex === -1) {
+//                            chat.scrollToMessage(originMessage)
+//                        } else {
+//                            messages.fastScrollEnabled = false
+//                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(messageIndex), ListView.SnapPosition)
+//                        }
+//                    }
+//                }
+
+//                onScrollingToBottom: {
+//                    messages.fastScrollEnabled = true
+//                    if (originMessage !== 0) {
+//                        if (count !== 0) originMessage = 0
+//                    } else if (chat.lastMessageId !== chatProxyModel.get(0).messageId) {
+//                        historyBrowsing = 0
+//                        chat.scrollToMessage(chat.unreadCount > 0 && chat.lastMessageId !== 0 ? chat.lastReadInboxMessageId : chat.lastMessageId)
+//                    }
+//                }
+
+//                onContentHeightChanged: {
+//                    if (oldContentHeight === 0 && contentHeight !== 0) {
+//                        if (historyBrowsing !== 0) {
+//                            if (originMessage !== 0 && chat.getMessageIndex(originMessage) !== -1) {
+//                                messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(originMessage)), ListView.SnapPosition)
+//                                originMessage = 0
+//                            } else {
+//                                messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(historyBrowsing)), ListView.SnapPosition)
+//                            }
+//                        } else {
+//                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId)), ListView.SnapPosition)
+//                        }
+//                    }
+//                    oldContentHeight = contentHeight
+
+//                    if (count != 0 && count < 20 && historyBrowsing === 0) {
+//                        chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
+//                    }
+//                }
+
+                onAtYBeginningChanged: if (atYBeginning) chat.getMoreChatHistory()
+                onAtYEndChanged: if (atYEnd && chatProxyModel.get(0).messageId !== chat.lastMessageId) chat.getMoreChatMessages()
+
                 onContentYChanged: {
-                    var item = chatProxyModel.get(indexAt(0, contentY + height - Theme.paddingSmall))
-                    if (!item.isRead && item.received) chat.setMessageAsRead(item.messageId)
-                    if (((contentHeight + originY) - (contentY + height)) < Theme.itemSizeHuge*3 && ((new Date()).getTime() - chatMessagesTime) > 300 && count > 0) {
+                    var highlightMessage = Math.max(0, indexAt(0, contentY + height - Theme.paddingSmall))
+                    var messageItem = chatProxyModel.get(highlightMessage)
+                    if ((!messageItem.isRead || messageItem.containsUnreadMention) && messageItem.received && initDone) {
+                        if (messageItem.containsUnreadMention) {
+                            blinkMessage = highlightMessage
+                            blinkMessage = blinkMessage
+                        }
+                        chat.setMessageAsRead(messageItem.messageId)
+                    }
+                    if (((contentHeight + originY) - (contentY + height)) < Theme.itemSizeHuge*3 && ((new Date()).getTime() - chatMessagesTime) > 300 && count > 0 && chatProxyModel.get(0).messageId !== chat.lastMessageId) {
                         chatMessagesTime = (new Date()).getTime();
                         chat.getMoreChatMessages()
                     }
@@ -399,12 +464,36 @@ Page {
                 ListItem {
                     id: item
                     width: chatPage.width
-                    contentHeight: Math.max(column.height + Theme.paddingSmall, Theme.itemSizeExtraSmall)
+                    contentHeight: Math.max(message.height + Theme.paddingSmall, Theme.itemSizeExtraSmall)
                     contentWidth: width
                     readonly property var user: users.getUserAsVariant(authorId)
                     readonly property bool isService: messageType == "chatSetTtl" || messageType == "pinMessage" || messageType == "messageChatDeleteMember" || messageType == "messageChatAddMembers" || messageType == "messageChatJoinByLink"
                     property bool displayAvatar: received && (type === "group" || type === "supergroup") && !isService
                     highlighted: selection.indexOf(messageId) !== -1
+
+                    Rectangle {
+                        id: blinkBackground
+                        anchors.fill: parent
+                        color: "transparent"
+                    }
+
+                    Connections {
+                        target: messages
+                        onBlinkMessageChanged: {
+                            if (index === messages.blinkMessage) {
+                                messages.blinkMessage = -1
+                                if (!flashAnimation.running) flashAnimation.start()
+                            }
+                        }
+                    }
+
+                    SequentialAnimation {
+                        id: flashAnimation
+                        running: false
+                        ColorAnimation { target: blinkBackground; property: "color"; from: Theme.rgba(Theme.highlightBackgroundColor, 0); to: Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity);  duration: 500}
+                        PauseAnimation { duration: 500 }
+                        ColorAnimation { target: blinkBackground; property: "color"; from: Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity); to: Theme.rgba(Theme.highlightBackgroundColor, 0);  duration: 500}
+                    }
 
                     onClicked: {
                         if (doubleClickTimer.running) {
@@ -448,80 +537,100 @@ Page {
                         }
                     }
 
-                    menu: Component {
-                        ContextMenu {
-                            id: contextMenu
+                    onPressAndHold: {
+                        contextMenuLoader.active = true;
+                    }
 
-                            MenuItem {
-                                text: qsTr("Reply")
-                                visible: chatList.selection.length === 0
-                                onClicked: {
-                                    chatPage.editMessageId = 0
-                                    chatPage.replyMessageId = messageId
-                                }
+                    Loader {
+                        id: contextMenuLoader
+                        active: false
+                        asynchronous: true
+                        onStatusChanged: {
+                            if(status === Loader.Ready) {
+                                item.menu = contextMenuLoader.item;
+                                item.openMenu();
                             }
+                        }
+                        sourceComponent: Component {
+                            ContextMenu {
+                                id: contextMenu
 
-                            MenuItem {
-                                text: qsTr("Pin message")
-                                visible: {
-                                    if (messageId === chat.pinnedMessageId) return false
-
-                                    var type = chat.getChatType()
-                                    if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canPinMessages
-                                    if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canPinMessages
-                                    return chat.canPinMessages
-                                }
-                                onClicked: pageStack.push(pinMessageDialog, {messageId: messageId})
-                            }
-
-                            MenuItem {
-                                text: qsTr("Edit")
-                                visible: canBeEdited && chatList.selection.length === 0
-                                onClicked: {
-                                    textInput.text = messageText
-                                    chatPage.editMessageId = messageId
-                                    chatPage.replyMessageId = 0
-                                }
-                            }
-
-                            MenuItem {
-                                text: qsTr("Copy")
-                                onClicked: Clipboard.text = messageText.trim()
-                            }
-
-                            MenuItem {
-                                text: qsTr("Forward")
-                                onClicked: {
-                                    selection.push(messageId)
-                                    chatList.selection = []
-                                    chatPage.selection.forEach(function (element) {
-                                        var tmp = chatList.selection
-                                        tmp.push(element)
-                                        chatList.selection = tmp
-                                    })
-                                    chatList.forwardedFrom = chat.id
-                                    pageStack.navigateBack()
-                                }
-                            }
-
-                            MenuItem {
-                                text: qsTr("Delete")
-                                visible: canBeDeleted
-                                onClicked: remove()
-                            }
-
-                            MenuItem {
-                                text: item.highlighted ? qsTr("Deselect") : qsTr("Select")
-                                visible: chatList.selection.length === 0
-                                onClicked: {
-                                    if (selection.indexOf(messageId) === -1) {
-                                        selection.push(messageId)
-                                        if (chatPage.selectionActive === false) chatPage.selectionActive = true
-                                    } else {
-                                        selection.splice(selection.indexOf(messageId), 1)
-                                        if (chatPage.selectionActive === true && chatPage.selection.length == 0) chatPage.selectionActive = false
+                                MenuItem {
+                                    text: qsTr("Reply")
+                                    visible: chatList.selection.length === 0
+                                    onClicked: {
+                                        chatPage.editMessageId = 0
+                                        chatPage.replyMessageId = messageId
                                     }
-                                    item.highlighted = selection.indexOf(messageId) !== -1
+                                }
+
+                                MenuItem {
+                                    text: qsTr("Pin message")
+                                    visible: {
+                                        if (messageId === chat.pinnedMessageId) return false
+
+                                        var type = chat.getChatType()
+                                        if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canPinMessages
+                                        if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canPinMessages
+                                        return chat.canPinMessages
+                                    }
+                                    onClicked: pageStack.push(pinMessageDialog, {messageId: messageId})
+                                }
+
+                                MenuItem {
+                                    text: qsTr("Edit")
+                                    visible: canBeEdited && chatList.selection.length === 0
+                                    onClicked: {
+                                        textInput.text = messageText
+                                        chatPage.editMessageId = messageId
+                                        chatPage.replyMessageId = 0
+                                    }
+                                }
+
+                                MenuItem {
+                                    text: qsTr("Copy")
+                                    onClicked: Clipboard.text = messageText.trim()
+                                }
+
+                                MenuItem {
+                                    text: qsTr("Forward")
+                                    onClicked: {
+                                        selection.push(messageId)
+                                        chatList.selection = []
+                                        chatPage.selection.forEach(function (element) {
+                                            var tmp = chatList.selection
+                                            tmp.push(element)
+                                            chatList.selection = tmp
+                                        })
+                                        chatList.forwardedFrom = chat.id
+                                        pageStack.navigateBack()
+                                    }
+                                }
+
+                                MenuItem {
+                                    text: qsTr("Delete")
+                                    visible: canBeDeleted
+                                    onClicked: remove()
+                                }
+
+                                MenuItem {
+                                    text: item.highlighted ? qsTr("Deselect") : qsTr("Select")
+                                    visible: chatList.selection.length === 0
+                                    onClicked: {
+                                        if (selection.indexOf(messageId) === -1) {
+                                            selection.push(messageId)
+                                            if (chatPage.selectionActive === false) chatPage.selectionActive = true
+                                        } else {
+                                            selection.splice(selection.indexOf(messageId), 1)
+                                            if (chatPage.selectionActive === true && chatPage.selection.length == 0) chatPage.selectionActive = false
+                                        }
+                                        item.highlighted = selection.indexOf(messageId) !== -1
+                                    }
+                                }
+
+                                MenuItem {
+                                    text: qsTr("Set as read")
+                                    onClicked: chat.setMessageAsRead(messageId)
                                 }
                             }
                         }
@@ -537,406 +646,18 @@ Page {
                         anchors.bottomMargin: Theme.paddingMedium
                         visible: displayAvatar && chat.getAuthorByIndex(chatProxyModel.mapToSource(index-1)) !== authorId
                         userName: user.name
-                        avatarPhoto: if (user && user.hasPhoto) user.smallPhoto
+                        avatarPhoto: if (user && user.hasPhoto) user.smallPhoto.localPath
                     }
 
-                    Column {
-                        id: column
-                        spacing: 0
-                        anchors.left: if (received || isService) parent.left
-                        anchors.leftMargin: isService ? 0 : (displayAvatar ? (Theme.itemSizeExtraSmall + Theme.paddingMedium + Theme.paddingMedium) : Theme.horizontalPageMargin)
-                        anchors.right: if (!received || isService) parent.right
-                        anchors.rightMargin: if (!received) Theme.horizontalPageMargin
-                        anchors.verticalCenter: parent.verticalCenter
+                    Message {
+                        id: message
                         width: parent.width/chatPage.messageWidth
 
-                        Label {
-                            id: name
-                            text: !isForwarded ? (chat.getChatType() === "channel" ? chat.title : user.name) : (qsTr("Forwarded from %1").arg(getName()) + " " + forwardTimestamp).trim()
-                            font.pixelSize: Theme.fontSizeMedium
-                            font.bold: true
-                            horizontalAlignment: received ? Text.AlignLeft : Text.AlignRight
-                            color: Theme.highlightColor
-                            visible: ((displayAvatar && chat.getAuthorByIndex(chatProxyModel.mapToSource(index+1)) !== authorId) ||  isForwarded || chat.getChatType() === "channel") && !serviceMessage.visible
-                            width: Math.min(implicitWidth, column.width)
-                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-
-                            function getName() {
-                                if (forwardUserId !== 0) return users.getUserAsVariant(forwardUserId).name;
-                                if (forwardUsername !== "") return forwardUsername;
-                                if (forwardChannelId !== 0) return chatList.getChatAsVariant(forwardChannelId).title
-                            }
-                        }
-
-                        Loader {
-                            id: replyLoader
-                            asynchronous: true
-                            height: (replyMessageId !== 0) ? Theme.itemSizeSmall : 0
-                            anchors.right: if (!received) parent.right
-                            anchors.left: if (received) parent.left
-                            sourceComponent: if (replyMessageId !== 0) replyComponent
-                            active: replyMessageId !== 0 && typeof chat.getMessage(replyMessageId) !== "undefined"
-                            Component.onCompleted: {
-                                if (replyMessageId !== 0 && typeof chat.getMessage(replyMessageId) === "undefined") chat.fetchMessage(replyMessageId)
-                            }
-
-                            Connections {
-                                target: chat
-                                onGotMessage: {
-                                    if (messageId === replyMessageId) {
-                                        replyLoader.active = true
-                                    }
-                                }
-                            }
-                        }
-
-                        Component {
-                            id: replyComponent
-
-                            Row {
-                                id: replyMessage
-                                width: Math.max(textField.width, Theme.itemSizeHuge, contentLoader.width)
-                                visible: replyMessageId !== 0
-
-                                Rectangle {
-                                    width: 3
-                                    height: parent.height
-                                    color: Theme.highlightColor
-                                }
-
-                                Item {
-                                    height: 1
-                                    width: Theme.paddingMedium
-                                }
-
-                                Column {
-                                    id: replyColumn
-                                    function scrollToReply() {
-                                        messages.originMessage = messageId
-                                        var messageIndex = chat.getMessageIndex(replyMessageId)
-                                        if (messageIndex === -1) {
-                                            messages.historyBrowsing = replyMessageId
-                                            chat.scrollToMessage(replyMessageId)
-                                        } else {
-                                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(messageIndex), ListView.SnapPosition)
-                                        }
-                                    }
-
-                                    Label {
-                                        id: replyName
-                                        text: replyMessageId !== 0 ? users.getUserAsVariant(chat.getMessage(replyMessageId).senderUserId).name : ""
-                                        font.bold: true
-                                        font.pixelSize: Theme.fontSizeSmall
-                                        truncationMode: TruncationMode.Fade
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            onClicked: replyColumn.scrollToReply()
-                                        }
-                                    }
-                                    Label {
-                                        id: replyText
-                                        width: replyMessage.width - Theme.paddingLarge
-                                        font.pixelSize: Theme.fontSizeSmall
-                                        text: chat.getMessage(replyMessageId).type === "text" ? chat.getMessage(replyMessageId).text.trim().replace(/\r?\n|\r/g, " ")
-                                                                                                       : chat.getMessage(replyMessageId).type
-                                        truncationMode: TruncationMode.Fade
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            onClicked: replyColumn.scrollToReply()
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        Loader {
-                            id: contentLoader
-                            width: {
-                                switch(messageType) {
-                                case "photo":
-                                    if (file.biggestPhotoSize.width === 0) return Theme.itemSizeHuge*2
-                                    return Math.min(Theme.itemSizeHuge*2, file.biggestPhotoSize.width)
-                                case "sticker":
-                                    return Theme.itemSizeHuge*1.5
-                                case "video":
-                                    if (file.size.width === 0) return Theme.itemSizeHuge*2
-                                    return Math.min(Theme.itemSizeHuge*2, file.size.width)
-                                case "animation":
-                                    return chatPage.width/2.5
-                                case "audio":
-                                    return Theme.itemSizeSmall + Theme.itemSizeHuge*2 + Theme.paddingMedium
-                                case "voiceNote":
-                                    return Theme.itemSizeSmall + Theme.itemSizeHuge*2
-                                case "videoNote":
-                                    return chatPage.width/2.5
-                                case "document":
-                                    return Theme.itemSizeMedium + Theme.itemSizeHuge*2
-                                }
-                            }
-                            height: {
-                                switch(messageType) {
-                                case "photo":
-                                    if (file.biggestPhotoSize.height === 0) return Theme.itemSizeHuge*2
-                                    return width * file.biggestPhotoSize.height/file.biggestPhotoSize.width;
-                                case "sticker":
-                                    return Theme.itemSizeHuge*1.5
-                                case "video":
-                                    if (file.size.height === 0) return Theme.itemSizeHuge*2
-                                    return width * file.size.height/file.size.width;
-                                case "animation":
-                                    return (file.size.width > 0 && file.size.height > 0) ? (width * (file.size.height/file.size.width)) : Theme.itemSizeLarge
-                                case "audio":
-                                    return Theme.itemSizeSmall
-                                case "voiceNote":
-                                    return Theme.itemSizeSmall
-                                case "videoNote":
-                                    return chatPage.width/2.5
-                                case "document":
-                                    return Theme.itemSizeMedium
-                                }
-                            }
-
-                            anchors.right: if (!received) parent.right
-                            asynchronous: true
-                            sourceComponent: {
-                                switch(messageType) {
-                                case "photo":
-                                    autoDownloadTimer.start()
-                                    return imageComponent;
-                                case "sticker":
-                                    autoDownloadTimer.start()
-                                    if (file.isAnimated) {
-                                        return animatedStickerComponent;
-                                    } else {
-                                        return stickerComponent;
-                                    }
-                                case "video":
-                                    autoDownloadTimer.start()
-                                    return videoComponent;
-                                case "animation":
-                                    autoDownloadTimer.start()
-                                    return animationComponent;
-                                case "audio":
-                                    autoDownloadTimer.start()
-                                    return audioComponent;
-                                case "voiceNote":
-                                    autoDownloadTimer.start()
-                                    return voicenoteComponent;
-                                case "videoNote":
-                                    autoDownloadTimer.start()
-                                    return videonoteComponent;
-                                case "document":
-                                    autoDownloadTimer.start()
-                                    return documentComponent;
-                                }
-                            }
-
-                            Timer {
-                                id: autoDownloadTimer
-                                interval: 1000
-                                repeat: false
-                                onTriggered: handleAutodownload()
-
-                                function handleAutodownload() {
-                                    if (!chatList.autoDownloadEnabled()) return;
-                                    if (messageType == "photo") chatList.autoDownload(file.biggestPhoto.id, messageType)
-                                    else chatList.autoDownload(file.id, messageType)
-                                }
-                            }
-                        }
-
-                        Component {
-                            id: imageComponent
-
-                            ImageContent { }
-                        }
-
-                        Component {
-                            id: stickerComponent
-
-                            StickerContent { }
-                        }
-
-                        Component {
-                            id: animatedStickerComponent
-
-                            AnimatedStickerContent { }
-                        }
-
-                        Component {
-                            id: videoComponent
-
-                            VideoContent { }
-                        }
-
-                        Component {
-                            id: audioComponent
-
-                            AudioContent { }
-                        }
-
-                        Component {
-                            id: documentComponent
-
-                            DocumentContent { }
-                        }
-
-                        Component {
-                            id: animationComponent
-
-                            AnimationContent { }
-                        }
-
-                        Component {
-                            id: voicenoteComponent
-
-                            VoiceNoteContent { }
-                        }
-
-                        Component {
-                            id: videonoteComponent
-
-                            VideoNoteContent { }
-                        }
-
-                        Label {
-                            id: serviceMessage
-                            width: chatPage.width
-                            height: Theme.itemSizeMedium
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            text: messageText.trim()
-                            color: Theme.highlightColor
-                            visible: isService
-                        }
-
-                        LinkedLabel {
-                            id: textField
-                            plainText: messageText
-                            font.pixelSize: settings.fontSize
-                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                            width: Math.min(parent.width, implicitWidth)
-                            anchors.right: if (!received) parent.right
-                            anchors.left: if (received) parent.left
-                            color: Theme.primaryColor
-                            linkColor: Theme.highlightColor
-                            visible: messageText !== "" && !serviceMessage.visible
-                        }
-
-                        Loader {
-                            id: pollLoader
-                            asynchronous: false
-                            sourceComponent: {
-                                if (messageType == "poll") {
-                                    return pollComponent;
-                                }
-                            }
-                        }
-
-                        Component {
-                            id: pollComponent
-
-                            Poll {
-                                width: chatPage.width/chatPage.messageWidth
-                            }
-                        }
-
-                        Loader {
-                            id: webPageLoader
-                            asynchronous: true
-                            sourceComponent: if (hasWebPage) webPageComponent
-                        }
-
-                        Component {
-                            id: webPageComponent
-
-                            Row {
-                                id: webPagePreviewMessage
-
-                                Rectangle {
-                                    width: 3
-                                    height: parent.height
-                                    color: Theme.highlightColor
-                                }
-
-                                Item {
-                                    height: 1
-                                    width: Theme.paddingMedium
-                                }
-
-                                Column {
-                                    Label {
-                                        id: webPageName
-                                        text: webPage.name
-                                        truncationMode: TruncationMode.Fade
-                                        font.family: Theme.fontFamilyHeading
-                                        font.bold: true
-                                        font.pixelSize: Theme.fontSizeSmall
-                                        color: Theme.highlightColor
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                        }
-                                    }
-
-                                    Label {
-                                        id: webPageTitle
-                                        text: webPage.title
-                                        width: webPageDescription.width
-                                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                                        font.bold: true
-                                        font.pixelSize: Theme.fontSizeSmall
-                                        truncationMode: TruncationMode.Fade
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                        }
-                                    }
-
-                                    Label {
-                                        id: webPageDescription
-                                        text: webPage.description
-                                        width: chatPage.width/chatPage.messageWidth - Theme.paddingLarge
-                                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                                        maximumLineCount: 5
-                                        font.pixelSize: Theme.fontSizeSmall
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        Row {
-                            id: stamp
-                            spacing: Theme.paddingSmall
-                            visible: !serviceMessage.visible
-
-                            Item {
-                                height: 1
-                                width: column.width - time.width - readIcon.width - Theme.paddingSmall*2
-                                visible: !received
-                            }
-
-                            Label {
-                                id: time
-                                text: (edited ? qsTr("Edited") + " ": "") + timestamp
-                                anchors.verticalCenter: parent.verticalCenter
-                                color: Theme.secondaryColor
-                                font.pixelSize: Theme.fontSizeExtraSmall
-                            }
-
-                            Icon {
-                                id: readIcon
-                                width: Theme.iconSizeExtraSmall
-                                height: Theme.iconSizeExtraSmall
-                                anchors.verticalCenter: parent.verticalCenter
-                                source: isRead ? "qrc:///icons/icon-s-read.svg" : "qrc:///icons/icon-s-sent.svg"
-                            }
+                        anchors {
+                            left: parent.left
+                            right: parent.right
+                            leftMargin: isService ? 0 : ((received && displayAvatar ? (Theme.itemSizeExtraSmall + Theme.paddingMedium + Theme.paddingMedium) : Theme.horizontalPageMargin) + (received ? 0 : parent.width/3))
+                            rightMargin: isService ? 0 : (Theme.horizontalPageMargin + (received ? parent.width/3 : 0))
                         }
                     }
                 }
@@ -1142,6 +863,8 @@ Page {
                     focusOutBehavior: FocusBehavior.KeepFocus
                     height: if (!visible) 0
                     visible: !stickerPicker.visible
+                    onFocusChanged:
+                        messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.startMessage)), ListView.SnapPosition)
                     EnterKey.onClicked: {
                         if (!settings.sendButton) {
                             textInput.text = textInput.text.slice(0,textInput.cursorPosition-1) + textInput.text.slice(textInput.cursorPosition,textInput.text.length)

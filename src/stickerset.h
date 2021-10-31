@@ -41,7 +41,7 @@ public:
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setFiles(shared_ptr<Files> files);
 
-    qint64 getId() const;
+    int64_t getId() const;
     bool getIsAnimated() const;
     shared_ptr<File> getThumbnail();
 
@@ -57,8 +57,8 @@ private:
     std::shared_ptr<TelegramManager> _manager;
     std::shared_ptr<Files> _files;
     td_api::stickerSet *_stickerSet;
-    qint32 _thumbnailId;
-    QVector<qint32> _stickerIds;
+    int32_t _thumbnailId;
+    QVector<int32_t> _stickerIds;
 };
 Q_DECLARE_METATYPE(StickerSet*)
 

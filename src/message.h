@@ -45,7 +45,7 @@ class Message : public QObject
     Q_OBJECT
     Q_PROPERTY(QString text READ getText NOTIFY messageChanged)
     Q_PROPERTY(QString type READ getType NOTIFY messageChanged)
-    Q_PROPERTY(qint32 senderUserId READ getSenderUserId NOTIFY messageChanged)
+    Q_PROPERTY(int32_t senderUserId READ getSenderUserId NOTIFY messageChanged)
 public:
     explicit Message(QObject *parent = nullptr);
     ~Message();
@@ -56,10 +56,10 @@ public:
     void setUsers(shared_ptr<Users> users);
     void setFiles(shared_ptr<Files> files);
 
-    qint64 getId();
+    int64_t getId();
     QString getText();
     QString getType();
-    qint32 getContentType();
+    int32_t getContentType();
     bool isEdited();
     bool canBeEdited();
     bool canBeForwarded();
@@ -68,11 +68,11 @@ public:
     int getEditedDate();
     int getViews();
     bool received();
-    qint32 getDeleteMemberId();
-    QVector<qint32> getAddMembersIds();
-    qint64 replyMessageId();
+    int32_t getDeleteMemberId();
+    QVector<int32_t> getAddMembersIds();
+    int64_t replyMessageId();
     td_api::messageForwardInfo* getForwardedInfo();
-    qint32 getSenderUserId();
+    int32_t getSenderUserId();
     QString getFormattedTimestamp();
     QString getFormattedForwardTimestamp();
 
@@ -90,12 +90,12 @@ public:
 
     void handleMessageContent(td_api::object_ptr<td_api::MessageContent> messageContent);
 
-    qint64 getChatId() const;
-    void setChatId(const qint64 &chatId);
+    int64_t getChatId() const;
+    void setChatId(const int64_t &chatId);
 
 signals:
-    void contentChanged(qint64 messageId);
-    void messageIdChanged(qint64 oldMessageId, qint64 newMessageId);
+    void contentChanged(int64_t messageId);
+    void messageIdChanged(int64_t oldMessageId, int64_t newMessageId);
     void messageChanged();
 
 public slots:
@@ -103,10 +103,10 @@ public slots:
     void updateMessageContent(td_api::updateMessageContent *updateMessageContent);
 
 private:
-    qint64 _chatId;
+    int64_t _chatId;
     td_api::message* _message;
-    qint32 _contentTypeId;
-    QVector<qint32> _file_ids;
+    int32_t _contentTypeId;
+    QVector<int32_t> _file_ids;
     shared_ptr<TelegramManager> _manager;
     shared_ptr<Users> _users;
     shared_ptr<Files> _files;

@@ -49,12 +49,12 @@ td_api::object_ptr<td_api::NotificationSettingsScope> ScopeNotificationSettings:
     return nullptr;
 }
 
-qint32 ScopeNotificationSettings::getMuteFor() const
+int32_t ScopeNotificationSettings::getMuteFor() const
 {
     return _scopeNotificationSettings->mute_for_;
 }
 
-void ScopeNotificationSettings::setMuteFor(qint32 muteFor)
+void ScopeNotificationSettings::setMuteFor(int32_t muteFor)
 {
     auto settings = td_api::make_object<td_api::scopeNotificationSettings>(
         _scopeNotificationSettings->mute_for_,

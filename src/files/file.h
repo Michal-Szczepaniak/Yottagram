@@ -31,13 +31,13 @@ using namespace td;
 class File : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qint32 id READ getId NOTIFY fileChanged)
+    Q_PROPERTY(int32_t id READ getId NOTIFY fileChanged)
     Q_PROPERTY(QString remoteId READ getRemoteId NOTIFY fileChanged)
     Q_PROPERTY(QString remoteUniqueId READ getRemoteUniqueId NOTIFY fileChanged)
     Q_PROPERTY(QString localPath READ localPath NOTIFY localPathChanged)
-    Q_PROPERTY(qint32 expectedSize READ getExpectedSize NOTIFY fileChanged)
-    Q_PROPERTY(qint32 downloadedSize READ getDownloadedSize NOTIFY fileChanged)
-    Q_PROPERTY(qint32 uploadedSize READ getUploadedSize NOTIFY fileChanged)
+    Q_PROPERTY(int32_t expectedSize READ getExpectedSize NOTIFY fileChanged)
+    Q_PROPERTY(int32_t downloadedSize READ getDownloadedSize NOTIFY fileChanged)
+    Q_PROPERTY(int32_t uploadedSize READ getUploadedSize NOTIFY fileChanged)
     Q_PROPERTY(bool isDownloaded READ isDownloaded NOTIFY fileChanged)
     Q_PROPERTY(bool isDownloading READ isDownloading NOTIFY fileChanged)
     Q_PROPERTY(bool isUploaded READ isUploaded NOTIFY fileChanged)
@@ -50,7 +50,7 @@ public:
     td_api::file* getFile();
     void setFile(td_api::object_ptr<td_api::file> file);
 
-    qint32 getId();
+    int32_t getId();
     QString getRemoteId();
     QString getRemoteUniqueId();
     QString localPath();
@@ -61,12 +61,12 @@ public:
     bool isDownloading();
     bool isUploaded();
     bool isUploading();
-    qint32 getExpectedSize();
-    qint32 getDownloadedSize();
-    qint32 getUploadedSize();
+    int32_t getExpectedSize();
+    int32_t getDownloadedSize();
+    int32_t getUploadedSize();
 
 signals:
-    void fileChanged(qint32 fileId);
+    void fileChanged(int32_t fileId);
     void localPathChanged(QString path);
 
 public slots:

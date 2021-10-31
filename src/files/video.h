@@ -59,7 +59,7 @@ public slots:
 
 private:
     td_api::object_ptr<td_api::messageVideo> _video;
-    qint32 _videoFileId;
+    int32_t _videoFileId;
 };
 
 #endif // VIDEO_H

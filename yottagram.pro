@@ -167,7 +167,7 @@ HEADERS += \
     src/users.h \
     src/webpage.h
 
-LIBS = -lssl -pthread /usr/lib/libtdclient.so.1.6.0 /usr/lib/libtdcore.a /usr/lib/libtdutils.a
+LIBS = -lssl -pthread /usr/lib/libtdclient.so.1.7.0 /usr/lib/libtdapi.a /usr/lib/libtdcore.a /usr/lib/libtdutils.a
 
 RESOURCES += \
     qml/resources/icons.qrc

@@ -27,7 +27,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 class Audio : public ContentFile
 {
     Q_OBJECT
-    Q_PROPERTY(qint32 duration READ getDuration NOTIFY audioChanged)
+    Q_PROPERTY(int32_t duration READ getDuration NOTIFY audioChanged)
     Q_PROPERTY(QString title READ getTitle NOTIFY audioChanged)
     Q_PROPERTY(QString performer READ getPerformer NOTIFY audioChanged)
     Q_PROPERTY(QString name READ getName NOTIFY audioChanged)
@@ -42,7 +42,7 @@ public:
     void addUpdateFiles();
 
     td_api::formattedText* getCaption();
-    qint32 getDuration() const;
+    int32_t getDuration() const;
     QString getTitle() const;
     QString getPerformer() const;
     QString getName() const;
@@ -56,7 +56,7 @@ public slots:
 
 private:
     td_api::object_ptr<td_api::messageAudio> _audio;
-    qint32 _audioFileId;
+    int32_t _audioFileId;
 };
 
 #endif // AUDIO_H

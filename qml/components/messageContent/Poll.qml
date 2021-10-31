@@ -41,7 +41,7 @@ Column {
             delegate: Avatar {
                 width: Theme.itemSizeExtraSmall/2
                 height: width
-                avatarPhoto: if (user.hasPhoto) user.smallPhoto
+                avatarPhoto: if (user.hasPhoto) user.smallPhoto.localPath
                 userName: user.name
                 readonly property var user: users.getUserAsVariant(modelData)
             }

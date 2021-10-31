@@ -36,13 +36,9 @@ Item {
         property real stickerPickerPostition: 0
         property int stickerPickerPickedPack: 0
 
-        Component.onCompleted: stickerSetGridView.model = stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 267)
-    }
-
-    Connections {
-        target: authorization
-        onIsAuthorizedChanged: {
-            stickerSets.getStickerSets()
+        Component.onCompleted: {
+//            stickerSetGridView.model = stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 267)
+//            stickerSets.getStickerSets()
         }
     }
 
@@ -60,18 +56,18 @@ Item {
             id: stickerSetsListView
             width: parent.width
             height: Theme.itemSizeLarge
-            model: stickerSets
+//            model: stickerSets
             orientation: Qt.Horizontal
             layoutDirection: Qt.LeftToRight
             contentX: settings.stickerPickerPostition
             onContentXChanged: settings.stickerPickerPostition = contentX
             Component.onCompleted: contentX = contentX
             delegate: ListItem {
-                width: Theme.itemSizeLarge
-                height: Theme.itemSizeLarge
+                contentHeight: Theme.itemSizeLarge
+                contentWidth: Theme.itemSizeLarge
                 Image {
-                    sourceSize.width: Theme.itemSizeMedium - Theme.paddingSmall*2
-                    sourceSize.height: Theme.itemSizeMedium - Theme.paddingSmall*2
+                    width: Theme.itemSizeLarge - Theme.paddingSmall*2
+                    height: Theme.itemSizeLarge - Theme.paddingSmall*2
                     fillMode: Image.PreserveAspectFit
                     anchors.centerIn: parent
                     asynchronous: true

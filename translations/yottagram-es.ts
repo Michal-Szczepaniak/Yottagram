@@ -45,6 +45,10 @@
         <source>Greg Goncharov (@gregguh at telegram) for icons.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>dashinfantry for chinese translation.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>AuthorizationCode</name>
@@ -184,6 +188,10 @@
         <source>Customize</source>
         <translation>Personalizar</translation>
     </message>
+    <message>
+        <source>Clear history</source>
+        <translation type="unfinished">Limpiar historial</translation>
+    </message>
 </context>
 <context>
     <name>Chat</name>
@@ -194,10 +202,6 @@
     <message>
         <source>%1 joined</source>
         <translation>%1 se unió</translation>
-    </message>
-    <message>
-        <source>Clear history</source>
-        <translation>Limpiar historial</translation>
     </message>
     <message>
         <source>Open secret chat</source>
@@ -234,14 +238,6 @@
     <message>
         <source>Delete</source>
         <translation>Borrar</translation>
-    </message>
-    <message>
-        <source>Forwarded from %1</source>
-        <translation>Reenviado desde %1</translation>
-    </message>
-    <message>
-        <source>Edited</source>
-        <translation>Editado</translation>
     </message>
     <message>
         <source>Deselect</source>
@@ -315,6 +311,14 @@
         <source>Press and hold record button to record voice note.</source>
         <translation>Mantén pulsado el botón de grabar para grabar nota de voz.</translation>
     </message>
+    <message>
+        <source>Scroll to first unread mention</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set as read</source>
+        <translation type="unfinished">Marcar como leído</translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
@@ -325,14 +329,6 @@
     <message>
         <source>Settings</source>
         <translation>Ajustes</translation>
-    </message>
-    <message>
-        <source>Archived chats</source>
-        <translation>Chats archivados</translation>
-    </message>
-    <message>
-        <source>Main chats</source>
-        <translation>Chats principales</translation>
     </message>
     <message>
         <source>Search</source>
@@ -411,7 +407,86 @@
     </message>
     <message>
         <source>%1 pinned message</source>
-        <translation>%1 fijó un mensaje</translation>
+        <translation type="unfinished">%1 fijó un mensaje</translation>
+    </message>
+</context>
+<context>
+    <name>ChatNew</name>
+    <message>
+        <source>Open secret chat</source>
+        <translation type="unfinished">Abrir chat secreto</translation>
+    </message>
+    <message>
+        <source>Close secret chat</source>
+        <translation type="unfinished">Cerrar chat secreto</translation>
+    </message>
+    <message>
+        <source>Set self-destruct timer</source>
+        <translation type="unfinished">Configurar autodestrucción</translation>
+    </message>
+    <message>
+        <source>Cancel selection</source>
+        <translation type="unfinished">Cancelar selección</translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished">Reenviar</translation>
+    </message>
+    <message>
+        <source>Scroll to first unread mention</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Saved messages</source>
+        <translation type="unfinished">Mensajes guardados</translation>
+    </message>
+    <message>
+        <source>%1 members</source>
+        <translation type="unfinished">%1 miembros</translation>
+    </message>
+    <message>
+        <source>%L1 forwarded messages</source>
+        <translation type="unfinished">%L1 mensajes reenviados</translation>
+    </message>
+    <message>
+        <source>Type the text...</source>
+        <translation type="unfinished">Escribe texto...</translation>
+    </message>
+    <message>
+        <source>Image</source>
+        <translation type="unfinished">Imagen</translation>
+    </message>
+    <message>
+        <source>Video</source>
+        <translation type="unfinished">Vídeo</translation>
+    </message>
+    <message>
+        <source>Audio</source>
+        <translation type="unfinished">Audio</translation>
+    </message>
+    <message>
+        <source>Document</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>File</source>
+        <translation type="unfinished">Archivo</translation>
+    </message>
+    <message>
+        <source>Poll</source>
+        <translation type="unfinished">Encuesta</translation>
+    </message>
+    <message>
+        <source>Sticker</source>
+        <translation type="unfinished">Sticker</translation>
+    </message>
+    <message>
+        <source>Voice Note</source>
+        <translation type="unfinished">Nota voz</translation>
+    </message>
+    <message>
+        <source>Press and hold record button to record voice note.</source>
+        <translation type="unfinished">Mantén pulsado el botón de grabar para grabar nota de voz.</translation>
     </message>
 </context>
 <context>
@@ -483,6 +558,14 @@
     <message>
         <source>%1 pinned message</source>
         <translation>%1 fijó un mensaje</translation>
+    </message>
+    <message>
+        <source>Forwarded from %1</source>
+        <translation type="unfinished">Reenviado desde %1</translation>
+    </message>
+    <message>
+        <source>Edited</source>
+        <translation type="unfinished">Editado</translation>
     </message>
 </context>
 <context>
@@ -756,6 +839,10 @@
         <source>Customize</source>
         <translation>Personalizar</translation>
     </message>
+    <message>
+        <source>Clear history</source>
+        <translation type="unfinished">Limpiar historial</translation>
+    </message>
 </context>
 <context>
     <name>User</name>
@@ -833,6 +920,10 @@
     <message>
         <source>Customize</source>
         <translation>Personalizar</translation>
+    </message>
+    <message>
+        <source>Clear history</source>
+        <translation type="unfinished">Limpiar historial</translation>
     </message>
 </context>
 <context>

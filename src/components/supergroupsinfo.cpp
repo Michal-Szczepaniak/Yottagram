@@ -12,7 +12,7 @@ void SupergroupsInfo::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), SIGNAL(updateSupergroup(td_api::updateSupergroup*)), this, SLOT(updateSupergroup(td_api::updateSupergroup*)));
 }
 
-SupergroupInfo *SupergroupsInfo::getSupergroup(qint32 id)
+SupergroupInfo *SupergroupsInfo::getSupergroup(int32_t id)
 {
     if (!_supergroups.contains(id)) return nullptr;
 
@@ -23,7 +23,7 @@ void SupergroupsInfo::updateSupergroup(td_api::updateSupergroup *updateSupergrou
 {
     if (updateSupergroup->supergroup_ == nullptr) return;
 
-    qint32 chatId = updateSupergroup->supergroup_->id_;
+    int32_t chatId = updateSupergroup->supergroup_->id_;
     if (!_supergroups.contains(chatId)) {
         SupergroupInfo* info = new SupergroupInfo();
         info->setSupergroupInfo(std::move(updateSupergroup->supergroup_));

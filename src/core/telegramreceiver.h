@@ -39,7 +39,7 @@ public:
     void run() override;
 
 signals:
-    void messageReceived(quint64 id, td_api::Object* object);
+    void messageReceived(uint64_t id, td_api::Object* object);
 
 private:
     const double WAIT_TIMEOUT = 1000;

@@ -30,7 +30,7 @@ class SupergroupFullInfo : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString description READ getDescription NOTIFY supergroupFullInfoChanged)
-    Q_PROPERTY(qint32 memberCount READ getMemberCount NOTIFY supergroupFullInfoChanged)
+    Q_PROPERTY(int32_t memberCount READ getMemberCount NOTIFY supergroupFullInfoChanged)
     Q_PROPERTY(QString inviteLink READ getInviteLink NOTIFY supergroupFullInfoChanged)
     /** Add rest of the properties, im too sleepy and they don't matter much to us */
 public:
@@ -39,7 +39,7 @@ public:
     void setSupergroupFullInfo(td_api::object_ptr<td_api::supergroupFullInfo> supergroupFullInfo);
 
     QString getDescription() const;
-    qint32 getMemberCount() const;
+    int32_t getMemberCount() const;
     QString getInviteLink() const;
 signals:
     void supergroupFullInfoChanged();

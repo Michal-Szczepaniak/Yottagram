@@ -38,7 +38,7 @@ QString SupergroupFullInfo::getDescription() const
     return QString::fromStdString(_supergroupFullInfo->description_);
 }
 
-qint32 SupergroupFullInfo::getMemberCount() const
+int32_t SupergroupFullInfo::getMemberCount() const
 {
     if (_supergroupFullInfo == nullptr) return 0;
     return _supergroupFullInfo->member_count_;

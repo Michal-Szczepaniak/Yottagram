@@ -2,9 +2,34 @@
     <qresource prefix="/">
         <file>icons/corner.svg</file>
         <file>icons/icon-s-pinned.svg</file>
+        <file>icons/icon-s-pinned.png</file>
+        <file>icons/+1.5/icon-s-pinned.png</file>
+        <file>icons/+2.0/icon-s-pinned.png</file>
+        <file>icons/+2.5/icon-s-pinned.png</file>
+        <file>icons/+3.0/icon-s-pinned.png</file>
         <file>icons/icon-s-read.svg</file>
+        <file>icons/icon-s-read.png</file>
+        <file>icons/+1.5/icon-s-read.png</file>
+        <file>icons/+2.0/icon-s-read.png</file>
+        <file>icons/+2.5/icon-s-read.png</file>
+        <file>icons/+3.0/icon-s-read.png</file>
         <file>icons/icon-s-sending.svg</file>
+        <file>icons/icon-s-sending.png</file>
+        <file>icons/+1.5/icon-s-sending.png</file>
+        <file>icons/+2.0/icon-s-sending.png</file>
+        <file>icons/+2.5/icon-s-sending.png</file>
+        <file>icons/+3.0/icon-s-sending.png</file>
         <file>icons/icon-s-sent.svg</file>
+        <file>icons/icon-s-sent.png</file>
+        <file>icons/+1.5/icon-s-sent.png</file>
+        <file>icons/+2.0/icon-s-sent.png</file>
+        <file>icons/+2.5/icon-s-sent.png</file>
+        <file>icons/+3.0/icon-s-sent.png</file>
         <file>icons/icon-s-bookmark.svg</file>
+        <file>icons/icon-s-bookmark.png</file>
+        <file>icons/+1.5/icon-s-bookmark.png</file>
+        <file>icons/+2.0/icon-s-bookmark.png</file>
+        <file>icons/+2.5/icon-s-bookmark.png</file>
+        <file>icons/+3.0/icon-s-bookmark.png</file>
     </qresource>
 </RCC>

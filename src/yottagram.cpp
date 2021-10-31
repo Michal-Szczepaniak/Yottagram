@@ -30,6 +30,10 @@ int main(int argc, char *argv[])
 {
     QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
     QSharedPointer<QQuickView> view(SailfishApp::createView());
+    qRegisterMetaType<int32_t>("int32_t");
+    qRegisterMetaType<uint32_t>("uint32_t");
+    qRegisterMetaType<int64_t>("int64_t");
+    qRegisterMetaType<uint64_t>("uint64_t");
 
     Core core;
     core.init();

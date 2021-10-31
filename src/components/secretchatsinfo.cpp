@@ -13,7 +13,7 @@ void SecretChatsInfo::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), SIGNAL(updateSecretChat(td_api::updateSecretChat*)), this, SLOT(updateSecretChat(td_api::updateSecretChat*)));
 }
 
-SecretChatInfo *SecretChatsInfo::getSecretChat(qint32 id)
+SecretChatInfo *SecretChatsInfo::getSecretChat(int32_t id)
 {
     if (!_secretChats.contains(id)) return nullptr;
 
@@ -24,7 +24,7 @@ void SecretChatsInfo::updateSecretChat(td_api::updateSecretChat *updateSecretCha
 {
     if (updateSecretChat->secret_chat_ == nullptr) return;
 
-    qint32 chatId = updateSecretChat->secret_chat_->id_;
+    int32_t chatId = updateSecretChat->secret_chat_->id_;
     if (!_secretChats.contains(chatId)) {
         SecretChatInfo* info = new SecretChatInfo();
         info->setSecretChatInfo(std::move(updateSecretChat->secret_chat_));

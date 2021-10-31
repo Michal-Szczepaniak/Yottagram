@@ -12,7 +12,7 @@ void BasicGroupsInfo::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), SIGNAL(updateBasicGroup(td_api::updateBasicGroup*)), this, SLOT(updateBasicGroup(td_api::updateBasicGroup*)));
 }
 
-BasicGroupInfo *BasicGroupsInfo::getBasicGroup(qint32 id)
+BasicGroupInfo *BasicGroupsInfo::getBasicGroup(int32_t id)
 {
     if (!_basicGroups.contains(id)) return nullptr;
 
@@ -23,7 +23,7 @@ void BasicGroupsInfo::updateBasicGroup(td_api::updateBasicGroup *updateBasicGrou
 {
     if (updateBasicGroup->basic_group_ == nullptr) return;
 
-    qint32 chatId = updateBasicGroup->basic_group_->id_;
+    int32_t chatId = updateBasicGroup->basic_group_->id_;
     if (!_basicGroups.contains(chatId)) {
         BasicGroupInfo* info = new BasicGroupInfo();
         info->setBasicGroupInfo(std::move(updateBasicGroup->basic_group_));

@@ -52,7 +52,7 @@ public slots:
 
 private:
     td_api::object_ptr<td_api::messageVideoNote> _videoNote;
-    qint32 _videoNoteFileId;
+    int32_t _videoNoteFileId;
 };
 
 #endif // VIDEONOTE_H

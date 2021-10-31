@@ -27,7 +27,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 class ScopeNotificationSettings : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qint32 muteFor READ getMuteFor WRITE setMuteFor NOTIFY scopeNotificationSettingsChanged)
+    Q_PROPERTY(int32_t muteFor READ getMuteFor WRITE setMuteFor NOTIFY scopeNotificationSettingsChanged)
     Q_PROPERTY(bool showPreview READ getShowPreview WRITE setShowPreview NOTIFY scopeNotificationSettingsChanged)
     Q_PROPERTY(bool disablePinnedMessageNotifications READ getDisablePinnedMessageNotifications WRITE setDisablePinnedMessageNotifications NOTIFY scopeNotificationSettingsChanged)
     Q_PROPERTY(bool disableMentionNotifications READ getDisableMentionNotifications WRITE setDisableMentionNotifications NOTIFY scopeNotificationSettingsChanged)
@@ -39,8 +39,8 @@ public:
     td_api::scopeNotificationSettings* getScopeNotificationSettings();
 
     td_api::object_ptr<td_api::NotificationSettingsScope> getScope() const;
-    qint32 getMuteFor() const;
-    void setMuteFor(qint32 muteFor);
+    int32_t getMuteFor() const;
+    void setMuteFor(int32_t muteFor);
     bool getShowPreview() const;
     void setShowPreview(bool showPreview);
     bool getDisablePinnedMessageNotifications() const;

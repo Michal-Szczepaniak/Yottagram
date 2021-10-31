@@ -18,7 +18,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import SortFilterProxyModel 0.2
 import org.nemomobile.dbus 2.0
@@ -29,35 +29,39 @@ Page {
     id: page
 
     allowedOrientations: Orientation.All
-    property int currentChatList: 0
 
-//    DBusAdaptor {
-//        id: shareDBusInterface
-//        service: "com.verdanditeam.yottagram"
-//        path: "/"
-//        iface: "com.verdanditeam.yottagram"
-//        xml: '<interface name="com.verdanditeam.yottagram">
-//                          <method name="share"> <arg type="s" name="title" direction="in"/> <arg type="s" name="description" direction="in" /> </method>
-//                          <method name="openChat"> <arg type="x" name="chatId" direction="in" /> </method>
-//                          <method name="openApp" />
-//                      </interface>'
+    DBusAdaptor {
+        id: shareDBusInterface
+        service: "com.verdanditeam.yottagram"
+        path: "/"
+        iface: "com.verdanditeam.yottagram"
+        xml: '<interface name="com.verdanditeam.yottagram">
+                  <method name="share"> <arg type="s" name="title" direction="in"/> <arg type="s" name="description" direction="in" /> </method>
+                  <method name="openChat"> <arg type="x" name="chatId" direction="in" /> </method>
+                  <method name="openApp" />
+                  <method name="ping"> <arg name="id" direction="out" type="b"> </method>
+              </interface>'
 
-//        function share(args) {
-//            console.log(args.title, args.description);
-//        }
+        function share(args) {
+            console.log(args.title, args.description);
+        }
 
-//        function openChat(chatId) {
-//            app.activate()
-//            var chat = chatList.openChat(chatId)
-//            if (typeof chat === "undefined" || !chat) return;
-//            if (pageStack.nextPage(page) !== null) pageStack.pop(pageStack.nextPage(page), PageStackAction.Immediate)
-//            pageStack.push(Qt.resolvedUrl("Chat.qml"), { chat: chat })
-//        }
+        function openChat(chatId) {
+            app.activate()
+            var chat = chatList.openChat(chatId)
+            if (typeof chat === "undefined" || !chat) return;
+            if (pageStack.nextPage(page) !== null) pageStack.pop(pageStack.nextPage(page), PageStackAction.Immediate)
+            pageStack.push(Qt.resolvedUrl("Chat.qml"), { chat: chat })
+        }
 
-//        function openApp() {
-//            app.activate()
-//        }
-//    }
+        function openApp() {
+            app.activate()
+        }
+
+        function ping() {
+            return true;
+        }
+    }
 
     Connections {
         target: authorization
@@ -70,11 +74,6 @@ Page {
                 pageStack.replace(Qt.resolvedUrl("AuthorizationNumber.qml"));
             }
         }
-    }
-
-
-    onStatusChanged: {
-        if (status === PageStatus.Activating) searchField.focus = false
     }
 
     SilicaFlickable {
@@ -91,12 +90,6 @@ Page {
                 text: qsTr("Settings")
                 onClicked: pageStack.push(Qt.resolvedUrl("Settings.qml"))
             }
-
-            MenuItem {
-                text: page.currentChatList == 0 ? qsTr("Archived chats") : qsTr("Main chats")
-                onClicked: page.currentChatList == 0 ? page.currentChatList = 1 : page.currentChatList = 0
-                visible: false
-            }
         }
 
         SearchField {
@@ -104,6 +97,7 @@ Page {
             width: parent.width
             anchors.top: parent.top
             placeholderText: qsTr("Search")
+            onFocusChanged: console.log(chatList.rowCount())
             Keys.onReturnPressed: {
                 if(searchField.text.length != 0) {
                     app.playlistModel.search(searchField.text)
@@ -123,10 +117,6 @@ Page {
                     value: false
                     inverted: true
                 },
-                ValueFilter {
-                    roleName: "chatlist"
-                    value: page.currentChatList
-                },
                 RegExpFilter {
                     roleName: "name"
                     pattern: searchField.text
@@ -144,39 +134,57 @@ Page {
             anchors.bottom: parent.bottom
             clip: true
             spacing: 0
-            model: chatListProxyModel
-            cacheBuffer: 0
+            model: page.status === PageStatus.Inactive ? null : chatListProxyModel
+            contentHeight: Theme.itemSizeLarge * count
+            cacheBuffer: Theme.itemSizeLarge*100
             delegate: ListItem {
+                id: listItem
                 contentHeight: Theme.itemSizeLarge
+                contentWidth: parent.width
 
-                menu: Component {
-                    ContextMenu {
-                        id: contextMenu
-                        MenuItem {
-                            text: isPinned ? qsTr("Unpin from top") : qsTr("Pin to top")
-                            onClicked: {
-                                chatList.togglePinnedChat(id)
-                            }
+                onPressAndHold: {
+                    contextMenuLoader.active = true;
+                }
+
+                Loader {
+                    id: contextMenuLoader
+                    active: false
+                    asynchronous: true
+                    onStatusChanged: {
+                        if(status === Loader.Ready) {
+                            listItem.menu = item;
+                            listItem.openMenu();
                         }
-
-                        MenuItem {
-                            text: qsTr("Set as read")
-                            onClicked: {
-                                chatList.markChatAsRead(id)
+                    }
+                    sourceComponent: Component {
+                        ContextMenu {
+                            id: contextMenu
+                            MenuItem {
+                                text: isPinned ? qsTr("Unpin from top") : qsTr("Pin to top")
+                                onClicked: {
+                                    chatList.togglePinnedChat(id)
+                                }
                             }
-                        }
 
-                        MenuItem {
-                            text: qsTr("Delete chat")
+                            MenuItem {
+                                text: qsTr("Set as read")
+                                onClicked: {
+                                    chatList.markChatAsRead(id)
+                                }
+                            }
 
-                            onClicked: {
-                                var list = chatList
-                                var chatId = id
-                                remorseAction("Deleting", function() {
-                                    var chat = list.getChatAsVariant(chatId)
-                                    chat.clearHistory(true)
-                                    if (chat.getChatType() === "secret") chat.closeSecretChat()
-                                })
+                            MenuItem {
+                                text: qsTr("Delete chat")
+
+                                onClicked: {
+                                    var list = chatList
+                                    var chatId = id
+                                    remorseAction("Deleting", function() {
+                                        var chat = list.getChatAsVariant(chatId)
+                                        chat.clearHistory(true)
+                                        if (chat.getChatType() === "secret") chat.closeSecretChat()
+                                    })
+                                }
                             }
                         }
                     }
@@ -185,8 +193,9 @@ Page {
                 Avatar {
                     id: avatar
                     userName: name
-                    avatarPhoto: if (hasPhoto && !isSelf) photo
-                    self: isSelf
+                    avatarPhoto: (hasPhoto && !isSelf) ? photo.localPath : (isSelf ? Qt.resolvedUrl("qrc:/icons/icon-s-bookmark.png") : undefined)
+                    forceBackground: isSelf
+                    maskEnabled: true
                     height: Theme.itemSizeLarge - Theme.paddingMedium*2
                     width: height
                     anchors.top: parent.top
@@ -217,6 +226,7 @@ Page {
                         }
 
                         Label {
+                            textFormat: Text.PlainText
                             anchors.verticalCenter: parent.verticalCenter
                             text: isSelf ? qsTr("Saved messages") : name
                             truncationMode: TruncationMode.Fade
@@ -264,14 +274,19 @@ Page {
                             height: Theme.iconSizeExtraSmall
                             anchors.verticalCenter: parent.verticalCenter
                             fillMode: Image.PreserveAspectFit
-                            source: isRead ? "qrc:///icons/icon-s-read.svg" : "qrc:///icons/icon-s-sent.svg"
-                            sourceSize.width: width
-                            sourceSize.height: height
+                            source: Qt.resolvedUrl(isRead ? "qrc:/icons/icon-s-read.png" : "qrc:/icons/icon-s-sent.png")
                         }
 
                         Label {
                             id: time
-                            text: lastMessageTimestamp
+                            text: {
+                                var current = new Date()
+                                var timestamp = lastMessageTimestamp
+                                var diff = (current.getTime()/1000) - timestamp
+                                if (diff >= 604800) return (new Date(timestamp*1000)).toLocaleString(Qt.locale("en_GB"), "yyyy.MM.dd")
+                                else if (diff >= 86400) return (new Date(timestamp*1000)).toLocaleString(Qt.locale("en_GB"), "ddd")
+                                return (new Date(timestamp*1000)).toLocaleString(Qt.locale("en_GB"), "hh:mm")
+                            }
                             anchors.verticalCenter: parent.verticalCenter
                             color: Theme.secondaryColor
                             font.pixelSize: Theme.fontSizeExtraSmall
@@ -280,6 +295,7 @@ Page {
 
                     Row {
                         anchors.right: parent.right
+                        spacing: Theme.paddingSmall
 
                         Icon {
                             id: pinnedIcon
@@ -287,9 +303,7 @@ Page {
                             height: Theme.iconSizeExtraSmall
                             anchors.verticalCenter: parent.verticalCenter
                             fillMode: Image.PreserveAspectFit
-                            source: "qrc:///icons/icon-s-pinned.svg"
-                            sourceSize.width: width
-                            sourceSize.height: height
+                            source: Qt.resolvedUrl("qrc:/icons/icon-s-pinned.png")
                             opacity: 0.3
                             visible: unreadCount === 0 && isPinned
                         }
@@ -300,11 +314,27 @@ Page {
                             height: implicitHeight
                             visible: unreadCount > 0 || !isPinned
                         }
+
+                        Rectangle {
+                            color: Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity)
+                            width: Theme.iconSizeSmall
+                            height: Theme.iconSizeSmall
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: unreadMentionCount > 0
+                            radius: width*0.5
+
+                            Icon {
+                                id: mentionsIcon
+                                anchors.fill: parent
+                                fillMode: Image.PreserveAspectFit
+                                source: "image://theme/icon-m-health"
+                            }
+                        }
                     }
                 }
 
                 onClicked: {
-                    var chat = chatList.openChat(id)
+                    var chat = chatList.getChatAsVariant(id)
                     pageStack.push(Qt.resolvedUrl("Chat.qml"), { chat: chat })
                 }
             }

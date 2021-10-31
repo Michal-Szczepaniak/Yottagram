@@ -13,17 +13,17 @@ public:
     explicit BasicGroupsInfo(QObject *parent = nullptr);
 
     void setTelegramManager(shared_ptr<TelegramManager> manager);
-    BasicGroupInfo* getBasicGroup(qint32 id);
+    BasicGroupInfo* getBasicGroup(int32_t id);
 
 signals:
-    void basicGroupInfoChanged(qint32 chatId);
+    void basicGroupInfoChanged(int32_t chatId);
 
 public slots:
     void updateBasicGroup(td_api::updateBasicGroup *updateBasicGroup);
 
 private:
     shared_ptr<TelegramManager> _manager;
-    QHash<qint32, BasicGroupInfo*> _basicGroups;
+    QHash<int32_t, BasicGroupInfo*> _basicGroups;
 };
 
 #endif // BASICGROUPSINFO_H

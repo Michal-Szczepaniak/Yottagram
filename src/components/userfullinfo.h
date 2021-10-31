@@ -36,7 +36,7 @@ class UserFullInfo : public QObject
     Q_PROPERTY(bool needPhoneNumberPrivacyException READ needPhoneNumberPrivacyException NOTIFY userFullInfoChanged)
     Q_PROPERTY(QString bio READ getBio NOTIFY userFullInfoChanged)
     Q_PROPERTY(QString shareText READ getShareText NOTIFY userFullInfoChanged)
-    Q_PROPERTY(qint32 groupInCommonCount READ getGroupInCommonCount NOTIFY userFullInfoChanged)
+    Q_PROPERTY(int32_t groupInCommonCount READ getGroupInCommonCount NOTIFY userFullInfoChanged)
 public:
     explicit UserFullInfo(QObject *parent = nullptr);
 
@@ -49,7 +49,7 @@ public:
     bool needPhoneNumberPrivacyException() const;
     QString getBio() const;
     QString getShareText() const;
-    qint32 getGroupInCommonCount() const;
+    int32_t getGroupInCommonCount() const;
 
 signals:
     void userFullInfoChanged();

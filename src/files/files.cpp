@@ -52,7 +52,7 @@ void Files::setOtherAutoDownloadSettings(AutoDownloadSettings *settings)
 
 void Files::appendFile(td_api::object_ptr<td_api::file> file, QString fileType)
 {
-    qint32 fileId = file->id_;
+    int32_t fileId = file->id_;
 
     if (_files.contains(file->id_)) {
         _files[file->id_]->setFile(std::move(file));
@@ -65,7 +65,7 @@ void Files::appendFile(td_api::object_ptr<td_api::file> file, QString fileType)
     if (fileType == "avatar" || fileType == "sticker") considerAutoDownloading(fileId, fileType);
 }
 
-void Files::considerAutoDownloading(qint32 fileId, QString fileType)
+void Files::considerAutoDownloading(int32_t fileId, QString fileType)
 {
     shared_ptr<File> file = getFile(fileId);
     if (file == nullptr) return;
@@ -88,7 +88,7 @@ AutoDownloadSettings *Files::getActiveAutoDownloadSetting()
     return _otherAutoDownloadSettings;
 }
 
-shared_ptr<File> Files::getFile(qint32 fileId) const
+shared_ptr<File> Files::getFile(int32_t fileId) const
 {
     if (_files.contains(fileId)) {
         return _files[fileId];

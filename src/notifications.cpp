@@ -96,10 +96,10 @@ void Notifications::updateNotificationGroup(td_api::updateNotificationGroup *upd
             newNotification->setPreviewBody(textFrom + message.getText().left(30));
             newNotification->setSummary(tr("New message from %1").arg(chat->getTitle()));
             newNotification->setBody(textFrom + message.getText());
-            newNotification->setReplacesId(static_cast<quint32>(notification->id_));
+            newNotification->setReplacesId(static_cast<uint32_t>(notification->id_));
             newNotification->setTimestamp(QDateTime::fromTime_t(static_cast<uint>(notification->date_)));
             QVariantList arguments;
-            arguments.append(chat->getId());
+            arguments.append(QVariant::fromValue(chat->getId()));
             QVariantList actions;
             actions.append(Notification::remoteAction("default", "openChat", "com.verdanditeam.yottagram", "/", "com.verdanditeam.yottagram", "openChat", arguments));
             newNotification->setRemoteActions(actions);
@@ -120,10 +120,10 @@ void Notifications::updateNotificationGroup(td_api::updateNotificationGroup *upd
             newNotification->setPreviewBody(chat->getTitle());
             newNotification->setSummary(tr("New secret chat"));
             newNotification->setBody(chat->getTitle());
-            newNotification->setReplacesId(static_cast<quint32>(notification->id_));
+            newNotification->setReplacesId(static_cast<uint32_t>(notification->id_));
             newNotification->setTimestamp(QDateTime::fromTime_t(static_cast<uint>(notification->date_)));
             QVariantList arguments;
-            arguments.append(chat->getId());
+            arguments.append(QVariant::fromValue(chat->getId()));
             QVariantList actions;
             actions.append(Notification::remoteAction("default", "openChat", "com.verdanditeam.yottagram", "/", "com.verdanditeam.yottagram", "openChat", arguments));
             newNotification->publish();
@@ -132,7 +132,7 @@ void Notifications::updateNotificationGroup(td_api::updateNotificationGroup *upd
         }
     }
 
-    for (qint32 notificationId : updateNotificationGroup->removed_notification_ids_) {
+    for (int32_t notificationId : updateNotificationGroup->removed_notification_ids_) {
         if (_notifications.contains(notificationId)) {
             Notification* notification = _notifications.take(notificationId);
             notification->close();

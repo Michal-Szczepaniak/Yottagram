@@ -53,7 +53,7 @@ private:
     shared_ptr<Users> _users;
     shared_ptr<ChatList> _chatList;
     shared_ptr<Files> _files;
-    QHash<qint32, Notification*> _notifications;
+    QHash<int32_t, Notification*> _notifications;
 };
 
 #endif // NOTIFICATIONS_H

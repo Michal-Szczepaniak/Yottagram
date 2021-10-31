@@ -39,6 +39,15 @@ Page {
             title: (chat.getChatType() === "channel") ? qsTr("Channel info") : qsTr("Group info")
         }
 
+        PullDownMenu {
+            MenuItem {
+                text: qsTr("Clear history")
+                onClicked: Remorse.popupAction(root, "", function() {
+                    chat.clearHistory()
+                })
+            }
+        }
+
         Column {
             id: column
 //            spacing: Theme.paddingLarge
@@ -61,7 +70,7 @@ Page {
                         width: height
                         height: parent.height
                         userName: chat.title
-                        avatarPhoto: chat.smallPhoto
+                        avatarPhoto: chat.smallPhoto.localPath
                         maskEnabled: false
 //                        onAvatarPhotoChanged: if (chat.smallPhoto && !chat.smallPhoto.isDownloading && !chat.smallPhoto.isDownloaded) chat.smallPhoto.download()
                     }
@@ -206,7 +215,7 @@ Page {
                         Avatar {
                             width: height
                             height: parent.height
-                            avatarPhoto: user.smallPhoto
+                            avatarPhoto: user.smallPhoto.localPath
                         }
 
                         Item {

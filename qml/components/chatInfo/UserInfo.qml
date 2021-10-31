@@ -41,6 +41,15 @@ Page {
             title: qsTr("User info")
         }
 
+        PullDownMenu {
+            MenuItem {
+                text: qsTr("Clear history")
+                onClicked: Remorse.popupAction(root, "", function() {
+                    chat.clearHistory()
+                })
+            }
+        }
+
         Column {
             id: column
 //            spacing: Theme.paddingLarge
@@ -63,7 +72,7 @@ Page {
                         width: height
                         height: parent.height
                         userName: user.name
-                        avatarPhoto: user.smallPhoto
+                        avatarPhoto: user.smallPhoto.localPath
                         maskEnabled: false
 //                        onAvatarPhotoChanged: if (user.smallPhoto && !user.smallPhoto.isDownloading && !user.smallPhoto.isDownloaded) user.smallPhoto.download()
                     }
