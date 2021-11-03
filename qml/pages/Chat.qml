@@ -28,6 +28,7 @@ import Sailfish.Pickers 1.0
 import SortFilterProxyModel 0.2
 import com.verdanditeam.user 1.0
 import com.verdanditeam.audiorecorder 1.0
+import com.verdanditeam.pinnedmessages 1.0
 import "../components/functions/muteFormat.js" as TimeFormat
 import "../components"
 import "../components/messageContent"
@@ -104,8 +105,6 @@ Page {
     ConfigurationGroup {
         id: chatSettings
         path: "/apps/yottagram/" + chat.id
-
-        property var pinnedMessageId: 0
     }
 
     SortFilterProxyModel {
@@ -114,6 +113,12 @@ Page {
         sorters: [
             RoleSorter { roleName: "messageId"; sortOrder: Qt.DescendingOrder}
         ]
+    }
+
+    PinnedMessages {
+        id: pinnedMessages
+        chatId: chat.id
+        Component.onCompleted: chat.injectDependencies(pinnedMessages)
     }
 
     SilicaFlickable {
@@ -289,23 +294,15 @@ Page {
             anchors.right: parent.right
             asynchronous: true
             sourceComponent: pinnedComponent
-            active: chat.pinnedMessageId !== 0 && chat.pinnedMessageId !== chatSettings.pinnedMessageId && typeof chat.pinnedMessage !== "undefined"
+            active: pinnedMessages.id !== 0
             visible: active
-            height: active ? Theme.fontSizeMedium*2 : 0
+            height: active ? Theme.fontSizeSmall*2 + Theme.paddingLarge : 0
 
             Connections {
-                target: chat
-                onGotMessage: {
-                    if (messageId === chat.pinnedMessageId) {
-                        pinnedMessageLoader.active = true
-                    }
-                }
+                target: pinnedMessages
 
-                onPinnedMessageIdChanged: {
-                    pinnedMessageLoader.active = false
-                    if (chat.pinnedMessageId !== 0 && chat.pinnedMessageId !== chatSettings.pinnedMessageId && typeof chat.pinnedMessage !== "undefined") {
-                        pinnedMessageLoader.active = true
-                    }
+                onIdChanged: {
+                    pinnedMessageLoader.active = pinnedMessages.id !== 0
                 }
             }
         }
@@ -315,7 +312,6 @@ Page {
 
             PinnedMessage {
                 onClosed: {
-                    chatSettings.pinnedMessageId = chat.pinnedMessageId
                     pinnedMessageLoader.active = false
                 }
             }
@@ -357,9 +353,9 @@ Page {
                 property bool creationDone: false
                 property var chatHistoryTime: (new Date()).getTime()
                 property var chatMessagesTime: (new Date()).getTime()
-//                property var oldContentHeight: 0
-//                property var historyBrowsing: 0
-//                property var originMessage: 0
+                property var oldContentHeight: 0
+                property var historyBrowsing: 0
+                property var originMessage: 0
                 property var blinkMessage: -1
 
                 Component.onCompleted: {
@@ -374,6 +370,19 @@ Page {
                         console.log("got chat history ", chat.rowCount(), messages.creationDone)
                         messages.countChanged(chat.rowCount())
                     }
+
+                    onLastMessageIdChanged: {
+                        var highlightMessage = Math.max(0, messages.indexAt(0, messages.contentY + messages.height -1))
+                        var messageItem = chatProxyModel.get(highlightMessage)
+                        if ((!messageItem.isRead || messageItem.containsUnreadMention) && messageItem.received && messages.initDone) {
+                            if (messageItem.containsUnreadMention || messageItem.containsUnreadReply) {
+                                messages.blinkMessage = highlightMessage
+                                messages.blinkMessage = messages.blinkMessage
+                                console.log(messages.blinkMessage)
+                            }
+                            chat.setMessageAsRead(messageItem.messageId)
+                        }
+                    }
                 }
 
                 function countChanged(chagedCount) {
@@ -387,54 +396,54 @@ Page {
                     }
                 }
 
-//                Timer {
-//                    id: getHistoryTimer
-//                    interval: 1000
-//                    repeat: false
-//                    onTriggered: chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
-//                }
+                Timer {
+                    id: getHistoryTimer
+                    interval: 1000
+                    repeat: false
+                    onTriggered: chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
+                }
 
-//                onBeforeScrollingToBottom: {
-//                    if (originMessage !== 0) {
-//                        var messageIndex = chat.getMessageIndex(originMessage)
-//                        if (messageIndex === -1) {
-//                            chat.scrollToMessage(originMessage)
-//                        } else {
-//                            messages.fastScrollEnabled = false
-//                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(messageIndex), ListView.SnapPosition)
-//                        }
-//                    }
-//                }
+                onBeforeScrollingToBottom: {
+                    if (originMessage !== 0) {
+                        var messageIndex = chat.getMessageIndex(originMessage)
+                        if (messageIndex === -1) {
+                            chat.scrollToMessage(originMessage)
+                        } else {
+                            messages.fastScrollEnabled = false
+                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(messageIndex), ListView.SnapPosition)
+                        }
+                    }
+                }
 
-//                onScrollingToBottom: {
-//                    messages.fastScrollEnabled = true
-//                    if (originMessage !== 0) {
-//                        if (count !== 0) originMessage = 0
-//                    } else if (chat.lastMessageId !== chatProxyModel.get(0).messageId) {
-//                        historyBrowsing = 0
-//                        chat.scrollToMessage(chat.unreadCount > 0 && chat.lastMessageId !== 0 ? chat.lastReadInboxMessageId : chat.lastMessageId)
-//                    }
-//                }
+                onScrollingToBottom: {
+                    messages.fastScrollEnabled = true
+                    if (originMessage !== 0) {
+                        if (count !== 0) originMessage = 0
+                    } else if (chat.lastMessageId !== chatProxyModel.get(0).messageId) {
+                        historyBrowsing = 0
+                        chat.scrollToMessage(chat.unreadCount > 0 && chat.lastMessageId !== 0 ? chat.lastReadInboxMessageId : chat.lastMessageId)
+                    }
+                }
 
-//                onContentHeightChanged: {
-//                    if (oldContentHeight === 0 && contentHeight !== 0) {
-//                        if (historyBrowsing !== 0) {
-//                            if (originMessage !== 0 && chat.getMessageIndex(originMessage) !== -1) {
-//                                messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(originMessage)), ListView.SnapPosition)
-//                                originMessage = 0
-//                            } else {
-//                                messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(historyBrowsing)), ListView.SnapPosition)
-//                            }
-//                        } else {
-//                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId)), ListView.SnapPosition)
-//                        }
-//                    }
-//                    oldContentHeight = contentHeight
+                onContentHeightChanged: {
+                    if (oldContentHeight === 0 && contentHeight !== 0) {
+                        if (historyBrowsing !== 0) {
+                            if (originMessage !== 0 && chat.getMessageIndex(originMessage) !== -1) {
+                                messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(originMessage)), ListView.SnapPosition)
+                                originMessage = 0
+                            } else {
+                                messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(historyBrowsing)), ListView.SnapPosition)
+                            }
+                        } else {
+                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId)), ListView.SnapPosition)
+                        }
+                    }
+                    oldContentHeight = contentHeight
 
-//                    if (count != 0 && count < 20 && historyBrowsing === 0) {
-//                        chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
-//                    }
-//                }
+                    if (count != 0 && count < 20 && historyBrowsing === 0) {
+                        chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
+                    }
+                }
 
                 onAtYBeginningChanged: if (atYBeginning) chat.getMoreChatHistory()
                 onAtYEndChanged: if (atYEnd && chatProxyModel.get(0).messageId !== chat.lastMessageId) chat.getMoreChatMessages()
@@ -443,7 +452,7 @@ Page {
                     var highlightMessage = Math.max(0, indexAt(0, contentY + height - Theme.paddingSmall))
                     var messageItem = chatProxyModel.get(highlightMessage)
                     if ((!messageItem.isRead || messageItem.containsUnreadMention) && messageItem.received && initDone) {
-                        if (messageItem.containsUnreadMention) {
+                        if ((messageItem.containsUnreadMention || messageItem.containsUnreadReply) && messages.blinkMessage == -1) {
                             blinkMessage = highlightMessage
                             blinkMessage = blinkMessage
                         }
@@ -481,7 +490,6 @@ Page {
                         target: messages
                         onBlinkMessageChanged: {
                             if (index === messages.blinkMessage) {
-                                messages.blinkMessage = -1
                                 if (!flashAnimation.running) flashAnimation.start()
                             }
                         }
@@ -490,6 +498,7 @@ Page {
                     SequentialAnimation {
                         id: flashAnimation
                         running: false
+                        onRunningChanged: if (!running) messages.blinkMessage = -1
                         ColorAnimation { target: blinkBackground; property: "color"; from: Theme.rgba(Theme.highlightBackgroundColor, 0); to: Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity);  duration: 500}
                         PauseAnimation { duration: 500 }
                         ColorAnimation { target: blinkBackground; property: "color"; from: Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity); to: Theme.rgba(Theme.highlightBackgroundColor, 0);  duration: 500}
@@ -567,14 +576,29 @@ Page {
                                 MenuItem {
                                     text: qsTr("Pin message")
                                     visible: {
-                                        if (messageId === chat.pinnedMessageId) return false
+                                        if (pinnedMessages.contains(messageId)) return false
 
                                         var type = chat.getChatType()
                                         if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canPinMessages
                                         if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canPinMessages
                                         return chat.canPinMessages
                                     }
-                                    onClicked: pageStack.push(pinMessageDialog, {messageId: messageId})
+                                    onClicked: pageStack.push(pinMessageDialog, {messageId: messageId, priv: (type === "private" || type === "secret")})
+                                }
+
+                                MenuItem {
+                                    text: qsTr("Unpin message")
+                                    visible: {
+                                        if (!pinnedMessages.contains(messageId)) return false
+
+                                        var type = chat.getChatType()
+                                        if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canPinMessages
+                                        if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canPinMessages
+                                        return chat.canPinMessages
+                                    }
+                                    onClicked: {
+                                        chat.unpinMessage(messageId)
+                                    }
                                 }
 
                                 MenuItem {
@@ -1151,6 +1175,7 @@ Page {
     Dialog {
         id: pinMessageDialog
         property var messageId
+        property var priv
         onMessageIdChanged: notify.checked = true
 
         allowedOrientations: Orientation.All
@@ -1162,14 +1187,14 @@ Page {
             TextSwitch {
                 id: notify
                 width: parent.width
-                text: qsTr("Notify members")
+                text: pinMessageDialog.priv ? qsTr("Also pin for %1").arg(chat.title) : qsTr("Notify members")
                 checked: true
             }
         }
 
         onDone: {
             if (result == DialogResult.Accepted) {
-                chat.pinMessage(messageId, notify.checked)
+                chat.pinMessage(messageId, priv ? true : notify.checked, priv ? !notify.checked : false)
             }
         }
     }

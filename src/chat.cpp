@@ -44,6 +44,10 @@ Chat::Chat(td_api::chat* chat, shared_ptr<Files> files) :
     setUnreadCount(_chat->unread_count_);
     setUnreadMentionCount(_chat->unread_mention_count_);
 
+    for (td_api::object_ptr<td_api::chatPosition> &position: _chat->positions_) {
+        updatePosition(position.release());
+    }
+
     if (this->hasPhoto()) {
         setChatPhoto(std::move(chat->photo_));
     }
@@ -188,6 +192,15 @@ int32_t Chat::getUnreadMentionCount() const
 void Chat::setUnreadMentionCount(int32_t unreadMentionCount)
 {
     _unreadMentionCount = unreadMentionCount;
+
+    emit unreadMentionCountChanged(unreadMentionCount);
+}
+
+void Chat::updateMessageMentionRead(int32_t unreadMentionCount, int64_t messageId)
+{
+    _unreadMentionCount = unreadMentionCount;
+
+    if (_messages.contains(messageId)) _messages[messageId]->setContainsUnreadMention(false);
 
     emit unreadMentionCountChanged(unreadMentionCount);
 }
@@ -414,25 +427,6 @@ bool Chat::getDefaultDisableMentionNotifications() const
     return _scopeNotificationSettings->disable_mention_notifications_ == _notificationSettings->disable_mention_notifications_;
 }
 
-int64_t Chat::getPinnedMessageId()
-{
-    qWarning() << "FIXME: " << __PRETTY_FUNCTION__;
-//    if (_chat->pinned_message_id_ != 0 && !_messages.contains(_chat->pinned_message_id_)) {
-//        fetchMessage(_chat->pinned_message_id_);
-//    }
-
-//    return _chat->pinned_message_id_;
-}
-
-Message *Chat::getPinnedMessage()
-{
-    qWarning() << "FIXME: " << __PRETTY_FUNCTION__;
-    return nullptr;
-//    if (_chat->pinned_message_id_ == 0 || !_messages.contains(_chat->pinned_message_id_)) return nullptr;
-
-//    return _messages[_chat->pinned_message_id_];
-}
-
 bool Chat::getCanSendMessages() const
 {
     return _chat->permissions_->can_send_messages_;
@@ -545,6 +539,13 @@ void Chat::setSupergroupsInfo(shared_ptr<SupergroupsInfo> supergroupsInfo)
     _supergroupsInfo = supergroupsInfo;
 
     connect(_supergroupsInfo.get(), &SupergroupsInfo::supergroupInfoChanged, [this](int32_t chatId){ if (chatId == getIdFromType()) emit supergroupChanged(getId()); });
+}
+
+void Chat::injectDependencies(PinnedMessages *component)
+{
+    component->setTelegramManager(_manager);
+    component->setFiles(_files);
+    component->setUsers(_users);
 }
 
 int Chat::rowCount(const QModelIndex &parent) const
@@ -698,6 +699,10 @@ QVariant Chat::data(const QModelIndex &index, int role) const
         QQmlEngine::setObjectOwnership(poll, QQmlEngine::CppOwnership);
         return QVariant::fromValue(poll);
     }
+    case MessageRoles::ContainsUnreadMentionRole:
+        return message->containsUnreadMention();
+    case MessageRoles::ContainsUnreadReplyRole:
+        return message->received() && message->getId() <= _lastReadInboxMessageId && message->replyMessageId() != 0;
     }
 
     return QVariant();
@@ -731,6 +736,8 @@ QHash<int, QByteArray> Chat::roleNames() const
     roles[HasWebPageRole] = "hasWebPage";
     roles[WebPageRole] = "webPage";
     roles[PollRole] = "poll";
+    roles[ContainsUnreadMentionRole] = "containsUnreadMention";
+    roles[ContainsUnreadReplyRole] = "containsUnreadReply";
     return roles;
 }
 
@@ -1169,9 +1176,14 @@ void Chat::saveToGallery(QString filePath)
     QFile::copy(filePath, QStandardPaths::writableLocation(QStandardPaths::PicturesLocation) + filePath.split('/').last());
 }
 
-void Chat::pinMessage(int64_t messageId, bool notify)
+void Chat::pinMessage(int64_t messageId, bool notify, bool onlyForSelf)
 {
-//    _manager->sendQuery(new td_api::pinChatMessage(getId(), messageId, !notify));
+    _manager->sendQuery(new td_api::pinChatMessage(getId(), messageId, !notify, onlyForSelf));
+}
+
+void Chat::unpinMessage(int64_t messageId)
+{
+    _manager->sendQuery(new td_api::unpinChatMessage(getId(), messageId));
 }
 
 void Chat::setTtl(int32_t ttl)
@@ -1293,6 +1305,7 @@ void Chat::onMessageContentChanged(int64_t messageId)
 void Chat::onMessageIdChanged(int64_t oldMessageId, int64_t newMessageId)
 {
     auto index = getMessageIndex(oldMessageId);
+    if (index == -1) return;
     _message_ids[index] = newMessageId;
     _messages[newMessageId] = _messages.take(oldMessageId);
     emit dataChanged(createIndex(index, 0), createIndex(index, 0), {IdRole});

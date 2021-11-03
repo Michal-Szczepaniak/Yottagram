@@ -30,12 +30,14 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <QUrl>
 #include <QVector>
+#include <QQmlComponent>
 #include "components/userfullinfo.h"
 #include "components/basicgroupfullinfo.h"
 #include "components/supergroupfullinfo.h"
 #include "components/secretchatsinfo.h"
 #include "components/basicgroupsinfo.h"
 #include "components/supergroupsinfo.h"
+#include "components/pinnedmessages.h"
 
 class Chat : public QAbstractListModel
 {
@@ -67,8 +69,6 @@ class Chat : public QAbstractListModel
     Q_PROPERTY(bool defaultDisablePinnedMessageNotifications READ getDefaultDisablePinnedMessageNotifications NOTIFY chatNotificationSettingsChanged)
     Q_PROPERTY(bool disableMentionNotifications READ getDisableMentionNotifications WRITE setDisableMentionNotifications NOTIFY chatNotificationSettingsChanged)
     Q_PROPERTY(bool defaultDisableMentionNotifications READ getDefaultDisableMentionNotifications NOTIFY chatNotificationSettingsChanged)
-    Q_PROPERTY(int64_t pinnedMessageId READ getPinnedMessageId NOTIFY pinnedMessageIdChanged)
-    Q_PROPERTY(Message* pinnedMessage READ getPinnedMessage NOTIFY pinnedMessageIdChanged)
     Q_PROPERTY(bool canSendMessages READ getCanSendMessages NOTIFY permissionsChanged)
     Q_PROPERTY(bool canSendMediaMessages READ getCanSendMediaMessages NOTIFY permissionsChanged)
     Q_PROPERTY(bool canSendPolls READ getCanSendPolls NOTIFY permissionsChanged)
@@ -105,6 +105,8 @@ public:
         HasWebPageRole,
         WebPageRole,
         PollRole,
+        ContainsUnreadMentionRole,
+        ContainsUnreadReplyRole
     };
 
     Chat(td_api::chat* chat, shared_ptr<Files> files);
@@ -126,6 +128,7 @@ public:
     void setUnreadCount(int32_t unreadCount);
     int32_t getUnreadMentionCount() const;
     void setUnreadMentionCount(int32_t unreadMentionCount);
+    void updateMessageMentionRead(int32_t unreadMentionCount, int64_t messageId);
     int64_t lastReadInboxMessageId() const { return _lastReadInboxMessageId; }
     void setLastReadInboxMessageId(int64_t messageId);
     int64_t lastReadOutboxMessageId() const { return _lastReadOutboxMessageId; }
@@ -148,8 +151,6 @@ public:
     bool getDisableMentionNotifications() const;
     void setDisableMentionNotifications(bool disableMentionNotifications);
     bool getDefaultDisableMentionNotifications() const;
-    int64_t getPinnedMessageId();
-    Message* getPinnedMessage();
     bool getCanSendMessages() const;
     bool getCanSendMediaMessages() const;
     bool getCanSendPolls() const;
@@ -167,6 +168,7 @@ public:
     void setSecretChatsInfo(shared_ptr<SecretChatsInfo> secretChatsInfo);
     void setBasicGroupsInfo(shared_ptr<BasicGroupsInfo> basicGroupsInfo);
     void setSupergroupsInfo(shared_ptr<SupergroupsInfo> supergroupsInfo);
+    Q_INVOKABLE void injectDependencies(PinnedMessages* component);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = TypeRole) const;
@@ -210,7 +212,8 @@ public:
     Q_INVOKABLE void closeSecretChat();
     Q_INVOKABLE void clearHistory(bool deleteChat = false);
     Q_INVOKABLE void saveToGallery(QString filePath);
-    Q_INVOKABLE void pinMessage(int64_t messageId, bool notify);
+    Q_INVOKABLE void pinMessage(int64_t messageId, bool notify = true, bool onlyForSelf = false);
+    Q_INVOKABLE void unpinMessage(int64_t messageId);
     void setTtl(int32_t ttl);
 
     bool hasPhoto();
@@ -233,7 +236,6 @@ signals:
     void supergroupChanged(int64_t chatId);
     void ttlChanged(int32_t ttl);
     void chatNotificationSettingsChanged();
-    void pinnedMessageIdChanged();
     void permissionsChanged();
     void gotMessage(int64_t messageId);
     void lastMessageIdChanged(int64_t lastMessageId);

@@ -55,8 +55,7 @@ signals:
 
 public slots:
     void updateInstalledStickerSets(td_api::updateInstalledStickerSets *updateInstalledStickerSets);
-    void gotInstalledStickerSets(td_api::stickerSets *stickerSets);
-    void gotStickerSet(td_api::stickerSet *stickerSet);
+    void onGotStickerSet(td_api::stickerSet *stickerSet);
     void onIsAuthorizedChanged(bool isAuthorized);
 
 private:

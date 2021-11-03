@@ -61,6 +61,8 @@ void ChatList::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), &TelegramManager::updateScopeNotificationSettings, this, &ChatList::updateScopeNotificationSettings);
     connect(_manager.get(), &TelegramManager::updateUnreadChatCount, this, &ChatList::updateUnreadChatCount);
     connect(_manager.get(), &TelegramManager::updateUnreadMessageCount, this, &ChatList::updateUnreadMessageCount);
+    connect(_manager.get(), &TelegramManager::updateChatUnreadMentionCount, this, &ChatList::updateChatUnreadMentionCount);
+    connect(_manager.get(), &TelegramManager::updateMessageMentionRead, this, &ChatList::updateMessageMentionRead);
     connect(_manager.get(), &TelegramManager::gotChats, this, &ChatList::onGotChats);
 }
 
@@ -432,9 +434,8 @@ QVariant ChatList::getChatAsVariant(int64_t chatId) const
 
 void ChatList::markChatAsRead(int64_t chatId)
 {
-//    _manager->sendQuery(new td_api::viewMessages(getChat(chatId)->getId(), {getChat(chatId)->getLastMessage()->id_}, true));
+    _manager->sendQuery(new td_api::viewMessages(getChat(chatId)->getId(), 0, {getChat(chatId)->getLastMessage()->id_}, true));
     _manager->sendQuery(new td_api::toggleChatIsMarkedAsUnread(chatId, false));
-    qWarning() << "FIXME: " << __PRETTY_FUNCTION__;
 }
 
 QVariant ChatList::getChannelNotificationSettings()
@@ -460,8 +461,7 @@ QVariant ChatList::getPrivateNotificationSettings()
 
 void ChatList::togglePinnedChat(int64_t chatId)
 {
-    qWarning() << "FIXME: " << __PRETTY_FUNCTION__;
-//    _manager->sendQuery(new td_api::toggleChatIsPinned(chatId, !getChat(chatId)->isPinned()));
+    _manager->sendQuery(new td_api::toggleChatIsPinned(getSelectedChatList(), chatId, !getChat(chatId)->isPinned(getSelectedChatList())));
 }
 
 bool ChatList::autoDownloadEnabled()
@@ -549,8 +549,7 @@ void ChatList::updateChatPhoto(td_api::updateChatPhoto *updateChatPhoto)
 {
     auto chat = updateChatPhoto->chat_id_;
     auto photo = move(updateChatPhoto->photo_);
-//    _chats[chat]->setChatPhoto(move(photo));
-    qWarning() << "FIXME: " << __PRETTY_FUNCTION__;
+    _chats[chat]->setChatPhoto(move(photo));
     this->updateChat(chat, {PhotoRole, HasPhotoRole});
 }
 
@@ -628,4 +627,10 @@ void ChatList::updateChatUnreadMentionCount(td_api::updateChatUnreadMentionCount
 {
     getChat(updateChatUnreadMentionCount->chat_id_)->setUnreadMentionCount(updateChatUnreadMentionCount->unread_mention_count_);
     updateChat(updateChatUnreadMentionCount->chat_id_, {UnreadMentionCountRole});
+}
+
+void ChatList::updateMessageMentionRead(td_api::updateMessageMentionRead *updateMessageMentionRead)
+{
+    getChat(updateMessageMentionRead->chat_id_)->updateMessageMentionRead(updateMessageMentionRead->unread_mention_count_, updateMessageMentionRead->message_id_);
+    updateChat(updateMessageMentionRead->chat_id_, {UnreadMentionCountRole});
 }

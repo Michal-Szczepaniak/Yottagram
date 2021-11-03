@@ -319,6 +319,14 @@
         <source>Set as read</source>
         <translation type="unfinished">标记为已读</translation>
     </message>
+    <message>
+        <source>Also pin for %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unpin message</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
@@ -564,6 +572,10 @@
     <message>
         <source>Edited</source>
         <translation type="unfinished">已编辑</translation>
+    </message>
+    <message>
+        <source>Message was pinned</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

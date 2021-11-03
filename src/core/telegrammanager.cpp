@@ -105,11 +105,21 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
     case td_api::getChats::ID:
         emit gotChats(static_cast<td_api::chats*>(message));
         break;
+    case td_api::getStickerSet::ID:
+        emit gotStickerSet(static_cast<td_api::stickerSet*>(message));
+        break;
+    case td_api::searchChatMessages::ID:
+        switch (response.subType) {
+        case td_api::searchMessagesFilterPinned::ID:
+            emit gotSearchChatMessagesFilterPinned(response.chatId, static_cast<td_api::messages*>(message));
+        default:
+            emit gotSearchChatMessages(response.chatId, static_cast<td_api::messages*>(message));
+        }
     }
 }
 
 void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
-{
+{   
     emit onMessageReceived(id, message);
     if (id > 1) handleMessageWithResponse(id, message);
 
@@ -210,6 +220,15 @@ void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
             },
             [this](td_api::updateChatUnreadMentionCount &updateChatUnreadMentionCount) {
                 emit this->updateChatUnreadMentionCount(&updateChatUnreadMentionCount);
+            },
+            [this](td_api::updateMessageMentionRead &updateMessageMentionRead) {
+                emit this->updateMessageMentionRead(&updateMessageMentionRead);
+            },
+            [](td_api::error &error) {
+                qWarning() << QString::fromStdString(error.message_);
+            },
+            [this](td_api::updateMessageIsPinned &updateMessageIsPinned) {
+                emit this->updateMessageIsPinned(&updateMessageIsPinned);
             },
             [](auto &update) { Q_UNUSED(update) }
         )

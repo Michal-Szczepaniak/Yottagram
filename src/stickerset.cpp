@@ -34,8 +34,6 @@ void StickerSet::setStickerSet(td_api::stickerSet *stickerSet)
     while (_stickerIds.count())
         _stickerIds.removeLast();
 
-
-    qWarning() << "FIXME: " << __PRETTY_FUNCTION__;
     if (_stickerSet->thumbnail_ != nullptr && _stickerSet->thumbnail_->format_->get_id() != td_api::thumbnailFormatMpeg4::ID) {
         _thumbnailId = _stickerSet->thumbnail_->file_->id_;
         _files->appendFile(move(_stickerSet->thumbnail_->file_), "sticker");

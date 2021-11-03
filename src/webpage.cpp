@@ -44,7 +44,5 @@ QString WebPage::getTitle()
 
 QString WebPage::getDescription()
 {
-    qWarning() << "FIXME: " << __PRETTY_FUNCTION__;
-    return "";
-//    return QString::fromStdString(_webPage->description_);
+    return QString::fromStdString(_webPage->description_->text_);
 }

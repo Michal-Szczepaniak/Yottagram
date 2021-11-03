@@ -75,6 +75,8 @@ public:
     int32_t getSenderUserId();
     QString getFormattedTimestamp();
     QString getFormattedForwardTimestamp();
+    bool containsUnreadMention() const;
+    void setContainsUnreadMention(bool containsUnreadMention);
 
     bool hasWebPage() const;
     WebPage* getWebPage() const;

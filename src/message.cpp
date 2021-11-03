@@ -107,7 +107,11 @@ QString Message::getText()
     case td_api::messageChatSetTtl::ID:
         return tr("Self-destruct timer set to %n second(s)", "", static_cast<td_api::messageChatSetTtl*>(_message->content_.get())->ttl_);
     case td_api::messagePinMessage::ID:
-        return tr("%1 pinned message").arg(_users->getUser(getSenderUserId())->getName());
+        if (_message->sender_->get_id() == td_api::messageSenderUser::ID) {
+            return tr("%1 pinned message").arg(_users->getUser(getSenderUserId())->getName());
+        } else if (_message->sender_->get_id() == td_api::messageSenderChat::ID) {
+            return tr("Message was pinned");
+        }
     default:
         return "Message unsupported";
     }
@@ -237,7 +241,7 @@ td_api::messageForwardInfo* Message::getForwardedInfo()
 
 int32_t Message::getSenderUserId()
 {
-    if (_message->sender_->get_id() != td_api::messageSenderUser::ID) return -1;
+    if (_message->sender_->get_id() != td_api::messageSenderUser::ID) return 0;
     return static_cast<td_api::messageSenderUser*>(_message->sender_.get())->user_id_;
 }
 
@@ -273,6 +277,16 @@ QString Message::getFormattedForwardTimestamp()
     }
 
     return QDateTime::fromTime_t(static_cast<uint>(_message->forward_info_->date_)).toString(format);
+}
+
+bool Message::containsUnreadMention() const
+{
+    return _message->contains_unread_mention_;
+}
+
+void Message::setContainsUnreadMention(bool containsUnreadMention)
+{
+    _message->contains_unread_mention_ = containsUnreadMention;
 }
 
 bool Message::hasWebPage() const

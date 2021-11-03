@@ -37,8 +37,7 @@ Item {
         property int stickerPickerPickedPack: 0
 
         Component.onCompleted: {
-//            stickerSetGridView.model = stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 267)
-//            stickerSets.getStickerSets()
+            stickerSetGridView.model = stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 267)
         }
     }
 
@@ -56,15 +55,15 @@ Item {
             id: stickerSetsListView
             width: parent.width
             height: Theme.itemSizeLarge
-//            model: stickerSets
+            model: stickerSets
             orientation: Qt.Horizontal
             layoutDirection: Qt.LeftToRight
             contentX: settings.stickerPickerPostition
             onContentXChanged: settings.stickerPickerPostition = contentX
             Component.onCompleted: contentX = contentX
-            delegate: ListItem {
-                contentHeight: Theme.itemSizeLarge
-                contentWidth: Theme.itemSizeLarge
+            delegate: MouseArea {
+                height: Theme.itemSizeLarge
+                width: Theme.itemSizeLarge
                 Image {
                     width: Theme.itemSizeLarge - Theme.paddingSmall*2
                     height: Theme.itemSizeLarge - Theme.paddingSmall*2

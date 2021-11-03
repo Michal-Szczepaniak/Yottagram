@@ -137,6 +137,7 @@ public slots:
     void updateUnreadChatCount(td_api::updateUnreadChatCount *updateUnreadChatCount);
     void updateUnreadMessageCount(td_api::updateUnreadMessageCount *updateUnreadMessageCount);
     void updateChatUnreadMentionCount(td_api::updateChatUnreadMentionCount *updateChatUnreadMentionCount);
+    void updateMessageMentionRead(td_api::updateMessageMentionRead *updateMessageMentionRead);
 
 protected:
     void updateChat(int64_t chat, const QVector<int> &roles = {IdRole, NameRole});

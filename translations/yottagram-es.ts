@@ -319,6 +319,14 @@
         <source>Set as read</source>
         <translation type="unfinished">Marcar como leído</translation>
     </message>
+    <message>
+        <source>Also pin for %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unpin message</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
@@ -566,6 +574,10 @@
     <message>
         <source>Edited</source>
         <translation type="unfinished">Editado</translation>
+    </message>
+    <message>
+        <source>Message was pinned</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
