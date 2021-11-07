@@ -27,6 +27,7 @@ SOURCES += src/core.cpp \
     src/components/basicgroupfullinfo.cpp \
     src/components/basicgroupinfo.cpp \
     src/components/basicgroupsinfo.cpp \
+    src/components/pinnedmessages.cpp \
     src/components/scopenotificationsettings.cpp \
     src/components/secretchatinfo.cpp \
     src/components/secretchatsinfo.cpp \
@@ -130,6 +131,7 @@ HEADERS += \
     src/components/basicgroupfullinfo.h \
     src/components/basicgroupinfo.h \
     src/components/basicgroupsinfo.h \
+    src/components/pinnedmessages.h \
     src/components/scopenotificationsettings.h \
     src/components/secretchatinfo.h \
     src/components/secretchatsinfo.h \
@@ -167,7 +169,7 @@ HEADERS += \
     src/users.h \
     src/webpage.h
 
-LIBS = -lssl -pthread /usr/lib/libtdclient.so.1.6.0 /usr/lib/libtdcore.a /usr/lib/libtdutils.a
+LIBS = -lssl -pthread /usr/lib/libtdclient.so.1.7.0 /usr/lib/libtdapi.a /usr/lib/libtdcore.a /usr/lib/libtdutils.a
 
 RESOURCES += \
     qml/resources/icons.qrc

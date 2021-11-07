@@ -50,7 +50,7 @@ td_api::formattedText* Audio::getCaption()
     return _audio->caption_.get();
 }
 
-qint32 Audio::getDuration() const
+int32_t Audio::getDuration() const
 {
     return _audio->audio_->duration_;
 }

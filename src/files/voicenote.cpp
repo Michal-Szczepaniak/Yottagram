@@ -50,7 +50,7 @@ td_api::formattedText* VoiceNote::getCaption()
     return _voiceNote->caption_.get();
 }
 
-qint32 VoiceNote::getDuration() const
+int32_t VoiceNote::getDuration() const
 {
     return _voiceNote->voice_note_->duration_;
 }

@@ -44,6 +44,10 @@
         <source>Greg Goncharov (@gregguh at telegram) for icons.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>dashinfantry for chinese translation.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>AuthorizationCode</name>
@@ -183,6 +187,10 @@
         <source>Default</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Clear history</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Chat</name>
@@ -192,10 +200,6 @@
     </message>
     <message>
         <source>%1 joined</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Clear history</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -307,11 +311,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Forwarded from %1</source>
+        <source>Scroll to first unread mention</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Edited</source>
+        <source>Set as read</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Also pin for %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unpin message</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -335,14 +347,6 @@
     </message>
     <message>
         <source>Delete chat</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Archived chats</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Main chats</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -404,11 +408,90 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Saved messages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>%1 pinned message</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ChatNew</name>
+    <message>
+        <source>Open secret chat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close secret chat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set self-destruct timer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel selection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scroll to first unread mention</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Saved messages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 members</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%L1 forwarded messages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Type the text...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Video</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Document</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Poll</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Voice Note</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Press and hold record button to record voice note.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -479,6 +562,18 @@
     </message>
     <message>
         <source>%1 pinned message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Forwarded from %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Edited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Message was pinned</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -753,6 +848,10 @@
         <source>Default</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Clear history</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>User</name>
@@ -829,6 +928,10 @@
     </message>
     <message>
         <source>Default</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear history</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

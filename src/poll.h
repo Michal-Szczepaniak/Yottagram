@@ -28,15 +28,15 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 class Poll : public QAbstractListModel
 {
     Q_OBJECT
-    Q_PROPERTY(qint64 id READ getId NOTIFY pollChanged)
+    Q_PROPERTY(int64_t id READ getId NOTIFY pollChanged)
     Q_PROPERTY(QString question READ getQuestion NOTIFY pollChanged)
-    Q_PROPERTY(qint32 totalVoterCount READ getTotalVoterCount NOTIFY pollChanged)
+    Q_PROPERTY(int32_t totalVoterCount READ getTotalVoterCount NOTIFY pollChanged)
     Q_PROPERTY(bool isAnonymous READ isAnonymous NOTIFY pollChanged)
     Q_PROPERTY(int type READ getType NOTIFY pollChanged)
     Q_PROPERTY(QString typeName READ getTypeName NOTIFY pollChanged)
     Q_PROPERTY(bool isClosed READ isClosed NOTIFY pollChanged)
     Q_PROPERTY(bool allowMultipleAnswers READ getAllowMultipleAnswers NOTIFY pollChanged)
-    Q_PROPERTY(qint32 correctOptionId READ getCorrectOptionId NOTIFY pollChanged)
+    Q_PROPERTY(int32_t correctOptionId READ getCorrectOptionId NOTIFY pollChanged)
     Q_PROPERTY(bool isAnswered READ isAnswered NOTIFY pollChanged)
     Q_PROPERTY(QString recentVoters READ getRecentVotersString NOTIFY pollChanged)
 public:
@@ -60,16 +60,16 @@ public:
     QVariant data(const QModelIndex &index, int role = TextRole) const;
     QHash<int, QByteArray> roleNames() const;
 
-    qint64 getId() const;
+    int64_t getId() const;
     QString getQuestion() const;
-    qint32 getTotalVoterCount() const;
-    std::vector<qint32> getRecentVoterUserIds() const;
+    int32_t getTotalVoterCount() const;
+    std::vector<int32_t> getRecentVoterUserIds() const;
     bool isAnonymous() const;
     int getType() const;
     QString getTypeName() const;
     bool isClosed() const;
     bool getAllowMultipleAnswers() const;
-    qint32 getCorrectOptionId() const;
+    int32_t getCorrectOptionId() const;
     bool isAnswered() const;
     QString getRecentVotersString() const;
 

@@ -24,7 +24,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "telegramreceiver.h"
 #include <QObject>
 #include <QTimer>
-#include <networkmanager.h>
+#include <connman-qt5/networkmanager.h>
 
 using namespace std;
 
@@ -34,28 +34,35 @@ class TelegramManager : public QObject
 public:
     TelegramManager();
 
+    struct MessageWithResponse {
+        int64_t chatId;
+        int32_t type;
+        int32_t subType;
+    };
+
     void init();
     void sendQuery(td_api::Function* message);
-    qint32 getMyId() const;
+    void sendQueryWithRespone(int64_t chatId, int32_t type, int32_t subType, td_api::Function* message);
+    int32_t getMyId() const;
     bool getDaemonEnabled() const;
     void setDaemonEnabled(bool daemonEnabled);
     void setNetworkType(QString networkType);
     QString getNetworkType() const;
 
+private:
+    void handleMessageWithResponse(uint64_t id, td_api::Object* message);
+
 signals:
-    void onMessageReceived(quint64 id, td_api::Object* message);
+    void onMessageReceived(uint64_t id, td_api::Object* message);
     void send(td_api::Function* message);
     void updateNewChat(td_api::updateNewChat *newChat);
-    void chats(td_api::chats *chats);
     void updateChatTitle(td_api::updateChatTitle *updateChatTitle);
     void updateChatPhoto(td_api::updateChatPhoto *updateChatPhoto);
     void updateChatLastMessage(td_api::updateChatLastMessage *updateChatLastMessage);
-    void updateChatOrder(td_api::updateChatOrder *updateChatOrder);
+    void updateChatPosition(td_api::updateChatPosition *updateChatPosition);
     void updateFile(td_api::updateFile *updateFile);
     void updateChatReadInbox(td_api::updateChatReadInbox *updateChatReadInbox);
     void updateChatReadOutbox(td_api::updateChatReadOutbox *updateChatReadOutbox);
-    void message(td_api::message *message);
-    void messages(td_api::messages *messages);
     void updateNewMessage(td_api::updateNewMessage *updateNewMessage);
     void updateUser(td_api::updateUser *updateUser);
     void updateMessageSendSucceeded(td_api::updateMessageSendSucceeded *updateMessageSendSucceeded);
@@ -75,19 +82,25 @@ signals:
     void updateChatNotificationSettings(td_api::updateChatNotificationSettings *updateChatNotificationSettings);
     void updateScopeNotificationSettings(td_api::updateScopeNotificationSettings *updateScopeNotificationSettings);
     void autoDownloadSettingsPresets(td_api::autoDownloadSettingsPresets *autoDownloadSettingsPresets);
-    void updateChatPinnedMessage(td_api::updateChatPinnedMessage *updateChatPinnedMessage);
     void updateInstalledStickerSets(td_api::updateInstalledStickerSets *updateInstalledStickerSets);
-    void stickerSets(td_api::stickerSets *stickerSets);
-    void stickerSet(td_api::stickerSet *stickerSet);
-    void updateChatIsPinned(td_api::updateChatIsPinned *updateChatIsPinned);
     void updateChatPermissions(td_api::updateChatPermissions *updateChatPermissions);
     void updateUnreadChatCount(td_api::updateUnreadChatCount *updateUnreadChatCount);
     void updateUnreadMessageCount(td_api::updateUnreadMessageCount *updateUnreadMessageCount);
+    void updateChatUnreadMentionCount(td_api::updateChatUnreadMentionCount *updateChatUnreadMentionCount);
+    void updateMessageIsPinned(td_api::updateMessageIsPinned *updateMessageIsPinned);
+    void updateMessageMentionRead(td_api::updateMessageMentionRead *updateMessageMentionRead);
 
-    void myIdChanged(qint32 myId);
+// Responses
+    void gotChatHistory(int64_t chatId, td_api::messages *messages);
+    void gotChats(td_api::chats *chats);
+    void gotStickerSet(td_api::stickerSet *stickerSet);
+    void gotSearchChatMessages(int64_t chatId, td_api::messages *messages);
+    void gotSearchChatMessagesFilterPinned(int64_t chatId, td_api::messages *messages);
+
+    void myIdChanged(int32_t myId);
 
 public slots:
-    void messageReceived(quint64 id, td_api::Object* message);
+    void messageReceived(uint64_t id, td_api::Object* message);
     void onUpdateOption(td_api::updateOption *updateOption);
     void defaultRouteChanged(NetworkService* networkService);
 
@@ -95,9 +108,11 @@ private:
     TelegramReceiver receiver;
     QThread receiverThread;
     QTimer incomingMessageCheckTimer;
-    qint32 _myId;
+    int32_t _myId;
     NetworkManager* _networkManager;
     QString _networkType;
+    QHash<uint64_t, MessageWithResponse> _messages;
+    uint64_t _messageId;
 };
 
 #endif // TELEGRAMSENDER_H

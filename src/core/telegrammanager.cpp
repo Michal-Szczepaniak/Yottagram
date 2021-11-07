@@ -24,7 +24,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QSettings>
 #include <QGuiApplication>
 
-TelegramManager::TelegramManager()
+TelegramManager::TelegramManager(): _messageId(1)
 {
 }
 
@@ -32,8 +32,8 @@ void TelegramManager::init()
 {
     _networkManager = NetworkManager::instance();
 
-    connect(&receiver, SIGNAL(messageReceived(quint64, td_api::Object*)),
-            this, SLOT(messageReceived(quint64, td_api::Object*)), Qt::DirectConnection);
+    connect(&receiver, SIGNAL(messageReceived(uint64_t, td_api::Object*)),
+            this, SLOT(messageReceived(uint64_t, td_api::Object*)), Qt::DirectConnection);
     connect(this, SIGNAL(updateOption(td_api::updateOption*)), this, SLOT(onUpdateOption(td_api::updateOption*)));
 
     connect(_networkManager, SIGNAL(defaultRouteChanged(NetworkService*)), this, SLOT(defaultRouteChanged(NetworkService*)));
@@ -44,10 +44,18 @@ void TelegramManager::init()
 
 void TelegramManager::sendQuery(td_api::Function* message)
 {
-    receiver.client->send({(std::uint64_t)1, std::move(td_api::object_ptr<td_api::Function>(message))});
+    receiver.client->send({(std::uint64_t)1, td_api::object_ptr<td_api::Function>(message)});
 }
 
-qint32 TelegramManager::getMyId() const
+void TelegramManager::sendQueryWithRespone(int64_t chatId, int32_t type, int32_t subType, td_api::Function *message)
+{
+    _messageId++;
+    _messages[_messageId] = {chatId, type, subType};
+
+    receiver.client->send({_messageId, td_api::object_ptr<td_api::Function>(message)});
+}
+
+int32_t TelegramManager::getMyId() const
 {
     return _myId;
 }
@@ -85,17 +93,40 @@ QString TelegramManager::getNetworkType() const
     return _networkType;
 }
 
-void TelegramManager::messageReceived(quint64 id, td_api::Object* message)
+void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *message)
 {
+    if (!_messages.contains(id) || message->get_id() == td_api::error::ID) return;
+
+    MessageWithResponse response = _messages.take(id);
+    switch (response.type) {
+    case td_api::getChatHistory::ID:
+        emit gotChatHistory(response.chatId, static_cast<td_api::messages*>(message));
+        break;
+    case td_api::getChats::ID:
+        emit gotChats(static_cast<td_api::chats*>(message));
+        break;
+    case td_api::getStickerSet::ID:
+        emit gotStickerSet(static_cast<td_api::stickerSet*>(message));
+        break;
+    case td_api::searchChatMessages::ID:
+        switch (response.subType) {
+        case td_api::searchMessagesFilterPinned::ID:
+            emit gotSearchChatMessagesFilterPinned(response.chatId, static_cast<td_api::messages*>(message));
+        default:
+            emit gotSearchChatMessages(response.chatId, static_cast<td_api::messages*>(message));
+        }
+    }
+}
+
+void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
+{   
     emit onMessageReceived(id, message);
+    if (id > 1) handleMessageWithResponse(id, message);
 
     downcast_call(
         *message, overloaded(
             [this](td_api::updateNewChat &newChat) {
                 emit this->updateNewChat(&newChat);
-            },
-            [this](td_api::chats &chats) {
-                emit this->chats(&chats);
             },
             [this](td_api::updateChatTitle &updateChatTitle) {
                 emit this->updateChatTitle(&updateChatTitle);
@@ -106,8 +137,8 @@ void TelegramManager::messageReceived(quint64 id, td_api::Object* message)
             [this](td_api::updateChatLastMessage &updateChatLastMessage) {
                 emit this->updateChatLastMessage(&updateChatLastMessage);
             },
-            [this](td_api::updateChatOrder &updateChatOrder) {
-                emit this->updateChatOrder(&updateChatOrder);
+            [this](td_api::updateChatPosition &updateChatPosition) {
+                emit this->updateChatPosition(&updateChatPosition);
             },
             [this](td_api::updateFile &updateFile) {
                 emit this->updateFile(&updateFile);
@@ -117,12 +148,6 @@ void TelegramManager::messageReceived(quint64 id, td_api::Object* message)
             },
             [this](td_api::updateChatReadOutbox &updateChatReadOutbox) {
                 emit this->updateChatReadOutbox(&updateChatReadOutbox);
-            },
-            [this](td_api::message &message) {
-                emit this->message(&message);
-            },
-            [this](td_api::messages &messages) {
-                emit this->messages(&messages);
             },
             [this](td_api::updateNewMessage &updateNewMessage) {
                 emit this->updateNewMessage(&updateNewMessage);
@@ -181,20 +206,8 @@ void TelegramManager::messageReceived(quint64 id, td_api::Object* message)
             [this](td_api::autoDownloadSettingsPresets &autoDownloadSettingsPresets) {
                 emit this->autoDownloadSettingsPresets(&autoDownloadSettingsPresets);
             },
-            [this](td_api::updateChatPinnedMessage &updateChatPinnedMessage) {
-                emit this->updateChatPinnedMessage(&updateChatPinnedMessage);
-            },
             [this](td_api::updateInstalledStickerSets &updateInstalledStickerSets) {
                 emit this->updateInstalledStickerSets(&updateInstalledStickerSets);
-            },
-            [this](td_api::stickerSets &stickerSets) {
-                emit this->stickerSets(&stickerSets);
-            },
-            [this](td_api::stickerSet &stickerSet) {
-                emit this->stickerSet(&stickerSet);
-            },
-            [this](td_api::updateChatIsPinned &updateChatIsPinned) {
-                emit this->updateChatIsPinned(&updateChatIsPinned);
             },
             [this](td_api::updateChatPermissions &updateChatPermissions) {
                 emit this->updateChatPermissions(&updateChatPermissions);
@@ -205,8 +218,17 @@ void TelegramManager::messageReceived(quint64 id, td_api::Object* message)
             [this](td_api::updateUnreadMessageCount &updateUnreadMessageCount) {
                 emit this->updateUnreadMessageCount(&updateUnreadMessageCount);
             },
-            [this](td_api::chatMembers &chatMembers) {
-//                emit this->chatMembers(&chatMembers);
+            [this](td_api::updateChatUnreadMentionCount &updateChatUnreadMentionCount) {
+                emit this->updateChatUnreadMentionCount(&updateChatUnreadMentionCount);
+            },
+            [this](td_api::updateMessageMentionRead &updateMessageMentionRead) {
+                emit this->updateMessageMentionRead(&updateMessageMentionRead);
+            },
+            [](td_api::error &error) {
+                qWarning() << QString::fromStdString(error.message_);
+            },
+            [this](td_api::updateMessageIsPinned &updateMessageIsPinned) {
+                emit this->updateMessageIsPinned(&updateMessageIsPinned);
             },
             [](auto &update) { Q_UNUSED(update) }
         )

@@ -55,7 +55,7 @@ public slots:
 
 private:
     td_api::object_ptr<td_api::messageAnimation> _animation;
-    qint32 _animationFileId;
+    int32_t _animationFileId;
 };
 
 #endif // ANIMATION_H

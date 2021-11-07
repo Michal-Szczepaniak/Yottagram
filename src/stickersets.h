@@ -55,16 +55,15 @@ signals:
 
 public slots:
     void updateInstalledStickerSets(td_api::updateInstalledStickerSets *updateInstalledStickerSets);
-    void gotInstalledStickerSets(td_api::stickerSets *stickerSets);
-    void gotStickerSet(td_api::stickerSet *stickerSet);
+    void onGotStickerSet(td_api::stickerSet *stickerSet);
     void onIsAuthorizedChanged(bool isAuthorized);
 
 private:
     std::shared_ptr<TelegramManager> _manager;
     std::shared_ptr<Files> _files;
-    QVector<qint64> _installedStickerSetIds;
-    QVector<qint64> _stickerSetIds;
-    QHash<qint64, StickerSet*> _stickerSets;
+    QVector<int64_t> _installedStickerSetIds;
+    QVector<int64_t> _stickerSetIds;
+    QHash<int64_t, StickerSet*> _stickerSets;
 };
 
 #endif // STICKERSETS_H

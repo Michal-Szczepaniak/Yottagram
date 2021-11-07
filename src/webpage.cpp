@@ -44,5 +44,5 @@ QString WebPage::getTitle()
 
 QString WebPage::getDescription()
 {
-    return QString::fromStdString(_webPage->description_);
+    return QString::fromStdString(_webPage->description_->text_);
 }

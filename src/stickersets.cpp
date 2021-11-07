@@ -29,6 +29,9 @@ StickerSets::StickerSets(QObject *parent) : QAbstractListModel(parent)
 void StickerSets::setTelegramManager(shared_ptr<TelegramManager> manager)
 {
     _manager = manager;
+
+    connect(_manager.get(), &TelegramManager::updateInstalledStickerSets, this, &StickerSets::updateInstalledStickerSets);
+    connect(_manager.get(), &TelegramManager::gotStickerSet, this, &StickerSets::onGotStickerSet);
 }
 
 void StickerSets::setFiles(shared_ptr<Files> files)
@@ -49,7 +52,7 @@ QVariant StickerSets::data(const QModelIndex &index, int role) const
     auto stickerSet = _stickerSets[_installedStickerSetIds[index.row()]];
     switch (role) {
     case StickerSetRoles::IdRole:
-        return stickerSet->getId();
+        return QVariant::fromValue(stickerSet->getId());
     case StickerSetRoles::IsAnimatedRole:
         return stickerSet->getIsAnimated();
     case StickerSetRoles::StickerSetRole:
@@ -86,6 +89,7 @@ void StickerSets::getStickerSets()
 
 void StickerSets::updateInstalledStickerSets(td_api::updateInstalledStickerSets *updateInstalledStickerSets)
 {
+    qDebug() << __PRETTY_FUNCTION__;
     beginResetModel();
     _installedStickerSetIds.clear();
 
@@ -93,25 +97,12 @@ void StickerSets::updateInstalledStickerSets(td_api::updateInstalledStickerSets 
         _installedStickerSetIds.append(stickerSetId);
         _stickerSetIds.append(stickerSetId);
         if (!_stickerSets.contains(stickerSetId))
-            _manager->sendQuery(new td_api::getStickerSet(stickerSetId));
+            _manager->sendQueryWithRespone(0, td_api::getStickerSet::ID, 0, new td_api::getStickerSet(stickerSetId));
     }
     endResetModel();
 }
 
-void StickerSets::gotInstalledStickerSets(td_api::stickerSets *stickerSets)
-{
-    beginResetModel();
-    _installedStickerSetIds.clear();
-    for (auto& stickerSet : stickerSets->sets_) {
-        _installedStickerSetIds.append(stickerSet->id_);
-
-        if (!_stickerSets.contains(stickerSet->id_))
-            _manager->sendQuery(new td_api::getStickerSet(stickerSet->id_));
-    }
-    endResetModel();
-}
-
-void StickerSets::gotStickerSet(td_api::stickerSet *stickerSet)
+void StickerSets::onGotStickerSet(td_api::stickerSet *stickerSet)
 {
     if (!_stickerSetIds.contains(stickerSet->id_)) _stickerSetIds.append(stickerSet->id_);
 

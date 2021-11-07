@@ -45,6 +45,10 @@
         <source>Greg Goncharov (@gregguh at telegram) for icons.</source>
         <translation>Greg Goncharov (@gregguh på Telegram) för ikoner.</translation>
     </message>
+    <message>
+        <source>dashinfantry for chinese translation.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>AuthorizationCode</name>
@@ -184,6 +188,10 @@
         <source>Default</source>
         <translation>Standard</translation>
     </message>
+    <message>
+        <source>Clear history</source>
+        <translation type="unfinished">Rensa historik</translation>
+    </message>
 </context>
 <context>
     <name>Chat</name>
@@ -194,10 +202,6 @@
     <message>
         <source>%1 joined</source>
         <translation>%1 anslöt</translation>
-    </message>
-    <message>
-        <source>Clear history</source>
-        <translation>Rensa historik</translation>
     </message>
     <message>
         <source>Open secret chat</source>
@@ -308,12 +312,20 @@
         <translation>Tryck och håll ner inspelningsknappen för att spela in röstmeddelande.</translation>
     </message>
     <message>
-        <source>Forwarded from %1</source>
-        <translation>Vidarebefordrat från %1</translation>
+        <source>Scroll to first unread mention</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Edited</source>
-        <translation>Redigerat</translation>
+        <source>Set as read</source>
+        <translation type="unfinished">Ange som läst</translation>
+    </message>
+    <message>
+        <source>Also pin for %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unpin message</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -337,14 +349,6 @@
     <message>
         <source>Delete chat</source>
         <translation>Ta bort chatt</translation>
-    </message>
-    <message>
-        <source>Archived chats</source>
-        <translation>Arkiverade chattar</translation>
-    </message>
-    <message>
-        <source>Main chats</source>
-        <translation>Huvudchattar</translation>
     </message>
     <message>
         <source>%1 left</source>
@@ -406,12 +410,91 @@
         <translation>Fäst vid överkant</translation>
     </message>
     <message>
+        <source>Saved messages</source>
+        <translation>Sparade meddelanden</translation>
+    </message>
+    <message>
         <source>%1 pinned message</source>
-        <translation>%1 fäst meddelande</translation>
+        <translation type="unfinished">%1 fäst meddelande</translation>
+    </message>
+</context>
+<context>
+    <name>ChatNew</name>
+    <message>
+        <source>Open secret chat</source>
+        <translation type="unfinished">Öppna privat chatt</translation>
+    </message>
+    <message>
+        <source>Close secret chat</source>
+        <translation type="unfinished">Stäng privat chatt</translation>
+    </message>
+    <message>
+        <source>Set self-destruct timer</source>
+        <translation type="unfinished">Ställ in självförstörandetidur</translation>
+    </message>
+    <message>
+        <source>Cancel selection</source>
+        <translation type="unfinished">Avbryt markering</translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished">Vidarebefordra</translation>
+    </message>
+    <message>
+        <source>Scroll to first unread mention</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Saved messages</source>
-        <translation>Sparade meddelanden</translation>
+        <translation type="unfinished">Sparade meddelanden</translation>
+    </message>
+    <message>
+        <source>%1 members</source>
+        <translation type="unfinished">%1 medlemmar</translation>
+    </message>
+    <message>
+        <source>%L1 forwarded messages</source>
+        <translation type="unfinished">%L1 meddelanden vidarebordrade</translation>
+    </message>
+    <message>
+        <source>Type the text...</source>
+        <translation type="unfinished">Skriv...</translation>
+    </message>
+    <message>
+        <source>Image</source>
+        <translation type="unfinished">Bild</translation>
+    </message>
+    <message>
+        <source>Video</source>
+        <translation type="unfinished">Video</translation>
+    </message>
+    <message>
+        <source>Audio</source>
+        <translation type="unfinished">Ljud</translation>
+    </message>
+    <message>
+        <source>Document</source>
+        <translation type="unfinished">Dokument</translation>
+    </message>
+    <message>
+        <source>File</source>
+        <translation type="unfinished">Fil</translation>
+    </message>
+    <message>
+        <source>Poll</source>
+        <translation type="unfinished">Omröstning</translation>
+    </message>
+    <message>
+        <source>Sticker</source>
+        <translation type="unfinished">Dekal</translation>
+    </message>
+    <message>
+        <source>Voice Note</source>
+        <translation type="unfinished">Röstmeddelande</translation>
+    </message>
+    <message>
+        <source>Press and hold record button to record voice note.</source>
+        <translation type="unfinished">Tryck och håll ner inspelningsknappen för att spela in röstmeddelande.</translation>
     </message>
 </context>
 <context>
@@ -483,6 +566,18 @@
     <message>
         <source>%1 pinned message</source>
         <translation>%1 fäst meddelande</translation>
+    </message>
+    <message>
+        <source>Forwarded from %1</source>
+        <translation type="unfinished">Vidarebefordrat från %1</translation>
+    </message>
+    <message>
+        <source>Edited</source>
+        <translation type="unfinished">Redigerat</translation>
+    </message>
+    <message>
+        <source>Message was pinned</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -756,6 +851,10 @@
         <source>Default</source>
         <translation>Standard</translation>
     </message>
+    <message>
+        <source>Clear history</source>
+        <translation type="unfinished">Rensa historik</translation>
+    </message>
 </context>
 <context>
     <name>User</name>
@@ -833,6 +932,10 @@
     <message>
         <source>Default</source>
         <translation>Standard</translation>
+    </message>
+    <message>
+        <source>Clear history</source>
+        <translation type="unfinished">Rensa historik</translation>
     </message>
 </context>
 <context>

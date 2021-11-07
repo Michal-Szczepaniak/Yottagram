@@ -40,14 +40,14 @@ public:
     void setOtherAutoDownloadSettings(AutoDownloadSettings* settings);
 
     void appendFile(td_api::object_ptr<td_api::file> file, QString fileType);
-    void considerAutoDownloading(qint32 fileId, QString fileType);
+    void considerAutoDownloading(int32_t fileId, QString fileType);
     AutoDownloadSettings* getActiveAutoDownloadSetting();
-    shared_ptr<File> getFile(qint32 fileId) const;
+    shared_ptr<File> getFile(int32_t fileId) const;
 signals:
 
 private:
     shared_ptr<TelegramManager> _manager;
-    QHash<qint32, std::shared_ptr<File>> _files;
+    QHash<int32_t, std::shared_ptr<File>> _files;
     AutoDownloadSettings* _wifiAutoDownloadSettings;
     AutoDownloadSettings* _mobileAutoDownloadSettings;
     AutoDownloadSettings* _roamingAutoDownloadSettings;

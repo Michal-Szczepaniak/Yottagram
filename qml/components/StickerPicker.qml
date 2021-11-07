@@ -36,13 +36,8 @@ Item {
         property real stickerPickerPostition: 0
         property int stickerPickerPickedPack: 0
 
-        Component.onCompleted: stickerSetGridView.model = stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 267)
-    }
-
-    Connections {
-        target: authorization
-        onIsAuthorizedChanged: {
-            stickerSets.getStickerSets()
+        Component.onCompleted: {
+            stickerSetGridView.model = stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 267)
         }
     }
 
@@ -66,12 +61,12 @@ Item {
             contentX: settings.stickerPickerPostition
             onContentXChanged: settings.stickerPickerPostition = contentX
             Component.onCompleted: contentX = contentX
-            delegate: ListItem {
-                width: Theme.itemSizeLarge
+            delegate: MouseArea {
                 height: Theme.itemSizeLarge
+                width: Theme.itemSizeLarge
                 Image {
-                    sourceSize.width: Theme.itemSizeMedium - Theme.paddingSmall*2
-                    sourceSize.height: Theme.itemSizeMedium - Theme.paddingSmall*2
+                    width: Theme.itemSizeLarge - Theme.paddingSmall*2
+                    height: Theme.itemSizeLarge - Theme.paddingSmall*2
                     fillMode: Image.PreserveAspectFit
                     anchors.centerIn: parent
                     asynchronous: true
@@ -92,7 +87,7 @@ Item {
             cellWidth: Math.floor(page.isLandscape ? root.width/(Math.floor(root.width/(root.height/5))) : root.width/5)
             cellHeight: cellWidth
             clip: true
-            cacheBuffer: 0
+            cacheBuffer: cellWidth*4
 
             delegate: GridItem {
                 width: stickerSetGridView.cellWidth

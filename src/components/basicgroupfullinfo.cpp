@@ -38,7 +38,7 @@ QString BasicGroupFullInfo::getDescription() const
     return QString::fromStdString(_basicGroupFullInfo->description_);
 }
 
-qint32 BasicGroupFullInfo::getCreatorUserId() const
+int32_t BasicGroupFullInfo::getCreatorUserId() const
 {
     if (_basicGroupFullInfo == nullptr) return 0;
     return _basicGroupFullInfo->creator_user_id_;

@@ -34,9 +34,9 @@ void StickerSet::setStickerSet(td_api::stickerSet *stickerSet)
     while (_stickerIds.count())
         _stickerIds.removeLast();
 
-    if (_stickerSet->thumbnail_ != nullptr) {
-        _thumbnailId = _stickerSet->thumbnail_->photo_->id_;
-        _files->appendFile(move(_stickerSet->thumbnail_->photo_), "sticker");
+    if (_stickerSet->thumbnail_ != nullptr && _stickerSet->thumbnail_->format_->get_id() != td_api::thumbnailFormatMpeg4::ID) {
+        _thumbnailId = _stickerSet->thumbnail_->file_->id_;
+        _files->appendFile(move(_stickerSet->thumbnail_->file_), "sticker");
     }
 
     for (auto& sticker : _stickerSet->stickers_) {
@@ -55,7 +55,7 @@ void StickerSet::setFiles(shared_ptr<Files> files)
     _files = files;
 }
 
-qint64 StickerSet::getId() const
+int64_t StickerSet::getId() const
 {
     return _stickerSet->id_;
 }

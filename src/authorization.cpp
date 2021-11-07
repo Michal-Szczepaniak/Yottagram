@@ -20,8 +20,8 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 #include "authorization.h"
 #include "overloaded.h"
-#include "aboutsettings.h"
-#include "deviceinfo.h"
+#include <systemsettings/aboutsettings.h>
+#include <systemsettings/deviceinfo.h>
 #include <QDebug>
 
 #define STR(x) #x
@@ -36,7 +36,7 @@ void Authorization::setTelegramManager(shared_ptr<TelegramManager> manager)
 {
     this->_manager = manager;
 
-    connect(this->_manager.get(), SIGNAL(onMessageReceived(quint64,td_api::Object*)), this, SLOT(messageReceived(quint64,td_api::Object*)));
+    connect(this->_manager.get(), SIGNAL(onMessageReceived(uint64_t,td_api::Object*)), this, SLOT(messageReceived(uint64_t,td_api::Object*)));
 }
 
 void Authorization::updateAuthorizationState(td_api::updateAuthorizationState &updateAuthorizationState)
@@ -138,7 +138,7 @@ void Authorization::sendPassword(QString password)
     _manager->sendQuery(new td_api::checkAuthenticationPassword(password.toStdString()));
 }
 
-void Authorization::messageReceived(quint64 id, td_api::Object *object)
+void Authorization::messageReceived(uint64_t id, td_api::Object *object)
 {
     downcast_call(
         *object, overloaded(

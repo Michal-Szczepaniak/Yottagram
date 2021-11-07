@@ -33,7 +33,7 @@ class Sticker : public ContentFile
     Q_OBJECT
     Q_PROPERTY(File* sticker READ getSticker NOTIFY stickerChanged)
     Q_PROPERTY(QSize size READ getSize NOTIFY stickerChanged)
-    Q_PROPERTY(qint64 setId READ getSetId NOTIFY stickerChanged)
+    Q_PROPERTY(int64_t setId READ getSetId NOTIFY stickerChanged)
     Q_PROPERTY(QString emoji READ getEmoji NOTIFY stickerChanged)
     Q_PROPERTY(bool isAnimated READ isAnimated NOTIFY stickerChanged)
     Q_PROPERTY(bool isMask READ isMask NOTIFY stickerChanged)
@@ -44,7 +44,7 @@ public:
     File* getSticker() const;
     void addUpdateFiles();
     QSize getSize() const;
-    qint64 getSetId() const;
+    int64_t getSetId() const;
     QString getEmoji() const;
     bool isAnimated() const;
     bool isMask() const;
@@ -56,7 +56,7 @@ public slots:
 
 private:
     td_api::object_ptr<td_api::messageSticker> _sticker;
-    qint32 _stickerFileId;
+    int32_t _stickerFileId;
 };
 
 #endif // STICKER_H

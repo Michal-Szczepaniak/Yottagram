@@ -13,17 +13,17 @@ public:
     explicit SupergroupsInfo(QObject *parent = nullptr);
 
     void setTelegramManager(shared_ptr<TelegramManager> manager);
-    SupergroupInfo* getSupergroup(qint32 id);
+    SupergroupInfo* getSupergroup(int32_t id);
 
 signals:
-    void supergroupInfoChanged(qint32 chatId);
+    void supergroupInfoChanged(int32_t chatId);
 
 public slots:
     void updateSupergroup(td_api::updateSupergroup *updateSupergroup);
 
 private:
     shared_ptr<TelegramManager> _manager;
-    QHash<qint32, SupergroupInfo*> _supergroups;
+    QHash<int32_t, SupergroupInfo*> _supergroups;
 };
 
 #endif // SUPERGROUPSINFO_H

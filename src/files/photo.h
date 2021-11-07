@@ -58,7 +58,7 @@ signals:
 
 private:
     td_api::object_ptr<td_api::messagePhoto> _photo;
-    QHash<QChar, qint32> _photoSizeFileIds;
+    QHash<QChar, int32_t> _photoSizeFileIds;
     QHash<QChar, QSize> _photoSizes;
     QList<QChar> _photoSizesTypes;
 };

@@ -164,16 +164,16 @@ QString AudioRecorder::getWaveform()
       if(code == 0) {
           int bufferSize = 1024 * 128;
           char sampleBuffer[bufferSize];
-            qint64 totalSamples = ov_pcm_total(&vf,-1);
-            const quint32 resultSamples = 100;
-            qint32 sampleRate = qMax(1, (qint32) (totalSamples / resultSamples));
+            int64_t totalSamples = ov_pcm_total(&vf,-1);
+            const uint32_t resultSamples = 100;
+            int32_t sampleRate = qMax(1, (int32_t) (totalSamples / resultSamples));
             quint16 samples[100];
-            for (qint32 i = 0; i < resultSamples; i++)
+            for (int32_t i = 0; i < resultSamples; i++)
             samples[i] = 0;
-       quint64 sampleIndex = 0;
+       uint64_t sampleIndex = 0;
        quint16 peakSample = 0;
 
-       quint32 index = 0;
+       uint32_t index = 0;
        while (!eof) {
             long ret = ov_read(&vf, sampleBuffer, bufferSize, 1, 2,
                                       1, &current_section);
@@ -182,7 +182,7 @@ QString AudioRecorder::getWaveform()
                } else if (ret < 0) {
                    qWarning() << "Can't get samples for waveform. code - " + ret;
                } else {
-                   for (qint32 i = 0; i+1 < ret; i = i+2) {
+                   for (int32_t i = 0; i+1 < ret; i = i+2) {
                        qint16 temp = ((qint16)sampleBuffer[i] << 8) | sampleBuffer[i+1];
                        quint16 sample = (quint16) qAbs(temp);
                        if (sample > peakSample) {
@@ -200,18 +200,18 @@ QString AudioRecorder::getWaveform()
        ov_clear(&vf);
        qf.close();
 
-       qint64 sumSamples = 0;
-              for (qint32 i = 0; i < resultSamples; i++)
+       int64_t sumSamples = 0;
+              for (int32_t i = 0; i < resultSamples; i++)
                   sumSamples += samples[i];
 
-              quint32 bitstreamLength = (resultSamples * 5) / 8 + 1;
+              uint32_t bitstreamLength = (resultSamples * 5) / 8 + 1;
 
       quint16 peak = (quint16) (sumSamples * 1.8f / resultSamples);
        if (peak < 2500)
            peak = 2500;
 
 
-       for (qint32 i = 0; i < resultSamples; i++) {
+       for (int32_t i = 0; i < resultSamples; i++) {
            quint16 sample =  samples[i];
            if (sample > peak)
                samples[i] = peak;
@@ -223,8 +223,8 @@ QString AudioRecorder::getWaveform()
         char *bytes = new char[bitstreamLength + 4];
         memset(bytes, 0, bitstreamLength + 4);
 
-        for (qint32 i = 0; i < resultSamples; i++) {
-            qint32 value = qMin(31, qAbs((qint32) samples[i]) * 31 / peak);
+        for (int32_t i = 0; i < resultSamples; i++) {
+            int32_t value = qMin(31, qAbs((int32_t) samples[i]) * 31 / peak);
             set_bits(bytes, i * 5, value & 31);
         }
 

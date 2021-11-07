@@ -74,48 +74,48 @@ void AutoDownloadSettings::setIsAutoDownloadEnabled(bool isAutoDownloadEnabled)
     emit isAutoDownloadEnabledChanged();
 }
 
-qint32 AutoDownloadSettings::getMaxPhotoFileSize() const
+int32_t AutoDownloadSettings::getMaxPhotoFileSize() const
 {
     return _maxPhotoFileSize;
 }
 
-void AutoDownloadSettings::setMaxPhotoFileSize(qint32 maxPhotoFileSize)
+void AutoDownloadSettings::setMaxPhotoFileSize(int32_t maxPhotoFileSize)
 {
     _maxPhotoFileSize = maxPhotoFileSize;
     saveSettings();
     emit maxPhotoFileSizeChanged();
 }
 
-qint32 AutoDownloadSettings::getMaxVideoFileSize() const
+int32_t AutoDownloadSettings::getMaxVideoFileSize() const
 {
     return _maxVideoFileSize;
 }
 
-void AutoDownloadSettings::setMaxVideoFileSize(qint32 maxVideoFileSize)
+void AutoDownloadSettings::setMaxVideoFileSize(int32_t maxVideoFileSize)
 {
     _maxVideoFileSize = maxVideoFileSize;
     saveSettings();
     emit maxVideoFileSizeChanged();
 }
 
-qint32 AutoDownloadSettings::getMaxOtherFileSize() const
+int32_t AutoDownloadSettings::getMaxOtherFileSize() const
 {
     return _maxOtherFileSize;
 }
 
-void AutoDownloadSettings::setMaxOtherFileSize(qint32 maxOtherFileSize)
+void AutoDownloadSettings::setMaxOtherFileSize(int32_t maxOtherFileSize)
 {
     _maxOtherFileSize = maxOtherFileSize;
     saveSettings();
     emit maxOtherFileSizeChanged();
 }
 
-qint32 AutoDownloadSettings::getVideoUploadBitrate() const
+int32_t AutoDownloadSettings::getVideoUploadBitrate() const
 {
     return _videoUploadBitrate;
 }
 
-void AutoDownloadSettings::setVideoUploadBitrate(qint32 videoUploadBitrate)
+void AutoDownloadSettings::setVideoUploadBitrate(int32_t videoUploadBitrate)
 {
     _videoUploadBitrate = videoUploadBitrate;
     saveSettings();

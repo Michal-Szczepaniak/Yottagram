@@ -48,7 +48,7 @@ public slots:
 
 private:
     td_api::object_ptr<td_api::messageDocument> _document;
-    qint32 _documentFileId;
+    int32_t _documentFileId;
 };
 
 #endif // DOCUMENT_H

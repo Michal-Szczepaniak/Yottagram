@@ -53,7 +53,7 @@ QSize Sticker::getSize() const
     return QSize(_sticker->sticker_->width_, _sticker->sticker_->height_);
 }
 
-qint64 Sticker::getSetId() const
+int64_t Sticker::getSetId() const
 {
     return _sticker->sticker_->set_id_;
 }

@@ -25,6 +25,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QtQml>
 #include "components/thumbnail.h"
 #include "components/audiorecorder.h"
+#include "components/pinnedmessages.h"
 
 Core::Core(QObject *parent) : QObject(parent)
 {
@@ -36,6 +37,7 @@ Core::Core(QObject *parent) : QObject(parent)
     qmlRegisterType<User>("com.verdanditeam.user", 1, 0, "User");
     qmlRegisterType<Thumbnail>("com.verdanditeam.thumbnail", 1, 0, "Thumbnail");
     qmlRegisterType<AudioRecorder>("com.verdanditeam.audiorecorder", 1, 0, "AudioRecorder");
+    qmlRegisterType<PinnedMessages>("com.verdanditeam.pinnedmessages", 1, 0, "PinnedMessages");
 
     _files->setTelegramManager(_manager);
     _files->setWifiAutoDownloadSettings(&_wifiAutoDownloadSettings);
@@ -72,10 +74,7 @@ Core::Core(QObject *parent) : QObject(parent)
 
     _stickerSets.setTelegramManager(_manager);
     _stickerSets.setFiles(_files);
-    connect(_manager.get(), SIGNAL(updateInstalledStickerSets(td_api::updateInstalledStickerSets*)), &_stickerSets, SLOT(updateInstalledStickerSets(td_api::updateInstalledStickerSets*)));
-    connect(&_authorization, SIGNAL(isAuthorizedChanged(bool)), &_stickerSets, SLOT(onIsAuthorizedChanged(bool)));
-//    connect(_manager.get(), SIGNAL(stickerSets(td_api::stickerSets*)), &_stickerSets, SLOT(gotInstalledStickerSets(td_api::stickerSets*)));
-    connect(_manager.get(), SIGNAL(stickerSet(td_api::stickerSet*)), &_stickerSets, SLOT(gotStickerSet(td_api::stickerSet*)));
+    connect(&_authorization, &Authorization::isAuthorizedChanged, &_stickerSets, &StickerSets::onIsAuthorizedChanged);
 }
 
 void Core::init()

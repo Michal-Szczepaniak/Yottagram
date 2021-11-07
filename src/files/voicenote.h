@@ -27,7 +27,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 class VoiceNote : public ContentFile
 {
     Q_OBJECT
-    Q_PROPERTY(qint32 duration READ getDuration NOTIFY voiceNoteChanged)
+    Q_PROPERTY(int32_t duration READ getDuration NOTIFY voiceNoteChanged)
     Q_PROPERTY(QString waveform READ getWaveform NOTIFY voiceNoteChanged)
     Q_PROPERTY(QString mimeType READ getMimeType NOTIFY voiceNoteChanged)
     Q_PROPERTY(QString mimeType READ getMimeType NOTIFY voiceNoteChanged)
@@ -41,7 +41,7 @@ public:
     void addUpdateFiles();
 
     td_api::formattedText* getCaption();
-    qint32 getDuration() const;
+    int32_t getDuration() const;
     QString getWaveform() const;
     QString getMimeType() const;
     bool isListened() const;
@@ -53,7 +53,7 @@ public slots:
 
 private:
     td_api::object_ptr<td_api::messageVoiceNote> _voiceNote;
-    qint32 _voiceNoteFileId;
+    int32_t _voiceNoteFileId;
 };
 
 #endif // VOICENOTE_H

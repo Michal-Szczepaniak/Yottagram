@@ -96,7 +96,7 @@ public:
     void setUserFullInfo(td_api::object_ptr<td_api::userFullInfo> UserFullInfo);
 
 signals:
-    void fileUpdated(qint32 fileId);
+    void fileUpdated(int32_t fileId);
     void userChanged();
     void hasPhotoChanged(bool hasPhoto);
     void smallPhotoChanged();
@@ -109,8 +109,8 @@ private:
     td_api::user* _user;
     shared_ptr<TelegramManager> _manager;
     shared_ptr<Files> _files;
-    qint32 _smallPhotoId;
-    qint32 _bigPhotoId;
+    int32_t _smallPhotoId;
+    int32_t _bigPhotoId;
     UserFullInfo* _userFullInfo;
 };
 Q_DECLARE_METATYPE(User*)

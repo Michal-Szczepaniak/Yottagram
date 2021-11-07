@@ -47,7 +47,7 @@ void File::setFile(td_api::object_ptr<td_api::file> file)
     emit localPathChanged(localPath());
 }
 
-qint32 File::getId()
+int32_t File::getId()
 {
     return _file->id_;
 }
@@ -102,17 +102,17 @@ bool File::isUploading()
     return _file->remote_->is_uploading_active_;
 }
 
-qint32 File::getExpectedSize()
+int32_t File::getExpectedSize()
 {
     return _file->expected_size_;
 }
 
-qint32 File::getDownloadedSize()
+int32_t File::getDownloadedSize()
 {
     return _file->local_->downloaded_size_;
 }
 
-qint32 File::getUploadedSize()
+int32_t File::getUploadedSize()
 {
     return _file->remote_->uploaded_size_;
 }

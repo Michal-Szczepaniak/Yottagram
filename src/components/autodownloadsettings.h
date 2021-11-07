@@ -28,10 +28,10 @@ class AutoDownloadSettings : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool isAutoDownloadEnabled READ getIsAutoDownloadEnabled WRITE setIsAutoDownloadEnabled NOTIFY isAutoDownloadEnabledChanged)
-    Q_PROPERTY(qint32 maxPhotoFileSize READ getMaxPhotoFileSize WRITE setMaxPhotoFileSize NOTIFY maxPhotoFileSizeChanged)
-    Q_PROPERTY(qint32 maxVideoFileSize READ getMaxVideoFileSize WRITE setMaxVideoFileSize NOTIFY maxVideoFileSizeChanged)
-    Q_PROPERTY(qint32 maxOtherFileSize READ getMaxOtherFileSize WRITE setMaxOtherFileSize NOTIFY maxOtherFileSizeChanged)
-    Q_PROPERTY(qint32 videoUploadBitrate READ getVideoUploadBitrate WRITE setVideoUploadBitrate NOTIFY videoUploadBitrateChanged)
+    Q_PROPERTY(int32_t maxPhotoFileSize READ getMaxPhotoFileSize WRITE setMaxPhotoFileSize NOTIFY maxPhotoFileSizeChanged)
+    Q_PROPERTY(int32_t maxVideoFileSize READ getMaxVideoFileSize WRITE setMaxVideoFileSize NOTIFY maxVideoFileSizeChanged)
+    Q_PROPERTY(int32_t maxOtherFileSize READ getMaxOtherFileSize WRITE setMaxOtherFileSize NOTIFY maxOtherFileSizeChanged)
+    Q_PROPERTY(int32_t videoUploadBitrate READ getVideoUploadBitrate WRITE setVideoUploadBitrate NOTIFY videoUploadBitrateChanged)
     Q_PROPERTY(bool preloadLargeVideos READ getPreloadLargeVideos WRITE setPreloadLargeVideos NOTIFY preloadLargeVideosChanged)
     Q_PROPERTY(bool preloadNextAudio READ getPreloadNextAudio WRITE setPreloadNextAudio NOTIFY preloadNextAudioChanged)
     Q_PROPERTY(bool useLessDataForCalls READ getUseLessDataForCalls WRITE setUseLessDataForCalls NOTIFY useLessDataForCallsChanged)
@@ -43,14 +43,14 @@ public:
 
     bool getIsAutoDownloadEnabled() const;
     void setIsAutoDownloadEnabled(bool isAutoDownloadEnabled);
-    qint32 getMaxPhotoFileSize() const;
-    void setMaxPhotoFileSize(qint32 maxPhotoFileSize);
-    qint32 getMaxVideoFileSize() const;
-    void setMaxVideoFileSize(qint32 maxVideoFileSize);
-    qint32 getMaxOtherFileSize() const;
-    void setMaxOtherFileSize(qint32 maxVideoFileSize);
-    qint32 getVideoUploadBitrate() const;
-    void setVideoUploadBitrate(qint32 videoUploadBitrate);
+    int32_t getMaxPhotoFileSize() const;
+    void setMaxPhotoFileSize(int32_t maxPhotoFileSize);
+    int32_t getMaxVideoFileSize() const;
+    void setMaxVideoFileSize(int32_t maxVideoFileSize);
+    int32_t getMaxOtherFileSize() const;
+    void setMaxOtherFileSize(int32_t maxVideoFileSize);
+    int32_t getVideoUploadBitrate() const;
+    void setVideoUploadBitrate(int32_t videoUploadBitrate);
     bool getPreloadLargeVideos() const;
     void setPreloadLargeVideos(bool preloadLargeVideos);
     bool getPreloadNextAudio() const;
@@ -81,10 +81,10 @@ private:
     std::shared_ptr<TelegramManager> _manager;
     QString _connectionType;
     bool 	_isAutoDownloadEnabled;
-    qint32 	_maxPhotoFileSize;
-    qint32 	_maxVideoFileSize;
-    qint32 	_maxOtherFileSize;
-    qint32 	_videoUploadBitrate;
+    int32_t 	_maxPhotoFileSize;
+    int32_t 	_maxVideoFileSize;
+    int32_t 	_maxOtherFileSize;
+    int32_t 	_videoUploadBitrate;
     bool 	_preloadLargeVideos;
     bool 	_preloadNextAudio;
     bool 	_useLessDataForCalls;

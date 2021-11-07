@@ -39,11 +39,15 @@
     </message>
     <message>
         <source>Fernando Lanero, Mika, Leszek Lesner, A. Madani, Timo Könnecke, Rudi Timmermans for being awesome testers.</source>
-        <translation type="unfinished"></translation>
+        <translation>Fernando Lanero, Mika, Leszek Lesner, A. Madani, Timo Könnecke, Rudi Timmermans por ser unos testeadores fantásticos.</translation>
     </message>
     <message>
         <source>Greg Goncharov (@gregguh at telegram) for icons.</source>
-        <translation type="unfinished"></translation>
+        <translation>Greg Goncharov (@gregguh en telegram) por los iconos.</translation>
+    </message>
+    <message>
+        <source>dashinfantry for chinese translation.</source>
+        <translation>dashinfantry por la traducción al chino.</translation>
     </message>
 </context>
 <context>
@@ -184,6 +188,10 @@
         <source>Customize</source>
         <translation>Personalizar</translation>
     </message>
+    <message>
+        <source>Clear history</source>
+        <translation>Limpiar historial</translation>
+    </message>
 </context>
 <context>
     <name>Chat</name>
@@ -194,10 +202,6 @@
     <message>
         <source>%1 joined</source>
         <translation>%1 se unió</translation>
-    </message>
-    <message>
-        <source>Clear history</source>
-        <translation>Limpiar historial</translation>
     </message>
     <message>
         <source>Open secret chat</source>
@@ -234,14 +238,6 @@
     <message>
         <source>Delete</source>
         <translation>Borrar</translation>
-    </message>
-    <message>
-        <source>Forwarded from %1</source>
-        <translation>Reenviado desde %1</translation>
-    </message>
-    <message>
-        <source>Edited</source>
-        <translation>Editado</translation>
     </message>
     <message>
         <source>Deselect</source>
@@ -315,6 +311,22 @@
         <source>Press and hold record button to record voice note.</source>
         <translation>Mantén pulsado el botón de grabar para grabar nota de voz.</translation>
     </message>
+    <message>
+        <source>Scroll to first unread mention</source>
+        <translation>Ir a la primera mención no leída</translation>
+    </message>
+    <message>
+        <source>Set as read</source>
+        <translation>Marcar como leído</translation>
+    </message>
+    <message>
+        <source>Also pin for %1</source>
+        <translation>Fijar también para %1</translation>
+    </message>
+    <message>
+        <source>Unpin message</source>
+        <translation>Quitar mensaje fijado</translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
@@ -325,14 +337,6 @@
     <message>
         <source>Settings</source>
         <translation>Ajustes</translation>
-    </message>
-    <message>
-        <source>Archived chats</source>
-        <translation>Chats archivados</translation>
-    </message>
-    <message>
-        <source>Main chats</source>
-        <translation>Chats principales</translation>
     </message>
     <message>
         <source>Search</source>
@@ -415,6 +419,85 @@
     </message>
 </context>
 <context>
+    <name>ChatNew</name>
+    <message>
+        <source>Open secret chat</source>
+        <translation>Abrir chat secreto</translation>
+    </message>
+    <message>
+        <source>Close secret chat</source>
+        <translation>Cerrar chat secreto</translation>
+    </message>
+    <message>
+        <source>Set self-destruct timer</source>
+        <translation>Configurar autodestrucción</translation>
+    </message>
+    <message>
+        <source>Cancel selection</source>
+        <translation>Cancelar selección</translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation>Reenviar</translation>
+    </message>
+    <message>
+        <source>Scroll to first unread mention</source>
+        <translation>Ir a la primera mención no leída</translation>
+    </message>
+    <message>
+        <source>Saved messages</source>
+        <translation>Mensajes guardados</translation>
+    </message>
+    <message>
+        <source>%1 members</source>
+        <translation>%1 miembros</translation>
+    </message>
+    <message>
+        <source>%L1 forwarded messages</source>
+        <translation>%L1 mensajes reenviados</translation>
+    </message>
+    <message>
+        <source>Type the text...</source>
+        <translation>Escribe texto...</translation>
+    </message>
+    <message>
+        <source>Image</source>
+        <translation>Imagen</translation>
+    </message>
+    <message>
+        <source>Video</source>
+        <translation>Vídeo</translation>
+    </message>
+    <message>
+        <source>Audio</source>
+        <translation>Audio</translation>
+    </message>
+    <message>
+        <source>Document</source>
+        <translation>Documento</translation>
+    </message>
+    <message>
+        <source>File</source>
+        <translation>Archivo</translation>
+    </message>
+    <message>
+        <source>Poll</source>
+        <translation>Encuesta</translation>
+    </message>
+    <message>
+        <source>Sticker</source>
+        <translation>Sticker</translation>
+    </message>
+    <message>
+        <source>Voice Note</source>
+        <translation>Nota voz</translation>
+    </message>
+    <message>
+        <source>Press and hold record button to record voice note.</source>
+        <translation>Mantén pulsado el botón de grabar para grabar nota de voz.</translation>
+    </message>
+</context>
+<context>
     <name>ChatNotifications</name>
     <message>
         <source>Notification settings</source>
@@ -445,15 +528,15 @@
     <name>CoverPage</name>
     <message>
         <source>Unread chats: %L1</source>
-        <translation type="unfinished"></translation>
+        <translation>Chats sin leer: %L1</translation>
     </message>
     <message>
         <source>Yottagram</source>
-        <translation type="unfinished"></translation>
+        <translation>Yottagram</translation>
     </message>
     <message>
         <source>New messages: %L1</source>
-        <translation type="unfinished"></translation>
+        <translation>Mensajes nuevos: %L1</translation>
     </message>
 </context>
 <context>
@@ -483,6 +566,18 @@
     <message>
         <source>%1 pinned message</source>
         <translation>%1 fijó un mensaje</translation>
+    </message>
+    <message>
+        <source>Forwarded from %1</source>
+        <translation>Reenviado desde %1</translation>
+    </message>
+    <message>
+        <source>Edited</source>
+        <translation>Editado</translation>
+    </message>
+    <message>
+        <source>Message was pinned</source>
+        <translation>Mensaje fijado</translation>
     </message>
 </context>
 <context>
@@ -691,15 +786,15 @@
     </message>
     <message>
         <source>Animated stickers</source>
-        <translation type="unfinished"></translation>
+        <translation>Stickers animados</translation>
     </message>
     <message>
         <source>Include muted chats in unread chats and messages counts</source>
-        <translation type="unfinished"></translation>
+        <translation>Incluir los chats silenciados en el recuento de mensajes y chats sin leer</translation>
     </message>
     <message>
         <source>Message font size</source>
-        <translation type="unfinished"></translation>
+        <translation>Tamaño de la fuente</translation>
     </message>
 </context>
 <context>
@@ -755,6 +850,10 @@
     <message>
         <source>Customize</source>
         <translation>Personalizar</translation>
+    </message>
+    <message>
+        <source>Clear history</source>
+        <translation>Limpiar historial</translation>
     </message>
 </context>
 <context>
@@ -833,6 +932,10 @@
     <message>
         <source>Customize</source>
         <translation>Personalizar</translation>
+    </message>
+    <message>
+        <source>Clear history</source>
+        <translation>Limpiar historial</translation>
     </message>
 </context>
 <context>

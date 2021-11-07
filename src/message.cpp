@@ -58,7 +58,7 @@ void Message::setFiles(shared_ptr<Files> files)
     _files = files;
 }
 
-qint64 Message::getId()
+int64_t Message::getId()
 {
     return _message->id_;
 }
@@ -107,7 +107,11 @@ QString Message::getText()
     case td_api::messageChatSetTtl::ID:
         return tr("Self-destruct timer set to %n second(s)", "", static_cast<td_api::messageChatSetTtl*>(_message->content_.get())->ttl_);
     case td_api::messagePinMessage::ID:
-        return tr("%1 pinned message").arg(_users->getUser(getSenderUserId())->getName());
+        if (_message->sender_->get_id() == td_api::messageSenderUser::ID) {
+            return tr("%1 pinned message").arg(_users->getUser(getSenderUserId())->getName());
+        } else if (_message->sender_->get_id() == td_api::messageSenderChat::ID) {
+            return tr("Message was pinned");
+        }
     default:
         return "Message unsupported";
     }
@@ -155,7 +159,7 @@ QString Message::getType()
     }
 }
 
-qint32 Message::getContentType()
+int32_t Message::getContentType()
 {
     return _contentTypeId;
 }
@@ -192,7 +196,8 @@ int Message::getEditedDate()
 
 int Message::getViews()
 {
-    return _message->views_;
+    if (_message->interaction_info_ == nullptr) return -1;
+    return _message->interaction_info_->view_count_;
 }
 
 bool Message::received()
@@ -200,7 +205,7 @@ bool Message::received()
     return !_message->is_outgoing_;
 }
 
-qint32 Message::getDeleteMemberId()
+int32_t Message::getDeleteMemberId()
 {
     if (_contentTypeId == td_api::messageChatDeleteMember::ID) {
         return static_cast<const td_api::messageChatDeleteMember &>(*_message->content_).user_id_;
@@ -209,14 +214,14 @@ qint32 Message::getDeleteMemberId()
     return -1;
 }
 
-QVector<qint32> Message::getAddMembersIds()
+QVector<int32_t> Message::getAddMembersIds()
 {
-    QVector<qint32> newUsers;
+    QVector<int32_t> newUsers;
 
     if (_contentTypeId == td_api::messageChatAddMembers::ID) {
         auto userIds = static_cast<const td_api::messageChatAddMembers &>(*_message->content_).member_user_ids_;
 
-        for(qint32 userId: userIds) {
+        for(int32_t userId: userIds) {
             newUsers.append(userId);
         }
     }
@@ -224,7 +229,7 @@ QVector<qint32> Message::getAddMembersIds()
     return newUsers;
 }
 
-qint64 Message::replyMessageId()
+int64_t Message::replyMessageId()
 {
     return _message->reply_to_message_id_;
 }
@@ -234,9 +239,10 @@ td_api::messageForwardInfo* Message::getForwardedInfo()
     return _message->forward_info_.get();
 }
 
-qint32 Message::getSenderUserId()
+int32_t Message::getSenderUserId()
 {
-    return _message->sender_user_id_;
+    if (_message->sender_->get_id() != td_api::messageSenderUser::ID) return 0;
+    return static_cast<td_api::messageSenderUser*>(_message->sender_.get())->user_id_;
 }
 
 QString Message::getFormattedTimestamp()
@@ -271,6 +277,16 @@ QString Message::getFormattedForwardTimestamp()
     }
 
     return QDateTime::fromTime_t(static_cast<uint>(_message->forward_info_->date_)).toString(format);
+}
+
+bool Message::containsUnreadMention() const
+{
+    return _message->contains_unread_mention_;
+}
+
+void Message::setContainsUnreadMention(bool containsUnreadMention)
+{
+    _message->contains_unread_mention_ = containsUnreadMention;
 }
 
 bool Message::hasWebPage() const
@@ -457,12 +473,12 @@ void Message::updateMessageContent(td_api::updateMessageContent *updateMessageCo
     }
 }
 
-qint64 Message::getChatId() const
+int64_t Message::getChatId() const
 {
     return _chatId;
 }
 
-void Message::setChatId(const qint64 &chatId)
+void Message::setChatId(const int64_t &chatId)
 {
     _chatId = chatId;
 }

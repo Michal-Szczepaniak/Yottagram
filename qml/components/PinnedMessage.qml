@@ -20,19 +20,21 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import com.verdanditeam.pinnedmessages 1.0
 
 Row {
     id: pinnedMessage
     signal closed()
 
     function scrollToReply() {
-        var messageIndex = chat.getMessageIndex(chat.pinnedMessageId)
+        var messageIndex = chat.getMessageIndex(pinnedMessages.id)
         if (messageIndex === -1) {
-            messages.historyBrowsing = chat.pinnedMessageId
-            chat.scrollToMessage(chat.pinnedMessageId)
+            messages.historyBrowsing = pinnedMessages.id
+            chat.scrollToMessage(pinnedMessages.id)
         } else {
             messages.positionViewAtIndex(chatProxyModel.mapFromSource(messageIndex), ListView.SnapPosition)
         }
+        pinnedMessages.cycleMessage();
     }
 
     Item {
@@ -42,7 +44,8 @@ Row {
 
     Rectangle {
         width: 3
-        height: parent.height
+        anchors.verticalCenter: parent.verticalCenter
+        height: parent.height - Theme.paddingLarge/2
         color: Theme.highlightColor
     }
 
@@ -52,13 +55,16 @@ Row {
     }
 
     Column {
+        id: col
+        anchors.verticalCenter: parent.verticalCenter
         width: pinnedMessage.width - closeButton.width - Theme.paddingLarge*2
 
         Label {
             id: pinnedName
-            text: chat.pinnedMessageId !== 0 ? users.getUserAsVariant(chat.pinnedMessage.senderUserId).name : ""
+            text: pinnedMessages.id !== 0 ? (pinnedMessages.senderUserId !== 0 ? users.getUserAsVariant(pinnedMessages.senderUserId).name : chat.title) : ""
             truncationMode: TruncationMode.Fade
             width: parent.width
+            font.pixelSize: Theme.fontSizeSmall
 
             MouseArea {
                 anchors.fill: parent
@@ -67,11 +73,12 @@ Row {
         }
         Label {
             id: pinnedText
-            text: chat.pinnedMessageId === 0 ? "" :
-                      (chat.pinnedMessage.type === "text" ? chat.pinnedMessage.text.trim().replace(/\r?\n|\r/g, " ")
-                                                                           : chat.pinnedMessage.type)
+            text: pinnedMessages.id === 0 ? "" :
+                      (pinnedMessages.type === "text" ? pinnedMessages.text.trim().replace(/\r?\n|\r/g, " ")
+                                                                           : pinnedMessages.type)
             width: parent.width
             truncationMode: TruncationMode.Fade
+            font.pixelSize: Theme.fontSizeSmall
 
             MouseArea {
                 anchors.fill: parent

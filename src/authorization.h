@@ -46,7 +46,7 @@ public:
     Q_INVOKABLE void sendPassword(QString password);
 
 public slots:
-    void messageReceived(quint64 id, td_api::Object* object);
+    void messageReceived(uint64_t id, td_api::Object* object);
 
 signals:
     void waitingForCode();

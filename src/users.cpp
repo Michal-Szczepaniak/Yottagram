@@ -71,7 +71,7 @@ QHash<int, QByteArray> Users::roleNames() const
     return roles;
 }
 
-std::shared_ptr<User> Users::getUser(qint32 userId) const
+std::shared_ptr<User> Users::getUser(int32_t userId) const
 {
     if (_users.contains(userId)) {
         return _users[userId];
@@ -80,7 +80,7 @@ std::shared_ptr<User> Users::getUser(qint32 userId) const
     }
 }
 
-QVariant Users::getUserAsVariant(qint32 userId) const
+QVariant Users::getUserAsVariant(int32_t userId) const
 {
     if (_users.contains(userId)) {
         auto user = _users[userId].get();

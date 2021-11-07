@@ -9,17 +9,17 @@ using namespace td;
 class SecretChatInfo : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qint32 userId READ getUserId NOTIFY secretChatInfoChanged)
+    Q_PROPERTY(int32_t userId READ getUserId NOTIFY secretChatInfoChanged)
     Q_PROPERTY(QString state READ getState NOTIFY secretChatInfoChanged)
-    Q_PROPERTY(qint32 ttl READ getTtl NOTIFY secretChatInfoChanged)
+    Q_PROPERTY(int32_t ttl READ getTtl NOTIFY secretChatInfoChanged)
 public:
     explicit SecretChatInfo(QObject *parent = nullptr);
 
     void setSecretChatInfo(td_api::object_ptr<td_api::secretChat> secretChat);
     td_api::secretChat* getSecretChat();
-    qint32 getUserId() const;
+    int32_t getUserId() const;
     QString getState() const;
-    qint32 getTtl() const;
+    int32_t getTtl() const;
 
 signals:
     void secretChatInfoChanged();
