@@ -1369,38 +1369,41 @@ void Chat::onGotChatHistory(int64_t chatId, td_api::messages *messages)
 {
     if (chatId != getId()) return;
 
-    if (messages->total_count_ == 0 || messages->messages_.front() == nullptr) return;
+    if (messages->total_count_ == 0 || messages->messages_.size() < 0 || !messages->messages_[0]) return;
 
     int addedMessages = 0;
-    for(td_api::object_ptr<td_api::message> &message: messages->messages_) {
-        if (message != nullptr) {
-            if (false == _messages.contains(message->id_)) {
+    for (int i = 0; i < messages->total_count_; i++) {
+        if (messages->messages_[i]) {
+            int64_t id = messages->messages_[i]->id_;
+            if (false == _messages.contains(id)) {
                 addedMessages++;
-            } else if (!_message_ids.contains(message->id_)) {
+            } else if (!_message_ids.contains(id)) {
                 addedMessages++;
             }
         }
     }
 
     beginInsertRows(QModelIndex(), rowCount(), rowCount()+addedMessages-1);
-    for(auto &message: messages->messages_) {
-        if (message != nullptr && message->chat_id_ == getId()) {
+    for (int i = 0; i < messages->total_count_; i++) {
+        td_api::message* message = messages->messages_[i].release();
+        if (message != nullptr) {
             if (false == _messages.contains(message->id_)) {
                 auto newMessage = new Message();
                 newMessage->setTelegramManager(_manager);
                 newMessage->setUsers(_users);
                 newMessage->setFiles(_files);
-                newMessage->setMessage(message.release());
+                newMessage->setMessage(message);
                 newMessage->setChatId(this->getId());
                 connect(newMessage, SIGNAL(contentChanged(int64_t)), this, SLOT(onMessageContentChanged(int64_t)));
                 connect(newMessage, SIGNAL(messageIdChanged(int64_t,int64_t)), this, SLOT(onMessageIdChanged(int64_t,int64_t)));
                 _messages[newMessage->getId()] = newMessage;
 
                 _message_ids.append(newMessage->getId());
-
-//                if (newMessage->getId() == _chat->pinned_message_id_) emit pinnedMessageIdChanged();
-            } else if (!_message_ids.contains(message->id_)) {
-                _message_ids.append(message->id_);
+            } else {
+                if (!_message_ids.contains(message->id_)) {
+                    _message_ids.append(message->id_);
+                }
+                delete message;
             }
         }
     }

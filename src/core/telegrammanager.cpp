@@ -95,7 +95,7 @@ QString TelegramManager::getNetworkType() const
 
 void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *message)
 {
-    if (!_messages.contains(id)) return;
+    if (!_messages.contains(id) || message->get_id() == td_api::error::ID) return;
 
     MessageWithResponse response = _messages.take(id);
     switch (response.type) {

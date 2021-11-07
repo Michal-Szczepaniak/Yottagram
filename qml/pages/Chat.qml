@@ -56,18 +56,20 @@ Page {
         if (status === PageStatus.Active) {
             chatList.openChat(chat.id)
 
-            switch (chat.getChatType()) {
-            case "private":
-            case "secret":
-                pageStack.pushAttached(Qt.resolvedUrl("../components/chatInfo/UserInfo.qml"), {chat: chat, userId: chat.getChatType() === "secret" ? chat.secretChatInfo.userId : chat.idFromType})
-                break;
-            case "group":
-                pageStack.pushAttached(Qt.resolvedUrl("../components/chatInfo/BasicGroupInfo.qml"), {chat: chat})
-                break;
-            case "supergroup":
-            case "channel":
-                pageStack.pushAttached(Qt.resolvedUrl("../components/chatInfo/SupergroupInfo.qml"), {chat: chat})
-                break;
+            if (!chat.isSelf) {
+                switch (chat.getChatType()) {
+                case "private":
+                case "secret":
+                    pageStack.pushAttached(Qt.resolvedUrl("../components/chatInfo/UserInfo.qml"), {chat: chat, userId: chat.getChatType() === "secret" ? chat.secretChatInfo.userId : chat.idFromType})
+                    break;
+                case "group":
+                    pageStack.pushAttached(Qt.resolvedUrl("../components/chatInfo/BasicGroupInfo.qml"), {chat: chat})
+                    break;
+                case "supergroup":
+                case "channel":
+                    pageStack.pushAttached(Qt.resolvedUrl("../components/chatInfo/SupergroupInfo.qml"), {chat: chat})
+                    break;
+                }
             }
 
             if (messages.count < 20) {

@@ -39,15 +39,15 @@
     </message>
     <message>
         <source>Fernando Lanero, Mika, Leszek Lesner, A. Madani, Timo Könnecke, Rudi Timmermans for being awesome testers.</source>
-        <translation type="unfinished"></translation>
+        <translation>Fernando Lanero, Mika, Leszek Lesner, A. Madani, Timo Könnecke, Rudi Timmermans por ser unos testeadores fantásticos.</translation>
     </message>
     <message>
         <source>Greg Goncharov (@gregguh at telegram) for icons.</source>
-        <translation type="unfinished"></translation>
+        <translation>Greg Goncharov (@gregguh en telegram) por los iconos.</translation>
     </message>
     <message>
         <source>dashinfantry for chinese translation.</source>
-        <translation type="unfinished"></translation>
+        <translation>dashinfantry por la traducción al chino.</translation>
     </message>
 </context>
 <context>
@@ -190,7 +190,7 @@
     </message>
     <message>
         <source>Clear history</source>
-        <translation type="unfinished">Limpiar historial</translation>
+        <translation>Limpiar historial</translation>
     </message>
 </context>
 <context>
@@ -313,19 +313,19 @@
     </message>
     <message>
         <source>Scroll to first unread mention</source>
-        <translation type="unfinished"></translation>
+        <translation>Ir a la primera mención no leída</translation>
     </message>
     <message>
         <source>Set as read</source>
-        <translation type="unfinished">Marcar como leído</translation>
+        <translation>Marcar como leído</translation>
     </message>
     <message>
         <source>Also pin for %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Fijar también para %1</translation>
     </message>
     <message>
         <source>Unpin message</source>
-        <translation type="unfinished"></translation>
+        <translation>Quitar mensaje fijado</translation>
     </message>
 </context>
 <context>
@@ -415,86 +415,86 @@
     </message>
     <message>
         <source>%1 pinned message</source>
-        <translation type="unfinished">%1 fijó un mensaje</translation>
+        <translation>%1 fijó un mensaje</translation>
     </message>
 </context>
 <context>
     <name>ChatNew</name>
     <message>
         <source>Open secret chat</source>
-        <translation type="unfinished">Abrir chat secreto</translation>
+        <translation>Abrir chat secreto</translation>
     </message>
     <message>
         <source>Close secret chat</source>
-        <translation type="unfinished">Cerrar chat secreto</translation>
+        <translation>Cerrar chat secreto</translation>
     </message>
     <message>
         <source>Set self-destruct timer</source>
-        <translation type="unfinished">Configurar autodestrucción</translation>
+        <translation>Configurar autodestrucción</translation>
     </message>
     <message>
         <source>Cancel selection</source>
-        <translation type="unfinished">Cancelar selección</translation>
+        <translation>Cancelar selección</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation type="unfinished">Reenviar</translation>
+        <translation>Reenviar</translation>
     </message>
     <message>
         <source>Scroll to first unread mention</source>
-        <translation type="unfinished"></translation>
+        <translation>Ir a la primera mención no leída</translation>
     </message>
     <message>
         <source>Saved messages</source>
-        <translation type="unfinished">Mensajes guardados</translation>
+        <translation>Mensajes guardados</translation>
     </message>
     <message>
         <source>%1 members</source>
-        <translation type="unfinished">%1 miembros</translation>
+        <translation>%1 miembros</translation>
     </message>
     <message>
         <source>%L1 forwarded messages</source>
-        <translation type="unfinished">%L1 mensajes reenviados</translation>
+        <translation>%L1 mensajes reenviados</translation>
     </message>
     <message>
         <source>Type the text...</source>
-        <translation type="unfinished">Escribe texto...</translation>
+        <translation>Escribe texto...</translation>
     </message>
     <message>
         <source>Image</source>
-        <translation type="unfinished">Imagen</translation>
+        <translation>Imagen</translation>
     </message>
     <message>
         <source>Video</source>
-        <translation type="unfinished">Vídeo</translation>
+        <translation>Vídeo</translation>
     </message>
     <message>
         <source>Audio</source>
-        <translation type="unfinished">Audio</translation>
+        <translation>Audio</translation>
     </message>
     <message>
         <source>Document</source>
-        <translation type="unfinished"></translation>
+        <translation>Documento</translation>
     </message>
     <message>
         <source>File</source>
-        <translation type="unfinished">Archivo</translation>
+        <translation>Archivo</translation>
     </message>
     <message>
         <source>Poll</source>
-        <translation type="unfinished">Encuesta</translation>
+        <translation>Encuesta</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation type="unfinished">Sticker</translation>
+        <translation>Sticker</translation>
     </message>
     <message>
         <source>Voice Note</source>
-        <translation type="unfinished">Nota voz</translation>
+        <translation>Nota voz</translation>
     </message>
     <message>
         <source>Press and hold record button to record voice note.</source>
-        <translation type="unfinished">Mantén pulsado el botón de grabar para grabar nota de voz.</translation>
+        <translation>Mantén pulsado el botón de grabar para grabar nota de voz.</translation>
     </message>
 </context>
 <context>
@@ -528,15 +528,15 @@
     <name>CoverPage</name>
     <message>
         <source>Unread chats: %L1</source>
-        <translation type="unfinished"></translation>
+        <translation>Chats sin leer: %L1</translation>
     </message>
     <message>
         <source>Yottagram</source>
-        <translation type="unfinished"></translation>
+        <translation>Yottagram</translation>
     </message>
     <message>
         <source>New messages: %L1</source>
-        <translation type="unfinished"></translation>
+        <translation>Mensajes nuevos: %L1</translation>
     </message>
 </context>
 <context>
@@ -569,15 +569,15 @@
     </message>
     <message>
         <source>Forwarded from %1</source>
-        <translation type="unfinished">Reenviado desde %1</translation>
+        <translation>Reenviado desde %1</translation>
     </message>
     <message>
         <source>Edited</source>
-        <translation type="unfinished">Editado</translation>
+        <translation>Editado</translation>
     </message>
     <message>
         <source>Message was pinned</source>
-        <translation type="unfinished"></translation>
+        <translation>Mensaje fijado</translation>
     </message>
 </context>
 <context>
@@ -786,15 +786,15 @@
     </message>
     <message>
         <source>Animated stickers</source>
-        <translation type="unfinished"></translation>
+        <translation>Stickers animados</translation>
     </message>
     <message>
         <source>Include muted chats in unread chats and messages counts</source>
-        <translation type="unfinished"></translation>
+        <translation>Incluir los chats silenciados en el recuento de mensajes y chats sin leer</translation>
     </message>
     <message>
         <source>Message font size</source>
-        <translation type="unfinished"></translation>
+        <translation>Tamaño de la fuente</translation>
     </message>
 </context>
 <context>
@@ -853,7 +853,7 @@
     </message>
     <message>
         <source>Clear history</source>
-        <translation type="unfinished">Limpiar historial</translation>
+        <translation>Limpiar historial</translation>
     </message>
 </context>
 <context>
@@ -935,7 +935,7 @@
     </message>
     <message>
         <source>Clear history</source>
-        <translation type="unfinished">Limpiar historial</translation>
+        <translation>Limpiar historial</translation>
     </message>
 </context>
 <context>

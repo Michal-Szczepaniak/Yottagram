@@ -5,13 +5,14 @@ Name:       yottagram
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    Yottagram
-Version:    0.1.6
+Version:    0.2.0
 Release:    1
 Group:      Qt/Qt
 License:    GPLv3
 URL:        http://verdanditeam.com/
 Source0:    %{name}-%{version}.tar.bz2
 Requires:   sailfishsilica-qt5 >= 0.10.9
+Requires:  tdlib = 1.7.0
 BuildRequires:  pkgconfig(sailfishapp) >= 1.0.2
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5Qml)
@@ -20,7 +21,7 @@ BuildRequires:  pkgconfig(openssl)
 BuildRequires:  pkgconfig(connman-qt5)
 BuildRequires:  pkgconfig(vorbisfile)
 BuildRequires:  pkgconfig(nemonotifications-qt5)
-BuildRequires:  tdlib
+BuildRequires:  tdlib = 1.7.0
 BuildRequires:  desktop-file-utils
 
 %description

@@ -87,7 +87,7 @@ Item {
             cellWidth: Math.floor(page.isLandscape ? root.width/(Math.floor(root.width/(root.height/5))) : root.width/5)
             cellHeight: cellWidth
             clip: true
-            cacheBuffer: 0
+            cacheBuffer: cellWidth*4
 
             delegate: GridItem {
                 width: stickerSetGridView.cellWidth
