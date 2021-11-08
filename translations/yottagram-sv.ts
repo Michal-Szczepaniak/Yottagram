@@ -47,7 +47,7 @@
     </message>
     <message>
         <source>dashinfantry for chinese translation.</source>
-        <translation type="unfinished"></translation>
+        <translation>dashinfantry för Kinesisk översättning.</translation>
     </message>
 </context>
 <context>
@@ -190,7 +190,7 @@
     </message>
     <message>
         <source>Clear history</source>
-        <translation type="unfinished">Rensa historik</translation>
+        <translation>Rensa historik</translation>
     </message>
 </context>
 <context>
@@ -313,19 +313,19 @@
     </message>
     <message>
         <source>Scroll to first unread mention</source>
-        <translation type="unfinished"></translation>
+        <translation>Skrolla till första olästa omnämnande</translation>
     </message>
     <message>
         <source>Set as read</source>
-        <translation type="unfinished">Ange som läst</translation>
+        <translation>Ange som läst</translation>
     </message>
     <message>
         <source>Also pin for %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Fäst också för %1</translation>
     </message>
     <message>
         <source>Unpin message</source>
-        <translation type="unfinished"></translation>
+        <translation>Lösgör meddelande</translation>
     </message>
 </context>
 <context>
@@ -415,86 +415,86 @@
     </message>
     <message>
         <source>%1 pinned message</source>
-        <translation type="unfinished">%1 fäst meddelande</translation>
+        <translation>%1 fäst meddelande</translation>
     </message>
 </context>
 <context>
     <name>ChatNew</name>
     <message>
         <source>Open secret chat</source>
-        <translation type="unfinished">Öppna privat chatt</translation>
+        <translation>Öppna privat chatt</translation>
     </message>
     <message>
         <source>Close secret chat</source>
-        <translation type="unfinished">Stäng privat chatt</translation>
+        <translation>Stäng privat chatt</translation>
     </message>
     <message>
         <source>Set self-destruct timer</source>
-        <translation type="unfinished">Ställ in självförstörandetidur</translation>
+        <translation>Ställ in självförstörandetidur</translation>
     </message>
     <message>
         <source>Cancel selection</source>
-        <translation type="unfinished">Avbryt markering</translation>
+        <translation>Avbryt markering</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation type="unfinished">Vidarebefordra</translation>
+        <translation>Vidarebefordra</translation>
     </message>
     <message>
         <source>Scroll to first unread mention</source>
-        <translation type="unfinished"></translation>
+        <translation>Skrolla till första olästa omnämnande</translation>
     </message>
     <message>
         <source>Saved messages</source>
-        <translation type="unfinished">Sparade meddelanden</translation>
+        <translation>Sparade meddelanden</translation>
     </message>
     <message>
         <source>%1 members</source>
-        <translation type="unfinished">%1 medlemmar</translation>
+        <translation>%1 medlemmar</translation>
     </message>
     <message>
         <source>%L1 forwarded messages</source>
-        <translation type="unfinished">%L1 meddelanden vidarebordrade</translation>
+        <translation>%L1 meddelanden vidarebordrade</translation>
     </message>
     <message>
         <source>Type the text...</source>
-        <translation type="unfinished">Skriv...</translation>
+        <translation>Skriv...</translation>
     </message>
     <message>
         <source>Image</source>
-        <translation type="unfinished">Bild</translation>
+        <translation>Bild</translation>
     </message>
     <message>
         <source>Video</source>
-        <translation type="unfinished">Video</translation>
+        <translation>Video</translation>
     </message>
     <message>
         <source>Audio</source>
-        <translation type="unfinished">Ljud</translation>
+        <translation>Ljud</translation>
     </message>
     <message>
         <source>Document</source>
-        <translation type="unfinished">Dokument</translation>
+        <translation>Dokument</translation>
     </message>
     <message>
         <source>File</source>
-        <translation type="unfinished">Fil</translation>
+        <translation>Fil</translation>
     </message>
     <message>
         <source>Poll</source>
-        <translation type="unfinished">Omröstning</translation>
+        <translation>Omröstning</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation type="unfinished">Dekal</translation>
+        <translation>Dekal</translation>
     </message>
     <message>
         <source>Voice Note</source>
-        <translation type="unfinished">Röstmeddelande</translation>
+        <translation>Röstmeddelande</translation>
     </message>
     <message>
         <source>Press and hold record button to record voice note.</source>
-        <translation type="unfinished">Tryck och håll ner inspelningsknappen för att spela in röstmeddelande.</translation>
+        <translation>Tryck och håll ner inspelningsknappen för att spela in röstmeddelande.</translation>
     </message>
 </context>
 <context>
@@ -569,15 +569,15 @@
     </message>
     <message>
         <source>Forwarded from %1</source>
-        <translation type="unfinished">Vidarebefordrat från %1</translation>
+        <translation>Vidarebefordrat från %1</translation>
     </message>
     <message>
         <source>Edited</source>
-        <translation type="unfinished">Redigerat</translation>
+        <translation>Redigerat</translation>
     </message>
     <message>
         <source>Message was pinned</source>
-        <translation type="unfinished"></translation>
+        <translation>Meddelande fäst</translation>
     </message>
 </context>
 <context>
@@ -853,7 +853,7 @@
     </message>
     <message>
         <source>Clear history</source>
-        <translation type="unfinished">Rensa historik</translation>
+        <translation>Rensa historik</translation>
     </message>
 </context>
 <context>
@@ -935,7 +935,7 @@
     </message>
     <message>
         <source>Clear history</source>
-        <translation type="unfinished">Rensa historik</translation>
+        <translation>Rensa historik</translation>
     </message>
 </context>
 <context>
