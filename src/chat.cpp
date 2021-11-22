@@ -1102,6 +1102,43 @@ void Chat::sendSticker(int32_t fileId, int64_t replyToMessageId)
     _manager->sendQuery(sendMessage);
 }
 
+void Chat::sendLocation(float latitude, float longitude, float horizontalAccuracy, int64_t replyToMessageId)
+{
+    auto sendMessage = new td_api::sendMessage();
+    sendMessage->chat_id_ = _chat->id_;
+
+    if (replyToMessageId != 0) {
+        sendMessage->reply_to_message_id_ = replyToMessageId;
+    }
+
+    auto messageContent = td_api::make_object<td_api::inputMessageLocation>();
+    messageContent->location_ = td_api::make_object<td_api::location>(latitude, longitude, horizontalAccuracy);
+
+    sendMessage->input_message_content_ = std::move(messageContent);
+
+    _manager->sendQuery(sendMessage);
+}
+
+void Chat::sendAnimation(int32_t fileId, int32_t width, int32_t height, int64_t replyToMessageId)
+{
+    auto sendMessage = new td_api::sendMessage();
+    sendMessage->chat_id_ = _chat->id_;
+
+    if (replyToMessageId != 0) {
+        sendMessage->reply_to_message_id_ = replyToMessageId;
+    }
+
+    auto messageContent = td_api::make_object<td_api::inputMessageAnimation>();
+    auto inputFile = td_api::make_object<td_api::inputFileId>();
+    inputFile->id_ = fileId;
+    messageContent->animation_ = std::move(inputFile);
+    messageContent->width_ = width;
+    messageContent->height_ = height;
+    sendMessage->input_message_content_ = std::move(messageContent);
+
+    _manager->sendQuery(sendMessage);
+}
+
 void Chat::sendForwardedMessages(QStringList forwardedMessages, int64_t forwardedFrom)
 {
     forwardedMessages.sort();
@@ -1184,6 +1221,11 @@ void Chat::pinMessage(int64_t messageId, bool notify, bool onlyForSelf)
 void Chat::unpinMessage(int64_t messageId)
 {
     _manager->sendQuery(new td_api::unpinChatMessage(getId(), messageId));
+}
+
+void Chat::clearCachedHistory()
+{
+    _message_ids.clear();
 }
 
 void Chat::setTtl(int32_t ttl)

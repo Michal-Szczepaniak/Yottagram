@@ -203,6 +203,8 @@ public:
     Q_INVOKABLE void sendPoll(QString question, QStringList options, bool anonymous, bool multipleAnswers, bool quizMode, int validAnswer);
     Q_INVOKABLE void sendVoiceNote(QString path, QString waveform, int64_t duration, int64_t replyToMessageId);
     Q_INVOKABLE void sendSticker(int32_t fileId, int64_t replyToMessageId);
+    Q_INVOKABLE void sendLocation(float latitude, float longitude, float horizontalAccuracy, int64_t replyToMessageId);
+    Q_INVOKABLE void sendAnimation(int32_t fileId, int32_t width, int32_t height, int64_t replyToMessageId);
     Q_INVOKABLE void sendForwardedMessages(QStringList forwardedMessages, int64_t forwardedFrom);
     Q_INVOKABLE void open(QString path);
     Q_INVOKABLE void deleteMessage(int64_t messageId);
@@ -214,6 +216,7 @@ public:
     Q_INVOKABLE void saveToGallery(QString filePath);
     Q_INVOKABLE void pinMessage(int64_t messageId, bool notify = true, bool onlyForSelf = false);
     Q_INVOKABLE void unpinMessage(int64_t messageId);
+    Q_INVOKABLE void clearCachedHistory();
     void setTtl(int32_t ttl);
 
     bool hasPhoto();

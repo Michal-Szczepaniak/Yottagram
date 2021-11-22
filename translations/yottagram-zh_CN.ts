@@ -327,6 +327,14 @@
         <source>Unpin message</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>GIF</source>
+        <translation type="unfinished">GIF</translation>
+    </message>
+    <message>
+        <source>Location</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
@@ -543,6 +551,21 @@
     <message>
         <source>Waiting for connection...</source>
         <translation>等候网络连接…</translation>
+    </message>
+</context>
+<context>
+    <name>LocationPicker</name>
+    <message>
+        <source>Location Picker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Latitude:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Longitude</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

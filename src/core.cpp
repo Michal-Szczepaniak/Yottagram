@@ -75,6 +75,10 @@ Core::Core(QObject *parent) : QObject(parent)
     _stickerSets.setTelegramManager(_manager);
     _stickerSets.setFiles(_files);
     connect(&_authorization, &Authorization::isAuthorizedChanged, &_stickerSets, &StickerSets::onIsAuthorizedChanged);
+
+    _savedAnimations.setTelegramManager(_manager);
+    _savedAnimations.setFiles(_files);
+    connect(&_authorization, &Authorization::isAuthorizedChanged, &_savedAnimations, &SavedAnimations::onIsAuthorizedChanged);
 }
 
 void Core::init()

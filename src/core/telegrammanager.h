@@ -89,6 +89,7 @@ signals:
     void updateChatUnreadMentionCount(td_api::updateChatUnreadMentionCount *updateChatUnreadMentionCount);
     void updateMessageIsPinned(td_api::updateMessageIsPinned *updateMessageIsPinned);
     void updateMessageMentionRead(td_api::updateMessageMentionRead *updateMessageMentionRead);
+    void updateSavedAnimations(td_api::updateSavedAnimations *updateSavedAnimations);
 
 // Responses
     void gotChatHistory(int64_t chatId, td_api::messages *messages);
@@ -96,6 +97,7 @@ signals:
     void gotStickerSet(td_api::stickerSet *stickerSet);
     void gotSearchChatMessages(int64_t chatId, td_api::messages *messages);
     void gotSearchChatMessagesFilterPinned(int64_t chatId, td_api::messages *messages);
+    void gotSavedAnimations(td_api::animations* animations);
 
     void myIdChanged(int32_t myId);
 

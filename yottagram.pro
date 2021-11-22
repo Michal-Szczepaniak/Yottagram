@@ -50,6 +50,7 @@ SOURCES += src/core.cpp \
     src/message.cpp \
     src/notifications.cpp \
     src/poll.cpp \
+    src/savedanimations.cpp \
     src/stickerset.cpp \
     src/stickersets.cpp \
     src/tgsioplugin/tgsioplugin.cpp \
@@ -66,8 +67,12 @@ SOURCES += src/core.cpp \
 
 DISTFILES += qml/yottagram.qml \
     com.verdanditeam.yottagram.service \
+    qml/components/AnimationPicker.qml \
+    qml/components/AnimationPreview.qml \
     qml/components/AutoDownloadSettings.qml \
     qml/components/ChatNotifications.qml \
+    qml/components/Property.qml \
+    qml/components/LocationPicker.qml \
     qml/components/PinnedMessage.qml \
     qml/components/ScopeNotificationSettings.qml \
     qml/components/SilicaSignalListView.qml \
@@ -161,6 +166,7 @@ HEADERS += \
     src/chatlist.h \
     src/chat.h \
     src/poll.h \
+    src/savedanimations.h \
     src/stickerset.h \
     src/stickersets.h \
     src/tgsioplugin/tgsioplugin.h \

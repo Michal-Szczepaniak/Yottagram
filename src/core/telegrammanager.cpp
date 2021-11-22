@@ -115,6 +115,9 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
         default:
             emit gotSearchChatMessages(response.chatId, static_cast<td_api::messages*>(message));
         }
+        break;
+    case td_api::getSavedAnimations::ID:
+        emit gotSavedAnimations(static_cast<td_api::animations*>(message));
     }
 }
 
@@ -229,6 +232,9 @@ void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
             },
             [this](td_api::updateMessageIsPinned &updateMessageIsPinned) {
                 emit this->updateMessageIsPinned(&updateMessageIsPinned);
+            },
+            [this](td_api::updateSavedAnimations &updateSavedAnimations) {
+                emit this->updateSavedAnimations(&updateSavedAnimations);
             },
             [](auto &update) { Q_UNUSED(update) }
         )

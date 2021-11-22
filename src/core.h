@@ -31,6 +31,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "notifications.h"
 #include "components/autodownloadsettings.h"
 #include "stickersets.h"
+#include "savedanimations.h"
 
 using namespace std;
 
@@ -45,6 +46,7 @@ public:
     Authorization _authorization;
     Notifications _notifications;
     StickerSets _stickerSets;
+    SavedAnimations _savedAnimations;
     shared_ptr<ChatList> _chatList;
     shared_ptr<Users> _users;
     shared_ptr<Files> _files;
