@@ -62,7 +62,7 @@ void Files::appendFile(td_api::object_ptr<td_api::file> file, QString fileType)
         _files.insert(filePointer->getId(), filePointer);
     }
 
-    if (fileType == "avatar" || fileType == "sticker") considerAutoDownloading(fileId, fileType);
+    if (fileType == "avatar" || fileType == "sticker" || fileType == "animation") considerAutoDownloading(fileId, fileType);
 }
 
 void Files::considerAutoDownloading(int32_t fileId, QString fileType)
@@ -75,7 +75,7 @@ void Files::considerAutoDownloading(int32_t fileId, QString fileType)
     if (fileType == "photo" && file->getExpectedSize() <= getActiveAutoDownloadSetting()->getMaxPhotoFileSize()) file->download();
     if (fileType == "video" && file->getExpectedSize() <= getActiveAutoDownloadSetting()->getMaxVideoFileSize()) file->download();
     if (fileType == "other" && file->getExpectedSize() <= getActiveAutoDownloadSetting()->getMaxOtherFileSize()) file->download();
-    if (fileType == "avatar" || fileType == "sticker") file->download();
+    if (fileType == "avatar" || fileType == "sticker" || fileType == "animation") file->download();
 }
 
 AutoDownloadSettings *Files::getActiveAutoDownloadSetting()

@@ -47,6 +47,11 @@ void TelegramManager::sendQuery(td_api::Function* message)
     receiver.client->send({(std::uint64_t)1, td_api::object_ptr<td_api::Function>(message)});
 }
 
+void TelegramManager::sendQuerySync(td_api::Function *message)
+{
+    receiver.client->execute({(std::uint64_t)1, td_api::object_ptr<td_api::Function>(message)});
+}
+
 void TelegramManager::sendQueryWithRespone(int64_t chatId, int32_t type, int32_t subType, td_api::Function *message)
 {
     _messageId++;
@@ -115,6 +120,9 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
         default:
             emit gotSearchChatMessages(response.chatId, static_cast<td_api::messages*>(message));
         }
+        break;
+    case td_api::getSavedAnimations::ID:
+        emit gotSavedAnimations(static_cast<td_api::animations*>(message));
     }
 }
 
@@ -229,6 +237,18 @@ void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
             },
             [this](td_api::updateMessageIsPinned &updateMessageIsPinned) {
                 emit this->updateMessageIsPinned(&updateMessageIsPinned);
+            },
+            [this](td_api::updateSavedAnimations &updateSavedAnimations) {
+                emit this->updateSavedAnimations(&updateSavedAnimations);
+            },
+            [this](td_api::updateNewCallSignalingData &updateNewCallSignalingData) {
+                emit this->updateNewCallSignalingData(&updateNewCallSignalingData);
+            },
+            [this](td_api::updateCall &updateCall) {
+                emit this->updateCall(&updateCall);
+            },
+            [this](td_api::updateChatMessageTtlSetting &updateChatMessageTtlSetting) {
+                emit this->updateChatMessageTtlSetting(&updateChatMessageTtlSetting);
             },
             [](auto &update) { Q_UNUSED(update) }
         )

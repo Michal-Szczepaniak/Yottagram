@@ -106,14 +106,17 @@ public:
         WebPageRole,
         PollRole,
         ContainsUnreadMentionRole,
-        ContainsUnreadReplyRole
+        ContainsUnreadReplyRole,
+        CallRole,
+        LocationRole,
+        ContactRole
     };
 
     Chat(td_api::chat* chat, shared_ptr<Files> files);
     ~Chat();
 
     int64_t getId() const;
-    int32_t getIdFromType() const;
+    int64_t getIdFromType() const;
     int32_t getSecretChatId() const;
     QString getTitle() const;
     SecretChatInfo* getSecretChatInfo() const;
@@ -203,6 +206,8 @@ public:
     Q_INVOKABLE void sendPoll(QString question, QStringList options, bool anonymous, bool multipleAnswers, bool quizMode, int validAnswer);
     Q_INVOKABLE void sendVoiceNote(QString path, QString waveform, int64_t duration, int64_t replyToMessageId);
     Q_INVOKABLE void sendSticker(int32_t fileId, int64_t replyToMessageId);
+    Q_INVOKABLE void sendLocation(float latitude, float longitude, float horizontalAccuracy, int64_t replyToMessageId);
+    Q_INVOKABLE void sendAnimation(int32_t fileId, int32_t width, int32_t height, int64_t replyToMessageId);
     Q_INVOKABLE void sendForwardedMessages(QStringList forwardedMessages, int64_t forwardedFrom);
     Q_INVOKABLE void open(QString path);
     Q_INVOKABLE void deleteMessage(int64_t messageId);
@@ -214,6 +219,7 @@ public:
     Q_INVOKABLE void saveToGallery(QString filePath);
     Q_INVOKABLE void pinMessage(int64_t messageId, bool notify = true, bool onlyForSelf = false);
     Q_INVOKABLE void unpinMessage(int64_t messageId);
+    Q_INVOKABLE void clearCachedHistory();
     void setTtl(int32_t ttl);
 
     bool hasPhoto();
@@ -258,6 +264,7 @@ public slots:
     void scopeNotificationSettingsChanged(td_api::scopeNotificationSettings *scopeNotificationSettings);
     void onGotMessage(td_api::message *message);
     void updateChatPermissions(td_api::updateChatPermissions *updateChatPermissions);
+    void updateChatMessageTtlSetting(td_api::updateChatMessageTtlSetting *updateChatMessageTtlSetting);
 
     void onGotChatHistory(int64_t chatId, td_api::messages *messages);
 

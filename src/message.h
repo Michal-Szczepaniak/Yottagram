@@ -28,24 +28,29 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "core/telegrammanager.h"
 #include "files/files.h"
 #include "files/file.h"
-#include "files/photo.h"
-#include "files/sticker.h"
-#include "files/video.h"
-#include "files/document.h"
-#include "files/audio.h"
-#include "files/animation.h"
-#include "files/voicenote.h"
-#include "files/videonote.h"
+#include "contents/photo.h"
+#include "contents/sticker.h"
+#include "contents/video.h"
+#include "contents/document.h"
+#include "contents/audio.h"
+#include "contents/animation.h"
+#include "contents/voicenote.h"
+#include "contents/videonote.h"
 #include "users.h"
 #include "webpage.h"
-#include "poll.h"
+#include "contents/poll.h"
+#include "contents/call.h"
+#include "contents/location.h"
+#include "contents/contact.h"
+#include "contents/contentinterface.h"
+#include <variant>
 
 class Message : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString text READ getText NOTIFY messageChanged)
     Q_PROPERTY(QString type READ getType NOTIFY messageChanged)
-    Q_PROPERTY(int32_t senderUserId READ getSenderUserId NOTIFY messageChanged)
+    Q_PROPERTY(int64_t senderUserId READ getSenderUserId NOTIFY messageChanged)
 public:
     explicit Message(QObject *parent = nullptr);
     ~Message();
@@ -72,7 +77,7 @@ public:
     QVector<int32_t> getAddMembersIds();
     int64_t replyMessageId();
     td_api::messageForwardInfo* getForwardedInfo();
-    int32_t getSenderUserId();
+    int64_t getSenderUserId();
     QString getFormattedTimestamp();
     QString getFormattedForwardTimestamp();
     bool containsUnreadMention() const;
@@ -80,15 +85,13 @@ public:
 
     bool hasWebPage() const;
     WebPage* getWebPage() const;
-    Poll* getPoll() const;
-    Photo* getPhoto() const;
-    Sticker* getSticker() const;
-    Video* getVideo() const;
-    Document* getDocument() const;
-    Audio* getAudio() const;
-    Animation* getAnimation() const;
-    VoiceNote* getVoiceNote() const;
-    VideoNote* getVideoNote() const;
+    template<class T>
+    T* getContent() {
+        if (dynamic_cast<T*>(_messageContent))
+            return static_cast<T*>(_messageContent);
+        else
+            return nullptr;
+    }
 
     void handleMessageContent(td_api::object_ptr<td_api::MessageContent> messageContent);
 
@@ -113,16 +116,8 @@ private:
     shared_ptr<Users> _users;
     shared_ptr<Files> _files;
     td_api::object_ptr<td_api::messageText> _text;
+    ContentInterface* _messageContent;
     WebPage* _webPage;
-    Poll* _poll;
-    Photo* _photo;
-    Sticker* _sticker;
-    Video* _video;
-    Document* _document;
-    Audio* _audio;
-    Animation* _animation;
-    VoiceNote* _voiceNote;
-    VideoNote* _videoNote;
 };
 
 #endif // MESSAGE_H

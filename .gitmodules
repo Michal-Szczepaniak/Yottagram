@@ -4,3 +4,9 @@
 [submodule "vendor/rlottie"]
 	path = vendor/rlottie
 	url = https://github.com/Samsung/rlottie.git
+[submodule "vendor/tgcalls/upstream"]
+	path = vendor/tgcalls/upstream
+	url = https://github.com/TelegramMessenger/tgcalls.git
+[submodule "vendor/tg_owt/upstream"]
+	path = vendor/tg_owt/upstream
+	url = https://github.com/desktop-app/tg_owt/

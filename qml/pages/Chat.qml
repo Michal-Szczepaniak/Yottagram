@@ -51,8 +51,15 @@ Page {
 
     allowedOrientations: Orientation.All
 
+    Connections {
+        target: pageStack
+        onDepthChanged: if (depth === 1) chat.clearCachedHistory()
+    }
+
     onStatusChanged: {
-        if (status === PageStatus.Deactivating) chatList.closeChat(chat.id)
+        if (status === PageStatus.Deactivating) {
+            chatList.closeChat(chat.id)
+        }
         if (status === PageStatus.Active) {
             chatList.openChat(chat.id)
 
@@ -123,6 +130,16 @@ Page {
         Component.onCompleted: chat.injectDependencies(pinnedMessages)
     }
 
+    AnimationPreview {
+        id: animationPreview
+        anchors.fill: parent
+        opacity: path !== "" ? 1 : 0
+        Behavior on opacity { PropertyAnimation {} }
+
+        visible: opacity > 0
+        z: 10000
+    }
+
     SilicaFlickable {
         id: mainFlickable
         anchors.fill: parent
@@ -177,9 +194,16 @@ Page {
                 visible: chat.unreadMentionCount > 0 && chat.firstUnreadMention !== 0 && !chatPage.selectionActive
                 onClicked: scrollToMention()
             }
+
+            MenuItem {
+                text: qsTr("Call")
+                visible: chat.getChatType() === "private" && !chatPage.selectionActive
+                onClicked: calls.call(chat.idFromType)
+            }
         }
 
         Rectangle {
+            Component.onCompleted: console.log(chat.getChatType(), chat.ttl)
             visible: chat.getChatType() === "secret" && chat.ttl > 0
             anchors.right: chatPhoto.right
             anchors.bottom: chatPhoto.bottom
@@ -253,7 +277,7 @@ Page {
                     horizontalAlignment: Text.AlignRight
                     text: chat.isSelf ? qsTr("Saved messages") : chat.title
                     truncationMode: TruncationMode.Fade
-                    width: parent.width - (secretChatIndicator.visible ? (Theme.paddingSmall + secretChatIndicator.width) : 0)
+                    width: parent.width - (secretChatIndicator.visible ? (Theme.paddingLarge + secretChatIndicator.width) : 0)
                     color: pageHeader.palette.highlightColor
                     font.pixelSize: Theme.fontSizeLarge
                     font.family: Theme.fontFamilyHeading
@@ -334,6 +358,7 @@ Page {
                 if (contentY <= (inputItem.height/2)) {
                     scrollToTop()
                     if (stickerPicker.visible) stickerPicker.visible = false
+                    if (animationPicker.visible) animationPicker.visible = false
                 } else {
                     scrollToBottom()
                 }
@@ -344,7 +369,7 @@ Page {
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: uploadFlickable.height - (stickerPicker.visible ? (Theme.itemSizeLarge + inputItem.editReplyPanel) : (textInput.height + inputItem.editReplyPanel))
+                height: uploadFlickable.height - ((stickerPicker.visible || animationPicker.visible) ? (Theme.itemSizeLarge + inputItem.editReplyPanel) : (textInput.height + inputItem.editReplyPanel))
                 width: parent.width
                 verticalLayoutDirection: ListView.BottomToTop
                 clip: true
@@ -696,7 +721,7 @@ Page {
                 anchors.top: messages.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: visible ? uploadMediaPanel.height + textInput.height + editReplyPanel + stickerPicker.height : 0
+                height: visible ? uploadMediaPanel.height + textInput.height + editReplyPanel + stickerPicker.height + animationPicker.height : 0
                 property var editReplyPanel: (replyRow.visible ? replyRow.height : 0) + (editRow.visible ? editRow.height : 0) + (forwardRow.visible ? forwardRow.height : 0)
                 visible: !(chat.getChatType() === "secret" && (chat.secretChatState === "closed" || chat.secretChatState === "pending"))
 
@@ -872,6 +897,24 @@ Page {
                     }
                 }
 
+                AnimationPicker {
+                    id: animationPicker
+                    height: visible ? Screen.height/2 + Theme.paddingLarge : 0
+                    width: parent.width
+                    anchors.top: parent.top
+                    visible: false
+                    animationPreview: animationPreview
+                    page: chatPage
+                    opacity: uploadFlickable.contentY/(inputItem.height- Theme.itemSizeLarge)
+                    onAnimationFileIdChanged: {
+                        chat.sendAnimation(animationFileId, animationWidth, animationHeight, chatPage.replyMessageId)
+                        animationPicker.visible = false
+                        chatPage.replyMessageId = 0
+                        animationFileId = 0
+                        uploadFlickable.scrollToTop()
+                    }
+                }
+
                 TextArea {
                     id: textInput
                     enabled: {
@@ -888,7 +931,7 @@ Page {
                     color: Theme.primaryColor
                     focusOutBehavior: FocusBehavior.KeepFocus
                     height: if (!visible) 0
-                    visible: !stickerPicker.visible
+                    visible: !(stickerPicker.visible || animationPicker.visible)
                     onFocusChanged:
                         messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.startMessage)), ListView.SnapPosition)
                     EnterKey.onClicked: {
@@ -926,7 +969,7 @@ Page {
                     anchors.topMargin: inputItem.editReplyPanel
                     anchors.right: parent.right
                     icon.source: "image://theme/icon-m-send"
-                    visible: settings.sendButton && !stickerPicker.visible
+                    visible: settings.sendButton && !(stickerPicker.visible || animationPicker.visible)
                     onClicked: textInput.sendMessage()
                 }
 
@@ -937,7 +980,7 @@ Page {
                     spacing: Theme.paddingLarge
                     padding: Theme.paddingLarge
                     visible: {
-                        if (stickerPicker.visible) return false
+                        if (stickerPicker.visible || animationPicker.visible) return false
                         if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canSendMediaMessages
                         if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canSendMediaMessages
                         return chat.canSendMediaMessages
@@ -1011,6 +1054,17 @@ Page {
                         }
 
                         HighlightLabelIconButton {
+                            width: uploadMediaPanel.cellWidth
+                            text: qsTr("GIF")
+                            source: "image://theme/icon-m-play"
+                            onClicked: {
+                                textInput.focus = false
+                                animationPicker.visible = true
+                                uploadFlickable.scrollToBottom()
+                            }
+                        }
+
+                        HighlightLabelIconButton {
                             id: voiceMessageButton
                             width: uploadMediaPanel.cellWidth
                             text: qsTr("Voice Note")
@@ -1033,8 +1087,27 @@ Page {
                                 previewSummary: qsTr("Press and hold record button to record voice note.")
                             }
                         }
+
+                        HighlightLabelIconButton {
+                            width: uploadMediaPanel.cellWidth
+                            text: qsTr("Location")
+                            source: "image://theme/icon-m-location"
+                            onClicked: {
+                                pageStack.push(locationPickerDialog)
+                            }
+                        }
                     }
                 }
+            }
+        }
+
+        Component {
+            id: locationPickerDialog
+
+            LocationPicker {
+                id: locationPicker
+
+                page: chatPage
             }
         }
 

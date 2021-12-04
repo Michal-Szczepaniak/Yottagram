@@ -208,6 +208,7 @@ void Authorization::authorizationStateWaitTdlibParameters()
 
     auto parameters = td_api::make_object<td_api::tdlibParameters>();
     parameters->database_directory_ = QDir::homePath().toStdString() + "/.local/share/Yottagram";
+    parameters->files_directory_ = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation).toStdString() + "/Yottagram";
     parameters->use_message_database_ = true;
     parameters->use_chat_info_database_ = true;
     parameters->use_file_database_ = true;
@@ -218,7 +219,7 @@ void Authorization::authorizationStateWaitTdlibParameters()
     parameters->system_language_code_ = "en";
     parameters->device_model_ = (deviceInfo.manufacturer() + " " + deviceInfo.prettyName()).toStdString();
     parameters->system_version_ = (aboutSettings.localizedOperatingSystemName() + " " + aboutSettings.localizedSoftwareVersion()).toStdString();
-    parameters->application_version_ = "0.1.3";
+    parameters->application_version_ = "0.2.2";
     parameters->enable_storage_optimizer_ = true;
     _manager->sendQuery(new td_api::setTdlibParameters(std::move(parameters)));
 }

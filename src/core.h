@@ -31,6 +31,9 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "notifications.h"
 #include "components/autodownloadsettings.h"
 #include "stickersets.h"
+#include "savedanimations.h"
+#include "calls.h"
+#include "dbushelper.h"
 
 using namespace std;
 
@@ -45,9 +48,12 @@ public:
     Authorization _authorization;
     Notifications _notifications;
     StickerSets _stickerSets;
+    SavedAnimations _savedAnimations;
+    Calls _calls;
     shared_ptr<ChatList> _chatList;
     shared_ptr<Users> _users;
     shared_ptr<Files> _files;
+    shared_ptr<DBusHelper> _dbusHelper;
     AutoDownloadSettings _wifiAutoDownloadSettings;
     AutoDownloadSettings _mobileAutoDownloadSettings;
     AutoDownloadSettings _roamingAutoDownloadSettings;

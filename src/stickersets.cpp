@@ -47,7 +47,12 @@ int StickerSets::rowCount(const QModelIndex &parent) const
 
 QVariant StickerSets::data(const QModelIndex &index, int role) const
 {
-    if (rowCount() <= 0 || !_stickerSets.contains(_installedStickerSetIds[index.row()])) return QVariant();
+    if (rowCount() <= 0) return QVariant();
+
+    if (!_stickerSets.contains(_installedStickerSetIds[index.row()])) {
+        _manager->sendQueryWithRespone(0, td_api::getStickerSet::ID, 0, new td_api::getStickerSet(_installedStickerSetIds[index.row()]));
+        return QVariant();
+    }
 
     auto stickerSet = _stickerSets[_installedStickerSetIds[index.row()]];
     switch (role) {
@@ -96,8 +101,6 @@ void StickerSets::updateInstalledStickerSets(td_api::updateInstalledStickerSets 
     for (auto stickerSetId : updateInstalledStickerSets->sticker_set_ids_) {
         _installedStickerSetIds.append(stickerSetId);
         _stickerSetIds.append(stickerSetId);
-        if (!_stickerSets.contains(stickerSetId))
-            _manager->sendQueryWithRespone(0, td_api::getStickerSet::ID, 0, new td_api::getStickerSet(stickerSetId));
     }
     endResetModel();
 }

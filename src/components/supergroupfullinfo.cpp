@@ -46,6 +46,6 @@ int32_t SupergroupFullInfo::getMemberCount() const
 
 QString SupergroupFullInfo::getInviteLink() const
 {
-    if (_supergroupFullInfo == nullptr) return "";
-    return QString::fromStdString(_supergroupFullInfo->invite_link_);
+    if (!_supergroupFullInfo || !_supergroupFullInfo->invite_link_) return "";
+    return QString::fromStdString(_supergroupFullInfo->invite_link_->invite_link_);
 }

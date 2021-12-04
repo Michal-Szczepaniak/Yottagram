@@ -32,7 +32,7 @@ class PinnedMessages : public QObject
     Q_OBJECT
     Q_PROPERTY(int64_t chatId READ chatId WRITE setChatId NOTIFY chatIdChanged)
     Q_PROPERTY(int64_t id READ id NOTIFY idChanged)
-    Q_PROPERTY(int32_t senderUserId READ senderUserId NOTIFY idChanged)
+    Q_PROPERTY(int64_t senderUserId READ senderUserId NOTIFY idChanged)
     Q_PROPERTY(QString type READ type NOTIFY idChanged)
     Q_PROPERTY(QString text READ text NOTIFY idChanged)
 public:
@@ -45,7 +45,7 @@ public:
     int64_t chatId() const;
     void setChatId(int64_t chatId);
     int64_t id();
-    int32_t senderUserId();
+    int64_t senderUserId();
     QString type();
     QString text();
 

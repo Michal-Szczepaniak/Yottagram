@@ -22,6 +22,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QDebug>
 #include <QQmlEngine>
 #include "overloaded.h"
+#include <limits>
 
 ChatList::ChatList() :
     _chats_ids(&_main_chats_ids),
@@ -138,12 +139,12 @@ int ChatList::rowCount(const QModelIndex &parent) const
 
 QVariant ChatList::data(const QModelIndex &index, int role) const
 {
-    if (rowCount() <= 0) return QVariant();
+    if (rowCount() <= 0 || index.row() >= rowCount() || index.row() < 0 || !_chats.contains((*_chats_ids)[index.row()])) return QVariant();
 
     auto chatNode = _chats[(*_chats_ids)[index.row()]];
     switch (role) {
     case ChatElementRoles::TypeRole:
-        return chatNode->getChatType();;
+        return chatNode->getChatType();
     case ChatElementRoles::IdRole:
         return QVariant::fromValue(chatNode->getId());
     case ChatElementRoles::NameRole:
@@ -231,6 +232,14 @@ QVariant ChatList::data(const QModelIndex &index, int role) const
             lastMessageInfo += tr("%1 pinned message").arg(name);
         }
             break;
+        case td_api::messageCall::ID:
+            return message->is_outgoing_ ? tr("Outgoing call") : tr("Incoming call");
+        case td_api::messageLocation::ID:
+            return tr("Location");
+        case td_api::messageContact::ID:
+            return tr("Contact");
+        case td_api::messageContactRegistered::ID:
+            return tr("%1 joined telegram").arg(_users->getUser(static_cast<td_api::messageSenderUser*>(message->sender_.get())->user_id_)->getName());
         default:
             lastMessageInfo += "Message UNSUPPORTED >:3";
             break;
@@ -362,7 +371,10 @@ void ChatList::setChatPosition(int64_t chatId, td_api::chatPosition *position)
     QVector<int64_t> *list = getChatList(position->list_.get());
     int64_t order = position->order_;
     if (order == 0) {
-        list->remove(list->indexOf(chatId));
+        int indexOf = list->indexOf(chatId);
+        if (list == getChatList(getSelectedChatList().get())) beginRemoveRows(QModelIndex(), indexOf, indexOf);
+        list->remove(indexOf);
+        if (list == getChatList(getSelectedChatList().get())) endRemoveRows();
     } else {
         if (list->indexOf(chatId) == -1) {
             if (list == _chats_ids) beginInsertRows(QModelIndex(), rowCount(), rowCount());
@@ -376,19 +388,9 @@ void ChatList::setChatPosition(int64_t chatId, td_api::chatPosition *position)
 
 void ChatList::fetchChatList()
 {
-    int64_t offsetOrder = std::numeric_limits<std::int64_t>::max();
-    int64_t offsetChatId = 0;
     td_api::object_ptr<td_api::ChatList> list = static_cast<td_api::object_ptr<td_api::ChatList>>(getSelectedChatList());
 
-    if (rowCount() > 0) {
-        if (_chats.size() == _chats_ids->length()) return;
-
-        Chat* chat = _chats[(*_chats_ids)[rowCount()-1]];
-        offsetOrder = chat->getOrder(list.get());
-        offsetChatId = chat->getId();
-    }
-
-    _manager->sendQueryWithRespone(0, td_api::getChats::ID, 0, new td_api::getChats(move(list), offsetOrder, offsetChatId, 20));
+    _manager->sendQueryWithRespone(0, td_api::getChats::ID, 0, new td_api::loadChats(move(list), std::numeric_limits<int32_t>::max()));
 }
 
 QVariant ChatList::openChat(int64_t chatId)
@@ -398,6 +400,7 @@ QVariant ChatList::openChat(int64_t chatId)
 
     _manager->sendQuery(new td_api::openChat(chat->getId()));
     chat->setIsOpen(true);
+    QQmlEngine::setObjectOwnership(chat, QQmlEngine::CppOwnership);
 
     return QVariant::fromValue(chat);
 }
@@ -499,9 +502,6 @@ void ChatList::onUnreadCountChanged(int64_t chatId, int32_t unreadCount)
 
 void ChatList::onGotChats(td_api::chats *chats)
 {
-    if (chats->chat_ids_.size() != 0) {
-        fetchChatList();
-    }
 }
 
 void ChatList::newChat(td_api::updateNewChat *updateNewChat)

@@ -1,6 +1,7 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import "messageContent"
+import "functions/foramtDuration.js" as FormatDuration
 
 Column {
     id: column
@@ -129,6 +130,10 @@ Column {
                 return chatPage.width/2.5
             case "document":
                 return Theme.itemSizeMedium + Theme.itemSizeHuge*2
+            case "location":
+                return parseInt(chatPage.width/2.2)
+            case "contact":
+                return chatPage.width/2.5
             }
         }
         height: {
@@ -151,6 +156,10 @@ Column {
                 return chatPage.width/2.5
             case "document":
                 return Theme.itemSizeMedium
+            case "location":
+                return chatPage.width/3
+            case "contact":
+                return Theme.itemSizeSmall
             }
         }
 
@@ -186,6 +195,10 @@ Column {
             case "document":
                 autoDownloadTimer.start()
                 return documentComponent;
+            case "location":
+                return locationComponent;
+            case "contact":
+                return contactComponent;
             }
         }
 
@@ -257,6 +270,18 @@ Column {
         VideoNoteContent { }
     }
 
+    Component {
+        id: locationComponent
+
+        LocationContent { }
+    }
+
+    Component {
+        id: contactComponent
+
+        ContactContent { }
+    }
+
     Label {
         id: serviceMessage
         width: chatPage.width
@@ -286,7 +311,7 @@ Column {
         id: pollLoader
         asynchronous: false
         sourceComponent: {
-            if (messageType == "poll") {
+            if (messageType === "poll") {
                 return pollComponent;
             }
         }
@@ -381,7 +406,7 @@ Column {
 
         Label {
             id: time
-            text: (edited ? qsTr("Edited") + " ": "") + timestamp
+            text: (edited ? qsTr("Edited") + " ": "") + timestamp + (messageType === "call" ? ", " + FormatDuration.format(call.duration) : "")
             anchors.verticalCenter: parent.verticalCenter
             color: Theme.secondaryColor
             font.pixelSize: Theme.fontSizeExtraSmall

@@ -50,7 +50,7 @@ int64_t PinnedMessages::id()
     return _messages[_currentMessage]->getId();
 }
 
-int32_t PinnedMessages::senderUserId()
+int64_t PinnedMessages::senderUserId()
 {
     if (_currentMessage >= _messages.size()) return 0;
 

@@ -269,6 +269,12 @@ Page {
                 text: qsTr("Other auto download settings")
                 onClicked: pageStack.push(Qt.resolvedUrl("../components/AutoDownloadSettings.qml"), {settings: otherAutoDownloadSettings})
             }
+
+            SubpageElement {
+                width: parent.width
+                text: qsTr("Call settings")
+                onClicked: pageStack.push(Qt.resolvedUrl("../components/CallSettings.qml"))
+            }
         }
         VerticalScrollDecorator {}
     }
