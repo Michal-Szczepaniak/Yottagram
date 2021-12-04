@@ -20,8 +20,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 #include "message.h"
 
-Message::Message(QObject *parent) : QObject(parent), _message(nullptr), _text(nullptr), _webPage(nullptr), _poll(nullptr), _photo(nullptr), _sticker(nullptr),
-    _video(nullptr), _document(nullptr), _audio(nullptr), _animation(nullptr), _voiceNote(nullptr), _videoNote(nullptr)
+Message::Message(QObject *parent) : QObject(parent), _message(nullptr), _text(nullptr), _messageContent(nullptr), _webPage(nullptr)
 {
 
 }
@@ -81,29 +80,29 @@ QString Message::getText()
     case td_api::messageChatJoinByLink::ID:
         return tr("%1 joined").arg(_users->getUser(getSenderUserId())->getName());
     case td_api::messagePhoto::ID:
-        if (_photo->getCaption() == nullptr) return "";
-        return QString::fromStdString(_photo->getCaption()->text_);
+        if (static_cast<Photo*>(_messageContent)->getCaption() == nullptr) return "";
+        return QString::fromStdString(static_cast<Photo*>(_messageContent)->getCaption()->text_);
     case td_api::messageSticker::ID:
         return "";
     case td_api::messageVideo::ID:
-        if (_video->getCaption() == nullptr) return "";
-        return QString::fromStdString(_video->getCaption()->text_);
+        if (static_cast<Video*>(_messageContent)->getCaption() == nullptr) return "";
+        return QString::fromStdString(static_cast<Video*>(_messageContent)->getCaption()->text_);
     case td_api::messageDocument::ID:
-        if (_document->getCaption() == nullptr) return "";
-        return QString::fromStdString(_document->getCaption()->text_);
+        if (static_cast<Document*>(_messageContent)->getCaption() == nullptr) return "";
+        return QString::fromStdString(static_cast<Document*>(_messageContent)->getCaption()->text_);
     case td_api::messageAudio::ID:
-        if (_audio->getCaption() == nullptr) return "";
-        return QString::fromStdString(_audio->getCaption()->text_);
+        if (static_cast<Audio*>(_messageContent)->getCaption() == nullptr) return "";
+        return QString::fromStdString(static_cast<Audio*>(_messageContent)->getCaption()->text_);
     case td_api::messageAnimation::ID:
-        if (_animation->getCaption() == nullptr) return "";
-        return QString::fromStdString(_animation->getCaption()->text_);
+        if (static_cast<Animation*>(_messageContent)->getCaption() == nullptr) return "";
+        return QString::fromStdString(static_cast<Animation*>(_messageContent)->getCaption()->text_);
     case td_api::messageVoiceNote::ID:
-        if (_voiceNote->getCaption() == nullptr) return "";
-        return QString::fromStdString(_voiceNote->getCaption()->text_);
+        if (static_cast<VoiceNote*>(_messageContent)->getCaption() == nullptr) return "";
+        return QString::fromStdString(static_cast<VoiceNote*>(_messageContent)->getCaption()->text_);
     case td_api::messageVideoNote::ID:
         return "";
     case td_api::messagePoll::ID:
-        return _poll->getQuestion();
+        return static_cast<Poll*>(_messageContent)->getQuestion();
     case td_api::messageChatSetTtl::ID:
         return tr("Self-destruct timer set to %n second(s)", "", static_cast<td_api::messageChatSetTtl*>(_message->content_.get())->ttl_);
     case td_api::messagePinMessage::ID:
@@ -112,6 +111,15 @@ QString Message::getText()
         } else if (_message->sender_->get_id() == td_api::messageSenderChat::ID) {
             return tr("Message was pinned");
         }
+    case td_api::messageCall::ID:
+        return _message->is_outgoing_ ? tr("Outgoing call") : tr("Incoming call");
+        break;
+    case td_api::messageLocation::ID:
+        return "";
+    case td_api::messageContact::ID:
+        return "";
+    case td_api::messageContactRegistered::ID:
+        return tr("%1 joined telegram").arg(_users->getUser(getSenderUserId())->getName());
     default:
         return "Message unsupported";
     }
@@ -152,6 +160,14 @@ QString Message::getType()
         return "messageCustomServiceAction";
     case td_api::messagePinMessage::ID:
         return "pinMessage";
+    case td_api::messageCall::ID:
+        return "call";
+    case td_api::messageLocation::ID:
+        return "location";
+    case td_api::messageContact::ID:
+        return "contact";
+    case td_api::messageContactRegistered::ID:
+        return "contactRegistered";
     case td_api::messageUnsupported::ID:
         return "messageUnsupported";
     default:
@@ -239,7 +255,7 @@ td_api::messageForwardInfo* Message::getForwardedInfo()
     return _message->forward_info_.get();
 }
 
-int32_t Message::getSenderUserId()
+int64_t Message::getSenderUserId()
 {
     if (_message->sender_->get_id() != td_api::messageSenderUser::ID) return 0;
     return static_cast<td_api::messageSenderUser*>(_message->sender_.get())->user_id_;
@@ -299,57 +315,11 @@ WebPage* Message::getWebPage() const
     return _webPage;
 }
 
-Poll *Message::getPoll() const
-{
-    return _poll;
-}
-
-Photo *Message::getPhoto() const
-{
-    return _photo;
-}
-
-Sticker *Message::getSticker() const
-{
-    return _sticker;
-}
-
-Video *Message::getVideo() const
-{
-    return _video;
-}
-
-Document *Message::getDocument() const
-{
-    return _document;
-}
-
-Audio *Message::getAudio() const
-{
-    return _audio;
-}
-
-Animation *Message::getAnimation() const
-{
-    return _animation;
-}
-
-VoiceNote *Message::getVoiceNote() const
-{
-    return _voiceNote;
-}
-
-VideoNote *Message::getVideoNote() const
-{
-    return _videoNote;
-}
-
 void Message::handleMessageContent(td_api::object_ptr<td_api::MessageContent> messageContent)
 {
     if (messageContent == nullptr) return;
     _contentTypeId = messageContent->get_id();
-    switch (_contentTypeId) {
-    case td_api::messageText::ID:
+    if (_contentTypeId == td_api::messageText::ID) {
         if (static_cast<td_api::messageText*>(messageContent.get())->web_page_ != nullptr) {
             if (_webPage == nullptr)
                 _webPage = new WebPage();
@@ -358,97 +328,60 @@ void Message::handleMessageContent(td_api::object_ptr<td_api::MessageContent> me
         }
 
         _text = td_api::move_object_as<td_api::messageText>(messageContent);
-        break;
-    case td_api::messagePhoto::ID:
-    {
-        if (_photo == nullptr) {
-            _photo = new Photo();
-            _photo->setTelegramManager(_manager);
-            _photo->setFiles(_files);
-        }
-        _photo->setPhoto(td_api::move_object_as<td_api::messagePhoto>(messageContent));
-    }
-        break;
-    case td_api::messageSticker::ID:
-    {
-        if (_sticker == nullptr) {
-            _sticker = new Sticker();
-            _sticker->setTelegramManager(_manager);
-            _sticker->setFiles(_files);
-        }
-        _sticker->setSticker(td_api::move_object_as<td_api::messageSticker>(messageContent));
-    }
-        break;
-    case td_api::messageVideo::ID:
-    {
-        if (_video == nullptr) {
-            _video = new Video();
-            _video->setTelegramManager(_manager);
-            _video->setFiles(_files);
-        }
-        _video->setVideo(td_api::move_object_as<td_api::messageVideo>(messageContent));
-    }
-        break;
-    case td_api::messageDocument::ID:
-    {
-        if (_document == nullptr) {
-            _document = new Document();
-            _document->setTelegramManager(_manager);
-            _document->setFiles(_files);
-        }
-        _document->setDocument(td_api::move_object_as<td_api::messageDocument>(messageContent));
-    }
-        break;
-    case td_api::messageAudio::ID:
-    {
-        if (_audio == nullptr) {
-            _audio = new Audio();
-            _audio->setTelegramManager(_manager);
-            _audio->setFiles(_files);
-        }
-        _audio->setAudio(td_api::move_object_as<td_api::messageAudio>(messageContent));
-    }
-        break;
-    case td_api::messageAnimation::ID:
-    {
-        if (_animation == nullptr) {
-            _animation = new Animation();
-            _animation->setTelegramManager(_manager);
-            _animation->setFiles(_files);
-        }
-        _animation->setAnimation(td_api::move_object_as<td_api::messageAnimation>(messageContent));
-    }
-        break;
-    case td_api::messageVoiceNote::ID:
-    {
-        if (_voiceNote == nullptr) {
-            _voiceNote = new VoiceNote();
-            _voiceNote->setTelegramManager(_manager);
-            _voiceNote->setFiles(_files);
-        }
-        _voiceNote->setVoiceNote(td_api::move_object_as<td_api::messageVoiceNote>(messageContent));
-    }
-        break;
-    case td_api::messageVideoNote::ID:
-    {
-        if (_videoNote == nullptr) {
-            _videoNote = new VideoNote();
-            _videoNote->setTelegramManager(_manager);
-            _videoNote->setFiles(_files);
-        }
-        _videoNote->setVideoNote(td_api::move_object_as<td_api::messageVideoNote>(messageContent));
-    }
-        break;
-    case td_api::messagePoll::ID:
-    {
-        if (_poll == nullptr)
-            _poll = new Poll();
+    } else {
+        if (_messageContent == nullptr) {
+            switch (_contentTypeId) {
+            case td_api::messagePhoto::ID:
+                _messageContent = new Photo();
+                break;
+            case td_api::messageSticker::ID:
+                _messageContent = new Sticker();
+                break;
+            case td_api::messageVideo::ID:
+                _messageContent = new Video();
+                break;
+            case td_api::messageDocument::ID:
+                _messageContent = new Document();
+                break;
+            case td_api::messageAudio::ID:
+                _messageContent = new Audio();
+                break;
+            case td_api::messageAnimation::ID:
+                _messageContent = new Animation();
+                break;
+            case td_api::messageVoiceNote::ID:
+                _messageContent = new VoiceNote();
+                break;
+            case td_api::messageVideoNote::ID:
+                _messageContent = new VideoNote();
+                break;
+            case td_api::messagePoll::ID:
+                _messageContent = new Poll();
+                break;
+            case td_api::messageCall::ID:
+                _messageContent = new Call();
+                break;
+            case td_api::messageLocation::ID:
+                _messageContent = new Location();
+                break;
+            case td_api::messageContact::ID:
+                _messageContent = new Contact();
+                static_cast<Contact*>(_messageContent)->setUsers(_users);
+                break;
+            }
 
-        _poll->setPoll(std::move(static_cast<td_api::messagePoll*>(messageContent.get())->poll_));
-    }
-        break;
-    default:
-        _message->content_ = move(messageContent);
+            if (_messageContent != nullptr) {
+                if (dynamic_cast<ContentFile*>(_messageContent)) {
+                    dynamic_cast<ContentFile*>(_messageContent)->setTelegramManager(_manager);
+                    dynamic_cast<ContentFile*>(_messageContent)->setFiles(_files);
+                }
+                _messageContent->handleContent(move(messageContent));
+            } else {
+                _message->content_ = move(messageContent);
+            }
+        } else {
+            _messageContent->handleContent(move(messageContent));
+        }
     }
 }
 

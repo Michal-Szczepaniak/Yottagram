@@ -1,0 +1,20 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/calls">
+  <interface name="com.verdanditeam.yottagram.calls">
+    <method name="newCall">
+      <arg name="callerName" type="s" direction="in"/>
+      <arg name="incoming" type="b" direction="in"/>
+    </method>
+    <method name="discardCall"/>
+    <method name="callReady"/>
+    <signal name="discard"/>
+    <signal name="accept"/>
+    <signal name="muteMicrophone">
+        <arg name="mute" type="b" direction="out"/>
+    </signal>
+    <signal name="changeSpeakerMode">
+        <arg name="loudspeaker" type="b" direction="out"/>
+    </signal>
+  </interface>
+</node>

@@ -33,11 +33,13 @@ Core::Core(QObject *parent) : QObject(parent)
     _chatList = make_shared<ChatList>();
     _users = make_shared<Users>();
     _files = make_shared<Files>();
+    _dbusHelper = make_shared<DBusHelper>();
     qRegisterMetaType<shared_ptr<td_api::Object>>();
     qmlRegisterType<User>("com.verdanditeam.user", 1, 0, "User");
     qmlRegisterType<Thumbnail>("com.verdanditeam.thumbnail", 1, 0, "Thumbnail");
     qmlRegisterType<AudioRecorder>("com.verdanditeam.audiorecorder", 1, 0, "AudioRecorder");
     qmlRegisterType<PinnedMessages>("com.verdanditeam.pinnedmessages", 1, 0, "PinnedMessages");
+    qmlRegisterType<Calls>("com.verdanditeam.calls", 1, 0, "Calls");
 
     _files->setTelegramManager(_manager);
     _files->setWifiAutoDownloadSettings(&_wifiAutoDownloadSettings);
@@ -79,6 +81,10 @@ Core::Core(QObject *parent) : QObject(parent)
     _savedAnimations.setTelegramManager(_manager);
     _savedAnimations.setFiles(_files);
     connect(&_authorization, &Authorization::isAuthorizedChanged, &_savedAnimations, &SavedAnimations::onIsAuthorizedChanged);
+
+    _calls.setTelegramManager(_manager);
+    _calls.setUsers(_users);
+    _calls.setDBusHelper(_dbusHelper);
 }
 
 void Core::init()

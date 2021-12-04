@@ -193,6 +193,33 @@
     </message>
 </context>
 <context>
+    <name>CallSettings</name>
+    <message>
+        <source>Call settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Echo cancellation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Noise suppression</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auto gain control</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Highpass filter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Typing detection</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Chat</name>
     <message>
         <source>%1 left</source>
@@ -334,6 +361,10 @@
         <source>Location</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Call</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
@@ -421,6 +452,26 @@
     </message>
     <message>
         <source>%1 pinned message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Outgoing call</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Incoming call</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Contact</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 joined telegram</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -563,7 +614,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Longitude</source>
+        <source>Longitude:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -597,6 +648,18 @@
     </message>
     <message>
         <source>Message was pinned</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Outgoing call</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Incoming call</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 joined telegram</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -816,6 +879,10 @@
         <source>Message font size</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Call settings</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SupergroupInfo</name>
@@ -955,6 +1022,21 @@
     </message>
     <message>
         <source>Clear history</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>foramtDuration</name>
+    <message>
+        <source>%L1 s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%L1 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%L1 h</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

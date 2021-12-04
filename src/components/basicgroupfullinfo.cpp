@@ -38,7 +38,7 @@ QString BasicGroupFullInfo::getDescription() const
     return QString::fromStdString(_basicGroupFullInfo->description_);
 }
 
-int32_t BasicGroupFullInfo::getCreatorUserId() const
+int64_t BasicGroupFullInfo::getCreatorUserId() const
 {
     if (_basicGroupFullInfo == nullptr) return 0;
     return _basicGroupFullInfo->creator_user_id_;
@@ -46,8 +46,8 @@ int32_t BasicGroupFullInfo::getCreatorUserId() const
 
 QString BasicGroupFullInfo::getInviteLink() const
 {
-    if (_basicGroupFullInfo == nullptr) return "";
-    return QString::fromStdString(_basicGroupFullInfo->invite_link_);
+    if (!_basicGroupFullInfo || !_basicGroupFullInfo->invite_link_) return "";
+    return QString::fromStdString(_basicGroupFullInfo->invite_link_->invite_link_);
 }
 
 int BasicGroupFullInfo::rowCount(const QModelIndex &parent) const
@@ -65,9 +65,9 @@ QVariant BasicGroupFullInfo::data(const QModelIndex &index, int role) const
     auto& chatMember = _basicGroupFullInfo->members_[index.row()];
     switch (role) {
     case ChatMemberRoles::UserIdRole:
-        return chatMember->user_id_;
+        return QVariant::fromValue(static_cast<const td_api::messageSenderUser*>(chatMember->member_id_.get())->user_id_);
     case ChatMemberRoles::InviteUserIdRole:
-        return chatMember->inviter_user_id_;
+        return QVariant::fromValue(chatMember->inviter_user_id_);
     case ChatMemberRoles::JoinedChatDateRole:
         return chatMember->joined_chat_date_;
 //    case ChatMemberRoles::BotInfoRole:

@@ -106,14 +106,17 @@ public:
         WebPageRole,
         PollRole,
         ContainsUnreadMentionRole,
-        ContainsUnreadReplyRole
+        ContainsUnreadReplyRole,
+        CallRole,
+        LocationRole,
+        ContactRole
     };
 
     Chat(td_api::chat* chat, shared_ptr<Files> files);
     ~Chat();
 
     int64_t getId() const;
-    int32_t getIdFromType() const;
+    int64_t getIdFromType() const;
     int32_t getSecretChatId() const;
     QString getTitle() const;
     SecretChatInfo* getSecretChatInfo() const;
@@ -261,6 +264,7 @@ public slots:
     void scopeNotificationSettingsChanged(td_api::scopeNotificationSettings *scopeNotificationSettings);
     void onGotMessage(td_api::message *message);
     void updateChatPermissions(td_api::updateChatPermissions *updateChatPermissions);
+    void updateChatMessageTtlSetting(td_api::updateChatMessageTtlSetting *updateChatMessageTtlSetting);
 
     void onGotChatHistory(int64_t chatId, td_api::messages *messages);
 

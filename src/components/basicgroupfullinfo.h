@@ -30,7 +30,7 @@ class BasicGroupFullInfo : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(QString description READ getDescription NOTIFY basicGroupFullInfoChanged)
-    Q_PROPERTY(int32_t creatorUserId READ getCreatorUserId NOTIFY basicGroupFullInfoChanged)
+    Q_PROPERTY(int64_t creatorUserId READ getCreatorUserId NOTIFY basicGroupFullInfoChanged)
     Q_PROPERTY(QString inviteLink READ getInviteLink NOTIFY basicGroupFullInfoChanged)
 public:
     enum ChatMemberRoles {
@@ -45,7 +45,7 @@ public:
 
     void setBasicGroupFullInfo(td_api::object_ptr<td_api::basicGroupFullInfo> basicGroupFullInfo);
     QString getDescription() const;
-    int32_t getCreatorUserId() const;
+    int64_t getCreatorUserId() const;
     QString getInviteLink() const;
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;

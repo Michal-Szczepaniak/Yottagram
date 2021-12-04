@@ -1,0 +1,13 @@
+diff --git a/src/modules/audio_device/linux/audio_mixer_manager_pulse_linux.cc b/src/modules/audio_device/linux/audio_mixer_manager_pulse_linux.cc
+index 91beee3c..3e980a4b 100644
+--- a/src/modules/audio_device/linux/audio_mixer_manager_pulse_linux.cc
++++ b/src/modules/audio_device/linux/audio_mixer_manager_pulse_linux.cc
+@@ -425,6 +425,8 @@ int32_t AudioMixerManagerLinuxPulse::StereoPlayoutIsAvailable(bool& available) {
+ int32_t AudioMixerManagerLinuxPulse::StereoRecordingIsAvailable(
+     bool& available) {
+   RTC_DCHECK(thread_checker_.IsCurrent());
++  available = false;
++  return 0;
+   if (_paInputDeviceIndex == -1) {
+     RTC_LOG(LS_WARNING) << "input device index has not been set";
+     return -1;

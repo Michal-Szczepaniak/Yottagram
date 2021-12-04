@@ -194,6 +194,33 @@
     </message>
 </context>
 <context>
+    <name>CallSettings</name>
+    <message>
+        <source>Call settings</source>
+        <translation>Ajustes de llamada</translation>
+    </message>
+    <message>
+        <source>Echo cancellation</source>
+        <translation>Cancelación de eco</translation>
+    </message>
+    <message>
+        <source>Noise suppression</source>
+        <translation>Supresión de ruido</translation>
+    </message>
+    <message>
+        <source>Auto gain control</source>
+        <translation>Control automático de ganancia</translation>
+    </message>
+    <message>
+        <source>Highpass filter</source>
+        <translation>Filtro paso alto</translation>
+    </message>
+    <message>
+        <source>Typing detection</source>
+        <translation>Detección de escritura</translation>
+    </message>
+</context>
+<context>
     <name>Chat</name>
     <message>
         <source>%1 left</source>
@@ -329,11 +356,15 @@
     </message>
     <message>
         <source>GIF</source>
-        <translation type="unfinished">GIF</translation>
+        <translation>GIF</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation type="unfinished"></translation>
+        <translation>Ubicación</translation>
+    </message>
+    <message>
+        <source>Call</source>
+        <translation>Llamar</translation>
     </message>
 </context>
 <context>
@@ -415,15 +446,35 @@
     </message>
     <message>
         <source>Unpin from top</source>
-        <translation>Desfijar del inicio</translation>
+        <translation>Desfijar de arriba</translation>
     </message>
     <message>
         <source>Pin to top</source>
-        <translation>Fijar al inicio</translation>
+        <translation>Fijar arriba</translation>
     </message>
     <message>
         <source>%1 pinned message</source>
         <translation>%1 fijó un mensaje</translation>
+    </message>
+    <message>
+        <source>Outgoing call</source>
+        <translation>Llamada saliente</translation>
+    </message>
+    <message>
+        <source>Incoming call</source>
+        <translation>Llamada entrante</translation>
+    </message>
+    <message>
+        <source>Location</source>
+        <translation>Ubicación</translation>
+    </message>
+    <message>
+        <source>Contact</source>
+        <translation>Contacto</translation>
+    </message>
+    <message>
+        <source>%1 joined telegram</source>
+        <translation>%1 se unió a telegram</translation>
     </message>
 </context>
 <context>
@@ -558,15 +609,15 @@
     <name>LocationPicker</name>
     <message>
         <source>Location Picker</source>
-        <translation type="unfinished"></translation>
+        <translation>Elección de ubicación</translation>
     </message>
     <message>
         <source>Latitude:</source>
-        <translation type="unfinished"></translation>
+        <translation>Latitud:</translation>
     </message>
     <message>
-        <source>Longitude</source>
-        <translation type="unfinished"></translation>
+        <source>Longitude:</source>
+        <translation>Longitud:</translation>
     </message>
 </context>
 <context>
@@ -601,6 +652,18 @@
     <message>
         <source>Message was pinned</source>
         <translation>Mensaje fijado</translation>
+    </message>
+    <message>
+        <source>Outgoing call</source>
+        <translation>Llamada saliente</translation>
+    </message>
+    <message>
+        <source>Incoming call</source>
+        <translation>Llamada entrante</translation>
+    </message>
+    <message>
+        <source>%1 joined telegram</source>
+        <translation>%1 se unió a telegram</translation>
     </message>
 </context>
 <context>
@@ -819,6 +882,10 @@
         <source>Message font size</source>
         <translation>Tamaño de la fuente</translation>
     </message>
+    <message>
+        <source>Call settings</source>
+        <translation>Ajustes de llamada</translation>
+    </message>
 </context>
 <context>
     <name>SupergroupInfo</name>
@@ -959,6 +1026,21 @@
     <message>
         <source>Clear history</source>
         <translation>Limpiar historial</translation>
+    </message>
+</context>
+<context>
+    <name>foramtDuration</name>
+    <message>
+        <source>%L1 s</source>
+        <translation>%L1 s</translation>
+    </message>
+    <message>
+        <source>%L1 min</source>
+        <translation>%L1 min</translation>
+    </message>
+    <message>
+        <source>%L1 h</source>
+        <translation>%L1 h</translation>
     </message>
 </context>
 <context>

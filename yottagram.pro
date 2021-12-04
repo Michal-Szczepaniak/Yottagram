@@ -2,13 +2,15 @@ include(vendor/vendor.pri)
 
 TARGET = yottagram
 
-QT += dbus multimedia
+QT += dbus multimedia location
 
-CONFIG +=  c++11 c++14 link_pkgconfig sailfishapp iostream
+CONFIG += c++2a link_pkgconfig sailfishapp iostream
 
-QMAKE_CXXFLAGS += -std=c++14 -O0
+QMAKE_CXXFLAGS += -std=c++2a
 
-PKGCONFIG += zlib openssl nemonotifications-qt5 connman-qt5 vorbisfile systemsettings
+INCLUDEPATH += /usr/include/glib-2.0 $$PWD/src
+
+PKGCONFIG += zlib openssl nemonotifications-qt5 connman-qt5 vorbisfile systemsettings libavcodec libavformat libavutil opus libjpeg libpng libswresample libswscale protobuf gio-2.0 alsa glib-2.0 libpulse libpulse-mainloop-glib
 
 DEFINES += QT_STATICPLUGIN
 
@@ -22,6 +24,7 @@ CONFIG(release, debug|release): {
 }
 
 SOURCES += src/core.cpp \
+    src/calls.cpp \
     src/components/audiorecorder.cpp \
     src/components/autodownloadsettings.cpp \
     src/components/basicgroupfullinfo.cpp \
@@ -36,20 +39,25 @@ SOURCES += src/core.cpp \
     src/components/supergroupsinfo.cpp \
     src/components/thumbnail.cpp \
     src/components/userfullinfo.cpp \
-    src/files/animation.cpp \
-    src/files/audio.cpp \
+    src/contents/call.cpp \
+    src/contents/contact.cpp \
+    src/contents/location.cpp \
+    src/contents/poll.cpp \
+    src/contents/animation.cpp \
+    src/contents/audio.cpp \
+    src/contents/document.cpp \
+    src/contents/photo.cpp \
+    src/contents/sticker.cpp \
+    src/contents/video.cpp \
+    src/contents/videonote.cpp \
+    src/contents/voicenote.cpp \
+    src/dbushelper.cpp \
     src/files/contentfile.cpp \
-    src/files/document.cpp \
     src/files/file.cpp \
     src/files/files.cpp \
-    src/files/photo.cpp \
-    src/files/sticker.cpp \
-    src/files/video.cpp \
-    src/files/videonote.cpp \
-    src/files/voicenote.cpp \
     src/message.cpp \
     src/notifications.cpp \
-    src/poll.cpp \
+    src/pulseaudiohelper.cpp \
     src/savedanimations.cpp \
     src/stickerset.cpp \
     src/stickersets.cpp \
@@ -66,10 +74,12 @@ SOURCES += src/core.cpp \
     src/chat.cpp
 
 DISTFILES += qml/yottagram.qml \
+    com.verdanditeam.yottagram.calls.xml \
     com.verdanditeam.yottagram.service \
     qml/components/AnimationPicker.qml \
     qml/components/AnimationPreview.qml \
     qml/components/AutoDownloadSettings.qml \
+    qml/components/CallSettings.qml \
     qml/components/ChatNotifications.qml \
     qml/components/Property.qml \
     qml/components/LocationPicker.qml \
@@ -83,16 +93,19 @@ DISTFILES += qml/yottagram.qml \
     qml/components/chatInfo/SupergroupInfo.qml \
     qml/components/chatInfo/UserInfo.qml \
     qml/components/functions/muteFormat.js \
+    qml/components/functions/foramtDuration.js \
     qml/components/messageContent/AnimatedStickerContent.qml \
     qml/components/messageContent/AnimationContent.qml \
     qml/components/messageContent/AudioContent.qml \
     qml/components/Avatar.qml \
+    qml/components/messageContent/ContactContent.qml \
     qml/components/messageContent/DocumentContent.qml \
     qml/components/HighlightLabelIconButton.qml \
     qml/components/messageContent/ImageContent.qml \
     qml/components/LabelWithMenu.qml \
     qml/components/MessageBubble.qml \
     qml/components/MessageContextMenu.qml \
+    qml/components/messageContent/LocationContent.qml \
     qml/components/messageContent/Poll.qml \
     qml/components/messageContent/StickerContent.qml \
     qml/components/TextSwitchWithMenu.qml \
@@ -131,6 +144,7 @@ TRANSLATIONS += \
     translations/yottagram-zh_CN.ts
 
 HEADERS += \
+    src/calls.h \
     src/components/audiorecorder.h \
     src/components/autodownloadsettings.h \
     src/components/basicgroupfullinfo.h \
@@ -145,18 +159,24 @@ HEADERS += \
     src/components/supergroupsinfo.h \
     src/components/thumbnail.h \
     src/components/userfullinfo.h \
+    src/contents/call.h \
+    src/contents/contact.h \
+    src/contents/contentinterface.h \
+    src/contents/location.h \
+    src/contents/poll.h \
+    src/contents/animation.h \
+    src/contents/audio.h \
+    src/contents/document.h \
+    src/contents/photo.h \
+    src/contents/sticker.h \
+    src/contents/video.h \
+    src/contents/videonote.h \
+    src/contents/voicenote.h \
     src/core.h \
-    src/files/animation.h \
-    src/files/audio.h \
+    src/dbushelper.h \
     src/files/contentfile.h \
-    src/files/document.h \
     src/files/file.h \
     src/files/files.h \
-    src/files/photo.h \
-    src/files/sticker.h \
-    src/files/video.h \
-    src/files/videonote.h \
-    src/files/voicenote.h \
     src/message.h \
     src/notifications.h \
     src/overloaded.h \
@@ -165,7 +185,7 @@ HEADERS += \
     src/core/telegrammanager.h \
     src/chatlist.h \
     src/chat.h \
-    src/poll.h \
+    src/pulseaudiohelper.h \
     src/savedanimations.h \
     src/stickerset.h \
     src/stickersets.h \
@@ -174,8 +194,6 @@ HEADERS += \
     src/user.h \
     src/users.h \
     src/webpage.h
-
-LIBS = -lssl -pthread /usr/lib/libtdclient.so.1.7.0 /usr/lib/libtdapi.a /usr/lib/libtdcore.a /usr/lib/libtdutils.a
 
 RESOURCES += \
     qml/resources/icons.qrc
@@ -187,6 +205,9 @@ notificationcategories.files=x-verdanditeam.yottagram.im.conf
 notificationcategories.path=/usr/share/lipstick/notificationcategories
 
 INSTALLS += dbus notificationcategories
+
+DBUS_ADAPTORS += com.verdanditeam.yottagram.calls.xml
+DBUS_INTERFACES += com.verdanditeam.yottagram.calls.xml
 
 # https://github.com/Samsung/rlottie.git
 

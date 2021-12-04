@@ -42,6 +42,7 @@ public:
 
     void init();
     void sendQuery(td_api::Function* message);
+    void sendQuerySync(td_api::Function* message);
     void sendQueryWithRespone(int64_t chatId, int32_t type, int32_t subType, td_api::Function* message);
     int32_t getMyId() const;
     bool getDaemonEnabled() const;
@@ -90,6 +91,9 @@ signals:
     void updateMessageIsPinned(td_api::updateMessageIsPinned *updateMessageIsPinned);
     void updateMessageMentionRead(td_api::updateMessageMentionRead *updateMessageMentionRead);
     void updateSavedAnimations(td_api::updateSavedAnimations *updateSavedAnimations);
+    void updateNewCallSignalingData(td_api::updateNewCallSignalingData *updateNewCallSignalingData);
+    void updateCall(td_api::updateCall *updateCall);
+    void updateChatMessageTtlSetting(td_api::updateChatMessageTtlSetting *updateChatMessageTtlSetting);
 
 // Responses
     void gotChatHistory(int64_t chatId, td_api::messages *messages);

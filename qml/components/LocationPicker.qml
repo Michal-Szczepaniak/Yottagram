@@ -51,7 +51,7 @@ Dialog {
         }
 
         Property {
-            name: qsTr("Longitude")
+            name: qsTr("Longitude:")
             value: positionSource.position.coordinate.longitude
         }
     }

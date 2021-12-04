@@ -17,12 +17,7 @@ td_api::secretChat *SecretChatInfo::getSecretChat()
     return _secretChat.get();
 }
 
-int32_t SecretChatInfo::getTtl() const
-{
-    return _secretChat->ttl_;
-}
-
-int32_t SecretChatInfo::getUserId() const
+int64_t SecretChatInfo::getUserId() const
 {
     return _secretChat->user_id_;
 }

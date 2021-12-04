@@ -51,10 +51,14 @@ Page {
 
     allowedOrientations: Orientation.All
 
+    Connections {
+        target: pageStack
+        onDepthChanged: if (depth === 1) chat.clearCachedHistory()
+    }
+
     onStatusChanged: {
         if (status === PageStatus.Deactivating) {
             chatList.closeChat(chat.id)
-            chat.clearCachedHistory()
         }
         if (status === PageStatus.Active) {
             chatList.openChat(chat.id)
@@ -190,9 +194,16 @@ Page {
                 visible: chat.unreadMentionCount > 0 && chat.firstUnreadMention !== 0 && !chatPage.selectionActive
                 onClicked: scrollToMention()
             }
+
+            MenuItem {
+                text: qsTr("Call")
+                visible: chat.getChatType() === "private" && !chatPage.selectionActive
+                onClicked: calls.call(chat.idFromType)
+            }
         }
 
         Rectangle {
+            Component.onCompleted: console.log(chat.getChatType(), chat.ttl)
             visible: chat.getChatType() === "secret" && chat.ttl > 0
             anchors.right: chatPhoto.right
             anchors.bottom: chatPhoto.bottom
@@ -266,7 +277,7 @@ Page {
                     horizontalAlignment: Text.AlignRight
                     text: chat.isSelf ? qsTr("Saved messages") : chat.title
                     truncationMode: TruncationMode.Fade
-                    width: parent.width - (secretChatIndicator.visible ? (Theme.paddingSmall + secretChatIndicator.width) : 0)
+                    width: parent.width - (secretChatIndicator.visible ? (Theme.paddingLarge + secretChatIndicator.width) : 0)
                     color: pageHeader.palette.highlightColor
                     font.pixelSize: Theme.fontSizeLarge
                     font.family: Theme.fontFamilyHeading
