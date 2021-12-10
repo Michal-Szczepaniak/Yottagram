@@ -25,6 +25,7 @@ CONFIG(release, debug|release): {
 
 SOURCES += src/core.cpp \
     src/calls.cpp \
+    src/chatlistfilters.cpp \
     src/components/audiorecorder.cpp \
     src/components/autodownloadsettings.cpp \
     src/components/basicgroupfullinfo.cpp \
@@ -51,6 +52,7 @@ SOURCES += src/core.cpp \
     src/contents/video.cpp \
     src/contents/videonote.cpp \
     src/contents/voicenote.cpp \
+    src/contents/animatedemoji.cpp \
     src/dbushelper.cpp \
     src/files/contentfile.cpp \
     src/files/file.cpp \
@@ -92,8 +94,11 @@ DISTFILES += qml/yottagram.qml \
     qml/components/chatInfo/BasicGroupInfo.qml \
     qml/components/chatInfo/SupergroupInfo.qml \
     qml/components/chatInfo/UserInfo.qml \
+    qml/components/functions/chatFolderIconHelper.js \
     qml/components/functions/muteFormat.js \
     qml/components/functions/foramtDuration.js \
+    qml/components/functions/twemoji.js \
+    qml/components/messageContent/AnimatedEmojiContent.qml \
     qml/components/messageContent/AnimatedStickerContent.qml \
     qml/components/messageContent/AnimationContent.qml \
     qml/components/messageContent/AudioContent.qml \
@@ -145,6 +150,7 @@ TRANSLATIONS += \
 
 HEADERS += \
     src/calls.h \
+    src/chatlistfilters.h \
     src/components/audiorecorder.h \
     src/components/autodownloadsettings.h \
     src/components/basicgroupfullinfo.h \
@@ -172,6 +178,7 @@ HEADERS += \
     src/contents/video.h \
     src/contents/videonote.h \
     src/contents/voicenote.h \
+    src/contents/animatedemoji.h \
     src/core.h \
     src/dbushelper.h \
     src/files/contentfile.h \

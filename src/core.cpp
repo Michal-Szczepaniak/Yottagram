@@ -60,19 +60,19 @@ Core::Core(QObject *parent) : QObject(parent)
     _wifiAutoDownloadSettings.setTelegramManager(_manager);
     _wifiAutoDownloadSettings.setConnectionType("wifi");
     connect(_manager.get(), SIGNAL(autoDownloadSettingsPresets(td_api::autoDownloadSettingsPresets*)), &_wifiAutoDownloadSettings, SLOT(autoDownloadSettingsPresets(td_api::autoDownloadSettingsPresets*)));
-    _wifiAutoDownloadSettings.loadSettings();
+    connect(&_authorization, &Authorization::isAuthorizedChanged, [=](bool isAuthorized) { if (isAuthorized) _wifiAutoDownloadSettings.loadSettings(); });
     _mobileAutoDownloadSettings.setTelegramManager(_manager);
     _mobileAutoDownloadSettings.setConnectionType("cellular");
     connect(_manager.get(), SIGNAL(autoDownloadSettingsPresets(td_api::autoDownloadSettingsPresets*)), &_mobileAutoDownloadSettings, SLOT(autoDownloadSettingsPresets(td_api::autoDownloadSettingsPresets*)));
-    _mobileAutoDownloadSettings.loadSettings();
+    connect(&_authorization, &Authorization::isAuthorizedChanged, [=](bool isAuthorized) { if (isAuthorized) _mobileAutoDownloadSettings.loadSettings(); });
     _roamingAutoDownloadSettings.setTelegramManager(_manager);
     _roamingAutoDownloadSettings.setConnectionType("roaming");
     connect(_manager.get(), SIGNAL(autoDownloadSettingsPresets(td_api::autoDownloadSettingsPresets*)), &_roamingAutoDownloadSettings, SLOT(autoDownloadSettingsPresets(td_api::autoDownloadSettingsPresets*)));
-    _roamingAutoDownloadSettings.loadSettings();
+    connect(&_authorization, &Authorization::isAuthorizedChanged, [=](bool isAuthorized) { if (isAuthorized) _roamingAutoDownloadSettings.loadSettings(); });
     _otherAutoDownloadSettings.setTelegramManager(_manager);
     _otherAutoDownloadSettings.setConnectionType("other");
     connect(_manager.get(), SIGNAL(autoDownloadSettingsPresets(td_api::autoDownloadSettingsPresets*)), &_otherAutoDownloadSettings, SLOT(autoDownloadSettingsPresets(td_api::autoDownloadSettingsPresets*)));
-    _otherAutoDownloadSettings.loadSettings();
+    connect(&_authorization, &Authorization::isAuthorizedChanged, [=](bool isAuthorized) { if (isAuthorized) _otherAutoDownloadSettings.loadSettings(); });
 
     _stickerSets.setTelegramManager(_manager);
     _stickerSets.setFiles(_files);
@@ -85,6 +85,8 @@ Core::Core(QObject *parent) : QObject(parent)
     _calls.setTelegramManager(_manager);
     _calls.setUsers(_users);
     _calls.setDBusHelper(_dbusHelper);
+
+    _chatListFilters.setTelegramManager(_manager);
 }
 
 void Core::init()

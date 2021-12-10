@@ -476,6 +476,14 @@
         <source>%1 joined telegram</source>
         <translation>%1 se unió a telegram</translation>
     </message>
+    <message>
+        <source>Archive</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Main</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ChatNew</name>

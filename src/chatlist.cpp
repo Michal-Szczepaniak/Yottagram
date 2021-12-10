@@ -163,90 +163,7 @@ QVariant ChatList::data(const QModelIndex &index, int role) const
     case ChatElementRoles::UnreadMentionCountRole:
         return chatNode->getUnreadMentionCount();
     case ChatElementRoles::LastMessageRole:
-    {
-        td_api::message* message = chatNode->getLastMessage();
-        if (message == nullptr) return "";
-
-        QString lastMessageInfo = "";
-
-        switch (message->content_->get_id()) {
-        case td_api::messageText::ID:
-            lastMessageInfo += QString::fromStdString(static_cast<const td_api::messageText &>(*message->content_).text_->text_);
-            break;
-        case td_api::messageChatDeleteMember::ID:
-            return tr("%1 left").arg(_users->getUser(static_cast<const td_api::messageChatDeleteMember &>(*message->content_).user_id_)->getName());
-        case td_api::messageChatAddMembers::ID:
-        {
-            auto userIds = static_cast<const td_api::messageChatAddMembers &>(*message->content_).member_user_ids_;
-            QStringList messages;
-            for(auto userId: userIds) {
-                messages << tr("%1 joined").arg(_users->getUser(userId)->getName());
-            }
-            return messages.join('\n');
-        }
-        case td_api::messageChatJoinByLink::ID:
-            return tr("%1 joined").arg(_users->getUser(static_cast<td_api::messageSenderUser*>(message->sender_.get())->user_id_)->getName());
-        case td_api::messageAudio::ID:
-            lastMessageInfo += tr("Audio");
-            break;
-        case td_api::messageVideoNote::ID:
-            lastMessageInfo += tr("Video note");
-            break;
-        case td_api::messageVoiceNote::ID:
-            lastMessageInfo += tr("Voice note");
-            break;
-        case td_api::messagePhoto::ID:
-            lastMessageInfo += tr("Photo");
-            break;
-        case td_api::messageSticker::ID:
-            lastMessageInfo += tr("Sticker");
-            break;
-        case td_api::messageVideo::ID:
-            lastMessageInfo += tr("Video");
-            break;
-        case td_api::messageDocument::ID:
-            lastMessageInfo += tr("Document");
-            break;
-        case td_api::messageAnimation::ID:
-            lastMessageInfo += tr("GIF");
-            break;
-        case td_api::messagePoll::ID:
-            lastMessageInfo += tr("Poll");
-            break;
-        case td_api::messageChatSetTtl::ID:
-            lastMessageInfo += tr("Self-destruct timer set to %n second(s)", "", static_cast<td_api::messageChatSetTtl*>(message->content_.get())->ttl_);
-            break;
-        case td_api::messagePinMessage::ID:
-        {
-            QString name;
-            if (message->sender_->get_id() == td_api::messageSenderUser::ID) {
-                shared_ptr<User> user = _users->getUser(static_cast<td_api::messageSenderUser*>(message->sender_.get())->user_id_);
-                if(user != nullptr) name = user->getName();
-            } else if (message->sender_->get_id() == td_api::messageSenderChat::ID){
-                Chat* chat = getChat(static_cast<td_api::messageSenderChat*>(message->sender_.get())->chat_id_);
-                if (chat != nullptr) name = chat->getTitle();
-            }
-
-            if (name == "") name = chatNode->getTitle();
-
-            lastMessageInfo += tr("%1 pinned message").arg(name);
-        }
-            break;
-        case td_api::messageCall::ID:
-            return message->is_outgoing_ ? tr("Outgoing call") : tr("Incoming call");
-        case td_api::messageLocation::ID:
-            return tr("Location");
-        case td_api::messageContact::ID:
-            return tr("Contact");
-        case td_api::messageContactRegistered::ID:
-            return tr("%1 joined telegram").arg(_users->getUser(static_cast<td_api::messageSenderUser*>(message->sender_.get())->user_id_)->getName());
-        default:
-            lastMessageInfo += "Message UNSUPPORTED >:3";
-            break;
-        }
-
-        return lastMessageInfo;
-    }
+        return getMessageText(chatNode->getLastMessage());
     case ChatElementRoles::LastMessageAuthorRole:
     {
         td_api::message* message = chatNode->getLastMessage();
@@ -372,9 +289,11 @@ void ChatList::setChatPosition(int64_t chatId, td_api::chatPosition *position)
     int64_t order = position->order_;
     if (order == 0) {
         int indexOf = list->indexOf(chatId);
-        if (list == getChatList(getSelectedChatList().get())) beginRemoveRows(QModelIndex(), indexOf, indexOf);
-        list->remove(indexOf);
-        if (list == getChatList(getSelectedChatList().get())) endRemoveRows();
+        if (indexOf != -1) {
+            if (list == getChatList(getSelectedChatList().get())) beginRemoveRows(QModelIndex(), indexOf, indexOf);
+            list->remove(indexOf);
+            if (list == getChatList(getSelectedChatList().get())) endRemoveRows();
+        }
     } else {
         if (list->indexOf(chatId) == -1) {
             if (list == _chats_ids) beginInsertRows(QModelIndex(), rowCount(), rowCount());
@@ -383,7 +302,92 @@ void ChatList::setChatPosition(int64_t chatId, td_api::chatPosition *position)
         }
     }
     getChat(chatId)->updatePosition(position);
-    updateChat(chatId, {OrderRole});
+    if (list == _chats_ids) updateChat(chatId, {OrderRole});
+}
+
+QString ChatList::getMessageText(td_api::message *message) const
+{
+    if (message == nullptr) return "";
+
+    QString lastMessageInfo = "";
+
+    switch (message->content_->get_id()) {
+    case td_api::messageText::ID:
+        lastMessageInfo += QString::fromStdString(static_cast<const td_api::messageText &>(*message->content_).text_->text_);
+        break;
+    case td_api::messageChatDeleteMember::ID:
+        return tr("%1 left").arg(_users->getUser(static_cast<const td_api::messageChatDeleteMember &>(*message->content_).user_id_)->getName());
+    case td_api::messageChatAddMembers::ID:
+    {
+        auto userIds = static_cast<const td_api::messageChatAddMembers &>(*message->content_).member_user_ids_;
+        QStringList messages;
+        for(auto userId: userIds) {
+            messages << tr("%1 joined").arg(_users->getUser(userId)->getName());
+        }
+        return messages.join('\n');
+    }
+    case td_api::messageChatJoinByLink::ID:
+        return tr("%1 joined").arg(_users->getUser(static_cast<td_api::messageSenderUser*>(message->sender_.get())->user_id_)->getName());
+    case td_api::messageAudio::ID:
+        lastMessageInfo += tr("Audio");
+        break;
+    case td_api::messageVideoNote::ID:
+        lastMessageInfo += tr("Video note");
+        break;
+    case td_api::messageVoiceNote::ID:
+        lastMessageInfo += tr("Voice note");
+        break;
+    case td_api::messagePhoto::ID:
+        lastMessageInfo += tr("Photo");
+        break;
+    case td_api::messageSticker::ID:
+        lastMessageInfo += tr("Sticker");
+        break;
+    case td_api::messageVideo::ID:
+        lastMessageInfo += tr("Video");
+        break;
+    case td_api::messageDocument::ID:
+        lastMessageInfo += tr("Document");
+        break;
+    case td_api::messageAnimation::ID:
+        lastMessageInfo += tr("GIF");
+        break;
+    case td_api::messagePoll::ID:
+        lastMessageInfo += tr("Poll");
+        break;
+    case td_api::messageChatSetTtl::ID:
+        lastMessageInfo += tr("Self-destruct timer set to %n second(s)", "", static_cast<td_api::messageChatSetTtl*>(message->content_.get())->ttl_);
+        break;
+    case td_api::messagePinMessage::ID:
+    {
+        QString name;
+        if (message->sender_->get_id() == td_api::messageSenderUser::ID) {
+            shared_ptr<User> user = _users->getUser(static_cast<td_api::messageSenderUser*>(message->sender_.get())->user_id_);
+            name = user->getName();
+        } else if (message->sender_->get_id() == td_api::messageSenderChat::ID){
+            Chat* chat = getChat(static_cast<td_api::messageSenderChat*>(message->sender_.get())->chat_id_);
+            name = chat->getTitle();
+        }
+
+        lastMessageInfo += tr("%1 pinned message").arg(name);
+    }
+        break;
+    case td_api::messageCall::ID:
+        return message->is_outgoing_ ? tr("Outgoing call") : tr("Incoming call");
+    case td_api::messageLocation::ID:
+        return tr("Location");
+    case td_api::messageContact::ID:
+        return tr("Contact");
+    case td_api::messageContactRegistered::ID:
+        return tr("%1 joined telegram").arg(_users->getUser(static_cast<td_api::messageSenderUser*>(message->sender_.get())->user_id_)->getName());
+    case td_api::messageAnimatedEmoji::ID:
+        return QString::fromStdString(static_cast<td_api::messageAnimatedEmoji*>(message->content_.get())->emoji_);
+    default:
+        lastMessageInfo += "Message UNSUPPORTED >:3";
+        break;
+    }
+
+    return lastMessageInfo;
 }
 
 void ChatList::fetchChatList()
@@ -480,6 +484,16 @@ void ChatList::autoDownload(int32_t fileId, QString type)
 bool ChatList::fileExists(QString path)
 {
     return QFile::exists(path);
+}
+
+void ChatList::switchChatList(int chatList, int64_t filterId)
+{
+    beginResetModel();
+    _selectedChatList = chatList;
+    if (chatList == 2) _selectedFilterChatList = filterId;
+    _chats_ids = getChatList(getSelectedChatList().get());
+    if (_chats_ids->empty()) fetchChatList();
+    endResetModel();
 }
 
 void ChatList::onIsAuthorizedChanged(bool isAuthorized)

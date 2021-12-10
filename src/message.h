@@ -50,6 +50,8 @@ class Message : public QObject
     Q_OBJECT
     Q_PROPERTY(QString text READ getText NOTIFY messageChanged)
     Q_PROPERTY(QString type READ getType NOTIFY messageChanged)
+    Q_PROPERTY(QString sender READ getSender NOTIFY messageChanged)
+    Q_PROPERTY(int64_t senderChatId READ getSenderChatId NOTIFY messageChanged)
     Q_PROPERTY(int64_t senderUserId READ getSenderUserId NOTIFY messageChanged)
 public:
     explicit Message(QObject *parent = nullptr);
@@ -63,8 +65,9 @@ public:
 
     int64_t getId();
     QString getText();
-    QString getType();
+    QString getType() const;
     int32_t getContentType();
+    bool isService() const;
     bool isEdited();
     bool canBeEdited();
     bool canBeForwarded();
@@ -78,6 +81,8 @@ public:
     int64_t replyMessageId();
     td_api::messageForwardInfo* getForwardedInfo();
     int64_t getSenderUserId();
+    int64_t getSenderChatId();
+    QString getSender();
     QString getFormattedTimestamp();
     QString getFormattedForwardTimestamp();
     bool containsUnreadMention() const;

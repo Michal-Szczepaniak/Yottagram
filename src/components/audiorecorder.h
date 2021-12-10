@@ -83,7 +83,7 @@ private:
     AudioRecorder::AudioCodec m_codec;
     QTemporaryFile *m_file;
 
-    bool m_autoRemove  = false;
+    bool m_autoRemove;
     bool m_recording;
 };
 

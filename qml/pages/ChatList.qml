@@ -24,11 +24,13 @@ import SortFilterProxyModel 0.2
 import org.nemomobile.dbus 2.0
 import QtGraphicalEffects 1.0
 import "../components"
+import "../components/functions/chatFolderIconHelper.js" as ChatFolderIconHelper
 
 Page {
     id: page
 
     allowedOrientations: Orientation.All
+    property int activeChatList: 0
 
     DBusAdaptor {
         id: shareDBusInterface
@@ -90,12 +92,63 @@ Page {
                 text: qsTr("Settings")
                 onClicked: pageStack.push(Qt.resolvedUrl("Settings.qml"))
             }
+
+            MenuItem {
+                text: activeChatList == 0 ? qsTr("Archive") : qsTr("Main")
+                onClicked: {
+                    activeChatList = activeChatList == 0 ? 1 : 0
+                    chatList.switchChatList(activeChatList)
+                }
+            }
+        }
+
+        SilicaListView {
+            id: chatListFilterList
+            width: parent.width
+            height: Theme.itemSizeExtraLarge
+            model: chatListFilters
+            orientation: Qt.Horizontal
+            layoutDirection: Qt.LeftToRight
+            anchors.top: parent.top
+            visible: count > 0
+            delegate: BackgroundItem {
+                width: Theme.itemSizeLarge
+                height: Theme.itemSizeExtraLarge
+                clip: true
+
+                Icon {
+                    id: icon
+                    source: ChatFolderIconHelper.getIcon(iconName)
+                    asynchronous: true
+                    cache: true
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: Theme.paddingMedium
+                }
+
+                Label {
+                    text: name
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                    anchors.top: icon.bottom
+                    anchors.topMargin: Theme.paddingSmall
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: Theme.itemSizeMedium
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                    lineHeight: 0.8
+                }
+
+                onClicked: {
+                    activeChatList = 2;
+                    chatList.switchChatList(2, id)
+                }
+            }
         }
 
         SearchField {
             id: searchField
             width: parent.width
-            anchors.top: parent.top
+            anchors.top: chatListFilterList.visible ? chatListFilterList.bottom : parent.top
             placeholderText: qsTr("Search")
             onFocusChanged: console.log(chatList.rowCount())
             Keys.onReturnPressed: {

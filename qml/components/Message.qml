@@ -1,7 +1,9 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
+import Sailfish.Silica.private 1.0
 import "messageContent"
 import "functions/foramtDuration.js" as FormatDuration
+import "functions/twemoji.js" as Twemoji
 
 Column {
     id: column
@@ -9,17 +11,18 @@ Column {
 
     Label {
         id: name
-        text: !isForwarded ? (chat.getChatType() === "channel" ? chat.title : user.name) : (qsTr("Forwarded from %1").arg(getName()) + " " + forwardTimestamp).trim()
+        text: !isForwarded ? (sender === "chat" ? chatList.getChatAsVariant(senderId).title : users.getUserAsVariant(senderId).name) : (qsTr("Forwarded from %1").arg(getName()) + " " + forwardTimestamp).trim()
         font.pixelSize: Theme.fontSizeMedium
         font.bold: true
         horizontalAlignment: received ? Text.AlignLeft : Text.AlignRight
         color: Theme.highlightColor
-        visible: ((displayAvatar && chat.getAuthorByIndex(chatProxyModel.mapToSource(index+1)) !== authorId) ||  isForwarded || chat.getChatType() === "channel") && !serviceMessage.visible
+        visible: (displayAvatar || isForwarded || chat.getChatType() === "channel") && !serviceMessage.visible
         width: Math.min(implicitWidth, column.width)
         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
 
         function getName() {
-            if (forwardUserId !== 0) return users.getUserAsVariant(forwardUserId).name;
+            if (forwardUserId !== 0) return users.getUserAsVariant(forwardUserId).name
+            if (forwardChatId !== 0) return chatList.getChatAsVariant(forwardChatId).title
             if (forwardUsername !== "") return forwardUsername;
             if (forwardChannelId !== 0) return chatList.getChatAsVariant(forwardChannelId).title
         }
@@ -81,7 +84,8 @@ Column {
 
                 Label {
                     id: replyName
-                    text: replyMessageId !== 0 ? users.getUserAsVariant(chat.getMessage(replyMessageId).senderUserId).name : ""
+                    readonly property var replyMessageObj: chat.getMessage(replyMessageId)
+                    text: replyMessageObj.sender == "chat" ? chatList.getChatAsVariant(replyMessageObj.senderChatId).title : users.getUserAsVariant(replyMessageObj.senderUserId).name
                     font.bold: true
                     font.pixelSize: Theme.fontSizeSmall
                     truncationMode: TruncationMode.Fade
@@ -199,6 +203,9 @@ Column {
                 return locationComponent;
             case "contact":
                 return contactComponent;
+            case "animatedEmoji":
+                autoDownloadTimer.start()
+                return animatedEmojiComponent;
             }
         }
 
@@ -282,6 +289,12 @@ Column {
         ContactContent { }
     }
 
+    Component {
+        id: animatedEmojiComponent
+
+        AnimatedEmojiContent { }
+    }
+
     Label {
         id: serviceMessage
         width: chatPage.width
@@ -293,9 +306,10 @@ Column {
         visible: isService
     }
 
-    LinkedLabel {
+    Label {
         id: textField
-        plainText: messageText
+        textFormat: Text.StyledText
+        text: Twemoji.emojify(parser.linkedText.replace(/\n/g, '<br>'), Theme.fontSizeSmall)
         font.pixelSize: settings.fontSize
         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
         width: parent.width
@@ -305,6 +319,11 @@ Column {
         linkColor: Theme.highlightColor
         visible: messageText !== "" && !serviceMessage.visible
         horizontalAlignment: received ? Text.AlignLeft : Text.AlignRight
+
+        LinkParser {
+            id: parser
+            text: messageText
+        }
     }
 
     Loader {

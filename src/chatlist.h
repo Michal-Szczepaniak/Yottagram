@@ -106,11 +106,13 @@ public:
     Q_INVOKABLE bool autoDownloadEnabled();
     Q_INVOKABLE void autoDownload(int32_t fileId, QString type);
     Q_INVOKABLE bool fileExists(QString path);
+    Q_INVOKABLE void switchChatList(int chatList, int64_t filterId = 0);
 
 private:
     QVector<int64_t>* getChatList(td_api::ChatList* list);
     td_api::object_ptr<td_api::ChatList> getSelectedChatList() const;
     void setChatPosition(int64_t chatId, td_api::chatPosition* position);
+    QString getMessageText(td_api::message* message) const;
 
 signals:
     void channelNotificationSettingsChanged(td_api::scopeNotificationSettings* scopeNotificationSettings);
@@ -149,7 +151,7 @@ private:
     QVector<int64_t> *_chats_ids;
     QVector<int64_t> _main_chats_ids;
     QVector<int64_t> _archive_chats_ids;
-    QHash<int, QVector<int64_t>> _filter_chats_ids;
+    QHash<int32_t, QVector<int64_t>> _filter_chats_ids;
     std::shared_ptr<TelegramManager> _manager;
     std::shared_ptr<Users> _users;
     std::shared_ptr<Files> _files;

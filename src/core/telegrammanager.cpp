@@ -123,6 +123,7 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
         break;
     case td_api::getSavedAnimations::ID:
         emit gotSavedAnimations(static_cast<td_api::animations*>(message));
+        break;
     }
 }
 
@@ -249,6 +250,9 @@ void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
             },
             [this](td_api::updateChatMessageTtlSetting &updateChatMessageTtlSetting) {
                 emit this->updateChatMessageTtlSetting(&updateChatMessageTtlSetting);
+            },
+            [this](td_api::updateChatFilters &updateChatFilters) {
+                emit this->updateChatFilters(&updateChatFilters);
             },
             [](auto &update) { Q_UNUSED(update) }
         )

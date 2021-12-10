@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
     view->rootContext()->setContextProperty("stickerSets", &core._stickerSets);
     view->rootContext()->setContextProperty("savedAnimations", &core._savedAnimations);
     view->rootContext()->setContextProperty("calls", &core._calls);
+    view->rootContext()->setContextProperty("chatListFilters", &core._chatListFilters);
     view->rootContext()->setContextProperty("wifiAutoDownloadSettings", &core._wifiAutoDownloadSettings);
     view->rootContext()->setContextProperty("mobileAutoDownloadSettings", &core._mobileAutoDownloadSettings);
     view->rootContext()->setContextProperty("roamingAutoDownloadSettings", &core._roamingAutoDownloadSettings);

@@ -41,8 +41,8 @@ Page {
     property string pluginName: ""
     property int type: 0
     property var chat: null
-    property var replyMessageId: 0
-    property var editMessageId: 0
+    property var newReplyMessageId: 0
+    property var newEditMessageId: 0
     property variant selection: []
     property bool selectionActive: false
     property var startMessage: (chat.firstUnreadMention > 0 ? chat.firstUnreadMention : (chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId))
@@ -502,9 +502,6 @@ Page {
                     width: chatPage.width
                     contentHeight: Math.max(message.height + Theme.paddingSmall, Theme.itemSizeExtraSmall)
                     contentWidth: width
-                    readonly property var user: users.getUserAsVariant(authorId)
-                    readonly property bool isService: messageType == "chatSetTtl" || messageType == "pinMessage" || messageType == "messageChatDeleteMember" || messageType == "messageChatAddMembers" || messageType == "messageChatJoinByLink"
-                    property bool displayAvatar: received && (type === "group" || type === "supergroup") && !isService
                     highlighted: selection.indexOf(messageId) !== -1
 
                     Rectangle {
@@ -556,8 +553,8 @@ Page {
                     }
 
                     onDoubleClicked: {
-                        chatPage.editMessageId = 0
-                        chatPage.replyMessageId = messageId
+                        chatPage.newEditMessageId = 0
+                        chatPage.newReplyMessageId = messageId
                     }
 
                     function remove() {
@@ -595,8 +592,8 @@ Page {
                                     text: qsTr("Reply")
                                     visible: chatList.selection.length === 0
                                     onClicked: {
-                                        chatPage.editMessageId = 0
-                                        chatPage.replyMessageId = messageId
+                                        chatPage.newEditMessageId = 0
+                                        chatPage.newReplyMessageId = messageId
                                     }
                                 }
 
@@ -633,8 +630,8 @@ Page {
                                     visible: canBeEdited && chatList.selection.length === 0
                                     onClicked: {
                                         textInput.text = messageText
-                                        chatPage.editMessageId = messageId
-                                        chatPage.replyMessageId = 0
+                                        chatPage.newEditMessageId = messageId
+                                        chatPage.newReplyMessageId = 0
                                     }
                                 }
 
@@ -695,9 +692,10 @@ Page {
                         anchors.leftMargin: Theme.paddingMedium
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: Theme.paddingMedium
-                        visible: displayAvatar && chat.getAuthorByIndex(chatProxyModel.mapToSource(index-1)) !== authorId
-                        userName: user.name
-                        avatarPhoto: if (user && user.hasPhoto) user.smallPhoto.localPath
+                        visible: displayAvatar
+                        userName: sender === "chat" ? chatList.getChatAsVariant(senderId).title : users.getUserAsVariant(senderId).name
+                        avatarPhoto: if (sender === "chat" && chatList.getChatAsVariant(senderId).hasPhoto) chatList.getChatAsVariant(senderId).smallPhoto.localPath
+                                     else if (users.getUserAsVariant(senderId).hasPhoto) users.getUserAsVariant(senderId).smallPhoto.localPath
                     }
 
                     Message {
@@ -765,10 +763,10 @@ Page {
                     anchors.right: parent.right
                     anchors.rightMargin: Theme.paddingLarge
                     spacing: Theme.paddingLarge
-                    visible: chatPage.replyMessageId !== 0
+                    visible: chatPage.newReplyMessageId !== 0
 
                     function getReplyData(roleName) {
-                        return chatProxyModel.data(chatProxyModel.index(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.replyMessageId)), 0), chatProxyModel.roleForName(roleName))
+                        return chatProxyModel.data(chatProxyModel.index(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.newReplyMessageId)), 0), chatProxyModel.roleForName(roleName))
                     }
 
                     Icon {
@@ -782,13 +780,13 @@ Page {
 
                         Label {
                             width: parent.width - Theme.paddingLarge
-                            text: chatPage.replyMessageId === 0 ? "" : users.getUserAsVariant(replyRow.getReplyData("authorId")).name
+                            text: chatPage.newReplyMessageId === 0 ? "" : users.getUserAsVariant(replyRow.getReplyData("authorId")).name
                             truncationMode: TruncationMode.Fade
                             color: Theme.highlightColor
                         }
                         Label {
                             width: parent.width - Theme.paddingLarge
-                            text: chatPage.replyMessageId === 0 ? "" :
+                            text: chatPage.newReplyMessageId === 0 ? "" :
                                           (replyRow.getReplyData("messageType") === "text" ? replyRow.getReplyData("messageText")
                                                                                                : replyRow.getReplyData("messageType"))
                             truncationMode: TruncationMode.Fade
@@ -799,8 +797,8 @@ Page {
                         id: cancelReplyIcon
                         icon.source: "image://theme/icon-m-cancel"
                         anchors.verticalCenter: parent.verticalCenter
-                        visible: chatPage.replyMessageId !== 0
-                        onClicked: chatPage.replyMessageId = 0
+                        visible: chatPage.newReplyMessageId !== 0
+                        onClicked: chatPage.newReplyMessageId = 0
                     }
                 }
 
@@ -812,10 +810,10 @@ Page {
                     anchors.right: parent.right
                     anchors.rightMargin: Theme.paddingLarge
                     spacing: Theme.paddingLarge
-                    visible: chatPage.editMessageId !== 0
+                    visible: chatPage.newEditMessageId !== 0
 
                     function getEditData(roleName) {
-                        return chatProxyModel.data(chatProxyModel.index(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.editMessageId)), 0), chatProxyModel.roleForName(roleName))
+                        return chatProxyModel.data(chatProxyModel.index(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.newEditMessageId)), 0), chatProxyModel.roleForName(roleName))
                     }
 
                     Icon {
@@ -829,13 +827,13 @@ Page {
 
                         Label {
                             width: parent.width - Theme.paddingLarge
-                            text: chatPage.editMessageId === 0 ? "" : users.getUserAsVariant(editRow.getEditData("authorId")).name
+                            text: chatPage.newEditMessageId === 0 ? "" : users.getUserAsVariant(editRow.getEditData("authorId")).name
                             truncationMode: TruncationMode.Fade
                             color: Theme.highlightColor
                         }
                         Label {
                             width: parent.width - Theme.paddingLarge
-                            text: chatPage.editMessageId === 0 ? "" :
+                            text: chatPage.newEditMessageId === 0 ? "" :
                                           (editRow.getEditData("messageType") === "text" ? editRow.getEditData("messageText")
                                                                                                : editRow.getEditData("messageType"))
                             truncationMode: TruncationMode.Fade
@@ -848,7 +846,7 @@ Page {
                         anchors.verticalCenter: parent.verticalCenter
                         onClicked: {
                             textInput.text = ""
-                            chatPage.editMessageId = 0
+                            chatPage.newEditMessageId = 0
                         }
                     }
                 }
@@ -863,9 +861,9 @@ Page {
                     interval: 100
                     repeat: false
                     onTriggered: if (audioRecorder.state == 0) {
-                                     chat.sendVoiceNote(audioRecorder.location, audioRecorder.getWaveform(), voiceMessageButton.duration, chatPage.replyMessageId)
+                                     chat.sendVoiceNote(audioRecorder.location, audioRecorder.getWaveform(), voiceMessageButton.duration, chatPage.newReplyMessageId)
                                      uploadFlickable.contentY = 0
-                                     chatPage.replyMessageId = 0
+                                     chatPage.newReplyMessageId = 0
                                  }
                 }
 
@@ -889,9 +887,9 @@ Page {
                     page: chatPage
                     opacity: uploadFlickable.contentY/(inputItem.height- Theme.itemSizeLarge)
                     onStickerFileIdChanged: {
-                        chat.sendSticker(stickerFileId, chatPage.replyMessageId)
+                        chat.sendSticker(stickerFileId, chatPage.newReplyMessageId)
                         stickerPicker.visible = false
-                        chatPage.replyMessageId = 0
+                        chatPage.newReplyMessageId = 0
                         stickerFileId = 0
                         uploadFlickable.scrollToTop()
                     }
@@ -907,9 +905,9 @@ Page {
                     page: chatPage
                     opacity: uploadFlickable.contentY/(inputItem.height- Theme.itemSizeLarge)
                     onAnimationFileIdChanged: {
-                        chat.sendAnimation(animationFileId, animationWidth, animationHeight, chatPage.replyMessageId)
+                        chat.sendAnimation(animationFileId, animationWidth, animationHeight, chatPage.newReplyMessageId)
                         animationPicker.visible = false
-                        chatPage.replyMessageId = 0
+                        chatPage.newReplyMessageId = 0
                         animationFileId = 0
                         uploadFlickable.scrollToTop()
                     }
@@ -943,12 +941,12 @@ Page {
 
                     function sendMessage() {
                         if(textInput.text.length !== 0) {
-                            if (chatPage.editMessageId !== 0) {
-                                chat.editMessageText(chatPage.editMessageId, textInput.text)
-                                chatPage.editMessageId = 0
+                            if (chatPage.newEditMessageId !== 0) {
+                                chat.editMessageText(chatPage.newEditMessageId, textInput.text)
+                                chatPage.newEditMessageId = 0
                             } else {
-                                chat.sendMessage(textInput.text, chatPage.replyMessageId)
-                                chatPage.replyMessageId = 0
+                                chat.sendMessage(textInput.text, chatPage.newReplyMessageId)
+                                chatPage.newReplyMessageId = 0
                             }
                             textInput.text = ""
                             textInput.focus = false
@@ -1119,8 +1117,8 @@ Page {
                 onAccepted: {
                     var urls = []
                     for (var i = 0; i < selectedContent.count; ++i) {
-                        chat.sendFile(selectedContent.get(i).filePath, chatPage.replyMessageId)
-                        chatPage.replyMessageId = 0
+                        chat.sendFile(selectedContent.get(i).filePath, chatPage.newReplyMessageId)
+                        chatPage.newReplyMessageId = 0
                     }
                     uploadFlickable.scrollToTop()
                     pageStack.navigateBack(PageStackAction.Immediate)
@@ -1138,8 +1136,8 @@ Page {
                     for (var i = 0; i < selectedContent.count; ++i) {
                         urls.push(selectedContent.get(i).filePath)
                     }
-                    chat.sendPhotos(urls, chatPage.replyMessageId)
-                    chatPage.replyMessageId = 0
+                    chat.sendPhotos(urls, chatPage.newReplyMessageId)
+                    chatPage.newReplyMessageId = 0
                     uploadFlickable.scrollToTop()
                 }
             }
@@ -1154,8 +1152,8 @@ Page {
                     for (var i = 0; i < selectedContent.count; ++i) {
                         urls.push(selectedContent.get(i).filePath)
                     }
-                    chat.sendVideos(urls, chatPage.replyMessageId)
-                    chatPage.replyMessageId = 0
+                    chat.sendVideos(urls, chatPage.newReplyMessageId)
+                    chatPage.newReplyMessageId = 0
                     uploadFlickable.scrollToTop()
                 }
             }
@@ -1168,8 +1166,8 @@ Page {
                 onAccepted: {
                     var urls = []
                     for (var i = 0; i < selectedContent.count; ++i) {
-                        chat.sendMusic(selectedContent.get(i).filePath, chatPage.replyMessageId)
-                        chatPage.replyMessageId = 0
+                        chat.sendMusic(selectedContent.get(i).filePath, chatPage.newReplyMessageId)
+                        chatPage.newReplyMessageId = 0
                     }
                     uploadFlickable.scrollToTop()
                 }
@@ -1183,8 +1181,8 @@ Page {
                 onAccepted: {
                     var urls = []
                     for (var i = 0; i < selectedContent.count; ++i) {
-                        chat.sendFile(selectedContent.get(i).filePath, chatPage.replyMessageId)
-                        chatPage.replyMessageId = 0
+                        chat.sendFile(selectedContent.get(i).filePath, chatPage.newReplyMessageId)
+                        chatPage.newReplyMessageId = 0
                     }
                     uploadFlickable.scrollToTop()
                 }

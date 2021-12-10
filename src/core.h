@@ -34,6 +34,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "savedanimations.h"
 #include "calls.h"
 #include "dbushelper.h"
+#include "chatlistfilters.h"
 
 using namespace std;
 
@@ -50,6 +51,7 @@ public:
     StickerSets _stickerSets;
     SavedAnimations _savedAnimations;
     Calls _calls;
+    ChatListFilters _chatListFilters;
     shared_ptr<ChatList> _chatList;
     shared_ptr<Users> _users;
     shared_ptr<Files> _files;

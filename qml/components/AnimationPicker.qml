@@ -59,6 +59,7 @@ Item {
 
                 onPressAndHold: animationPreview.path = file.localPath
                 onReleased: animationPreview.path = ""
+                onCanceled: animationPreview.path = ""
 
                 Loader {
                     active: true

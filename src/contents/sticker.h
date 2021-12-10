@@ -26,9 +26,6 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "files/contentfile.h"
 #include "contentinterface.h"
 
-#define GZIP_WINDOWS_BIT 15 + 16
-#define GZIP_CHUNK_SIZE 32 * 1024
-
 class Sticker : public ContentFile, public ContentInterface
 {
     Q_OBJECT

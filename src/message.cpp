@@ -20,6 +20,8 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 #include "message.h"
 
+#include <contents/animatedemoji.h>
+
 Message::Message(QObject *parent) : QObject(parent), _message(nullptr), _text(nullptr), _messageContent(nullptr), _webPage(nullptr)
 {
 
@@ -82,8 +84,6 @@ QString Message::getText()
     case td_api::messagePhoto::ID:
         if (static_cast<Photo*>(_messageContent)->getCaption() == nullptr) return "";
         return QString::fromStdString(static_cast<Photo*>(_messageContent)->getCaption()->text_);
-    case td_api::messageSticker::ID:
-        return "";
     case td_api::messageVideo::ID:
         if (static_cast<Video*>(_messageContent)->getCaption() == nullptr) return "";
         return QString::fromStdString(static_cast<Video*>(_messageContent)->getCaption()->text_);
@@ -99,8 +99,6 @@ QString Message::getText()
     case td_api::messageVoiceNote::ID:
         if (static_cast<VoiceNote*>(_messageContent)->getCaption() == nullptr) return "";
         return QString::fromStdString(static_cast<VoiceNote*>(_messageContent)->getCaption()->text_);
-    case td_api::messageVideoNote::ID:
-        return "";
     case td_api::messagePoll::ID:
         return static_cast<Poll*>(_messageContent)->getQuestion();
     case td_api::messageChatSetTtl::ID:
@@ -115,8 +113,10 @@ QString Message::getText()
         return _message->is_outgoing_ ? tr("Outgoing call") : tr("Incoming call");
         break;
     case td_api::messageLocation::ID:
-        return "";
     case td_api::messageContact::ID:
+    case td_api::messageSticker::ID:
+    case td_api::messageVideoNote::ID:
+    case td_api::messageAnimatedEmoji::ID:
         return "";
     case td_api::messageContactRegistered::ID:
         return tr("%1 joined telegram").arg(_users->getUser(getSenderUserId())->getName());
@@ -125,7 +125,7 @@ QString Message::getText()
     }
 }
 
-QString Message::getType()
+QString Message::getType() const
 {
     switch (_contentTypeId) {
     case td_api::messageChatDeleteMember::ID:
@@ -168,6 +168,8 @@ QString Message::getType()
         return "contact";
     case td_api::messageContactRegistered::ID:
         return "contactRegistered";
+    case td_api::messageAnimatedEmoji::ID:
+        return "animatedEmoji";
     case td_api::messageUnsupported::ID:
         return "messageUnsupported";
     default:
@@ -178,6 +180,16 @@ QString Message::getType()
 int32_t Message::getContentType()
 {
     return _contentTypeId;
+}
+
+bool Message::isService() const
+{
+    QString messageType = getType();
+    return  messageType == "chatSetTtl" ||
+            messageType == "pinMessage" ||
+            messageType == "messageChatDeleteMember" ||
+            messageType == "messageChatAddMembers" ||
+            messageType == "messageChatJoinByLink";
 }
 
 bool Message::isEdited()
@@ -259,6 +271,18 @@ int64_t Message::getSenderUserId()
 {
     if (_message->sender_->get_id() != td_api::messageSenderUser::ID) return 0;
     return static_cast<td_api::messageSenderUser*>(_message->sender_.get())->user_id_;
+}
+
+int64_t Message::getSenderChatId()
+{
+    if (_message->sender_->get_id() != td_api::messageSenderChat::ID) return 0;
+    return static_cast<td_api::messageSenderChat*>(_message->sender_.get())->chat_id_;
+}
+
+QString Message::getSender()
+{
+    if (_message->sender_->get_id() == td_api::messageSenderChat::ID) return "chat";
+    else return "user";
 }
 
 QString Message::getFormattedTimestamp()
@@ -367,6 +391,9 @@ void Message::handleMessageContent(td_api::object_ptr<td_api::MessageContent> me
             case td_api::messageContact::ID:
                 _messageContent = new Contact();
                 static_cast<Contact*>(_messageContent)->setUsers(_users);
+                break;
+            case td_api::messageAnimatedEmoji::ID:
+                _messageContent = new AnimatedEmoji();
                 break;
             }
 

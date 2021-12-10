@@ -25,6 +25,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QDesktopServices>
 #include <QQmlEngine>
 #include "overloaded.h"
+#include <contents/animatedemoji.h>
 
 Chat::Chat(td_api::chat* chat, shared_ptr<Files> files) :
     _smallPhotoId(0),
@@ -574,12 +575,31 @@ QVariant Chat::data(const QModelIndex &index, int role) const
         return QVariant::fromValue(message->received());
     case MessageRoles::ReplyMessageIdRole:
         return QVariant::fromValue(message->replyMessageId());
+    case MessageRoles::DisplayAvatarRole:
+    {
+        bool display = true;
+        if (_message_ids.contains(index.row()-1)) {
+            Message* prev = _messages[_message_ids[index.row()-1]];
+            if (message->getSenderUserId() != 0) display = prev->getSenderUserId() != message->getSenderUserId();
+            if (message->getSenderChatId() != 0) display = prev->getSenderChatId() != message->getSenderChatId();
+        }
+        return message->received() && (getChatType() == "group" || getChatType() == "supergroup") && !message->isService();
+    }
+    case MessageRoles::IsServiceRole:
+        return message->isService();
     case MessageRoles::IsForwardedRole:
         return message->getForwardedInfo() != nullptr;
     case MessageRoles::ForwardUserRole:
     {
         if (message->getForwardedInfo() != nullptr && message->getForwardedInfo()->origin_->get_id() == td_api::messageForwardOriginUser::ID) {
             return QVariant::fromValue(static_cast<const td_api::messageForwardOriginUser&>(*message->getForwardedInfo()->origin_).sender_user_id_);
+        }
+        return 0;
+    }
+    case MessageRoles::ForwardChatRole:
+    {
+        if (message->getForwardedInfo() != nullptr && message->getForwardedInfo()->origin_->get_id() == td_api::messageForwardOriginChat::ID) {
+            return QVariant::fromValue(static_cast<const td_api::messageForwardOriginChat&>(*message->getForwardedInfo()->origin_).sender_chat_id_);
         }
         return 0;
     }
@@ -650,13 +670,24 @@ QVariant Chat::data(const QModelIndex &index, int role) const
             QQmlEngine::setObjectOwnership(videoNote, QQmlEngine::CppOwnership);
             return QVariant::fromValue(videoNote);
         }
+        case td_api::messageAnimatedEmoji::ID:
+        {
+            auto animatedEmoji = message->getContent<AnimatedEmoji>();
+            QQmlEngine::setObjectOwnership(animatedEmoji, QQmlEngine::CppOwnership);
+            return QVariant::fromValue(animatedEmoji);
+        }
         }
         break;
      }
     case MessageRoles::TimeRole:
         return message->getFormattedTimestamp();
-    case MessageRoles::AuthorIdRole:
-        return QVariant::fromValue(message->getSenderUserId());
+    case MessageRoles::SenderRole:
+        return message->getSender();
+    case MessageRoles::SenderIdRole:
+        if (message->getSenderUserId() != 0)
+            return QVariant::fromValue(message->getSenderUserId());
+        else
+            return QVariant::fromValue(message->getSenderChatId());
     case MessageRoles::EditedRole:
         return message->isEdited();
     case MessageRoles::CanBeEditedRole:
@@ -729,14 +760,18 @@ QHash<int, QByteArray> Chat::roleNames() const
     roles[MessageTypeRole] = "messageType";
     roles[ReceivedRole] = "received";
     roles[ReplyMessageIdRole] = "replyMessageId";
+    roles[DisplayAvatarRole] = "displayAvatar";
+    roles[IsServiceRole] = "isService";
     roles[IsForwardedRole] = "isForwarded";
     roles[ForwardUserRole] = "forwardUserId";
+    roles[ForwardChatRole] = "forwardChatId";
     roles[ForwardUsernameRole] = "forwardUsername";
     roles[ForwardChannelRole] = "forwardChannelId";
     roles[ForwardTimeRole] = "forwardTimestamp";
     roles[FileRole] = "file";
     roles[TimeRole] = "timestamp";
-    roles[AuthorIdRole] = "authorId";
+    roles[SenderRole] = "sender";
+    roles[SenderIdRole] = "senderId";
     roles[EditedRole] = "edited";
     roles[CanBeEditedRole] = "canBeEdited";
     roles[CanBeForwardedRole] = "canBeForwarded";
@@ -1179,7 +1214,6 @@ void Chat::open(QString path)
 void Chat::deleteMessage(int64_t messageId)
 {
     _manager->sendQuery(new td_api::deleteMessages(_chat->id_, std::vector<int64_t>(1, messageId), true));
-
 }
 
 void Chat::editMessageText(int64_t messageId, QString messageText)

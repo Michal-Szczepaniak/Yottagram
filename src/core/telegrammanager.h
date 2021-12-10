@@ -94,6 +94,7 @@ signals:
     void updateNewCallSignalingData(td_api::updateNewCallSignalingData *updateNewCallSignalingData);
     void updateCall(td_api::updateCall *updateCall);
     void updateChatMessageTtlSetting(td_api::updateChatMessageTtlSetting *updateChatMessageTtlSetting);
+    void updateChatFilters(td_api::updateChatFilters *updateChatFilters);
 
 // Responses
     void gotChatHistory(int64_t chatId, td_api::messages *messages);
