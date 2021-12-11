@@ -59,6 +59,8 @@ class Chat : public QAbstractListModel
     Q_PROPERTY(int64_t latestMessageId READ getLatestMessageId NOTIFY latestMessageIdChanged)
     Q_PROPERTY(int64_t lastMessageId READ getLastMessageId NOTIFY lastMessageIdChanged)
     Q_PROPERTY(int32_t unreadCount READ getUnreadCount NOTIFY unreadCountChanged)
+    Q_PROPERTY(int32_t unreadMentionCount READ getUnreadMentionCount NOTIFY unreadMentionCountChanged)
+    Q_PROPERTY(int64_t firstUnreadMention READ firstUnreadMention NOTIFY unreadMentionCountChanged)
     Q_PROPERTY(bool isSelf READ isSelf NOTIFY isSelfChanged)
     Q_PROPERTY(int32_t ttl READ getTtl WRITE setTtl NOTIFY ttlChanged)
     Q_PROPERTY(int32_t muteFor READ getMuteFor WRITE setMuteFor NOTIFY chatNotificationSettingsChanged)
@@ -135,6 +137,7 @@ public:
     void setUnreadCount(int32_t unreadCount);
     int32_t getUnreadMentionCount() const;
     void setUnreadMentionCount(int32_t unreadMentionCount);
+    int64_t firstUnreadMention() const;
     void updateMessageMentionRead(int32_t unreadMentionCount, int64_t messageId);
     int64_t lastReadInboxMessageId() const { return _lastReadInboxMessageId; }
     void setLastReadInboxMessageId(int64_t messageId);

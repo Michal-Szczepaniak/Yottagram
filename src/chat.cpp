@@ -197,6 +197,18 @@ void Chat::setUnreadMentionCount(int32_t unreadMentionCount)
     emit unreadMentionCountChanged(unreadMentionCount);
 }
 
+int64_t Chat::firstUnreadMention() const
+{
+    int64_t messageId = 0;
+    for (QVector<const int64_t>::reverse_iterator it = _message_ids.rbegin(); it != _message_ids.rend(); ++it) {
+        if (_messages.contains(*it) && _messages[*it]->containsUnreadMention()) {
+            messageId = *it;
+            break;
+        }
+    }
+    return messageId;
+}
+
 void Chat::updateMessageMentionRead(int32_t unreadMentionCount, int64_t messageId)
 {
     _unreadMentionCount = unreadMentionCount;
@@ -583,7 +595,7 @@ QVariant Chat::data(const QModelIndex &index, int role) const
             if (message->getSenderUserId() != 0) display = prev->getSenderUserId() != message->getSenderUserId();
             if (message->getSenderChatId() != 0) display = prev->getSenderChatId() != message->getSenderChatId();
         }
-        return message->received() && (getChatType() == "group" || getChatType() == "supergroup") && !message->isService();
+        return message->received() && (getChatType() == "group" || getChatType() == "supergroup") && !message->isService() && display;
     }
     case MessageRoles::IsServiceRole:
         return message->isService();
@@ -1468,7 +1480,7 @@ void Chat::onGotChatHistory(int64_t chatId, td_api::messages *messages)
 {
     if (chatId != getId()) return;
 
-    if (messages->total_count_ == 0 || messages->messages_.size() < 0 || !messages->messages_[0]) return;
+    if (messages->total_count_ == 0 || messages->messages_.size() <= 0 || !messages->messages_[0]) return;
 
     int addedMessages = 0;
     for (int i = 0; i < messages->total_count_; i++) {
