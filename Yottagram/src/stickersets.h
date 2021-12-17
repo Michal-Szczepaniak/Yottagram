@@ -52,6 +52,7 @@ public:
 
     Q_INVOKABLE void getStickerSets();
 signals:
+    void gotStickerSet(int64_t stickerSetId);
 
 public slots:
     void updateInstalledStickerSets(td_api::updateInstalledStickerSets *updateInstalledStickerSets);

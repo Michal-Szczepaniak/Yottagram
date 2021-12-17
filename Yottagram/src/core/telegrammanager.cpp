@@ -134,126 +134,49 @@ void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
 
     downcast_call(
         *message, overloaded(
-            [this](td_api::updateNewChat &newChat) {
-                emit this->updateNewChat(&newChat);
-            },
-            [this](td_api::updateChatTitle &updateChatTitle) {
-                emit this->updateChatTitle(&updateChatTitle);
-            },
-            [this](td_api::updateChatPhoto &updateChatPhoto) {
-                emit this->updateChatPhoto(&updateChatPhoto);
-            },
-            [this](td_api::updateChatLastMessage &updateChatLastMessage) {
-                emit this->updateChatLastMessage(&updateChatLastMessage);
-            },
-            [this](td_api::updateChatPosition &updateChatPosition) {
-                emit this->updateChatPosition(&updateChatPosition);
-            },
-            [this](td_api::updateFile &updateFile) {
-                emit this->updateFile(&updateFile);
-            },
-            [this](td_api::updateChatReadInbox &updateChatReadInbox) {
-                emit this->updateChatReadInbox(&updateChatReadInbox);
-            },
-            [this](td_api::updateChatReadOutbox &updateChatReadOutbox) {
-                emit this->updateChatReadOutbox(&updateChatReadOutbox);
-            },
-            [this](td_api::updateNewMessage &updateNewMessage) {
-                emit this->updateNewMessage(&updateNewMessage);
-            },
-            [this](td_api::updateUser &updateUser) {
-                emit this->updateUser(&updateUser);
-            },
-            [this](td_api::updateMessageSendSucceeded &updateMessageSendSucceeded) {
-                emit this->updateMessageSendSucceeded(&updateMessageSendSucceeded);
-            },
-            [this](td_api::updateMessageContent &updateMessageContent) {
-                emit this->updateMessageContent(&updateMessageContent);
-            },
-            [this](td_api::updateDeleteMessages &updateDeleteMessages) {
-                emit this->updateDeleteMessages(&updateDeleteMessages);
-            },
-            [this](td_api::updateNotification &updateNotification) {
-                emit this->updateNotification(&updateNotification);
-            },
-            [this](td_api::updateNotificationGroup &updateNotificationGroup) {
-                emit this->updateNotificationGroup(&updateNotificationGroup);
-            },
-            [this](td_api::updateActiveNotifications &updateActiveNotifications) {
-                emit this->updateActiveNotifications(&updateActiveNotifications);
-            },
-            [this](td_api::updateHavePendingNotifications &updateHavePendingNotifications) {
-                emit this->updateHavePendingNotifications(&updateHavePendingNotifications);
-            },
-            [this](td_api::updateUserFullInfo &updateUserFullInfo) {
-                emit this->updateUserFullInfo(&updateUserFullInfo);
-            },
-            [this](td_api::updateBasicGroupFullInfo &updateBasicGroupFullInfo) {
-                emit this->updateBasicGroupFullInfo(&updateBasicGroupFullInfo);
-            },
-            [this](td_api::updateSupergroupFullInfo &updateSupergroupFullInfo) {
-                emit this->updateSupergroupFullInfo(&updateSupergroupFullInfo);
-            },
-            [this](td_api::updateOption &updateOption) {
-                emit this->updateOption(&updateOption);
-            },
-            [this](td_api::updateBasicGroup &updateBasicGroup) {
-                emit this->updateBasicGroup(&updateBasicGroup);
-            },
-            [this](td_api::updateSupergroup &updateSupergroup) {
-                emit this->updateSupergroup(&updateSupergroup);
-            },
-            [this](td_api::updateSecretChat &updateSecretChat) {
-                emit this->updateSecretChat(&updateSecretChat);
-            },
-            [this](td_api::updateChatNotificationSettings &updateChatNotificationSettings) {
-                emit this->updateChatNotificationSettings(&updateChatNotificationSettings);
-            },
-            [this](td_api::updateScopeNotificationSettings &updateScopeNotificationSettings) {
-                emit this->updateScopeNotificationSettings(&updateScopeNotificationSettings);
-            },
-            [this](td_api::autoDownloadSettingsPresets &autoDownloadSettingsPresets) {
-                emit this->autoDownloadSettingsPresets(&autoDownloadSettingsPresets);
-            },
-            [this](td_api::updateInstalledStickerSets &updateInstalledStickerSets) {
-                emit this->updateInstalledStickerSets(&updateInstalledStickerSets);
-            },
-            [this](td_api::updateChatPermissions &updateChatPermissions) {
-                emit this->updateChatPermissions(&updateChatPermissions);
-            },
-            [this](td_api::updateUnreadChatCount &updateUnreadChatCount) {
-                emit this->updateUnreadChatCount(&updateUnreadChatCount);
-            },
-            [this](td_api::updateUnreadMessageCount &updateUnreadMessageCount) {
-                emit this->updateUnreadMessageCount(&updateUnreadMessageCount);
-            },
-            [this](td_api::updateChatUnreadMentionCount &updateChatUnreadMentionCount) {
-                emit this->updateChatUnreadMentionCount(&updateChatUnreadMentionCount);
-            },
-            [this](td_api::updateMessageMentionRead &updateMessageMentionRead) {
-                emit this->updateMessageMentionRead(&updateMessageMentionRead);
-            },
-            [](td_api::error &error) {
-                qWarning() << QString::fromStdString(error.message_);
-            },
-            [this](td_api::updateMessageIsPinned &updateMessageIsPinned) {
-                emit this->updateMessageIsPinned(&updateMessageIsPinned);
-            },
-            [this](td_api::updateSavedAnimations &updateSavedAnimations) {
-                emit this->updateSavedAnimations(&updateSavedAnimations);
-            },
-            [this](td_api::updateNewCallSignalingData &updateNewCallSignalingData) {
-                emit this->updateNewCallSignalingData(&updateNewCallSignalingData);
-            },
-            [this](td_api::updateCall &updateCall) {
-                emit this->updateCall(&updateCall);
-            },
-            [this](td_api::updateChatMessageTtlSetting &updateChatMessageTtlSetting) {
-                emit this->updateChatMessageTtlSetting(&updateChatMessageTtlSetting);
-            },
-            [this](td_api::updateChatFilters &updateChatFilters) {
-                emit this->updateChatFilters(&updateChatFilters);
-            },
+            [this](td_api::updateNewChat &newChat) { emit this->updateNewChat(&newChat); },
+            [this](td_api::updateChatTitle &updateChatTitle) { emit this->updateChatTitle(&updateChatTitle); },
+            [this](td_api::updateChatPhoto &updateChatPhoto) { emit this->updateChatPhoto(&updateChatPhoto); },
+            [this](td_api::updateChatLastMessage &updateChatLastMessage) { emit this->updateChatLastMessage(&updateChatLastMessage); },
+            [this](td_api::updateChatPosition &updateChatPosition) { emit this->updateChatPosition(&updateChatPosition); },
+            [this](td_api::updateFile &updateFile) { emit this->updateFile(&updateFile); },
+            [this](td_api::updateChatReadInbox &updateChatReadInbox) { emit this->updateChatReadInbox(&updateChatReadInbox); },
+            [this](td_api::updateChatReadOutbox &updateChatReadOutbox) { emit this->updateChatReadOutbox(&updateChatReadOutbox); },
+            [this](td_api::updateNewMessage &updateNewMessage) { emit this->updateNewMessage(&updateNewMessage); },
+            [this](td_api::updateUser &updateUser) { emit this->updateUser(&updateUser); },
+            [this](td_api::updateMessageSendSucceeded &updateMessageSendSucceeded) { emit this->updateMessageSendSucceeded(&updateMessageSendSucceeded); },
+            [this](td_api::updateMessageContent &updateMessageContent) { emit this->updateMessageContent(&updateMessageContent); },
+            [this](td_api::updateDeleteMessages &updateDeleteMessages) { emit this->updateDeleteMessages(&updateDeleteMessages); },
+            [this](td_api::updateNotification &updateNotification) { emit this->updateNotification(&updateNotification); },
+            [this](td_api::updateNotificationGroup &updateNotificationGroup) { emit this->updateNotificationGroup(&updateNotificationGroup); },
+            [this](td_api::updateActiveNotifications &updateActiveNotifications) { emit this->updateActiveNotifications(&updateActiveNotifications); },
+            [this](td_api::updateHavePendingNotifications &updateHavePendingNotifications) { emit this->updateHavePendingNotifications(&updateHavePendingNotifications); },
+            [this](td_api::updateUserFullInfo &updateUserFullInfo) { emit this->updateUserFullInfo(&updateUserFullInfo); },
+            [this](td_api::updateBasicGroupFullInfo &updateBasicGroupFullInfo) { emit this->updateBasicGroupFullInfo(&updateBasicGroupFullInfo); },
+            [this](td_api::updateSupergroupFullInfo &updateSupergroupFullInfo) { emit this->updateSupergroupFullInfo(&updateSupergroupFullInfo); },
+            [this](td_api::updateOption &updateOption) { emit this->updateOption(&updateOption); },
+            [this](td_api::updateBasicGroup &updateBasicGroup) { emit this->updateBasicGroup(&updateBasicGroup); },
+            [this](td_api::updateSupergroup &updateSupergroup) { emit this->updateSupergroup(&updateSupergroup); },
+            [this](td_api::updateSecretChat &updateSecretChat) { emit this->updateSecretChat(&updateSecretChat); },
+            [this](td_api::updateChatNotificationSettings &updateChatNotificationSettings) { emit this->updateChatNotificationSettings(&updateChatNotificationSettings); },
+            [this](td_api::updateScopeNotificationSettings &updateScopeNotificationSettings) { emit this->updateScopeNotificationSettings(&updateScopeNotificationSettings); },
+            [this](td_api::autoDownloadSettingsPresets &autoDownloadSettingsPresets) { emit this->autoDownloadSettingsPresets(&autoDownloadSettingsPresets); },
+            [this](td_api::updateInstalledStickerSets &updateInstalledStickerSets) { emit this->updateInstalledStickerSets(&updateInstalledStickerSets); },
+            [this](td_api::updateChatPermissions &updateChatPermissions) { emit this->updateChatPermissions(&updateChatPermissions); },
+            [this](td_api::updateUnreadChatCount &updateUnreadChatCount) { emit this->updateUnreadChatCount(&updateUnreadChatCount); },
+            [this](td_api::updateUnreadMessageCount &updateUnreadMessageCount) { emit this->updateUnreadMessageCount(&updateUnreadMessageCount); },
+            [this](td_api::updateChatUnreadMentionCount &updateChatUnreadMentionCount) { emit this->updateChatUnreadMentionCount(&updateChatUnreadMentionCount); },
+            [this](td_api::updateMessageMentionRead &updateMessageMentionRead) { emit this->updateMessageMentionRead(&updateMessageMentionRead); },
+            [this](td_api::updateMessageIsPinned &updateMessageIsPinned) { emit this->updateMessageIsPinned(&updateMessageIsPinned); },
+            [this](td_api::updateSavedAnimations &updateSavedAnimations) { emit this->updateSavedAnimations(&updateSavedAnimations); },
+            [this](td_api::updateNewCallSignalingData &updateNewCallSignalingData) { emit this->updateNewCallSignalingData(&updateNewCallSignalingData); },
+            [this](td_api::updateCall &updateCall) { emit this->updateCall(&updateCall); },
+            [this](td_api::updateChatMessageTtlSetting &updateChatMessageTtlSetting) { emit this->updateChatMessageTtlSetting(&updateChatMessageTtlSetting); },
+            [this](td_api::updateChatFilters &updateChatFilters) { emit this->updateChatFilters(&updateChatFilters); },
+            [this](td_api::updateChatDraftMessage &updateChatDraftMessage) { emit this->updateChatDraftMessage(&updateChatDraftMessage); },
+            [this](td_api::updateUserChatAction &updateUserChatAction) { emit this->updateUserChatAction(&updateUserChatAction); },
+            [this](td_api::updateUserStatus &updateUserStatus) { emit this->updateUserStatus(&updateUserStatus); },
+            [](td_api::error &error) { qWarning() << QString::fromStdString(error.message_); },
             [](auto &update) { Q_UNUSED(update) }
         )
     );

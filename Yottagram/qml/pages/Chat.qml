@@ -26,6 +26,7 @@ import org.nemomobile.notifications 1.0
 import org.nemomobile.configuration 1.0
 import Sailfish.Pickers 1.0
 import SortFilterProxyModel 0.2
+import com.verdanditeam.chat 1.0
 import com.verdanditeam.user 1.0
 import com.verdanditeam.audiorecorder 1.0
 import com.verdanditeam.pinnedmessages 1.0
@@ -41,6 +42,7 @@ Page {
     property string pluginName: ""
     property int type: 0
     property var chat: null
+    property var shareConfiguration: null
     property var newReplyMessageId: 0
     property var newEditMessageId: 0
     property variant selection: []
@@ -51,10 +53,44 @@ Page {
 
     allowedOrientations: Orientation.All
 
+    onShareConfigurationChanged: {
+        if (!shareConfiguration || shareConfiguration === null) return;
+
+        if (shareConfiguration.mimeType.lastIndexOf("audio", 0) === 0) {
+            chat.sendMusic(shareConfiguration.resources[0], 0)
+        } else if (shareConfiguration.mimeType.lastIndexOf("video", 0) === 0) {
+            chat.sendVideo(shareConfiguration.resources[0], 0)
+        } else if (shareConfiguration.mimeType.lastIndexOf("image", 0) === 0) {
+            chat.sendPhoto(shareConfiguration.resources[0], 0)
+        } else {
+            chat.sendFile(shareConfiguration.resources[0], 0)
+        }
+    }
+
     Connections {
         target: pageStack
         onDepthChanged: if (depth === 1) chat.clearCachedHistory()
     }
+
+    Connections {
+        target: chat
+        onDraftMessageChanged: {
+            textInput.text = chat.draftMessage
+            textInput.text = textInput.text
+
+            if (chat.draftMessageReplyId != 0) {
+                chatPage.newReplyMessageId = chat.draftMessageReplyId
+                chatPage.newReplyMessageId = chatPage.newReplyMessageId
+            }
+        }
+    }
+
+    onNewReplyMessageIdChanged: {
+        if (chat.draftMessage !== "") {
+            chat.setDraftMessage(textInput.text, chatPage.newReplyMessageId)
+        }
+    }
+
 
     onStatusChanged: {
         if (status === PageStatus.Deactivating) {
@@ -83,6 +119,15 @@ Page {
                 console.log("GETCHATHISTORY")
                 chat.getChatHistory(startMessage, 40, -20)
             }
+            if (chat.draftMessage !== "") {
+                textInput.text = chat.draftMessage
+                textInput.text = textInput.text
+            }
+            if (chat.draftMessageReplyId != 0) {
+                console.log(chat.draftMessageReplyId)
+                chatPage.newReplyMessageId = chat.draftMessageReplyId
+                chatPage.newReplyMessageId = chatPage.newReplyMessageId
+            }
         }
     }
 
@@ -109,11 +154,28 @@ Page {
         property bool sendButton: false
         property bool animatedStickers: true
         property int fontSize: Theme.fontSizeMedium
+        property bool uploadHintShown: false
+        Component.onCompleted: if (!uploadHintShown) hint.start(); else uploadHintShown = false
     }
 
     ConfigurationGroup {
         id: chatSettings
         path: "/apps/yottagram/" + chat.id
+    }
+
+    TouchInteractionHint {
+        id: hint
+        loops: 3
+        startY: chatPage.height - textInput.height
+        interactionMode: TouchInteraction.Swipe
+        direction: TouchInteraction.Up
+        onRunningChanged: if (!running) settings.uploadHintShown = true
+    }
+    InteractionHintLabel {
+        anchors.bottom: parent.bottom
+        text: qsTr("Swipe from bottom to access upload options")
+        opacity: hint.running ? 1.0 : 0.0
+        Behavior on opacity { FadeAnimation {} }
     }
 
     SortFilterProxyModel {
@@ -191,7 +253,7 @@ Page {
 
             MenuItem {
                 text: qsTr("Scroll to first unread mention")
-                visible: chat.unreadMentionCount > 0 && chat.firstUnreadMention !== 0 && !chatPage.selectionActive
+                visible: chat.unreadMentionCount > 0 && chat.firstUnreadMention != 0 && !chatPage.selectionActive
                 onClicked: scrollToMention()
             }
 
@@ -203,7 +265,6 @@ Page {
         }
 
         Rectangle {
-            Component.onCompleted: console.log(chat.getChatType(), chat.ttl)
             visible: chat.getChatType() === "secret" && chat.ttl > 0
             anchors.right: chatPhoto.right
             anchors.bottom: chatPhoto.bottom
@@ -287,16 +348,19 @@ Page {
                     id: secretChatIndicator
                     anchors.verticalCenter: parent.verticalCenter
                     source: "image://theme/icon-s-secure"
-                    color: chat.secretChatInfo.state === "pending" ? "yellow" : (chat.secretChatInfo.state === "ready" ? "green" : "red")
+                    color: if (chat.getChatType() === "secret") chat.secretChatInfo.state === "pending" ? "yellow" : (chat.secretChatInfo.state === "ready" ? "green" : "red")
                     visible: chat.getChatType() === "secret"
                 }
             }
 
             Label {
                 text: {
+                    if (chat.actionText !== "") return chat.actionText
                     var type = chat.getChatType()
-                    if (type === "supergroup" || type === "channel") return qsTr("%1 members").arg(chat.supergroupFullInfo.memberCount)
-                    else if (type === "group") return qsTr("%1 members").arg(chat.basicGroupFullInfo.rowCount())
+                    if (type === "supergroup" || type === "channel") return qsTr("%1 members").arg(chat.supergroupFullInfo.memberCount) +
+                                                                     (chat.onlineMemberCount > 0 ? ", " + qsTr("%1 online").arg(chat.onlineMemberCount) : "")
+                    else if (type === "group") return qsTr("%1 members").arg(chat.basicGroupFullInfo.rowCount()) +
+                                               (chat.onlineMemberCount > 0 ? ", " + qsTr("%1 online").arg(chat.onlineMemberCount) : "")
                     else if (type === "secret") return users.getUserAsVariant(chat.secretChatInfo.userId).statusText
                     else return users.getUserAsVariant(chat.idFromType).statusText
                 }
@@ -320,17 +384,10 @@ Page {
             anchors.right: parent.right
             asynchronous: true
             sourceComponent: pinnedComponent
-            active: pinnedMessages.id !== 0
+            active: pinnedMessages.id != 0
+            onActiveChanged: console.log(pinnedMessages.id, pinnedMessages.id != 0)
             visible: active
             height: active ? Theme.fontSizeSmall*2 + Theme.paddingLarge : 0
-
-            Connections {
-                target: pinnedMessages
-
-                onIdChanged: {
-                    pinnedMessageLoader.active = pinnedMessages.id !== 0
-                }
-            }
         }
 
         Component {
@@ -431,7 +488,7 @@ Page {
                 }
 
                 onBeforeScrollingToBottom: {
-                    if (originMessage !== 0) {
+                    if (originMessage != 0) {
                         var messageIndex = chat.getMessageIndex(originMessage)
                         if (messageIndex === -1) {
                             chat.scrollToMessage(originMessage)
@@ -444,18 +501,18 @@ Page {
 
                 onScrollingToBottom: {
                     messages.fastScrollEnabled = true
-                    if (originMessage !== 0) {
-                        if (count !== 0) originMessage = 0
+                    if (originMessage != 0) {
+                        if (count != 0) originMessage = 0
                     } else if (chat.lastMessageId !== chatProxyModel.get(0).messageId) {
                         historyBrowsing = 0
-                        chat.scrollToMessage(chat.unreadCount > 0 && chat.lastMessageId !== 0 ? chat.lastReadInboxMessageId : chat.lastMessageId)
+                        chat.scrollToMessage(chat.unreadCount > 0 && chat.lastMessageId != 0 ? chat.lastReadInboxMessageId : chat.lastMessageId)
                     }
                 }
 
                 onContentHeightChanged: {
-                    if (oldContentHeight === 0 && contentHeight !== 0) {
-                        if (historyBrowsing !== 0) {
-                            if (originMessage !== 0 && chat.getMessageIndex(originMessage) !== -1) {
+                    if (oldContentHeight == 0 && contentHeight != 0) {
+                        if (historyBrowsing != 0) {
+                            if (originMessage != 0 && chat.getMessageIndex(originMessage) !== -1) {
                                 messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(originMessage)), ListView.SnapPosition)
                                 originMessage = 0
                             } else {
@@ -467,7 +524,7 @@ Page {
                     }
                     oldContentHeight = contentHeight
 
-                    if (count != 0 && count < 20 && historyBrowsing === 0) {
+                    if (count != 0 && count < 20 && historyBrowsing == 0) {
                         chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
                     }
                 }
@@ -496,9 +553,17 @@ Page {
                     }
                 }
 
+                add: Transition {
+                    NumberAnimation { properties: "y"; duration: 200; easing.type: Easing.InOutQuad }
+                }
+
+                displaced: Transition {
+                    NumberAnimation { properties: "y"; duration: 200; easing.type: Easing.InOutQuad }
+                }
+
                 delegate:
                 ListItem {
-                    id: item
+                    id: listItem
                     width: chatPage.width
                     contentHeight: Math.max(message.height + Theme.paddingSmall, Theme.itemSizeExtraSmall)
                     contentWidth: width
@@ -580,8 +645,8 @@ Page {
                         asynchronous: true
                         onStatusChanged: {
                             if(status === Loader.Ready) {
-                                item.menu = contextMenuLoader.item;
-                                item.openMenu();
+                                listItem.menu = contextMenuLoader.item;
+                                listItem.openMenu();
                             }
                         }
                         sourceComponent: Component {
@@ -590,7 +655,7 @@ Page {
 
                                 MenuItem {
                                     text: qsTr("Reply")
-                                    visible: chatList.selection.length === 0
+                                    visible: chatList.selection.length == 0
                                     onClicked: {
                                         chatPage.newEditMessageId = 0
                                         chatPage.newReplyMessageId = messageId
@@ -627,7 +692,7 @@ Page {
 
                                 MenuItem {
                                     text: qsTr("Edit")
-                                    visible: canBeEdited && chatList.selection.length === 0
+                                    visible: canBeEdited && chatList.selection.length == 0
                                     onClicked: {
                                         textInput.text = messageText
                                         chatPage.newEditMessageId = messageId
@@ -662,8 +727,8 @@ Page {
                                 }
 
                                 MenuItem {
-                                    text: item.highlighted ? qsTr("Deselect") : qsTr("Select")
-                                    visible: chatList.selection.length === 0
+                                    text: listItem.highlighted ? qsTr("Deselect") : qsTr("Select")
+                                    visible: chatList.selection.length == 0
                                     onClicked: {
                                         if (selection.indexOf(messageId) === -1) {
                                             selection.push(messageId)
@@ -672,7 +737,8 @@ Page {
                                             selection.splice(selection.indexOf(messageId), 1)
                                             if (chatPage.selectionActive === true && chatPage.selection.length == 0) chatPage.selectionActive = false
                                         }
-                                        item.highlighted = selection.indexOf(messageId) !== -1
+                                        listItem.highlighted = selection.indexOf(messageId) !== -1
+                                        listItem.selectionChanged()
                                     }
                                 }
 
@@ -731,7 +797,7 @@ Page {
                     anchors.right: parent.right
                     anchors.rightMargin: Theme.paddingLarge
                     spacing: Theme.paddingLarge
-                    visible: chatList.selection.length !== 0
+                    visible: chatList.selection.length != 0
 
                     Icon {
                         id: forwardIcon
@@ -763,7 +829,7 @@ Page {
                     anchors.right: parent.right
                     anchors.rightMargin: Theme.paddingLarge
                     spacing: Theme.paddingLarge
-                    visible: chatPage.newReplyMessageId !== 0
+                    visible: chatPage.newReplyMessageId != 0
 
                     function getReplyData(roleName) {
                         return chatProxyModel.data(chatProxyModel.index(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.newReplyMessageId)), 0), chatProxyModel.roleForName(roleName))
@@ -780,13 +846,13 @@ Page {
 
                         Label {
                             width: parent.width - Theme.paddingLarge
-                            text: chatPage.newReplyMessageId === 0 ? "" : users.getUserAsVariant(replyRow.getReplyData("authorId")).name
+                            text: chatPage.newReplyMessageId == 0 ? "" : users.getUserAsVariant(replyRow.getReplyData("senderId")).name
                             truncationMode: TruncationMode.Fade
                             color: Theme.highlightColor
                         }
                         Label {
                             width: parent.width - Theme.paddingLarge
-                            text: chatPage.newReplyMessageId === 0 ? "" :
+                            text: chatPage.newReplyMessageId == 0 ? "" :
                                           (replyRow.getReplyData("messageType") === "text" ? replyRow.getReplyData("messageText")
                                                                                                : replyRow.getReplyData("messageType"))
                             truncationMode: TruncationMode.Fade
@@ -797,7 +863,7 @@ Page {
                         id: cancelReplyIcon
                         icon.source: "image://theme/icon-m-cancel"
                         anchors.verticalCenter: parent.verticalCenter
-                        visible: chatPage.newReplyMessageId !== 0
+                        visible: chatPage.newReplyMessageId != 0
                         onClicked: chatPage.newReplyMessageId = 0
                     }
                 }
@@ -810,7 +876,7 @@ Page {
                     anchors.right: parent.right
                     anchors.rightMargin: Theme.paddingLarge
                     spacing: Theme.paddingLarge
-                    visible: chatPage.newEditMessageId !== 0
+                    visible: chatPage.newEditMessageId != 0
 
                     function getEditData(roleName) {
                         return chatProxyModel.data(chatProxyModel.index(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.newEditMessageId)), 0), chatProxyModel.roleForName(roleName))
@@ -827,13 +893,13 @@ Page {
 
                         Label {
                             width: parent.width - Theme.paddingLarge
-                            text: chatPage.newEditMessageId === 0 ? "" : users.getUserAsVariant(editRow.getEditData("authorId")).name
+                            text: chatPage.newEditMessageId == 0 ? "" : users.getUserAsVariant(editRow.getEditData("senderId")).name
                             truncationMode: TruncationMode.Fade
                             color: Theme.highlightColor
                         }
                         Label {
                             width: parent.width - Theme.paddingLarge
-                            text: chatPage.newEditMessageId === 0 ? "" :
+                            text: chatPage.newEditMessageId == 0 ? "" :
                                           (editRow.getEditData("messageType") === "text" ? editRow.getEditData("messageText")
                                                                                                : editRow.getEditData("messageType"))
                             truncationMode: TruncationMode.Fade
@@ -886,6 +952,8 @@ Page {
                     visible: false
                     page: chatPage
                     opacity: uploadFlickable.contentY/(inputItem.height- Theme.itemSizeLarge)
+                    onVisibleChanged: chat.sendAction(visible ? Chat.ChoosingSticker : Chat.None)
+
                     onStickerFileIdChanged: {
                         chat.sendSticker(stickerFileId, chatPage.newReplyMessageId)
                         stickerPicker.visible = false
@@ -928,10 +996,12 @@ Page {
                     placeholderText: qsTr("Type the text...")
                     color: Theme.primaryColor
                     focusOutBehavior: FocusBehavior.KeepFocus
-                    height: if (!visible) 0
+                    height: visible ? Math.min(implicitHeight, Theme.itemSizeExtraLarge) : 0
                     visible: !(stickerPicker.visible || animationPicker.visible)
-                    onFocusChanged:
+                    onFocusChanged: {
+                        if (!focus) chat.setDraftMessage(textInput.text, chatPage.newReplyMessageId)
                         messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.startMessage)), ListView.SnapPosition)
+                    }
                     EnterKey.onClicked: {
                         if (!settings.sendButton) {
                             textInput.text = textInput.text.slice(0,textInput.cursorPosition-1) + textInput.text.slice(textInput.cursorPosition,textInput.text.length)
@@ -939,9 +1009,11 @@ Page {
                         }
                     }
 
+                    onTextChanged: chat.sendAction(text.length > 0 ? Chat.Typing : Chat.None)
+
                     function sendMessage() {
-                        if(textInput.text.length !== 0) {
-                            if (chatPage.newEditMessageId !== 0) {
+                        if(textInput.text.length != 0) {
+                            if (chatPage.newEditMessageId != 0) {
                                 chat.editMessageText(chatPage.newEditMessageId, textInput.text)
                                 chatPage.newEditMessageId = 0
                             } else {
@@ -953,7 +1025,7 @@ Page {
                             textInput.focus = true
                         }
 
-                        if (chatList.selection.length !== 0) {
+                        if (chatList.selection.length != 0) {
                             chat.sendForwardedMessages(chatList.selection, chatList.forwardedFrom)
                             chatList.selection = []
                             chatList.forwardedFrom = 0
@@ -1199,13 +1271,6 @@ Page {
         SilicaFlickable {
             anchors.fill: parent
 
-            PullDownMenu {
-                MenuItem {
-                    text: qsTr("Save to gallery")
-                    onClicked: chat.saveToGallery(bigPhoto.path)
-                }
-            }
-
             Image {
                 anchors.fill: parent
                 source: bigPhoto.path
@@ -1222,13 +1287,6 @@ Page {
 
         SilicaFlickable {
             anchors.fill: parent
-
-            PullDownMenu {
-                MenuItem {
-                    text: qsTr("Save to gallery")
-                    onClicked: chat.saveToGallery(bigVideo.path)
-                }
-            }
 
             Video {
                 id: video

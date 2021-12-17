@@ -24,19 +24,14 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <abstractvoicecallhandler.h>
 
 class YottagramVoiceCallProvider;
-class QYottagramVoiceCallManager;
+class VoiceCallManagerInterface;
 
 class YottagramVoiceCallHandler : public AbstractVoiceCallHandler
 {
     Q_OBJECT
-
-    Q_PROPERTY(QString path READ path)
-
 public:
-    explicit YottagramVoiceCallHandler(const QString &handlerId, const QString &path, YottagramVoiceCallProvider *provider, QYottagramVoiceCallManager *manager);
+    explicit YottagramVoiceCallHandler(const QString &handlerId, YottagramVoiceCallProvider *provider, VoiceCallManagerInterface *manager);
             ~YottagramVoiceCallHandler();
-
-    QString path() const;
 
     AbstractVoiceCallProvider* provider() const;
 
@@ -55,9 +50,6 @@ public:
     QList<AbstractVoiceCallHandler*> childCalls() const { return QList<AbstractVoiceCallHandler*>(); }
 
     VoiceCallStatus status() const;
-
-Q_SIGNALS:
-    void validChanged(bool valid);
 
 public Q_SLOTS:
     void answer();

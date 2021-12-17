@@ -31,6 +31,7 @@ Page {
 
     allowedOrientations: Orientation.All
     property int activeChatList: 0
+    property var shareConfiguration: null
 
     DBusAdaptor {
         id: shareDBusInterface
@@ -38,21 +39,24 @@ Page {
         path: "/"
         iface: "com.verdanditeam.yottagram"
         xml: '<interface name="com.verdanditeam.yottagram">
-                  <method name="share"> <arg type="s" name="title" direction="in"/> <arg type="s" name="description" direction="in" /> </method>
+                  <method name="share"> <arg type="a" name="configuration" direction="in"/> </method>
                   <method name="openChat"> <arg type="x" name="chatId" direction="in" /> </method>
                   <method name="openApp" />
                   <method name="ping"> <arg name="id" direction="out" type="b"> </method>
               </interface>'
 
-        function share(args) {
-            console.log(args.title, args.description);
+        function share(configuration) {
+            console.log(JSON.stringify(configuration));
+            page.shareConfiguration = configuration
+            pageStack.pop(page, PageStackAction.Immediate)
+            app.activate()
         }
 
         function openChat(chatId) {
             app.activate()
             var chat = chatList.openChat(chatId)
             if (typeof chat === "undefined" || !chat) return;
-            if (pageStack.nextPage(page) !== null) pageStack.pop(pageStack.nextPage(page), PageStackAction.Immediate)
+            pageStack.pop(page, PageStackAction.Immediate)
             pageStack.push(Qt.resolvedUrl("Chat.qml"), { chat: chat })
         }
 
@@ -358,7 +362,7 @@ Page {
                             fillMode: Image.PreserveAspectFit
                             source: Qt.resolvedUrl("qrc:/icons/icon-s-pinned.png")
                             opacity: 0.3
-                            visible: unreadCount === 0 && isPinned
+                            visible: unreadCount == 0 && isPinned
                         }
 
                         Label {
@@ -388,7 +392,10 @@ Page {
 
                 onClicked: {
                     var chat = chatList.getChatAsVariant(id)
-                    pageStack.push(Qt.resolvedUrl("Chat.qml"), { chat: chat })
+                    var configuration = page.shareConfiguration
+                    configuration = configuration
+                    page.shareConfiguration = null
+                    pageStack.push(Qt.resolvedUrl("Chat.qml"), { chat: chat, shareConfiguration: configuration })
                 }
             }
         }

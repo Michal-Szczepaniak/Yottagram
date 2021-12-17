@@ -50,7 +50,8 @@ public:
 
 public slots:
     void updateUser(td_api::updateUser *updateUser);
-    void onUpdateUserFullInfo(td_api::updateUserFullInfo* updateUserFullInfo);
+    void updateUserFullInfo(td_api::updateUserFullInfo* updateUserFullInfo);
+    void updateUserStatus(td_api::updateUserStatus* updateUserStatus);
 
 private:
     QHash<int64_t, std::shared_ptr<User>> _users;

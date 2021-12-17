@@ -119,6 +119,7 @@ void StickerSets::onGotStickerSet(td_api::stickerSet *stickerSet)
     _stickerSets[stickerSet->id_]->setStickerSet(stickerSet);
 
     emit dataChanged(createIndex(_stickerSetIds.indexOf(stickerSet->id_), 0), createIndex(_stickerSetIds.indexOf(stickerSet->id_), 0));
+    emit gotStickerSet(stickerSet->id_);
 }
 
 void StickerSets::onIsAuthorizedChanged(bool isAuthorized)

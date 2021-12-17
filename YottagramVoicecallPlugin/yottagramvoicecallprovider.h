@@ -23,12 +23,13 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 #include <abstractvoicecallprovider.h>
 #include <voicecallmanagerinterface.h>
+#include "calls_adaptor.h"
 
 class YottagramVoiceCallProvider : public AbstractVoiceCallProvider
 {
     Q_OBJECT
 public:
-    explicit YottagramVoiceCallProvider(const QString &path, VoiceCallManagerInterface *manager, QObject *parent = 0);
+    explicit YottagramVoiceCallProvider(VoiceCallManagerInterface *manager, QObject *parent = 0);
             ~YottagramVoiceCallProvider();
 
     QString providerId() const;
@@ -38,6 +39,7 @@ public:
 
 public Q_SLOTS:
     bool dial(const QString &msisdn);
+    void newCall(const QString &callerName, const bool &incoming);
 
 private:
     class YottagramVoiceCallProviderPrivate *d_ptr;

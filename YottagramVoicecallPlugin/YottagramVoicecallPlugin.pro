@@ -17,4 +17,6 @@ SOURCES += \
     yottagramvoicecallprovider.cpp \
     yottagramvoicecallproviderfactory.cpp
 
+DBUS_ADAPTORS += ../Yottagram/com.verdanditeam.yottagram.calls.xml
+
 DEFINES += PLUGIN_NAME=\\\"yottagram-voicecall-plugin\\\"

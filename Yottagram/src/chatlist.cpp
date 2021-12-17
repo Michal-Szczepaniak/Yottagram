@@ -64,6 +64,7 @@ void ChatList::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), &TelegramManager::updateUnreadMessageCount, this, &ChatList::updateUnreadMessageCount);
     connect(_manager.get(), &TelegramManager::updateChatUnreadMentionCount, this, &ChatList::updateChatUnreadMentionCount);
     connect(_manager.get(), &TelegramManager::updateMessageMentionRead, this, &ChatList::updateMessageMentionRead);
+    connect(_manager.get(), &TelegramManager::updateChatDraftMessage, this, &ChatList::updateChatDraftMessage);
     connect(_manager.get(), &TelegramManager::gotChats, this, &ChatList::onGotChats);
 }
 
@@ -647,4 +648,13 @@ void ChatList::updateMessageMentionRead(td_api::updateMessageMentionRead *update
 {
     getChat(updateMessageMentionRead->chat_id_)->updateMessageMentionRead(updateMessageMentionRead->unread_mention_count_, updateMessageMentionRead->message_id_);
     updateChat(updateMessageMentionRead->chat_id_, {UnreadMentionCountRole});
+}
+
+void ChatList::updateChatDraftMessage(td_api::updateChatDraftMessage *updateChatDraftMessage)
+{
+    for (td_api::object_ptr<td_api::chatPosition> &position: updateChatDraftMessage->positions_) {
+        setChatPosition(updateChatDraftMessage->chat_id_, position.release());
+    }
+
+    _chats[updateChatDraftMessage->chat_id_]->setDraftMessage(move(updateChatDraftMessage->draft_message_));
 }

@@ -21,23 +21,23 @@ Column {
         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
 
         function getName() {
-            if (forwardUserId !== 0) return users.getUserAsVariant(forwardUserId).name
-            if (forwardChatId !== 0) return chatList.getChatAsVariant(forwardChatId).title
+            if (forwardUserId != 0) return users.getUserAsVariant(forwardUserId).name
+            if (forwardChatId != 0) return chatList.getChatAsVariant(forwardChatId).title
             if (forwardUsername !== "") return forwardUsername;
-            if (forwardChannelId !== 0) return chatList.getChatAsVariant(forwardChannelId).title
+            if (forwardChannelId != 0) return chatList.getChatAsVariant(forwardChannelId).title
         }
     }
 
     Loader {
         id: replyLoader
         asynchronous: true
-        height: (replyMessageId !== 0) ? Theme.itemSizeSmall : 0
+        height: (replyMessageId != 0) ? Theme.itemSizeSmall : 0
         anchors.right: if (!received) parent.right
         anchors.left: if (received) parent.left
-        sourceComponent: if (replyMessageId !== 0) replyComponent
-        active: replyMessageId !== 0 && typeof chat.getMessage(replyMessageId) !== "undefined"
+        sourceComponent: if (replyMessageId != 0) replyComponent
+        active: replyMessageId != 0 && typeof chat.getMessage(replyMessageId) !== "undefined"
         Component.onCompleted: {
-            if (replyMessageId !== 0 && typeof chat.getMessage(replyMessageId) === "undefined") chat.fetchMessage(replyMessageId)
+            if (replyMessageId != 0 && typeof chat.getMessage(replyMessageId) === "undefined") chat.fetchMessage(replyMessageId)
         }
 
         Connections {
@@ -56,7 +56,7 @@ Column {
         Row {
             id: replyMessage
             width: Math.max(textField.width, Theme.itemSizeHuge, contentLoader.width)
-            visible: replyMessageId !== 0
+            visible: replyMessageId != 0
 
             Rectangle {
                 width: 3
@@ -117,12 +117,12 @@ Column {
         width: {
             switch(messageType) {
             case "photo":
-                if (file.biggestPhotoSize.width === 0) return Theme.itemSizeHuge*2
+                if (file.biggestPhotoSize.width == 0) return Theme.itemSizeHuge*2
                 return Math.min(Theme.itemSizeHuge*2, file.biggestPhotoSize.width)
             case "sticker":
                 return Theme.itemSizeHuge*1.5
             case "video":
-                if (file.size.width === 0) return Theme.itemSizeHuge*2
+                if (file.size.width == 0) return Theme.itemSizeHuge*2
                 return Math.min(Theme.itemSizeHuge*2, file.size.width)
             case "animation":
                 return chatPage.width/2.5
@@ -135,6 +135,7 @@ Column {
             case "document":
                 return Theme.itemSizeMedium + Theme.itemSizeHuge*2
             case "location":
+            case "venue":
                 return parseInt(chatPage.width/2.2)
             case "contact":
                 return chatPage.width/2.5
@@ -143,12 +144,12 @@ Column {
         height: {
             switch(messageType) {
             case "photo":
-                if (file.biggestPhotoSize.height === 0) return Theme.itemSizeHuge*2
+                if (file.biggestPhotoSize.height == 0) return Theme.itemSizeHuge*2
                 return width * file.biggestPhotoSize.height/file.biggestPhotoSize.width;
             case "sticker":
                 return Theme.itemSizeHuge*1.5
             case "video":
-                if (file.size.height === 0) return Theme.itemSizeHuge*2
+                if (file.size.height == 0) return Theme.itemSizeHuge*2
                 return width * file.size.height/file.size.width;
             case "animation":
                 return (file.size.width > 0 && file.size.height > 0) ? (width * (file.size.height/file.size.width)) : Theme.itemSizeLarge
@@ -161,6 +162,7 @@ Column {
             case "document":
                 return Theme.itemSizeMedium
             case "location":
+            case "venue":
                 return chatPage.width/3
             case "contact":
                 return Theme.itemSizeSmall
@@ -201,6 +203,8 @@ Column {
                 return documentComponent;
             case "location":
                 return locationComponent;
+            case "venue":
+                return venueComponent;
             case "contact":
                 return contactComponent;
             case "animatedEmoji":
@@ -284,6 +288,12 @@ Column {
     }
 
     Component {
+        id: venueComponent
+
+        VenueContent { }
+    }
+
+    Component {
         id: contactComponent
 
         ContactContent { }
@@ -317,6 +327,7 @@ Column {
         anchors.left: if (received) parent.left
         color: Theme.primaryColor
         linkColor: Theme.highlightColor
+        onLinkActivated: Qt.openUrlExternally(link)
         visible: messageText !== "" && !serviceMessage.visible
         horizontalAlignment: received ? Text.AlignLeft : Text.AlignRight
 

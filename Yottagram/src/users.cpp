@@ -35,8 +35,9 @@ void Users::setTelegramManager(shared_ptr<TelegramManager> manager)
 {
     _manager = manager;
 
-    connect(_manager.get(), SIGNAL(updateUser(td_api::updateUser*)), this, SLOT(updateUser(td_api::updateUser*)));
-    connect(_manager.get(), SIGNAL(updateUserFullInfo(td_api::updateUserFullInfo*)), this, SLOT(onUpdateUserFullInfo(td_api::updateUserFullInfo*)));
+    connect(_manager.get(), &TelegramManager::updateUser, this, &Users::updateUser);
+    connect(_manager.get(), &TelegramManager::updateUserFullInfo, this, &Users::updateUserFullInfo);
+    connect(_manager.get(), &TelegramManager::updateUserStatus, this, &Users::updateUserStatus);
 }
 
 void Users::setFiles(shared_ptr<Files> files)
@@ -109,11 +110,20 @@ void Users::updateUser(td_api::updateUser *updateUser)
     }
 }
 
-void Users::onUpdateUserFullInfo(td_api::updateUserFullInfo *updateUserFullInfo)
+void Users::updateUserFullInfo(td_api::updateUserFullInfo *updateUserFullInfo)
 {
     auto userId = updateUserFullInfo->user_id_;
 
     if (false == _users.contains(userId)) return;
 
     _users[userId]->setUserFullInfo(std::move(updateUserFullInfo->user_full_info_));
+}
+
+void Users::updateUserStatus(td_api::updateUserStatus *updateUserStatus)
+{
+    auto userId = updateUserStatus->user_id_;
+
+    if (false == _users.contains(userId)) return;
+
+    _users[userId]->setUserStatus(std::move(updateUserStatus->status_));
 }

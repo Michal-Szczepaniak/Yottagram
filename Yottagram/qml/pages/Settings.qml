@@ -275,6 +275,12 @@ Page {
                 text: qsTr("Call settings")
                 onClicked: pageStack.push(Qt.resolvedUrl("../components/CallSettings.qml"))
             }
+
+            SubpageElement {
+                width: parent.width
+                text: qsTr("Proxy settings")
+                onClicked: pageStack.push(Qt.resolvedUrl("../components/ProxySettings.qml"))
+            }
         }
         VerticalScrollDecorator {}
     }

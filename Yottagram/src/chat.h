@@ -80,6 +80,9 @@ class Chat : public QAbstractListModel
     Q_PROPERTY(bool canInviteUsers READ getCanInviteUsers NOTIFY permissionsChanged)
     Q_PROPERTY(bool canPinMessages READ getCanPinMessages NOTIFY permissionsChanged)
     Q_PROPERTY(QVector<int32_t> foundChatMembers READ getFoundChatMembers NOTIFY foundChatMembersChanged)
+    Q_PROPERTY(QString draftMessage READ draftMessage NOTIFY draftMessageChanged)
+    Q_PROPERTY(int64_t draftMessageReplyId READ draftMessageReplyId NOTIFY draftMessageChanged)
+    Q_PROPERTY(QString actionText READ actionText NOTIFY actionTextChanged)
 public:
     enum MessageRoles {
         TypeRole = Qt::UserRole + 1,
@@ -118,6 +121,26 @@ public:
         ContactRole
     };
 
+    enum ChatAction {
+        None,
+        Typing,
+        RecordingVideo,
+        UploadingVideo,
+        RecordingVoiceNote,
+        UploadingVoiceNote,
+        UploadingPhoto,
+        UploadingDocument,
+        ChoosingSticker,
+        ChoosingLocation,
+        ChoosingContact,
+        StartPlayingGame,
+        RecordingVideoNote,
+        UploadingVideoNote,
+        WatchingAnimations,
+    };
+    Q_ENUMS(ChatAction)
+
+    Chat();
     Chat(td_api::chat* chat, shared_ptr<Files> files);
     ~Chat();
 
@@ -171,6 +194,11 @@ public:
     bool getCanPinMessages() const;
     QVector<int32_t> getFoundChatMembers() const;
     void updatePosition(td_api::chatPosition* position);
+    QString draftMessage() const;
+    int64_t draftMessageReplyId() const;
+    Q_INVOKABLE void setDraftMessage(QString message, int64_t replyMessageId);
+    void setDraftMessage(td_api::object_ptr<td_api::draftMessage> draftMessage);
+    QString actionText();
 
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setUsers(shared_ptr<Users> users);
@@ -256,6 +284,8 @@ signals:
     void foundChatMembersChanged();
     void unreadMentionCountChanged(int32_t unreadMentionCount);
     void gotChatHistory();
+    void draftMessageChanged();
+    void actionTextChanged();
 
 public slots:
     void updateChatReadInbox(td_api::updateChatReadInbox *updateChatReadInbox);
@@ -272,6 +302,7 @@ public slots:
     void onGotMessage(td_api::message *message);
     void updateChatPermissions(td_api::updateChatPermissions *updateChatPermissions);
     void updateChatMessageTtlSetting(td_api::updateChatMessageTtlSetting *updateChatMessageTtlSetting);
+    void updateUserChatAction(td_api::updateUserChatAction *updateUserChatAction);
 
     void onGotChatHistory(int64_t chatId, td_api::messages *messages);
 
@@ -286,7 +317,7 @@ private:
     bool _isOpen = false;
     td_api::chat *_chat;
     QVector<int64_t> _message_ids;
-    QMap<int64_t, Message*> _messages;
+    QHash<int64_t, Message*> _messages;
     shared_ptr<TelegramManager> _manager;
     shared_ptr<Users> _users;
     shared_ptr<Files> _files;
@@ -300,7 +331,8 @@ private:
     QVector<int32_t> _foundChatMembers;
     td_api::chatPosition* _mainPosition;
     td_api::chatPosition* _archivePosition;
-    QMap<int32_t, td_api::chatPosition*> _filterPositions;
+    QHash<int32_t, td_api::chatPosition*> _filterPositions;
+    QHash<int64_t, ChatAction> _chatActions;
 };
 Q_DECLARE_METATYPE(Chat*)
 

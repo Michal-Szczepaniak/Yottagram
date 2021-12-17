@@ -40,6 +40,7 @@ Core::Core(QObject *parent) : QObject(parent)
     qmlRegisterType<AudioRecorder>("com.verdanditeam.audiorecorder", 1, 0, "AudioRecorder");
     qmlRegisterType<PinnedMessages>("com.verdanditeam.pinnedmessages", 1, 0, "PinnedMessages");
     qmlRegisterType<Calls>("com.verdanditeam.calls", 1, 0, "Calls");
+    qmlRegisterType<Chat>("com.verdanditeam.chat", 1, 0, "Chat");
 
     _files->setTelegramManager(_manager);
     _files->setWifiAutoDownloadSettings(&_wifiAutoDownloadSettings);

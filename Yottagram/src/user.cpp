@@ -54,6 +54,7 @@ void User::setUser(td_api::user *user)
     _user = user;
 
     emit userChanged();
+    emit userStatusChanged();
 
     if (hasPhoto()) {
         _smallPhotoId = _user->profile_photo_->small_->id_;
@@ -66,6 +67,16 @@ void User::setUser(td_api::user *user)
         emit bigPhotoChanged();
     }
     emit hasPhotoChanged(hasPhoto());
+}
+
+QString User::getFirstName() const
+{
+    return QString::fromStdString(_user->first_name_);
+}
+
+QString User::getLastName() const
+{
+    return QString::fromStdString(_user->last_name_);
 }
 
 QString User::getName() const
@@ -202,4 +213,11 @@ void User::setUserFullInfo(td_api::object_ptr<td_api::userFullInfo> userFullInfo
     _userFullInfo->setUserFullInfo(std::move(userFullInfo));
 
     emit userFullInfoChanged();
+}
+
+void User::setUserStatus(td_api::object_ptr<td_api::UserStatus> userStatus)
+{
+    _user->status_ = move(userStatus);
+
+    emit userStatusChanged();
 }

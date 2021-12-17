@@ -36,8 +36,8 @@ class User : public QObject
     Q_PROPERTY(QString name READ getName NOTIFY userChanged)
     Q_PROPERTY(QString username READ getUserame NOTIFY userChanged)
     Q_PROPERTY(QString phoneNumber READ getPhoneNumber NOTIFY userChanged)
-    Q_PROPERTY(Status status READ getStatus NOTIFY userChanged)
-    Q_PROPERTY(QString statusText READ getStatusText NOTIFY userChanged)
+    Q_PROPERTY(Status status READ getStatus NOTIFY userStatusChanged)
+    Q_PROPERTY(QString statusText READ getStatusText NOTIFY userStatusChanged)
     Q_PROPERTY(bool isContact READ isContact NOTIFY userChanged)
     Q_PROPERTY(bool isMutualContact READ isMutualContact NOTIFY userChanged)
     Q_PROPERTY(bool isVerified READ isVerified NOTIFY userChanged)
@@ -76,6 +76,8 @@ public:
     td_api::user *user() const;
     void setUser(td_api::user *user);
 
+    QString getFirstName() const;
+    QString getLastName() const;
     QString getName() const;
     QString getUserame() const;
     QString getPhoneNumber() const;
@@ -94,6 +96,7 @@ public:
     File* getBigPhoto() const;
     UserFullInfo* getUserFullInfo() const;
     void setUserFullInfo(td_api::object_ptr<td_api::userFullInfo> UserFullInfo);
+    void setUserStatus(td_api::object_ptr<td_api::UserStatus> userStatus);
 
 signals:
     void fileUpdated(int32_t fileId);
@@ -102,6 +105,7 @@ signals:
     void smallPhotoChanged();
     void bigPhotoChanged();
     void userFullInfoChanged();
+    void userStatusChanged();
 
 public slots:
 

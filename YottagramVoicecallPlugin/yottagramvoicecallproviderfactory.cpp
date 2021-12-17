@@ -41,7 +41,7 @@ public:
 
     VoiceCallManagerInterface *manager;
 
-    QHash<QString, YottagramVoiceCallProvider*> providers;
+    YottagramVoiceCallProvider* provider;
 };
 
 YottagramVoiceCallProviderFactory::YottagramVoiceCallProviderFactory(QObject *parent)
@@ -81,6 +81,9 @@ bool YottagramVoiceCallProviderFactory::configure(VoiceCallManagerInterface *man
     }
 
     d->manager = manager;
+    d->provider = new YottagramVoiceCallProvider(d->manager, this);
+
+    d->manager->appendProvider(d->provider);
 
     d->isConfigured = true;
 

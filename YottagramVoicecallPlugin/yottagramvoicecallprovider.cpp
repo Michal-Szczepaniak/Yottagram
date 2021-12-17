@@ -28,17 +28,14 @@ class YottagramVoiceCallProviderPrivate
 
 public:
     YottagramVoiceCallProviderPrivate(YottagramVoiceCallProvider *q, VoiceCallManagerInterface *pManager)
-        : q_ptr(q), manager(pManager)
+        : q_ptr(q), manager(pManager), voiceCall(nullptr)
     { }
 
     YottagramVoiceCallProvider *q_ptr;
 
     VoiceCallManagerInterface *manager;
 
-    QString modemPath;
-
-    QHash<QString,YottagramVoiceCallHandler*> voiceCalls;
-    QHash<QString,YottagramVoiceCallHandler*> invalidVoiceCalls;
+    YottagramVoiceCallHandler* voiceCall;
 
     QString errorString;
     void setError(const QString &errorString)
@@ -53,12 +50,13 @@ public:
     }
 };
 
-YottagramVoiceCallProvider::YottagramVoiceCallProvider(const QString &path, VoiceCallManagerInterface *manager, QObject *parent)
+YottagramVoiceCallProvider::YottagramVoiceCallProvider(VoiceCallManagerInterface *manager, QObject *parent)
     : AbstractVoiceCallProvider(parent), d_ptr(new YottagramVoiceCallProviderPrivate(this, manager))
 {
     TRACE
     Q_D(YottagramVoiceCallProvider);
-    d->modemPath = path;
+
+    new CallsAdaptor(this);
 }
 
 YottagramVoiceCallProvider::~YottagramVoiceCallProvider()
@@ -72,13 +70,13 @@ QString YottagramVoiceCallProvider::providerId() const
 {
     TRACE
     Q_D(const YottagramVoiceCallProvider);
-    return QString("yottagram-") + d->modemPath;
+    return QString("yottagram");
 }
 
 QString YottagramVoiceCallProvider::providerType() const
 {
     TRACE
-    return "cellular";
+    return "voip";
 }
 
 QList<AbstractVoiceCallHandler*> YottagramVoiceCallProvider::voiceCalls() const
@@ -86,12 +84,7 @@ QList<AbstractVoiceCallHandler*> YottagramVoiceCallProvider::voiceCalls() const
     TRACE
     Q_D(const YottagramVoiceCallProvider);
     QList<AbstractVoiceCallHandler*> results;
-
-    foreach(AbstractVoiceCallHandler* handler, d->voiceCalls.values())
-    {
-        results.append(handler);
-    }
-
+    if (d->voiceCall != nullptr) results.append(d->voiceCall);
     return results;
 }
 
@@ -102,8 +95,18 @@ QString YottagramVoiceCallProvider::errorString() const
     return d->errorString;
 }
 
-bool YottagramVoiceCallProvider::dial(const QString &msisdn)
+bool YottagramVoiceCallProvider::dial(const QString &)
 {
     TRACE
     return false;
+}
+
+void YottagramVoiceCallProvider::newCall(const QString &callerName, const bool &incoming)
+{
+    TRACE
+    Q_D(YottagramVoiceCallProvider);
+
+    YottagramVoiceCallHandler* handler = new YottagramVoiceCallHandler(d->manager->generateHandlerId(), this, d->manager);
+    emit voiceCallAdded(handler);
+    emit voiceCallsChanged();
 }

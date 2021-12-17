@@ -331,10 +331,6 @@
         <translation>按下并握住录音按钮以录制语音消息。</translation>
     </message>
     <message>
-        <source>Save to gallery</source>
-        <translation>保存到图库</translation>
-    </message>
-    <message>
         <source>Notify members</source>
         <translation>通知成员</translation>
     </message>
@@ -364,6 +360,78 @@
     </message>
     <message>
         <source>Call</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Swipe from bottom to access upload options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 online</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Many people are typing...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 and %2 are typing...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 is typing...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 is recording video</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 is uploading video</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 is recording voicenote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 is uploading voicenote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 is uploading photo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 is uploading document</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 is choosing sticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 is choosing location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 is choosing contact</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 is playing game</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 is recording videonote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 is uploading videonote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 is watching animations</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -773,6 +841,53 @@
     </message>
 </context>
 <context>
+    <name>ProxySettings</name>
+    <message>
+        <source>Add server</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disable proxy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Proxy settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Test</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation type="unfinished">删除</translation>
+    </message>
+    <message>
+        <source>Server settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Server</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Port</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Username</source>
+        <translation type="unfinished">用户名</translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation type="unfinished">密码</translation>
+    </message>
+</context>
+<context>
     <name>ScopeNotificationSettings</name>
     <message>
         <source>Notification settings</source>
@@ -890,6 +1005,10 @@
     </message>
     <message>
         <source>Call settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Proxy settings</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

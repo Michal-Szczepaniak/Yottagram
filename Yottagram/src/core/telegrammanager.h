@@ -95,6 +95,9 @@ signals:
     void updateCall(td_api::updateCall *updateCall);
     void updateChatMessageTtlSetting(td_api::updateChatMessageTtlSetting *updateChatMessageTtlSetting);
     void updateChatFilters(td_api::updateChatFilters *updateChatFilters);
+    void updateChatDraftMessage(td_api::updateChatDraftMessage *updateChatDraftMessage);
+    void updateUserChatAction(td_api::updateUserChatAction *updateUserChatAction);
+    void updateUserStatus(td_api::updateUserStatus *updateUserStatus);
 
 // Responses
     void gotChatHistory(int64_t chatId, td_api::messages *messages);

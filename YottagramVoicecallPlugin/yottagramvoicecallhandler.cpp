@@ -30,13 +30,14 @@ class YottagramVoiceCallHandlerPrivate
     Q_DECLARE_PUBLIC(YottagramVoiceCallHandler)
 
 public:
-    YottagramVoiceCallHandlerPrivate(YottagramVoiceCallHandler *q, const QString &pHandlerId, YottagramVoiceCallProvider *pProvider, QYottagramVoiceCallManager *manager)
-        : q_ptr(q), handlerId(pHandlerId), provider(pProvider), duration(0), durationTimerId(-1), isIncoming(false)
+    YottagramVoiceCallHandlerPrivate(YottagramVoiceCallHandler *q, const QString &pHandlerId, YottagramVoiceCallProvider *pProvider, VoiceCallManagerInterface *manager)
+        : q_ptr(q), handlerId(pHandlerId), provider(pProvider), manager(manager), duration(0), durationTimerId(-1), isIncoming(false)
     { /* ... */ }
 
     YottagramVoiceCallHandler *q_ptr;
 
     QString handlerId;
+    VoiceCallManagerInterface *manager;
 
     YottagramVoiceCallProvider *provider;
 
@@ -46,7 +47,7 @@ public:
     bool isIncoming;
 };
 
-YottagramVoiceCallHandler::YottagramVoiceCallHandler(const QString &handlerId, const QString &path, YottagramVoiceCallProvider *provider, QYottagramVoiceCallManager *manager)
+YottagramVoiceCallHandler::YottagramVoiceCallHandler(const QString &handlerId, YottagramVoiceCallProvider *provider, VoiceCallManagerInterface *manager)
     : AbstractVoiceCallHandler(provider), d_ptr(new YottagramVoiceCallHandlerPrivate(this, handlerId, provider, manager))
 {
     TRACE
@@ -58,14 +59,6 @@ YottagramVoiceCallHandler::~YottagramVoiceCallHandler()
     TRACE
     Q_D(const YottagramVoiceCallHandler);
     delete d;
-}
-
-QString YottagramVoiceCallHandler::path() const
-{
-    TRACE
-    Q_D(const YottagramVoiceCallHandler);
-//    return d->yottagramVoiceCall->voiceCallPath();
-    return "";
 }
 
 AbstractVoiceCallProvider* YottagramVoiceCallHandler::provider() const

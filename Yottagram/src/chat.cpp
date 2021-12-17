@@ -27,6 +27,18 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "overloaded.h"
 #include <contents/animatedemoji.h>
 
+Chat::Chat() :
+    _smallPhotoId(0),
+    _bigPhotoId(0),
+    _chat(nullptr),
+    _files(nullptr),
+    _notificationSettings(nullptr),
+    _scopeNotificationSettings(nullptr),
+    _mainPosition(nullptr),
+    _archivePosition(nullptr)
+{
+}
+
 Chat::Chat(td_api::chat* chat, shared_ptr<Files> files) :
     _smallPhotoId(0),
     _bigPhotoId(0),
@@ -499,6 +511,104 @@ void Chat::updatePosition(td_api::chatPosition *position)
     else (*listPosition) = position;
 }
 
+QString Chat::draftMessage() const
+{
+    if (!_chat->draft_message_) return "";
+
+    return QString::fromStdString(static_cast<td_api::inputMessageText*>(_chat->draft_message_->input_message_text_.get())->text_->text_);
+}
+
+int64_t Chat::draftMessageReplyId() const
+{
+    if (!_chat->draft_message_) return 0;
+
+    return _chat->draft_message_->reply_to_message_id_;
+}
+
+void Chat::setDraftMessage(QString message, int64_t replyMessageId)
+{
+    td_api::object_ptr<td_api::draftMessage> newMessage = td_api::make_object<td_api::draftMessage>();
+    auto messageContent = td_api::make_object<td_api::inputMessageText>();
+    messageContent->text_ = td_api::make_object<td_api::formattedText>();
+    messageContent->text_->text_ = message.toStdString();
+    messageContent->disable_web_page_preview_ = false;
+    newMessage->input_message_text_ = move(messageContent);
+    newMessage->reply_to_message_id_ = replyMessageId;
+
+    _manager->sendQuery(new td_api::setChatDraftMessage(getId(), 0, move(newMessage)));
+}
+
+void Chat::setDraftMessage(td_api::object_ptr<td_api::draftMessage> draftMessage)
+{
+    _chat->draft_message_ = move(draftMessage);
+    emit draftMessageChanged();
+}
+
+QString Chat::actionText()
+{
+    if (_chatActions.empty()) return "";
+    int typingCount = count(_chatActions.begin(), _chatActions.end(), ChatAction::Typing);
+
+    if (typingCount > 2) {
+        return tr("Many people are typing...");
+    } else if (typingCount > 1) {
+        QPair<int64_t, int64_t> users = {0,0};
+        for (QHash<int64_t, ChatAction>::iterator it; it != _chatActions.end(); ++it) {
+            if (it.value() == ChatAction::Typing)
+                if (users.first == 0) users.first = it.key();
+                else users.second = it.key();
+        }
+        return tr("%1 and %2 are typing...").arg(_users->getUser(users.first)->getFirstName()).arg(_users->getUser(users.second)->getFirstName());
+    } else if (typingCount == 1) {
+        int64_t userId = find(_chatActions.begin(), _chatActions.end(), ChatAction::Typing).key();
+        return tr("%1 is typing...").arg(_users->getUser(userId)->getFirstName());
+    }
+
+    ChatAction action = _chatActions.begin().value();
+    QString userFirstName = _users->getUser(_chatActions.begin().key())->getFirstName();
+    switch (action) {
+    case ChatAction::RecordingVideo:
+        return tr("%1 is recording video").arg(userFirstName);
+        break;
+    case ChatAction::UploadingVideo:
+        return tr("%1 is uploading video").arg(userFirstName);
+        break;
+    case ChatAction::RecordingVoiceNote:
+        return tr("%1 is recording voicenote").arg(userFirstName);
+        break;
+    case ChatAction::UploadingVoiceNote:
+        return tr("%1 is uploading voicenote").arg(userFirstName);
+        break;
+    case ChatAction::UploadingPhoto:
+        return tr("%1 is uploading photo").arg(userFirstName);
+        break;
+    case ChatAction::UploadingDocument:
+        return tr("%1 is uploading document").arg(userFirstName);
+        break;
+    case ChatAction::ChoosingSticker:
+        return tr("%1 is choosing sticker").arg(userFirstName);
+        break;
+    case ChatAction::ChoosingLocation:
+        return tr("%1 is choosing location").arg(userFirstName);
+        break;
+    case ChatAction::ChoosingContact:
+        return tr("%1 is choosing contact").arg(userFirstName);
+        break;
+    case ChatAction::StartPlayingGame:
+        return tr("%1 is playing game").arg(userFirstName);
+        break;
+    case ChatAction::RecordingVideoNote:
+        return tr("%1 is recording videonote").arg(userFirstName);
+        break;
+    case ChatAction::UploadingVideoNote:
+        return tr("%1 is uploading videonote").arg(userFirstName);
+        break;
+    case ChatAction::WatchingAnimations:
+        return tr("%1 is watching animations").arg(userFirstName);
+        break;
+    }
+}
+
 void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
 {
     _manager = manager;
@@ -515,6 +625,7 @@ void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), &TelegramManager::updateChatPermissions, this, &Chat::updateChatPermissions);
     connect(_manager.get(), &TelegramManager::gotChatHistory, this, &Chat::onGotChatHistory);
     connect(_manager.get(), &TelegramManager::updateChatMessageTtlSetting, this, &Chat::updateChatMessageTtlSetting);
+    connect(_manager.get(), &TelegramManager::updateUserChatAction, this, &Chat::updateUserChatAction);
 }
 
 void Chat::setUsers(shared_ptr<Users> users)
@@ -1474,6 +1585,39 @@ void Chat::updateChatMessageTtlSetting(td_api::updateChatMessageTtlSetting *upda
     if (updateChatMessageTtlSetting->chat_id_ != getId()) return;
     _chat->message_ttl_setting_ = updateChatMessageTtlSetting->message_ttl_setting_;
     emit ttlChanged(_chat->message_ttl_setting_);
+}
+
+void Chat::updateUserChatAction(td_api::updateUserChatAction *updateUserChatAction)
+{
+    if (updateUserChatAction->chat_id_ != getId()) return;
+
+    if (updateUserChatAction->action_->get_id() == td_api::chatActionCancel::ID && _chatActions.contains(updateUserChatAction->user_id_)) {
+        _chatActions.remove(updateUserChatAction->user_id_);
+    }
+
+    ChatAction action;
+    downcast_call(
+        *updateUserChatAction->action_, overloaded(
+            [&](td_api::chatActionTyping&) { action = Typing; },
+            [&](td_api::chatActionRecordingVideo&) { action = RecordingVideo; },
+            [&](td_api::chatActionUploadingVideo&) { action = UploadingVideo; },
+            [&](td_api::chatActionRecordingVoiceNote&) { action = RecordingVoiceNote; },
+            [&](td_api::chatActionUploadingVoiceNote&) { action = UploadingVoiceNote; },
+            [&](td_api::chatActionUploadingPhoto&) { action = UploadingPhoto; },
+            [&](td_api::chatActionUploadingDocument&) { action = UploadingDocument; },
+            [&](td_api::chatActionChoosingSticker&) { action = ChoosingSticker; },
+            [&](td_api::chatActionChoosingLocation&) { action = ChoosingLocation; },
+            [&](td_api::chatActionChoosingContact&) { action = ChoosingContact; },
+            [&](td_api::chatActionStartPlayingGame&) { action = StartPlayingGame; },
+            [&](td_api::chatActionRecordingVideoNote&) { action = RecordingVideoNote; },
+            [&](td_api::chatActionUploadingVideoNote&) { action = UploadingVideoNote; },
+            [&](td_api::chatActionWatchingAnimations&) { action = WatchingAnimations; },
+            [&](td_api::chatActionCancel&) { action = WatchingAnimations; }
+        )
+    );
+
+    _chatActions[updateUserChatAction->user_id_] = action;
+    emit actionTextChanged();
 }
 
 void Chat::onGotChatHistory(int64_t chatId, td_api::messages *messages)

@@ -23,6 +23,7 @@ import Sailfish.Silica 1.0
 import QtGraphicalEffects 1.0
 import SortFilterProxyModel 0.2
 import org.nemomobile.configuration 1.0
+import com.verdanditeam.chat 1.0
 
 Item {
     id: root
@@ -38,6 +39,15 @@ Item {
 
         Component.onCompleted: {
             stickerSetGridView.model = stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 267)
+        }
+    }
+
+    Connections {
+        target: stickerSets
+        onGotStickerSet: {
+            if (stickerSetId == stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 257)) {
+                stickerSetGridView.model = stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 267)
+            }
         }
     }
 
@@ -70,12 +80,19 @@ Item {
                     fillMode: Image.PreserveAspectFit
                     anchors.centerIn: parent
                     asynchronous: true
-                    source: thumbnail.localPath
+                    source: thumbnail && thumbnail.isDownloaded ? thumbnail.localPath : "image://theme/icon-m-other"
+
+                    BusyIndicator {
+                        size: BusyIndicatorSize.Medium
+                        anchors.centerIn: parent
+                        running: !thumbnail || !thumbnail.isDownloaded || thumbnail.isDownloading
+                    }
                 }
 
                 onClicked: {
                     settings.stickerPickerPickedPack = index
                     stickerSetGridView.model = stickerSet
+                    chat.sendAction(Chat.ChoosingSticker)
                 }
             }
         }

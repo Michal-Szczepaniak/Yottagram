@@ -5,7 +5,7 @@ Name:       yottagram
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    Yottagram
-Version:    0.2.4
+Version:    0.2.7
 Release:    1
 Group:      Qt/Qt
 License:    GPLv3
@@ -56,13 +56,8 @@ Yottagram's Transfer Engine plugin
 
 %prep
 %setup -q -n %{name}-%{version}
-#cd ../Yottagram/vendor/tg_owt/upstream
-#%patch0
-#%patch1
 
 %build
-#export CFLAGS="${CFLAGS} -O0"
-#export CXXFLAGS="${CXXFLAGS} -O0"
 %qtc_qmake5 
 
 %qtc_make %{?_smp_mflags}
@@ -83,3 +78,9 @@ desktop-file-install --delete-original       \
 %{_datadir}/lipstick/notificationcategories/x-verdanditeam.yottagram.im.conf
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
+
+%files voicecall-plugin
+%{_libdir}/voicecall/plugins/libyottagram-voicecall-plugin.so
+
+%files transferengine-plugin
+%{_libdir}/nemo-transferengine/plugins/libYottagramTransferEnginePlugin.so
