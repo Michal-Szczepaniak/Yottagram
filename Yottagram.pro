@@ -5,4 +5,4 @@ SUBDIRS = \
     YottagramTransferEnginePlugin \
     Yottagram \
 
-OTHER_FILES += rpm/Yottagram.spec
+DISTFILES += rpm/yottagram.spec

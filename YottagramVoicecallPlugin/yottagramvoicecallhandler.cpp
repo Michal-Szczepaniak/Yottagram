@@ -22,9 +22,6 @@
 #include "yottagramvoicecallhandler.h"
 #include "yottagramvoicecallprovider.h"
 
-#include <qyottagramvoicecall.h>
-#include <qyottagramvoicecallmanager.h>
-
 #include <QElapsedTimer>
 #include <QTimerEvent>
 
@@ -34,8 +31,7 @@ class YottagramVoiceCallHandlerPrivate
 
 public:
     YottagramVoiceCallHandlerPrivate(YottagramVoiceCallHandler *q, const QString &pHandlerId, YottagramVoiceCallProvider *pProvider, QYottagramVoiceCallManager *manager)
-        : q_ptr(q), handlerId(pHandlerId), provider(pProvider), yottagramVoiceCallManager(manager), yottagramVoiceCall(NULL)
-        , duration(0), durationTimerId(-1), isIncoming(false)
+        : q_ptr(q), handlerId(pHandlerId), provider(pProvider), duration(0), durationTimerId(-1), isIncoming(false)
     { /* ... */ }
 
     YottagramVoiceCallHandler *q_ptr;
@@ -43,9 +39,6 @@ public:
     QString handlerId;
 
     YottagramVoiceCallProvider *provider;
-
-    QYottagramVoiceCallManager *yottagramVoiceCallManager;
-    QYottagramVoiceCall *yottagramVoiceCall;
 
     quint64 duration;
     int durationTimerId;
@@ -58,19 +51,6 @@ YottagramVoiceCallHandler::YottagramVoiceCallHandler(const QString &handlerId, c
 {
     TRACE
     Q_D(YottagramVoiceCallHandler);
-    d->yottagramVoiceCall = new QYottagramVoiceCall(this);
-    d->yottagramVoiceCall->setVoiceCallPath(path);
-
-    QObject::connect(d->yottagramVoiceCall, SIGNAL(lineIdentificationChanged(QString)), SIGNAL(lineIdChanged(QString)));
-    QObject::connect(d->yottagramVoiceCall, SIGNAL(emergencyChanged(bool)), SIGNAL(emergencyChanged(bool)));
-    QObject::connect(d->yottagramVoiceCall, SIGNAL(multipartyChanged(bool)), SIGNAL(multipartyChanged(bool)));
-
-    QObject::connect(d->yottagramVoiceCall, SIGNAL(stateChanged(QString)), SLOT(onStatusChanged()));
-
-    QObject::connect(d->yottagramVoiceCall, SIGNAL(validChanged(bool)), SLOT(onValidChanged(bool)));
-    if(d->yottagramVoiceCall->isValid()) {
-        onValidChanged(true);
-    }
 }
 
 YottagramVoiceCallHandler::~YottagramVoiceCallHandler()
@@ -80,24 +60,12 @@ YottagramVoiceCallHandler::~YottagramVoiceCallHandler()
     delete d;
 }
 
-void YottagramVoiceCallHandler::onValidChanged(bool isValid)
-{
-    Q_D(YottagramVoiceCallHandler);
-
-    if (isValid)
-    {
-        // Properties are now ready
-        d->isIncoming = d->yottagramVoiceCall->state() == QLatin1String("incoming");
-    }
-
-    emit validChanged(isValid);
-}
-
 QString YottagramVoiceCallHandler::path() const
 {
     TRACE
     Q_D(const YottagramVoiceCallHandler);
-    return d->yottagramVoiceCall->voiceCallPath();
+//    return d->yottagramVoiceCall->voiceCallPath();
+    return "";
 }
 
 AbstractVoiceCallProvider* YottagramVoiceCallHandler::provider() const
@@ -118,15 +86,15 @@ QString YottagramVoiceCallHandler::lineId() const
 {
     TRACE
     Q_D(const YottagramVoiceCallHandler);
-    return d->yottagramVoiceCall->lineIdentification();
+    return "";
 }
 
 QDateTime YottagramVoiceCallHandler::startedAt() const
 {
     TRACE
     Q_D(const YottagramVoiceCallHandler);
-    DEBUG_T("CALL START TIME: %s", qPrintable(d->yottagramVoiceCall->startTime()));
-    return QDateTime::fromString(d->yottagramVoiceCall->startTime(), "");
+//    return QDateTime::fromString(d->yottagramVoiceCall->startTime(), "");
+    return QDateTime();
 }
 
 int YottagramVoiceCallHandler::duration() const
@@ -146,18 +114,16 @@ bool YottagramVoiceCallHandler::isIncoming() const
 bool YottagramVoiceCallHandler::isMultiparty() const
 {
     TRACE
-    Q_D(const YottagramVoiceCallHandler);
-    return d->yottagramVoiceCall->multiparty();
+    return false;
 }
 
 bool YottagramVoiceCallHandler::isEmergency() const
 {
     TRACE
     Q_D(const YottagramVoiceCallHandler);
-    return d->yottagramVoiceCall->emergency();
+    return false;
 }
 
-//XXX Monitor VoiceCallManager Forwarded signal
 bool YottagramVoiceCallHandler::isForwarded() const
 {
     TRACE
@@ -174,7 +140,7 @@ AbstractVoiceCallHandler::VoiceCallStatus YottagramVoiceCallHandler::status() co
 {
     TRACE
     Q_D(const YottagramVoiceCallHandler);
-    QString state = d->yottagramVoiceCall->state();
+    QString state = "waiting";
 
     if(state == "active")
         return STATUS_ACTIVE;
@@ -198,75 +164,25 @@ void YottagramVoiceCallHandler::answer()
 {
     TRACE
     Q_D(YottagramVoiceCallHandler);
-    if (status() == STATUS_WAITING)
-        d->yottagramVoiceCallManager->holdAndAnswer();
-    else
-        d->yottagramVoiceCall->answer();
 }
 
 void YottagramVoiceCallHandler::hangup()
 {
     TRACE
-    Q_D(YottagramVoiceCallHandler);
-    d->yottagramVoiceCall->hangup();
+    Q_D(YottagramVoiceCallHandler);;
 }
 
-void YottagramVoiceCallHandler::hold(bool on)
+void YottagramVoiceCallHandler::hold(bool)
 {
-    Q_UNUSED(on)
     TRACE
-    Q_D(YottagramVoiceCallHandler);
-    bool isHeld = status() == STATUS_HELD;
-    if (isHeld == on)
-        return;
-
-    d->yottagramVoiceCallManager->swapCalls();
 }
 
-void YottagramVoiceCallHandler::deflect(const QString &target)
+void YottagramVoiceCallHandler::deflect(const QString &)
 {
     TRACE
-    Q_D(YottagramVoiceCallHandler);
-    d->yottagramVoiceCall->deflect(target);
 }
 
-void YottagramVoiceCallHandler::sendDtmf(const QString &tones)
+void YottagramVoiceCallHandler::sendDtmf(const QString &)
 {
     TRACE
-    Q_D(YottagramVoiceCallHandler);
-    d->yottagramVoiceCallManager->sendTones(tones);
-}
-
-void YottagramVoiceCallHandler::timerEvent(QTimerEvent *event)
-{
-    TRACE
-    Q_D(YottagramVoiceCallHandler);
-
-    // Whilst call is active, increase duration by a second each second.
-    if(isOngoing() && event->timerId() == d->durationTimerId)
-    {
-        d->duration += d->elapsedTimer.restart();
-        emit this->durationChanged(d->duration);
-    }
-}
-
-void YottagramVoiceCallHandler::onStatusChanged()
-{
-    TRACE
-    Q_D(YottagramVoiceCallHandler);
-
-    if (isOngoing())
-    {
-        if (d->durationTimerId == -1) {
-            d->durationTimerId = this->startTimer(1000);
-            d->elapsedTimer.start();
-        }
-    }
-    else if (d->durationTimerId != -1)
-    {
-        this->killTimer(d->durationTimerId);
-        d->durationTimerId = -1;
-    }
-
-    emit statusChanged(status());
 }

@@ -1,3 +1,5 @@
+include(upstream/plugins/plugin.pri)
+
 TARGET = yottagram-voicecall-plugin
 QT += dbus
 

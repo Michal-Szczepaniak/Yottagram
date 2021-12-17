@@ -25,7 +25,6 @@
 #include <voicecallmanagerinterface.h>
 
 #include <QtPlugin>
-#include <qyottagrammanager.h>
 
 class YottagramVoiceCallProviderFactoryPrivate
 {
@@ -33,14 +32,12 @@ class YottagramVoiceCallProviderFactoryPrivate
 
 public:
     YottagramVoiceCallProviderFactoryPrivate(YottagramVoiceCallProviderFactory *q)
-        : q_ptr(q), isConfigured(false), yottagramModemManager(NULL), manager(NULL)
+        : q_ptr(q), isConfigured(false)
     {/* ... */}
 
     YottagramVoiceCallProviderFactory *q_ptr;
 
     bool isConfigured;
-
-    QYottagramManager *yottagramModemManager;
 
     VoiceCallManagerInterface *manager;
 
@@ -70,7 +67,6 @@ bool YottagramVoiceCallProviderFactory::initialize()
 {
     TRACE
     Q_D(YottagramVoiceCallProviderFactory);
-    d->yottagramModemManager = new QYottagramManager(this);
     return true;
 }
 

@@ -17,7 +17,7 @@
     along with Yottagram.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "YottagramPluginInfo.h"
+#include "YottagramTransferPluginInfo.h"
 #include <QDebug>
 
 YottagramPluginInfo::YottagramPluginInfo(): m_ready(false)

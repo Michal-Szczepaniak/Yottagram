@@ -22,24 +22,19 @@
 #include "yottagramvoicecallhandler.h"
 #include "yottagramvoicecallprovider.h"
 
-#include <qyottagrammodem.h>
-#include <qyottagramvoicecallmanager.h>
-
 class YottagramVoiceCallProviderPrivate
 {
     Q_DECLARE_PUBLIC(YottagramVoiceCallProvider)
 
 public:
     YottagramVoiceCallProviderPrivate(YottagramVoiceCallProvider *q, VoiceCallManagerInterface *pManager)
-        : q_ptr(q), manager(pManager), yottagramManager(NULL), yottagramModem(NULL)
-    { /* ... */ }
+        : q_ptr(q), manager(pManager)
+    { }
 
     YottagramVoiceCallProvider *q_ptr;
 
     VoiceCallManagerInterface *manager;
 
-    QYottagramVoiceCallManager   *yottagramManager;
-    QYottagramModem              *yottagramModem;
     QString modemPath;
 
     QHash<QString,YottagramVoiceCallHandler*> voiceCalls;
@@ -54,7 +49,7 @@ public:
 
     void debugMessage(const QString &message)
     {
-        DEBUG_T("YottagramVoiceCallProvider(%s): %s", qPrintable(yottagramModem->modemPath()), qPrintable(message));
+        DEBUG_T("YottagramVoiceCallProvider");
     }
 };
 
@@ -64,26 +59,6 @@ YottagramVoiceCallProvider::YottagramVoiceCallProvider(const QString &path, Voic
     TRACE
     Q_D(YottagramVoiceCallProvider);
     d->modemPath = path;
-    d->yottagramModem = new QYottagramModem(this);
-    d->yottagramModem->setModemPath(path);
-    connect(d->yottagramModem, SIGNAL(interfacesChanged(QStringList)), this, SLOT(interfacesChanged(QStringList)));
-
-    if (d->yottagramModem->interfaces().contains(QLatin1String("org.yottagram.VoiceCallManager")))
-        initialize();
-}
-
-void YottagramVoiceCallProvider::initialize()
-{
-    TRACE
-    Q_D(YottagramVoiceCallProvider);
-    d->yottagramManager = new QYottagramVoiceCallManager(this);
-    d->yottagramManager->setModemPath(d->modemPath);
-
-    QObject::connect(d->yottagramManager, SIGNAL(callAdded(QString)), SLOT(onCallAdded(QString)));
-    QObject::connect(d->yottagramManager, SIGNAL(callRemoved(QString)), SLOT(onCallRemoved(QString)));
-
-    foreach (const QString &call, d->yottagramManager->getCalls())
-        onCallAdded(call);
 }
 
 YottagramVoiceCallProvider::~YottagramVoiceCallProvider()
@@ -130,20 +105,5 @@ QString YottagramVoiceCallProvider::errorString() const
 bool YottagramVoiceCallProvider::dial(const QString &msisdn)
 {
     TRACE
-    Q_D(YottagramVoiceCallProvider);
-    if(!d->yottagramManager || !d->yottagramManager->isValid())
-    {
-        d->setError("yottagram connection is not valid");
-        return false;
-    }
-
-    d->yottagramManager->dial(msisdn, "default");
-    return true;
-}
-
-QYottagramModem* YottagramVoiceCallProvider::modem() const
-{
-    TRACE
-    Q_D(const YottagramVoiceCallProvider);
-    return d->yottagramModem;
+    return false;
 }

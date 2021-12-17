@@ -66,16 +66,8 @@ public Q_SLOTS:
     void deflect(const QString &target);
     void sendDtmf(const QString &tones);
 
-    // TODO: unimplemented - JB#35997
     void merge(const QString &) {}
     void split() {}
-
-protected Q_SLOTS:
-    void onStatusChanged();
-    void onValidChanged(bool);
-
-protected:
-    void timerEvent(QTimerEvent *event);
 
 private:
     class YottagramVoiceCallHandlerPrivate *d_ptr;

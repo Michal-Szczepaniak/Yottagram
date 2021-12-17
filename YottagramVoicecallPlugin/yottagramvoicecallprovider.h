@@ -24,14 +24,9 @@
 #include <abstractvoicecallprovider.h>
 #include <voicecallmanagerinterface.h>
 
-#include <qyottagrammodem.h>
-
 class YottagramVoiceCallProvider : public AbstractVoiceCallProvider
 {
     Q_OBJECT
-
-    Q_PROPERTY(QYottagramModem* modem READ modem)
-
 public:
     explicit YottagramVoiceCallProvider(const QString &path, VoiceCallManagerInterface *manager, QObject *parent = 0);
             ~YottagramVoiceCallProvider();
@@ -41,13 +36,10 @@ public:
     QList<AbstractVoiceCallHandler*> voiceCalls() const;
     QString errorString() const;
 
-    QYottagramModem* modem() const;
-
 public Q_SLOTS:
     bool dial(const QString &msisdn);
 
 private:
-    void initialize();
     class YottagramVoiceCallProviderPrivate *d_ptr;
 
     Q_DECLARE_PRIVATE(YottagramVoiceCallProvider)
