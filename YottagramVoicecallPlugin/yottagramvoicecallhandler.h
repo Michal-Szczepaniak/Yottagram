@@ -1,5 +1,5 @@
 /*
- * This file is a part of the Voice Call Manager Ofono Plugin project.
+ * This file is a part of the Voice Call Manager Yottagram Plugin project.
  *
  * Copyright (C) 2011-2012  Tom Swindell <t.swindell@rubyx.co.uk>
  *
@@ -18,23 +18,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
-#ifndef OFONOVOICECALLHANDLER_H
-#define OFONOVOICECALLHANDLER_H
+#ifndef YOTTAGRAMVOICECALLHANDLER_H
+#define YOTTAGRAMVOICECALLHANDLER_H
 
 #include <abstractvoicecallhandler.h>
 
-class OfonoVoiceCallProvider;
-class QOfonoVoiceCallManager;
+class YottagramVoiceCallProvider;
+class QYottagramVoiceCallManager;
 
-class OfonoVoiceCallHandler : public AbstractVoiceCallHandler
+class YottagramVoiceCallHandler : public AbstractVoiceCallHandler
 {
     Q_OBJECT
 
     Q_PROPERTY(QString path READ path)
 
 public:
-    explicit OfonoVoiceCallHandler(const QString &handlerId, const QString &path, OfonoVoiceCallProvider *provider, QOfonoVoiceCallManager *manager);
-            ~OfonoVoiceCallHandler();
+    explicit YottagramVoiceCallHandler(const QString &handlerId, const QString &path, YottagramVoiceCallProvider *provider, QYottagramVoiceCallManager *manager);
+            ~YottagramVoiceCallHandler();
 
     QString path() const;
 
@@ -78,9 +78,9 @@ protected:
     void timerEvent(QTimerEvent *event);
 
 private:
-    class OfonoVoiceCallHandlerPrivate *d_ptr;
+    class YottagramVoiceCallHandlerPrivate *d_ptr;
 
-    Q_DECLARE_PRIVATE(OfonoVoiceCallHandler)
+    Q_DECLARE_PRIVATE(YottagramVoiceCallHandler)
 };
 
-#endif // OFONOVOICECALLHANDLER_H
+#endif // YOTTAGRAMVOICECALLHANDLER_H

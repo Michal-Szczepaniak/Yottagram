@@ -1,5 +1,5 @@
 /*
- * This file is a part of the Voice Call Manager Ofono Plugin project.
+ * This file is a part of the Voice Call Manager Yottagram Plugin project.
  *
  * Copyright (C) 2011-2012  Tom Swindell <t.swindell@rubyx.co.uk>
  *
@@ -19,31 +19,31 @@
  *
  */
 #include "common.h"
-#include "ofonovoicecallhandler.h"
-#include "ofonovoicecallprovider.h"
+#include "yottagramvoicecallhandler.h"
+#include "yottagramvoicecallprovider.h"
 
-#include <qofonomodem.h>
-#include <qofonovoicecallmanager.h>
+#include <qyottagrammodem.h>
+#include <qyottagramvoicecallmanager.h>
 
-class OfonoVoiceCallProviderPrivate
+class YottagramVoiceCallProviderPrivate
 {
-    Q_DECLARE_PUBLIC(OfonoVoiceCallProvider)
+    Q_DECLARE_PUBLIC(YottagramVoiceCallProvider)
 
 public:
-    OfonoVoiceCallProviderPrivate(OfonoVoiceCallProvider *q, VoiceCallManagerInterface *pManager)
-        : q_ptr(q), manager(pManager), ofonoManager(NULL), ofonoModem(NULL)
+    YottagramVoiceCallProviderPrivate(YottagramVoiceCallProvider *q, VoiceCallManagerInterface *pManager)
+        : q_ptr(q), manager(pManager), yottagramManager(NULL), yottagramModem(NULL)
     { /* ... */ }
 
-    OfonoVoiceCallProvider *q_ptr;
+    YottagramVoiceCallProvider *q_ptr;
 
     VoiceCallManagerInterface *manager;
 
-    QOfonoVoiceCallManager   *ofonoManager;
-    QOfonoModem              *ofonoModem;
+    QYottagramVoiceCallManager   *yottagramManager;
+    QYottagramModem              *yottagramModem;
     QString modemPath;
 
-    QHash<QString,OfonoVoiceCallHandler*> voiceCalls;
-    QHash<QString,OfonoVoiceCallHandler*> invalidVoiceCalls;
+    QHash<QString,YottagramVoiceCallHandler*> voiceCalls;
+    QHash<QString,YottagramVoiceCallHandler*> invalidVoiceCalls;
 
     QString errorString;
     void setError(const QString &errorString)
@@ -54,62 +54,62 @@ public:
 
     void debugMessage(const QString &message)
     {
-        DEBUG_T("OfonoVoiceCallProvider(%s): %s", qPrintable(ofonoModem->modemPath()), qPrintable(message));
+        DEBUG_T("YottagramVoiceCallProvider(%s): %s", qPrintable(yottagramModem->modemPath()), qPrintable(message));
     }
 };
 
-OfonoVoiceCallProvider::OfonoVoiceCallProvider(const QString &path, VoiceCallManagerInterface *manager, QObject *parent)
-    : AbstractVoiceCallProvider(parent), d_ptr(new OfonoVoiceCallProviderPrivate(this, manager))
+YottagramVoiceCallProvider::YottagramVoiceCallProvider(const QString &path, VoiceCallManagerInterface *manager, QObject *parent)
+    : AbstractVoiceCallProvider(parent), d_ptr(new YottagramVoiceCallProviderPrivate(this, manager))
 {
     TRACE
-    Q_D(OfonoVoiceCallProvider);
+    Q_D(YottagramVoiceCallProvider);
     d->modemPath = path;
-    d->ofonoModem = new QOfonoModem(this);
-    d->ofonoModem->setModemPath(path);
-    connect(d->ofonoModem, SIGNAL(interfacesChanged(QStringList)), this, SLOT(interfacesChanged(QStringList)));
+    d->yottagramModem = new QYottagramModem(this);
+    d->yottagramModem->setModemPath(path);
+    connect(d->yottagramModem, SIGNAL(interfacesChanged(QStringList)), this, SLOT(interfacesChanged(QStringList)));
 
-    if (d->ofonoModem->interfaces().contains(QLatin1String("org.ofono.VoiceCallManager")))
+    if (d->yottagramModem->interfaces().contains(QLatin1String("org.yottagram.VoiceCallManager")))
         initialize();
 }
 
-void OfonoVoiceCallProvider::initialize()
+void YottagramVoiceCallProvider::initialize()
 {
     TRACE
-    Q_D(OfonoVoiceCallProvider);
-    d->ofonoManager = new QOfonoVoiceCallManager(this);
-    d->ofonoManager->setModemPath(d->modemPath);
+    Q_D(YottagramVoiceCallProvider);
+    d->yottagramManager = new QYottagramVoiceCallManager(this);
+    d->yottagramManager->setModemPath(d->modemPath);
 
-    QObject::connect(d->ofonoManager, SIGNAL(callAdded(QString)), SLOT(onCallAdded(QString)));
-    QObject::connect(d->ofonoManager, SIGNAL(callRemoved(QString)), SLOT(onCallRemoved(QString)));
+    QObject::connect(d->yottagramManager, SIGNAL(callAdded(QString)), SLOT(onCallAdded(QString)));
+    QObject::connect(d->yottagramManager, SIGNAL(callRemoved(QString)), SLOT(onCallRemoved(QString)));
 
-    foreach (const QString &call, d->ofonoManager->getCalls())
+    foreach (const QString &call, d->yottagramManager->getCalls())
         onCallAdded(call);
 }
 
-OfonoVoiceCallProvider::~OfonoVoiceCallProvider()
+YottagramVoiceCallProvider::~YottagramVoiceCallProvider()
 {
     TRACE
-    Q_D(OfonoVoiceCallProvider);
+    Q_D(YottagramVoiceCallProvider);
     delete d;
 }
 
-QString OfonoVoiceCallProvider::providerId() const
+QString YottagramVoiceCallProvider::providerId() const
 {
     TRACE
-    Q_D(const OfonoVoiceCallProvider);
-    return QString("ofono-") + d->modemPath;
+    Q_D(const YottagramVoiceCallProvider);
+    return QString("yottagram-") + d->modemPath;
 }
 
-QString OfonoVoiceCallProvider::providerType() const
+QString YottagramVoiceCallProvider::providerType() const
 {
     TRACE
     return "cellular";
 }
 
-QList<AbstractVoiceCallHandler*> OfonoVoiceCallProvider::voiceCalls() const
+QList<AbstractVoiceCallHandler*> YottagramVoiceCallProvider::voiceCalls() const
 {
     TRACE
-    Q_D(const OfonoVoiceCallProvider);
+    Q_D(const YottagramVoiceCallProvider);
     QList<AbstractVoiceCallHandler*> results;
 
     foreach(AbstractVoiceCallHandler* handler, d->voiceCalls.values())
@@ -120,107 +120,30 @@ QList<AbstractVoiceCallHandler*> OfonoVoiceCallProvider::voiceCalls() const
     return results;
 }
 
-QString OfonoVoiceCallProvider::errorString() const
+QString YottagramVoiceCallProvider::errorString() const
 {
     TRACE
-    Q_D(const OfonoVoiceCallProvider);
+    Q_D(const YottagramVoiceCallProvider);
     return d->errorString;
 }
 
-bool OfonoVoiceCallProvider::dial(const QString &msisdn)
+bool YottagramVoiceCallProvider::dial(const QString &msisdn)
 {
     TRACE
-    Q_D(OfonoVoiceCallProvider);
-    if(!d->ofonoManager || !d->ofonoManager->isValid())
+    Q_D(YottagramVoiceCallProvider);
+    if(!d->yottagramManager || !d->yottagramManager->isValid())
     {
-        d->setError("ofono connection is not valid");
+        d->setError("yottagram connection is not valid");
         return false;
     }
 
-    d->ofonoManager->dial(msisdn, "default");
+    d->yottagramManager->dial(msisdn, "default");
     return true;
 }
 
-QOfonoModem* OfonoVoiceCallProvider::modem() const
+QYottagramModem* YottagramVoiceCallProvider::modem() const
 {
     TRACE
-    Q_D(const OfonoVoiceCallProvider);
-    return d->ofonoModem;
-}
-
-void OfonoVoiceCallProvider::onDialComplete(const bool status)
-{
-    TRACE
-    Q_D(OfonoVoiceCallProvider);
-    if (!d->ofonoManager) {
-        d->setError("ofono connection is not valid");
-        return;
-    }
-    if (!status)
-        d->setError(d->ofonoManager->errorMessage());
-}
-
-void OfonoVoiceCallProvider::interfacesChanged(const QStringList &interfaces)
-{
-    TRACE
-    Q_D(OfonoVoiceCallProvider);
-    bool hasVoiceCallManager = interfaces.contains(QLatin1String("org.ofono.VoiceCallManager"));
-    if (!hasVoiceCallManager && d->ofonoManager) {
-        foreach (QString handler, d->voiceCalls.keys())
-            onCallRemoved(handler);
-        delete d->ofonoManager;
-        d->ofonoManager = 0;
-    } else if (hasVoiceCallManager && !d->ofonoManager) {
-        initialize();
-    }
-}
-
-void OfonoVoiceCallProvider::onCallAdded(const QString &call)
-{
-    TRACE
-    Q_D(OfonoVoiceCallProvider);
-    if(d->voiceCalls.contains(call)) return;
-
-    qDebug() << "Adding call handler " << call;
-    OfonoVoiceCallHandler *handler = new OfonoVoiceCallHandler(d->manager->generateHandlerId(), call, this, d->ofonoManager);
-    d->invalidVoiceCalls.insert(call, handler);
-    QObject::connect(handler, SIGNAL(validChanged(bool)), SLOT(onVoiceCallHandlerValidChanged(bool)));
-}
-
-void OfonoVoiceCallProvider::onVoiceCallHandlerValidChanged(bool isValid)
-{
-    TRACE
-    Q_D(OfonoVoiceCallProvider);
-
-    OfonoVoiceCallHandler *handler = static_cast<OfonoVoiceCallHandler *>(QObject::sender());
-    if(handler)
-    {
-        QString call = handler->path();
-
-        if(isValid && !d->voiceCalls.contains(call))
-        {
-            d->voiceCalls.insert(call, handler);
-            d->invalidVoiceCalls.remove(call);
-            emit this->voiceCallAdded(handler);
-            emit this->voiceCallsChanged();
-        }
-    }
-}
-
-void OfonoVoiceCallProvider::onCallRemoved(const QString &call)
-{
-    TRACE
-    Q_D(OfonoVoiceCallProvider);
-    if(!d->voiceCalls.contains(call)) {
-        delete d->invalidVoiceCalls.take(call);
-        return;
-    }
-
-    OfonoVoiceCallHandler *handler = d->voiceCalls.value(call);
-    QString handlerId = handler->handlerId();
-    d->voiceCalls.remove(call);
-    handler->deleteLater();
-
-    emit this->voiceCallRemoved(handlerId);
-    emit this->voiceCallsChanged();
+    Q_D(const YottagramVoiceCallProvider);
+    return d->yottagramModem;
 }

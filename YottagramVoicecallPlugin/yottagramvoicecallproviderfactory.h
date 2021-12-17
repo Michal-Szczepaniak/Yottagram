@@ -42,10 +42,6 @@ public Q_SLOTS:
     bool resume();
     void finalize();
 
-protected Q_SLOTS:
-    void onModemAdded(const QString &modemPath);
-    void onModemRemoved(const QString &modemPath);
-
 private:
     class YottagramVoiceCallProviderFactoryPrivate *d_ptr;
 

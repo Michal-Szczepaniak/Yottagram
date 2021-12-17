@@ -1,5 +1,5 @@
 /*
- * This file is a part of the Voice Call Manager Ofono Plugin project.
+ * This file is a part of the Voice Call Manager Yottagram Plugin project.
  *
  * Copyright (C) 2011-2012  Tom Swindell <t.swindell@rubyx.co.uk>
  *
@@ -18,48 +18,39 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
-#ifndef OFONOVOICECALLPROVIDER_H
-#define OFONOVOICECALLPROVIDER_H
+#ifndef YOTTAGRAMVOICECALLPROVIDER_H
+#define YOTTAGRAMVOICECALLPROVIDER_H
 
 #include <abstractvoicecallprovider.h>
 #include <voicecallmanagerinterface.h>
 
-#include <qofonomodem.h>
+#include <qyottagrammodem.h>
 
-class OfonoVoiceCallProvider : public AbstractVoiceCallProvider
+class YottagramVoiceCallProvider : public AbstractVoiceCallProvider
 {
     Q_OBJECT
 
-    Q_PROPERTY(QOfonoModem* modem READ modem)
+    Q_PROPERTY(QYottagramModem* modem READ modem)
 
 public:
-    explicit OfonoVoiceCallProvider(const QString &path, VoiceCallManagerInterface *manager, QObject *parent = 0);
-            ~OfonoVoiceCallProvider();
+    explicit YottagramVoiceCallProvider(const QString &path, VoiceCallManagerInterface *manager, QObject *parent = 0);
+            ~YottagramVoiceCallProvider();
 
     QString providerId() const;
     QString providerType() const;
     QList<AbstractVoiceCallHandler*> voiceCalls() const;
     QString errorString() const;
 
-    QOfonoModem* modem() const;
+    QYottagramModem* modem() const;
 
 public Q_SLOTS:
     bool dial(const QString &msisdn);
 
-protected Q_SLOTS:
-    void interfacesChanged(const QStringList &interfaces);
-    void onCallAdded(const QString &call);
-    void onCallRemoved(const QString &call);
-
-    void onDialComplete(const bool status);
-
-    void onVoiceCallHandlerValidChanged(bool isValid);
-
 private:
     void initialize();
-    class OfonoVoiceCallProviderPrivate *d_ptr;
+    class YottagramVoiceCallProviderPrivate *d_ptr;
 
-    Q_DECLARE_PRIVATE(OfonoVoiceCallProvider)
+    Q_DECLARE_PRIVATE(YottagramVoiceCallProvider)
 };
 
-#endif // OFONOVOICECALLPROVIDER_H
+#endif // YOTTAGRAMVOICECALLPROVIDER_H

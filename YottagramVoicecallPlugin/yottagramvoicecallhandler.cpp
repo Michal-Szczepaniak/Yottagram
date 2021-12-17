@@ -1,5 +1,5 @@
 /*
- * This file is a part of the Voice Call Manager Ofono Plugin project.
+ * This file is a part of the Voice Call Manager Yottagram Plugin project.
  *
  * Copyright (C) 2011-2012  Tom Swindell <t.swindell@rubyx.co.uk>
  *
@@ -19,33 +19,33 @@
  *
  */
 #include "common.h"
-#include "ofonovoicecallhandler.h"
-#include "ofonovoicecallprovider.h"
+#include "yottagramvoicecallhandler.h"
+#include "yottagramvoicecallprovider.h"
 
-#include <qofonovoicecall.h>
-#include <qofonovoicecallmanager.h>
+#include <qyottagramvoicecall.h>
+#include <qyottagramvoicecallmanager.h>
 
 #include <QElapsedTimer>
 #include <QTimerEvent>
 
-class OfonoVoiceCallHandlerPrivate
+class YottagramVoiceCallHandlerPrivate
 {
-    Q_DECLARE_PUBLIC(OfonoVoiceCallHandler)
+    Q_DECLARE_PUBLIC(YottagramVoiceCallHandler)
 
 public:
-    OfonoVoiceCallHandlerPrivate(OfonoVoiceCallHandler *q, const QString &pHandlerId, OfonoVoiceCallProvider *pProvider, QOfonoVoiceCallManager *manager)
-        : q_ptr(q), handlerId(pHandlerId), provider(pProvider), ofonoVoiceCallManager(manager), ofonoVoiceCall(NULL)
+    YottagramVoiceCallHandlerPrivate(YottagramVoiceCallHandler *q, const QString &pHandlerId, YottagramVoiceCallProvider *pProvider, QYottagramVoiceCallManager *manager)
+        : q_ptr(q), handlerId(pHandlerId), provider(pProvider), yottagramVoiceCallManager(manager), yottagramVoiceCall(NULL)
         , duration(0), durationTimerId(-1), isIncoming(false)
     { /* ... */ }
 
-    OfonoVoiceCallHandler *q_ptr;
+    YottagramVoiceCallHandler *q_ptr;
 
     QString handlerId;
 
-    OfonoVoiceCallProvider *provider;
+    YottagramVoiceCallProvider *provider;
 
-    QOfonoVoiceCallManager *ofonoVoiceCallManager;
-    QOfonoVoiceCall *ofonoVoiceCall;
+    QYottagramVoiceCallManager *yottagramVoiceCallManager;
+    QYottagramVoiceCall *yottagramVoiceCall;
 
     quint64 duration;
     int durationTimerId;
@@ -53,128 +53,128 @@ public:
     bool isIncoming;
 };
 
-OfonoVoiceCallHandler::OfonoVoiceCallHandler(const QString &handlerId, const QString &path, OfonoVoiceCallProvider *provider, QOfonoVoiceCallManager *manager)
-    : AbstractVoiceCallHandler(provider), d_ptr(new OfonoVoiceCallHandlerPrivate(this, handlerId, provider, manager))
+YottagramVoiceCallHandler::YottagramVoiceCallHandler(const QString &handlerId, const QString &path, YottagramVoiceCallProvider *provider, QYottagramVoiceCallManager *manager)
+    : AbstractVoiceCallHandler(provider), d_ptr(new YottagramVoiceCallHandlerPrivate(this, handlerId, provider, manager))
 {
     TRACE
-    Q_D(OfonoVoiceCallHandler);
-    d->ofonoVoiceCall = new QOfonoVoiceCall(this);
-    d->ofonoVoiceCall->setVoiceCallPath(path);
+    Q_D(YottagramVoiceCallHandler);
+    d->yottagramVoiceCall = new QYottagramVoiceCall(this);
+    d->yottagramVoiceCall->setVoiceCallPath(path);
 
-    QObject::connect(d->ofonoVoiceCall, SIGNAL(lineIdentificationChanged(QString)), SIGNAL(lineIdChanged(QString)));
-    QObject::connect(d->ofonoVoiceCall, SIGNAL(emergencyChanged(bool)), SIGNAL(emergencyChanged(bool)));
-    QObject::connect(d->ofonoVoiceCall, SIGNAL(multipartyChanged(bool)), SIGNAL(multipartyChanged(bool)));
+    QObject::connect(d->yottagramVoiceCall, SIGNAL(lineIdentificationChanged(QString)), SIGNAL(lineIdChanged(QString)));
+    QObject::connect(d->yottagramVoiceCall, SIGNAL(emergencyChanged(bool)), SIGNAL(emergencyChanged(bool)));
+    QObject::connect(d->yottagramVoiceCall, SIGNAL(multipartyChanged(bool)), SIGNAL(multipartyChanged(bool)));
 
-    QObject::connect(d->ofonoVoiceCall, SIGNAL(stateChanged(QString)), SLOT(onStatusChanged()));
+    QObject::connect(d->yottagramVoiceCall, SIGNAL(stateChanged(QString)), SLOT(onStatusChanged()));
 
-    QObject::connect(d->ofonoVoiceCall, SIGNAL(validChanged(bool)), SLOT(onValidChanged(bool)));
-    if(d->ofonoVoiceCall->isValid()) {
+    QObject::connect(d->yottagramVoiceCall, SIGNAL(validChanged(bool)), SLOT(onValidChanged(bool)));
+    if(d->yottagramVoiceCall->isValid()) {
         onValidChanged(true);
     }
 }
 
-OfonoVoiceCallHandler::~OfonoVoiceCallHandler()
+YottagramVoiceCallHandler::~YottagramVoiceCallHandler()
 {
     TRACE
-    Q_D(const OfonoVoiceCallHandler);
+    Q_D(const YottagramVoiceCallHandler);
     delete d;
 }
 
-void OfonoVoiceCallHandler::onValidChanged(bool isValid)
+void YottagramVoiceCallHandler::onValidChanged(bool isValid)
 {
-    Q_D(OfonoVoiceCallHandler);
+    Q_D(YottagramVoiceCallHandler);
 
     if (isValid)
     {
         // Properties are now ready
-        d->isIncoming = d->ofonoVoiceCall->state() == QLatin1String("incoming");
+        d->isIncoming = d->yottagramVoiceCall->state() == QLatin1String("incoming");
     }
 
     emit validChanged(isValid);
 }
 
-QString OfonoVoiceCallHandler::path() const
+QString YottagramVoiceCallHandler::path() const
 {
     TRACE
-    Q_D(const OfonoVoiceCallHandler);
-    return d->ofonoVoiceCall->voiceCallPath();
+    Q_D(const YottagramVoiceCallHandler);
+    return d->yottagramVoiceCall->voiceCallPath();
 }
 
-AbstractVoiceCallProvider* OfonoVoiceCallHandler::provider() const
+AbstractVoiceCallProvider* YottagramVoiceCallHandler::provider() const
 {
     TRACE
-    Q_D(const OfonoVoiceCallHandler);
+    Q_D(const YottagramVoiceCallHandler);
     return d->provider;
 }
 
-QString OfonoVoiceCallHandler::handlerId() const
+QString YottagramVoiceCallHandler::handlerId() const
 {
     TRACE
-    Q_D(const OfonoVoiceCallHandler);
+    Q_D(const YottagramVoiceCallHandler);
     return d->handlerId;
 }
 
-QString OfonoVoiceCallHandler::lineId() const
+QString YottagramVoiceCallHandler::lineId() const
 {
     TRACE
-    Q_D(const OfonoVoiceCallHandler);
-    return d->ofonoVoiceCall->lineIdentification();
+    Q_D(const YottagramVoiceCallHandler);
+    return d->yottagramVoiceCall->lineIdentification();
 }
 
-QDateTime OfonoVoiceCallHandler::startedAt() const
+QDateTime YottagramVoiceCallHandler::startedAt() const
 {
     TRACE
-    Q_D(const OfonoVoiceCallHandler);
-    DEBUG_T("CALL START TIME: %s", qPrintable(d->ofonoVoiceCall->startTime()));
-    return QDateTime::fromString(d->ofonoVoiceCall->startTime(), "");
+    Q_D(const YottagramVoiceCallHandler);
+    DEBUG_T("CALL START TIME: %s", qPrintable(d->yottagramVoiceCall->startTime()));
+    return QDateTime::fromString(d->yottagramVoiceCall->startTime(), "");
 }
 
-int OfonoVoiceCallHandler::duration() const
+int YottagramVoiceCallHandler::duration() const
 {
     TRACE
-    Q_D(const OfonoVoiceCallHandler);
+    Q_D(const YottagramVoiceCallHandler);
     return int(qRound(d->duration/1000.0));
 }
 
-bool OfonoVoiceCallHandler::isIncoming() const
+bool YottagramVoiceCallHandler::isIncoming() const
 {
     TRACE
-    Q_D(const OfonoVoiceCallHandler);
+    Q_D(const YottagramVoiceCallHandler);
     return d->isIncoming;
 }
 
-bool OfonoVoiceCallHandler::isMultiparty() const
+bool YottagramVoiceCallHandler::isMultiparty() const
 {
     TRACE
-    Q_D(const OfonoVoiceCallHandler);
-    return d->ofonoVoiceCall->multiparty();
+    Q_D(const YottagramVoiceCallHandler);
+    return d->yottagramVoiceCall->multiparty();
 }
 
-bool OfonoVoiceCallHandler::isEmergency() const
+bool YottagramVoiceCallHandler::isEmergency() const
 {
     TRACE
-    Q_D(const OfonoVoiceCallHandler);
-    return d->ofonoVoiceCall->emergency();
+    Q_D(const YottagramVoiceCallHandler);
+    return d->yottagramVoiceCall->emergency();
 }
 
 //XXX Monitor VoiceCallManager Forwarded signal
-bool OfonoVoiceCallHandler::isForwarded() const
+bool YottagramVoiceCallHandler::isForwarded() const
 {
     TRACE
     return false;
 }
 
-bool OfonoVoiceCallHandler::isRemoteHeld() const
+bool YottagramVoiceCallHandler::isRemoteHeld() const
 {
     TRACE
     return false;
 }
 
-AbstractVoiceCallHandler::VoiceCallStatus OfonoVoiceCallHandler::status() const
+AbstractVoiceCallHandler::VoiceCallStatus YottagramVoiceCallHandler::status() const
 {
     TRACE
-    Q_D(const OfonoVoiceCallHandler);
-    QString state = d->ofonoVoiceCall->state();
+    Q_D(const YottagramVoiceCallHandler);
+    QString state = d->yottagramVoiceCall->state();
 
     if(state == "active")
         return STATUS_ACTIVE;
@@ -194,53 +194,53 @@ AbstractVoiceCallHandler::VoiceCallStatus OfonoVoiceCallHandler::status() const
     return STATUS_NULL;
 }
 
-void OfonoVoiceCallHandler::answer()
+void YottagramVoiceCallHandler::answer()
 {
     TRACE
-    Q_D(OfonoVoiceCallHandler);
+    Q_D(YottagramVoiceCallHandler);
     if (status() == STATUS_WAITING)
-        d->ofonoVoiceCallManager->holdAndAnswer();
+        d->yottagramVoiceCallManager->holdAndAnswer();
     else
-        d->ofonoVoiceCall->answer();
+        d->yottagramVoiceCall->answer();
 }
 
-void OfonoVoiceCallHandler::hangup()
+void YottagramVoiceCallHandler::hangup()
 {
     TRACE
-    Q_D(OfonoVoiceCallHandler);
-    d->ofonoVoiceCall->hangup();
+    Q_D(YottagramVoiceCallHandler);
+    d->yottagramVoiceCall->hangup();
 }
 
-void OfonoVoiceCallHandler::hold(bool on)
+void YottagramVoiceCallHandler::hold(bool on)
 {
     Q_UNUSED(on)
     TRACE
-    Q_D(OfonoVoiceCallHandler);
+    Q_D(YottagramVoiceCallHandler);
     bool isHeld = status() == STATUS_HELD;
     if (isHeld == on)
         return;
 
-    d->ofonoVoiceCallManager->swapCalls();
+    d->yottagramVoiceCallManager->swapCalls();
 }
 
-void OfonoVoiceCallHandler::deflect(const QString &target)
+void YottagramVoiceCallHandler::deflect(const QString &target)
 {
     TRACE
-    Q_D(OfonoVoiceCallHandler);
-    d->ofonoVoiceCall->deflect(target);
+    Q_D(YottagramVoiceCallHandler);
+    d->yottagramVoiceCall->deflect(target);
 }
 
-void OfonoVoiceCallHandler::sendDtmf(const QString &tones)
+void YottagramVoiceCallHandler::sendDtmf(const QString &tones)
 {
     TRACE
-    Q_D(OfonoVoiceCallHandler);
-    d->ofonoVoiceCallManager->sendTones(tones);
+    Q_D(YottagramVoiceCallHandler);
+    d->yottagramVoiceCallManager->sendTones(tones);
 }
 
-void OfonoVoiceCallHandler::timerEvent(QTimerEvent *event)
+void YottagramVoiceCallHandler::timerEvent(QTimerEvent *event)
 {
     TRACE
-    Q_D(OfonoVoiceCallHandler);
+    Q_D(YottagramVoiceCallHandler);
 
     // Whilst call is active, increase duration by a second each second.
     if(isOngoing() && event->timerId() == d->durationTimerId)
@@ -250,10 +250,10 @@ void OfonoVoiceCallHandler::timerEvent(QTimerEvent *event)
     }
 }
 
-void OfonoVoiceCallHandler::onStatusChanged()
+void YottagramVoiceCallHandler::onStatusChanged()
 {
     TRACE
-    Q_D(OfonoVoiceCallHandler);
+    Q_D(YottagramVoiceCallHandler);
 
     if (isOngoing())
     {

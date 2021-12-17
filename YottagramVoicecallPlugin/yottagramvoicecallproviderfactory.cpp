@@ -86,15 +86,7 @@ bool YottagramVoiceCallProviderFactory::configure(VoiceCallManagerInterface *man
 
     d->manager = manager;
 
-    QObject::connect(d->yottagramModemManager, SIGNAL(modemAdded(QString)), SLOT(onModemAdded(QString)));
-    QObject::connect(d->yottagramModemManager, SIGNAL(modemRemoved(QString)), SLOT(onModemRemoved(QString)));
-
     d->isConfigured = true;
-
-    foreach(QString modemPath, d->yottagramModemManager->modems())
-    {
-        this->onModemAdded(modemPath);
-    }
 
     return true;
 }
@@ -121,41 +113,3 @@ void YottagramVoiceCallProviderFactory::finalize()
 {
     TRACE
 }
-
-void YottagramVoiceCallProviderFactory::onModemAdded(const QString &modemPath)
-{
-    TRACE
-    Q_D(YottagramVoiceCallProviderFactory);
-    YottagramVoiceCallProvider *provider;
-
-    if(d->providers.contains(modemPath))
-    {
-        WARNING_T("YottagramVoiceCallProviderFactory: Modem already registered %s", qPrintable(modemPath));
-        return;
-    }
-
-    provider = new YottagramVoiceCallProvider(modemPath, d->manager, this);
-    d->providers.insert(modemPath, provider);
-
-    if(d->isConfigured)
-    {
-        d->manager->appendProvider(provider);
-    }
-}
-
-void YottagramVoiceCallProviderFactory::onModemRemoved(const QString &modemPath)
-{
-    TRACE
-    Q_D(YottagramVoiceCallProviderFactory);
-    YottagramVoiceCallProvider *provider;
-
-    if(!d->providers.contains(modemPath)) return;
-
-    provider = d->providers.value(modemPath);
-    d->providers.remove(modemPath);
-
-    d->manager->removeProvider(provider);
-
-    provider->deleteLater();
-}
-
