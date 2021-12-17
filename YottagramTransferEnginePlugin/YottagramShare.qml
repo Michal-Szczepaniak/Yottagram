@@ -17,28 +17,24 @@ You should have received a copy of the GNU General Public License
 along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 */
+import QtQuick 2.0
+import Sailfish.Silica 1.0
+import Nemo.DBus 2.0
 
-#ifndef YOTTAGRAMPLUGININFO_H
-#define YOTTAGRAMPLUGININFO_H
+Item {
+    property var shareAction
 
-#include <TransferEngine-qt5/transferplugininfo.h>
-#include <TransferEngine-qt5/transfermethodinfo.h>
+    Component.onCompleted: {
+        yottagram.call("share", [shareAction.toConfiguration()])
+        shareAction.done()
+    }
 
-class YottagramPluginInfo : public TransferPluginInfo
-{
-    Q_OBJECT
-public:
-    YottagramPluginInfo();
-    ~YottagramPluginInfo();
+    DBusInterface {
+        id: yottagram
 
-    QList<TransferMethodInfo> info() const;
-    void query();
-    bool ready() const;
+        service: "com.verdanditeam.yottagram"
+        path: "/"
+        iface: "com.verdanditeam.yottagram"
+    }
+}
 
-private:
-    QList<TransferMethodInfo> m_infoList;
-    bool m_ready;
-
-};
-
-#endif // YOTTAGRAMPLUGININFO_H

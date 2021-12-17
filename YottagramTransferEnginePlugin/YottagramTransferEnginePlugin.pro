@@ -19,6 +19,9 @@ SOURCES += \
     $$PWD/YottagramMediaTransfer.cpp \
     $$PWD/YottagramTransferPlugin.cpp
 
+DISTFILES += \
+    $$PWD/YottagramShare.qml
+
 target.path = $$[QT_INSTALL_LIBS]/nemo-transferengine/plugins
 INSTALLS += target
 
