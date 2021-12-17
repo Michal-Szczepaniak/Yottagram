@@ -1,12 +1,12 @@
-[submodule "vendor/fr/grecko/sortfilterproxymodel"]
-	path = vendor/fr/grecko/sortfilterproxymodel
+[submodule "Yottagram/vendor/fr/grecko/sortfilterproxymodel"]
+	path = Yottagram/vendor/fr/grecko/sortfilterproxymodel
 	url = https://github.com/oKcerG/SortFilterProxyModel.git
-[submodule "vendor/rlottie"]
-	path = vendor/rlottie
+[submodule "Yottagram/vendor/rlottie"]
+	path = Yottagram/vendor/rlottie
 	url = https://github.com/Samsung/rlottie.git
-[submodule "vendor/tgcalls/upstream"]
-	path = vendor/tgcalls/upstream
+[submodule "Yottagram/vendor/tgcalls/upstream"]
+	path = Yottagram/vendor/tgcalls/upstream
 	url = https://github.com/TelegramMessenger/tgcalls.git
-[submodule "vendor/tg_owt/upstream"]
-	path = vendor/tg_owt/upstream
+[submodule "Yottagram/vendor/tg_owt/upstream"]
+	path = Yottagram/vendor/tg_owt/upstream
 	url = https://github.com/desktop-app/tg_owt/
