@@ -60,7 +60,7 @@ class Chat : public QAbstractListModel
     Q_PROPERTY(int64_t lastMessageId READ getLastMessageId NOTIFY lastMessageIdChanged)
     Q_PROPERTY(int32_t unreadCount READ getUnreadCount NOTIFY unreadCountChanged)
     Q_PROPERTY(int32_t unreadMentionCount READ getUnreadMentionCount NOTIFY unreadMentionCountChanged)
-    Q_PROPERTY(int64_t firstUnreadMention READ firstUnreadMention NOTIFY unreadMentionCountChanged)
+    Q_PROPERTY(int64_t firstUnreadMention READ firstUnreadMention NOTIFY firstUnreadMentionChanged)
     Q_PROPERTY(bool isSelf READ isSelf NOTIFY isSelfChanged)
     Q_PROPERTY(int32_t ttl READ getTtl WRITE setTtl NOTIFY ttlChanged)
     Q_PROPERTY(int32_t muteFor READ getMuteFor WRITE setMuteFor NOTIFY chatNotificationSettingsChanged)
@@ -288,6 +288,7 @@ signals:
     void gotChatHistory();
     void draftMessageChanged();
     void actionTextChanged();
+    void firstUnreadMentionChanged();
 
 public slots:
     void updateChatReadInbox(td_api::updateChatReadInbox *updateChatReadInbox);
@@ -305,6 +306,7 @@ public slots:
     void updateChatPermissions(td_api::updateChatPermissions *updateChatPermissions);
     void updateChatMessageTtlSetting(td_api::updateChatMessageTtlSetting *updateChatMessageTtlSetting);
     void updateUserChatAction(td_api::updateUserChatAction *updateUserChatAction);
+    void onGotSearchChatMessagesFilterUnreadMention(int64_t chatId, td_api::messages *messages);
 
     void onGotChatHistory(int64_t chatId, td_api::messages *messages);
 
@@ -337,6 +339,7 @@ private:
     QHash<int64_t, ChatAction> _chatActions;
     QVector<int64_t> _getMessageCache;
     shared_ptr<Message> _lastMessage;
+    int64_t _firstUnreadMention;
 };
 Q_DECLARE_METATYPE(Chat*)
 

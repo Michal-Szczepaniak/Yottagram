@@ -41,20 +41,29 @@ Page {
 
         contentHeight: column.height
 
+        PullDownMenu {
+            MenuItem {
+                text: qsTr("Proxy settings")
+                onClicked: pageStack.push(Qt.resolvedUrl("../components/ProxySettings.qml"))
+            }
+        }
+
         Column {
             id: column
 
             width: page.width
             spacing: Theme.paddingLarge
             PageHeader {
-                title: qsTr("UI Template")
+                title: qsTr("Login")
             }
+
             Label {
                 x: Theme.horizontalPageMargin
                 text: qsTr("Number with +XXX")
                 color: Theme.secondaryHighlightColor
                 font.pixelSize: Theme.fontSizeExtraLarge
             }
+
             TextField {
                 id: number
                 width: column.width
@@ -63,6 +72,12 @@ Page {
                 Keys.onReturnPressed: {
                     authorization.sendNumber(number.text)
                 }
+            }
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Submit")
+                onClicked: authorization.sendNumber(number.text)
             }
         }
     }

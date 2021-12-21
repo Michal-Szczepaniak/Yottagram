@@ -47,7 +47,8 @@ Chat::Chat(td_api::chat* chat, shared_ptr<Files> files) :
     _notificationSettings(nullptr),
     _scopeNotificationSettings(nullptr),
     _mainPosition(nullptr),
-    _archivePosition(nullptr)
+    _archivePosition(nullptr),
+    _firstUnreadMention(0)
 {
     _basicGroupFullInfo = new BasicGroupFullInfo();
     _supergroupFullInfo = new SupergroupFullInfo();
@@ -207,28 +208,33 @@ void Chat::setUnreadMentionCount(int32_t unreadMentionCount)
 {
     _unreadMentionCount = unreadMentionCount;
 
+    if (unreadMentionCount > 0) {
+        if (_manager) {
+            _manager->sendQueryWithRespone(
+                getId(),
+                td_api::searchChatMessages::ID,
+                td_api::searchMessagesFilterUnreadMention::ID,
+                new td_api::searchChatMessages(getId(), "", nullptr, 0, 0, 1, td_api::make_object<td_api::searchMessagesFilterUnreadMention>(), 0)
+            );
+        }
+    } else {
+        _firstUnreadMention = 0;
+        emit firstUnreadMentionChanged();
+    }
+
     emit unreadMentionCountChanged(unreadMentionCount);
 }
 
 int64_t Chat::firstUnreadMention() const
 {
-    int64_t messageId = 0;
-    for (QVector<const int64_t>::reverse_iterator it = _message_ids.rbegin(); it != _message_ids.rend(); ++it) {
-        if (_messages.contains(*it) && _messages[*it]->containsUnreadMention()) {
-            messageId = *it;
-            break;
-        }
-    }
-    return messageId;
+    return _firstUnreadMention;
 }
 
 void Chat::updateMessageMentionRead(int32_t unreadMentionCount, int64_t messageId)
 {
-    _unreadMentionCount = unreadMentionCount;
-
     if (_messages.contains(messageId)) _messages[messageId]->setContainsUnreadMention(false);
 
-    emit unreadMentionCountChanged(unreadMentionCount);
+    setUnreadMentionCount(unreadMentionCount);
 }
 
 void Chat::setLastReadInboxMessageId(int64_t messageId)
@@ -615,6 +621,16 @@ void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), &TelegramManager::updateChatMessageTtlSetting, this, &Chat::updateChatMessageTtlSetting);
     connect(_manager.get(), &TelegramManager::updateUserChatAction, this, &Chat::updateUserChatAction);
     connect(_manager.get(), &TelegramManager::gotMessage, this, &Chat::onGotMessage);
+    connect(_manager.get(), &TelegramManager::gotSearchChatMessagesFilterUnreadMention, this, &Chat::onGotSearchChatMessagesFilterUnreadMention);
+
+    if (_unreadMentionCount > 0) {
+        _manager->sendQueryWithRespone(
+            getId(),
+            td_api::searchChatMessages::ID,
+            td_api::searchMessagesFilterUnreadMention::ID,
+            new td_api::searchChatMessages(getId(), "", nullptr, 0, 0, 1, td_api::make_object<td_api::searchMessagesFilterUnreadMention>(), 0)
+            );
+    }
 }
 
 void Chat::setUsers(shared_ptr<Users> users)
@@ -1684,6 +1700,15 @@ void Chat::updateUserChatAction(td_api::updateUserChatAction *updateUserChatActi
 
     if (action != ChatAction::None) _chatActions[updateUserChatAction->user_id_] = action;
     emit actionTextChanged();
+}
+
+void Chat::onGotSearchChatMessagesFilterUnreadMention(int64_t chatId, td_api::messages *messages)
+{
+    if (chatId != getId()) return;
+    if (messages->total_count_ > 0) {
+        _firstUnreadMention = messages->messages_[0]->id_;
+        emit firstUnreadMentionChanged();
+    }
 }
 
 void Chat::onGotChatHistory(int64_t chatId, td_api::messages *messages)

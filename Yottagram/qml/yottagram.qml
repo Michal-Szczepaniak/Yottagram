@@ -28,26 +28,7 @@ ApplicationWindow
 {
     id: app
 
-    Timer {
-        id: loadTimer
-        running: true
-        repeat: false
-        interval: 5000
-        onTriggered: {
-            pageStack.animatorPush(initialPageComponent)
-        }
-    }
-
-    Component {
-        id: initialPageComponent
-        ChatList { }
-    }
-
-    BusyLabel {
-        anchors.centerIn: parent
-        visible: loadTimer.running
-    }
-
     cover: Qt.resolvedUrl("cover/CoverPage.qml")
     allowedOrientations: defaultAllowedOrientations
+    initialPage: Component { ChatList { } }
 }

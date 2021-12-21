@@ -135,6 +135,10 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
         switch (response.subType) {
         case td_api::searchMessagesFilterPinned::ID:
             emit gotSearchChatMessagesFilterPinned(response.chatId, static_cast<td_api::messages*>(message));
+            break;
+        case td_api::searchMessagesFilterUnreadMention::ID:
+            emit gotSearchChatMessagesFilterUnreadMention(response.chatId, static_cast<td_api::messages*>(message));
+            break;
         default:
             emit gotSearchChatMessages(response.chatId, static_cast<td_api::messages*>(message));
         }

@@ -115,6 +115,7 @@ signals:
     void gotStickerSet(td_api::stickerSet *stickerSet);
     void gotSearchChatMessages(int64_t chatId, td_api::messages *messages);
     void gotSearchChatMessagesFilterPinned(int64_t chatId, td_api::messages *messages);
+    void gotSearchChatMessagesFilterUnreadMention(int64_t chatId, td_api::messages *messages);
     void gotSavedAnimations(td_api::animations *animations);
     void gotMessage(td_api::message *message);
     void gotProxies(td_api::proxies *proxies);

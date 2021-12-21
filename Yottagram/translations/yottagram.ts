@@ -52,33 +52,41 @@
 <context>
     <name>AuthorizationCode</name>
     <message>
-        <source>UI Template</source>
+        <source>Code</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Code</source>
+        <source>Login</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>AuthorizationNumber</name>
     <message>
-        <source>UI Template</source>
+        <source>Number with +XXX</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Number with +XXX</source>
+        <source>Proxy settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Submit</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>AuthorizationPassword</name>
     <message>
-        <source>UI Template</source>
+        <source>Password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Password</source>
+        <source>Login</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -853,6 +861,10 @@
     </message>
     <message>
         <source>Password</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Secret</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

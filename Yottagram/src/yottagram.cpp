@@ -43,8 +43,6 @@ int main(int argc, char *argv[])
 {
     signal(SIGSEGV, handler);
     signal(SIGABRT, handler);
-    Core *c;
-    c->init();
     QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
     QSharedPointer<QQuickView> view(SailfishApp::createView());
     qRegisterMetaType<int32_t>("int32_t");

@@ -52,7 +52,7 @@ bool ProxyModel::setData(const QModelIndex &index, const QVariant &value, int ro
 {
     if (rowCount() <= 0 || index.row() >= rowCount()) return false;
 
-    Proxy proxy = _proxyList[index.row()];
+    Proxy &proxy = _proxyList[index.row()];
 
     switch (role) {
     case ProxyRoles::ServerRole:
@@ -148,6 +148,7 @@ void ProxyModel::update(int index)
 
     Proxy proxy = _proxyList[index];
     td_api::editProxy *req = new td_api::editProxy();
+    req->proxy_id_ = proxy.id;
     req->server_ = proxy.server.toStdString();
     req->port_ = proxy.port;
     req->type_ = getProxyType(proxy.type, proxy.username, proxy.password);

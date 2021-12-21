@@ -571,8 +571,6 @@ Page {
                     contentWidth: width
                     highlighted: selection.indexOf(messageId) !== -1
 
-                    Component.onDestruction: if (Qt.application.state === Qt.ApplicationInactive) console.log("destroyed in inactive")
-
                     Rectangle {
                         id: blinkBackground
                         anchors.fill: parent

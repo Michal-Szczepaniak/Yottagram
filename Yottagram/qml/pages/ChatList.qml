@@ -75,6 +75,14 @@ Page {
             pageStack.replace(Qt.resolvedUrl("AuthorizationNumber.qml"));
         }
 
+        onWaitingForCode: {
+            pageStack.replace(Qt.resolvedUrl("AuthorizationCode.qml"));
+        }
+
+        onWaitingForPassword: {
+            pageStack.replace(Qt.resolvedUrl("AuthorizationPassword.qml"));
+        }
+
         onIsAuthorizedChanged: {
             if (!authorization.isAuthorized) {
                 pageStack.replace(Qt.resolvedUrl("AuthorizationNumber.qml"));

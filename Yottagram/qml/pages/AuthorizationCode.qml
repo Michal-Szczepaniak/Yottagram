@@ -48,7 +48,7 @@ Page {
             width: page.width
             spacing: Theme.paddingLarge
             PageHeader {
-                title: qsTr("UI Template")
+                title: qsTr("Login")
             }
             Label {
                 x: Theme.horizontalPageMargin

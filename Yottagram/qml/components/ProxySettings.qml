@@ -106,7 +106,7 @@ Page {
                             id: serverEditDialog
                             width: Screen.width
 
-                            onAccepted: proxyModel.saveServer(index)
+                            onAccepted: proxyModel.update(index)
 
                             Column {
                                 anchors.fill: parent
@@ -135,6 +135,7 @@ Page {
                                     label: qsTr("Server")
                                     text: server
                                     onTextChanged: server = text
+                                    inputMethodHints: Qt.ImhNoAutoUppercase
                                 }
 
                                 TextField {
@@ -142,16 +143,18 @@ Page {
                                     label: qsTr("Port")
                                     text: port
                                     onTextChanged: port = text
+                                    inputMethodHints: Qt.ImhDigitsOnly
                                 }
 
                                 TextField {
                                     width: parent.width
-                                    label: qsTr("Username")
+                                    label: typeSwitch.currentIndex === 2 ? qsTr("Secret") : qsTr("Username")
                                     text: username
                                     onTextChanged: username = text
+                                    inputMethodHints: Qt.ImhNoAutoUppercase
                                 }
 
-                                TextField {
+                                PasswordField {
                                     width: parent.width
                                     label: qsTr("Password")
                                     text: password
