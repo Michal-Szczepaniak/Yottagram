@@ -112,6 +112,10 @@ QString Message::getText()
     case td_api::messageCall::ID:
         return _message->is_outgoing_ ? tr("Outgoing call") : tr("Incoming call");
         break;
+    case td_api::messageBasicGroupChatCreate::ID:
+        return tr("Group created");
+    case td_api::messageSupergroupChatCreate::ID:
+        return tr("Group created");
     case td_api::messageLocation::ID:
     case td_api::messageContact::ID:
     case td_api::messageSticker::ID:
@@ -172,6 +176,10 @@ QString Message::getType() const
         return "animatedEmoji";
     case td_api::messageUnsupported::ID:
         return "messageUnsupported";
+    case td_api::messageBasicGroupChatCreate::ID:
+        return "messageBasicGroupChatCreate";
+    case td_api::messageSupergroupChatCreate::ID:
+        return "messageSupergroupChatCreate";
     default:
         return "Message unsupported";
     }

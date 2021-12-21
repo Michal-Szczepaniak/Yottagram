@@ -45,7 +45,7 @@ public:
     QVariant data(const QModelIndex &index, int role = TypeRole) const;
     QHash<int, QByteArray> roleNames() const;
 
-    std::shared_ptr<User> getUser(int64_t userId) const;
+    std::shared_ptr<User> getUser(int64_t userId);
     Q_INVOKABLE QVariant getUserAsVariant(int64_t userId) const;
 
 public slots:

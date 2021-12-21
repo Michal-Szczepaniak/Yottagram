@@ -30,28 +30,32 @@ class YottagramVoiceCallHandlerPrivate
     Q_DECLARE_PUBLIC(YottagramVoiceCallHandler)
 
 public:
-    YottagramVoiceCallHandlerPrivate(YottagramVoiceCallHandler *q, const QString &pHandlerId, YottagramVoiceCallProvider *pProvider, VoiceCallManagerInterface *manager)
-        : q_ptr(q), handlerId(pHandlerId), provider(pProvider), manager(manager), duration(0), durationTimerId(-1), isIncoming(false)
+    YottagramVoiceCallHandlerPrivate(YottagramVoiceCallHandler *q, const QString &pHandlerId, const QString &callerName, const bool &incoming, YottagramVoiceCallProvider *pProvider, VoiceCallManagerInterface *manager)
+        : q_ptr(q), handlerId(pHandlerId), provider(pProvider), manager(manager), callerName(callerName), isIncoming(incoming), status(incoming ? AbstractVoiceCallHandler::STATUS_INCOMING : AbstractVoiceCallHandler::STATUS_DIALING)
     { /* ... */ }
 
     YottagramVoiceCallHandler *q_ptr;
 
     QString handlerId;
+    QString callerName;
     VoiceCallManagerInterface *manager;
 
     YottagramVoiceCallProvider *provider;
 
-    quint64 duration;
-    int durationTimerId;
-    QElapsedTimer elapsedTimer;
     bool isIncoming;
+    QDateTime startTime;
+    QTimer timer;
+    AbstractVoiceCallHandler::VoiceCallStatus status;
 };
 
-YottagramVoiceCallHandler::YottagramVoiceCallHandler(const QString &handlerId, YottagramVoiceCallProvider *provider, VoiceCallManagerInterface *manager)
-    : AbstractVoiceCallHandler(provider), d_ptr(new YottagramVoiceCallHandlerPrivate(this, handlerId, provider, manager))
+YottagramVoiceCallHandler::YottagramVoiceCallHandler(const QString &handlerId, const QString &callerName, const bool &incoming, YottagramVoiceCallProvider *provider, VoiceCallManagerInterface *manager)
+    : AbstractVoiceCallHandler(provider), d_ptr(new YottagramVoiceCallHandlerPrivate(this, handlerId, callerName, incoming, provider, manager))
 {
     TRACE
     Q_D(YottagramVoiceCallHandler);
+    d->timer.setSingleShot(false);
+    d->timer.setInterval(1000);
+    connect(&d->timer, &QTimer::timeout, [this](){ emit this->durationChanged(this->duration()); });
 }
 
 YottagramVoiceCallHandler::~YottagramVoiceCallHandler()
@@ -79,22 +83,21 @@ QString YottagramVoiceCallHandler::lineId() const
 {
     TRACE
     Q_D(const YottagramVoiceCallHandler);
-    return "";
+    return d->callerName;
 }
 
 QDateTime YottagramVoiceCallHandler::startedAt() const
 {
     TRACE
     Q_D(const YottagramVoiceCallHandler);
-//    return QDateTime::fromString(d->yottagramVoiceCall->startTime(), "");
-    return QDateTime();
+    return d->startTime;
 }
 
 int YottagramVoiceCallHandler::duration() const
 {
     TRACE
     Q_D(const YottagramVoiceCallHandler);
-    return int(qRound(d->duration/1000.0));
+    return d->startTime.secsTo(QDateTime::currentDateTime());
 }
 
 bool YottagramVoiceCallHandler::isIncoming() const
@@ -113,7 +116,6 @@ bool YottagramVoiceCallHandler::isMultiparty() const
 bool YottagramVoiceCallHandler::isEmergency() const
 {
     TRACE
-    Q_D(const YottagramVoiceCallHandler);
     return false;
 }
 
@@ -133,36 +135,36 @@ AbstractVoiceCallHandler::VoiceCallStatus YottagramVoiceCallHandler::status() co
 {
     TRACE
     Q_D(const YottagramVoiceCallHandler);
-    QString state = "waiting";
+    return d->status;
+}
 
-    if(state == "active")
-        return STATUS_ACTIVE;
-    else if(state == "held")
-        return STATUS_HELD;
-    else if(state == "dialing")
-        return STATUS_DIALING;
-    else if(state == "alerting")
-        return STATUS_ALERTING;
-    else if(state == "incoming")
-        return STATUS_INCOMING;
-    else if(state == "waiting")
-        return STATUS_WAITING;
-    else if(state == "disconnected")
-        return STATUS_DISCONNECTED;
-
-    return STATUS_NULL;
+void YottagramVoiceCallHandler::setStatus(VoiceCallStatus status)
+{
+    TRACE
+    Q_D(YottagramVoiceCallHandler);
+    d->status = status;
+    if (status == STATUS_ACTIVE) {
+        d->startTime = QDateTime::currentDateTime();
+        emit startedAtChanged(d->startTime);
+        d->timer.start();
+    }
+    emit statusChanged(d->status);
 }
 
 void YottagramVoiceCallHandler::answer()
 {
     TRACE
     Q_D(YottagramVoiceCallHandler);
+    emit d->provider->accept();
 }
 
 void YottagramVoiceCallHandler::hangup()
 {
     TRACE
-    Q_D(YottagramVoiceCallHandler);;
+    Q_D(YottagramVoiceCallHandler);
+    d->timer.stop();
+    emit d->provider->discard();
+    setStatus(STATUS_DISCONNECTED);
 }
 
 void YottagramVoiceCallHandler::hold(bool)

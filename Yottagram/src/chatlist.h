@@ -112,7 +112,7 @@ private:
     QVector<int64_t>* getChatList(td_api::ChatList* list);
     td_api::object_ptr<td_api::ChatList> getSelectedChatList() const;
     void setChatPosition(int64_t chatId, td_api::chatPosition* position);
-    QString getMessageText(td_api::message* message) const;
+    QString getMessageText(shared_ptr<Message> message) const;
 
 signals:
     void channelNotificationSettingsChanged(td_api::scopeNotificationSettings* scopeNotificationSettings);

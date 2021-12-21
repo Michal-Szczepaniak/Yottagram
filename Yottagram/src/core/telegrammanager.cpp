@@ -44,12 +44,18 @@ void TelegramManager::init()
 
 void TelegramManager::sendQuery(td_api::Function* message)
 {
-    receiver.client->send({(std::uint64_t)1, td_api::object_ptr<td_api::Function>(message)});
+    _messageId++;
+    _messages[_messageId] = {0, message->get_id(), 0};
+
+    receiver.client->send({_messageId, td_api::object_ptr<td_api::Function>(message)});
 }
 
 void TelegramManager::sendQuerySync(td_api::Function *message)
 {
-    receiver.client->execute({(std::uint64_t)1, td_api::object_ptr<td_api::Function>(message)});
+    _messageId++;
+    _messages[_messageId] = {0, message->get_id(), 0};
+
+    receiver.client->execute({_messageId, td_api::object_ptr<td_api::Function>(message)});
 }
 
 void TelegramManager::sendQueryWithRespone(int64_t chatId, int32_t type, int32_t subType, td_api::Function *message)
@@ -98,11 +104,23 @@ QString TelegramManager::getNetworkType() const
     return _networkType;
 }
 
+TelegramManager::ConnectionState TelegramManager::getConnectionState() const
+{
+    return _connectionState;
+}
+
 void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *message)
 {
-    if (!_messages.contains(id) || message->get_id() == td_api::error::ID) return;
+    if (!_messages.contains(id)) return;
 
     MessageWithResponse response = _messages.take(id);
+
+    if (message->get_id() == td_api::error::ID) {
+        td_api::error* error = static_cast<td_api::error*>(message);
+        emit this->error(response.chatId, response.type, response.subType, error->code_, QString::fromStdString(error->message_));
+        return;
+    }
+
     switch (response.type) {
     case td_api::getChatHistory::ID:
         emit gotChatHistory(response.chatId, static_cast<td_api::messages*>(message));
@@ -123,6 +141,15 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
         break;
     case td_api::getSavedAnimations::ID:
         emit gotSavedAnimations(static_cast<td_api::animations*>(message));
+        break;
+    case td_api::getMessage::ID:
+        emit gotMessage(static_cast<td_api::message*>(message));
+        break;
+    case td_api::getProxies::ID:
+        emit gotProxies(static_cast<td_api::proxies*>(message));
+        break;
+    case td_api::testProxy::ID:
+        emit proxyTestSuccessful();
         break;
     }
 }
@@ -177,6 +204,7 @@ void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
             [this](td_api::updateUserChatAction &updateUserChatAction) { emit this->updateUserChatAction(&updateUserChatAction); },
             [this](td_api::updateUserStatus &updateUserStatus) { emit this->updateUserStatus(&updateUserStatus); },
             [](td_api::error &error) { qWarning() << QString::fromStdString(error.message_); },
+            [this](td_api::updateConnectionState &updateConnectionState) { this->updateConnectionState(&updateConnectionState); },
             [](auto &update) { Q_UNUSED(update) }
         )
     );
@@ -211,4 +239,19 @@ void TelegramManager::defaultRouteChanged(NetworkService *networkService)
     }
 
     setNetworkType("other");
+}
+
+void TelegramManager::updateConnectionState(td_api::updateConnectionState *updateConnectionState)
+{
+    downcast_call(
+        *updateConnectionState->state_, overloaded(
+            [&](td_api::connectionStateWaitingForNetwork&) { _connectionState = ConnectionState::WaitingForNetwork; },
+            [&](td_api::connectionStateConnectingToProxy&) { _connectionState = ConnectionState::ConnectingToProxy; },
+            [&](td_api::connectionStateConnecting&) { _connectionState = ConnectionState::Connecting; },
+            [&](td_api::connectionStateUpdating&) { _connectionState = ConnectionState::Updating; },
+            [&](td_api::connectionStateReady&) { _connectionState = ConnectionState::Ready; }
+        )
+    );
+
+    emit connectionStateChanged();
 }

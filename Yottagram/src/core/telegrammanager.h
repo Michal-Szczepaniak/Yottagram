@@ -40,6 +40,15 @@ public:
         int32_t subType;
     };
 
+    enum ConnectionState {
+        WaitingForNetwork,
+        ConnectingToProxy,
+        Connecting,
+        Updating,
+        Ready
+    };
+    Q_ENUMS(ConnectionState)
+
     void init();
     void sendQuery(td_api::Function* message);
     void sendQuerySync(td_api::Function* message);
@@ -49,6 +58,7 @@ public:
     void setDaemonEnabled(bool daemonEnabled);
     void setNetworkType(QString networkType);
     QString getNetworkType() const;
+    ConnectionState getConnectionState() const;
 
 private:
     void handleMessageWithResponse(uint64_t id, td_api::Object* message);
@@ -105,14 +115,21 @@ signals:
     void gotStickerSet(td_api::stickerSet *stickerSet);
     void gotSearchChatMessages(int64_t chatId, td_api::messages *messages);
     void gotSearchChatMessagesFilterPinned(int64_t chatId, td_api::messages *messages);
-    void gotSavedAnimations(td_api::animations* animations);
+    void gotSavedAnimations(td_api::animations *animations);
+    void gotMessage(td_api::message *message);
+    void gotProxies(td_api::proxies *proxies);
+    void proxyTestSuccessful();
 
     void myIdChanged(int32_t myId);
+    void error(int64_t chatId, int32_t type, int32_t subType, int32_t code, QString message);
+
+    void connectionStateChanged();
 
 public slots:
     void messageReceived(uint64_t id, td_api::Object* message);
     void onUpdateOption(td_api::updateOption *updateOption);
-    void defaultRouteChanged(NetworkService* networkService);
+    void defaultRouteChanged(NetworkService *networkService);
+    void updateConnectionState(td_api::updateConnectionState *updateConnectionState);
 
 private:
     TelegramReceiver receiver;
@@ -123,6 +140,7 @@ private:
     QString _networkType;
     QHash<uint64_t, MessageWithResponse> _messages;
     uint64_t _messageId;
+    ConnectionState _connectionState;
 };
 
 #endif // TELEGRAMSENDER_H

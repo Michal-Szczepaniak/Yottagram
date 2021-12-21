@@ -30,7 +30,7 @@ class YottagramVoiceCallHandler : public AbstractVoiceCallHandler
 {
     Q_OBJECT
 public:
-    explicit YottagramVoiceCallHandler(const QString &handlerId, YottagramVoiceCallProvider *provider, VoiceCallManagerInterface *manager);
+    explicit YottagramVoiceCallHandler(const QString &handlerId, const QString &callerName, const bool &incoming, YottagramVoiceCallProvider *provider, VoiceCallManagerInterface *manager);
             ~YottagramVoiceCallHandler();
 
     AbstractVoiceCallProvider* provider() const;
@@ -50,6 +50,7 @@ public:
     QList<AbstractVoiceCallHandler*> childCalls() const { return QList<AbstractVoiceCallHandler*>(); }
 
     VoiceCallStatus status() const;
+    void setStatus(VoiceCallStatus status);
 
 public Q_SLOTS:
     void answer();

@@ -144,7 +144,9 @@ Page {
 
     Connections {
         target: Qt.application
-        onStateChanged: if (Qt.application.state === Qt.ApplicationInactive) chatList.closeChat(chat.id); else if (Qt.application.state === Qt.ApplicationActive) chatList.openChat(chat.id)
+        onStateChanged: {
+            if (Qt.application.state === Qt.ApplicationInactive) chatList.closeChat(chat.id); else if (Qt.application.state === Qt.ApplicationActive) chatList.openChat(chat.id)
+        }
     }
 
     ConfigurationGroup {
@@ -155,7 +157,7 @@ Page {
         property bool animatedStickers: true
         property int fontSize: Theme.fontSizeMedium
         property bool uploadHintShown: false
-        Component.onCompleted: if (!uploadHintShown) hint.start(); else uploadHintShown = false
+        Component.onCompleted: if (!uploadHintShown) hint.start()
     }
 
     ConfigurationGroup {
@@ -166,12 +168,14 @@ Page {
     TouchInteractionHint {
         id: hint
         loops: 3
+        z: 10000
         startY: chatPage.height - textInput.height
         interactionMode: TouchInteraction.Swipe
         direction: TouchInteraction.Up
         onRunningChanged: if (!running) settings.uploadHintShown = true
     }
     InteractionHintLabel {
+        z: 10001
         anchors.bottom: parent.bottom
         text: qsTr("Swipe from bottom to access upload options")
         opacity: hint.running ? 1.0 : 0.0
@@ -553,13 +557,11 @@ Page {
                     }
                 }
 
-                add: Transition {
-                    NumberAnimation { properties: "y"; duration: 200; easing.type: Easing.InOutQuad }
-                }
-
-                displaced: Transition {
-                    NumberAnimation { properties: "y"; duration: 200; easing.type: Easing.InOutQuad }
-                }
+//                add: Transition {
+//                    to: item.height
+//                    PauseAnimation { duration: 500 }
+//                    NumberAnimation { properties: "y"; duration: 200; easing.type: Easing.InOutQuad }
+//                }
 
                 delegate:
                 ListItem {
@@ -568,6 +570,8 @@ Page {
                     contentHeight: Math.max(message.height + Theme.paddingSmall, Theme.itemSizeExtraSmall)
                     contentWidth: width
                     highlighted: selection.indexOf(messageId) !== -1
+
+                    Component.onDestruction: if (Qt.application.state === Qt.ApplicationInactive) console.log("destroyed in inactive")
 
                     Rectangle {
                         id: blinkBackground

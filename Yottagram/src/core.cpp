@@ -41,6 +41,8 @@ Core::Core(QObject *parent) : QObject(parent)
     qmlRegisterType<PinnedMessages>("com.verdanditeam.pinnedmessages", 1, 0, "PinnedMessages");
     qmlRegisterType<Calls>("com.verdanditeam.calls", 1, 0, "Calls");
     qmlRegisterType<Chat>("com.verdanditeam.chat", 1, 0, "Chat");
+    qmlRegisterType<ProxyModel>("com.verdanditeam.proxy", 1, 0, "ProxyModel");
+    qmlRegisterType<TelegramManager>("com.verdanditeam.manager", 1, 0, "TelegramManager");
 
     _files->setTelegramManager(_manager);
     _files->setWifiAutoDownloadSettings(&_wifiAutoDownloadSettings);
@@ -88,6 +90,7 @@ Core::Core(QObject *parent) : QObject(parent)
     _calls.setDBusHelper(_dbusHelper);
 
     _chatListFilters.setTelegramManager(_manager);
+    _proxyModel.setTelegramManager(_manager);
 }
 
 void Core::init()

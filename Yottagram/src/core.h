@@ -35,6 +35,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "calls.h"
 #include "dbushelper.h"
 #include "chatlistfilters.h"
+#include "proxymodel.h"
 
 using namespace std;
 
@@ -52,6 +53,7 @@ public:
     SavedAnimations _savedAnimations;
     Calls _calls;
     ChatListFilters _chatListFilters;
+    ProxyModel _proxyModel;
     shared_ptr<ChatList> _chatList;
     shared_ptr<Users> _users;
     shared_ptr<Files> _files;

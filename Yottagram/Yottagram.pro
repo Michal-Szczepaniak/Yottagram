@@ -59,7 +59,7 @@ SOURCES += src/core.cpp \
     src/files/files.cpp \
     src/message.cpp \
     src/notifications.cpp \
-#    src/proxymodel.cpp \
+    src/proxymodel.cpp \
     src/pulseaudiohelper.cpp \
     src/savedanimations.cpp \
     src/stickerset.cpp \
@@ -192,7 +192,7 @@ HEADERS += \
     src/core/telegrammanager.h \
     src/chatlist.h \
     src/chat.h \
-#    src/proxymodel.h \
+    src/proxymodel.h \
     src/pulseaudiohelper.h \
     src/savedanimations.h \
     src/stickerset.h \

@@ -72,12 +72,19 @@ QHash<int, QByteArray> Users::roleNames() const
     return roles;
 }
 
-std::shared_ptr<User> Users::getUser(int64_t userId) const
+std::shared_ptr<User> Users::getUser(int64_t userId)
 {
     if (_users.contains(userId)) {
         return _users[userId];
     } else {
-        return nullptr;
+        auto user = std::make_shared<User>();
+        user->setFiles(_files);
+        user->setTelegramManager(_manager);
+
+        beginInsertRows(QModelIndex(), rowCount(), rowCount());
+        _users[userId] = user;
+        endInsertRows();
+        return user;
     }
 }
 

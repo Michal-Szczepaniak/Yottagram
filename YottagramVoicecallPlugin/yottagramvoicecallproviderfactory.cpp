@@ -18,8 +18,8 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#include "common.h"
 #include "yottagramvoicecallproviderfactory.h"
+#include "common.h"
 #include "yottagramvoicecallprovider.h"
 
 #include <voicecallmanagerinterface.h>

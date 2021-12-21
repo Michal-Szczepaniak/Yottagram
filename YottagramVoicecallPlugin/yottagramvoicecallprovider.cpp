@@ -56,7 +56,12 @@ YottagramVoiceCallProvider::YottagramVoiceCallProvider(VoiceCallManagerInterface
     TRACE
     Q_D(YottagramVoiceCallProvider);
 
+    connect(d->manager, &VoiceCallManagerInterface::setMuteMicrophoneRequested, this, &YottagramVoiceCallProvider::muteMicrophone);
+    connect(d->manager, &VoiceCallManagerInterface::setAudioModeRequested, [this](const QString &mode) { emit this->changeSpeakerMode(mode != "earpiece"); });
+
     new CallsAdaptor(this);
+    QDBusConnection::sessionBus().registerService("com.verdanditeam.yottagram.calls");
+    QDBusConnection::sessionBus().registerObject("/calls", this);
 }
 
 YottagramVoiceCallProvider::~YottagramVoiceCallProvider()
@@ -106,7 +111,30 @@ void YottagramVoiceCallProvider::newCall(const QString &callerName, const bool &
     TRACE
     Q_D(YottagramVoiceCallProvider);
 
-    YottagramVoiceCallHandler* handler = new YottagramVoiceCallHandler(d->manager->generateHandlerId(), this, d->manager);
+    YottagramVoiceCallHandler* handler = new YottagramVoiceCallHandler(d->manager->generateHandlerId(), callerName, incoming, this, d->manager);
+    d->voiceCall = handler;
     emit voiceCallAdded(handler);
+    emit voiceCallsChanged();
+}
+
+void YottagramVoiceCallProvider::callReady()
+{
+    TRACE
+    Q_D(YottagramVoiceCallProvider);
+    if (d->voiceCall == nullptr) return;
+    d->voiceCall->setStatus(AbstractVoiceCallHandler::STATUS_ACTIVE);
+}
+
+void YottagramVoiceCallProvider::discardCall()
+{
+    TRACE
+    Q_D(YottagramVoiceCallProvider);
+    if (d->voiceCall != nullptr) {
+        d->voiceCall->setStatus(AbstractVoiceCallHandler::STATUS_DISCONNECTED);
+        QString handlerId = d->voiceCall->handlerId();
+        d->voiceCall->deleteLater();
+        d->voiceCall = nullptr;
+        emit voiceCallRemoved(handlerId);
+    }
     emit voiceCallsChanged();
 }

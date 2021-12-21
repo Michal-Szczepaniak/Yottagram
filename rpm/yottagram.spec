@@ -40,7 +40,7 @@ Fastest telegram client for sailfishos on the earth!
 Summary:        Yottagram's Voicecall plugin
 BuildRequires:  voicecall-qt5-devel
 Requires:       voicecall-qt5
-Requires:       %{name} = %{version}
+Requires:       %{name} >= %{version}
 
 %description voicecall-plugin
 Yottagram's Voicecall plugin
@@ -48,8 +48,8 @@ Yottagram's Voicecall plugin
 %package transferengine-plugin
 Summary:        Yottagram's Transfer Engine plugin
 BuildRequires:  libnemotransferengine-qt5-devel
-Requires:       nemotransferengine-qt5
-Requires:       %{name} = %{version}
+Requires:       libnemotransferengine-qt5
+Requires:       %{name} >= %{version}
 
 %description transferengine-plugin
 Yottagram's Transfer Engine plugin
@@ -84,3 +84,4 @@ desktop-file-install --delete-original       \
 
 %files transferengine-plugin
 %{_libdir}/nemo-transferengine/plugins/libYottagramTransferEnginePlugin.so
+%{_datadir}/nemo-transferengine/plugins/YottagramShare.qml

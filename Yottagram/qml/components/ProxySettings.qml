@@ -33,7 +33,7 @@ Page {
     Connections {
         target: proxyModel
         onTestError: Notices.show(message, Notice.Short, Notice.Center)
-        onProxyTestSuccessful: Notices.show("Test successful", Notice.Short, Notice.Center)
+        onTestSuccessful: Notices.show("Test successful", Notice.Short, Notice.Center)
         onAddError: Notices.show(message, Notice.Short, Notice.Center)
         onEditError: Notices.show(message, Notice.Short, Notice.Center)
     }
@@ -44,7 +44,7 @@ Page {
         PullDownMenu {
             MenuItem {
                 text: qsTr("Add server")
-                onClicked: proxyModel.addServer()
+                onClicked: proxyModel.add()
             }
             MenuItem {
                 text: qsTr("Disable proxy")

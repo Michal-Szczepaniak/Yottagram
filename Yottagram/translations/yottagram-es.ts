@@ -223,14 +223,6 @@
 <context>
     <name>Chat</name>
     <message>
-        <source>%1 left</source>
-        <translation>%1 salió</translation>
-    </message>
-    <message>
-        <source>%1 joined</source>
-        <translation>%1 se unió</translation>
-    </message>
-    <message>
         <source>Open secret chat</source>
         <translation>Abrir chat secreto</translation>
     </message>
@@ -434,6 +426,10 @@
         <source>%1 is watching animations</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Channel created</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
@@ -462,24 +458,8 @@
         <translation>Mensajes guardados</translation>
     </message>
     <message>
-        <source>%1 left</source>
-        <translation>%1 salió</translation>
-    </message>
-    <message>
-        <source>%1 joined</source>
-        <translation>%1 se unió</translation>
-    </message>
-    <message>
         <source>Audio</source>
         <translation>Audio</translation>
-    </message>
-    <message>
-        <source>Video note</source>
-        <translation>Nota de vídeo</translation>
-    </message>
-    <message>
-        <source>Voice note</source>
-        <translation>Nota de voz</translation>
     </message>
     <message>
         <source>Photo</source>
@@ -498,19 +478,8 @@
         <translation>Documento</translation>
     </message>
     <message>
-        <source>GIF</source>
-        <translation>GIF</translation>
-    </message>
-    <message>
         <source>Poll</source>
         <translation>Encuesta</translation>
-    </message>
-    <message numerus="yes">
-        <source>Self-destruct timer set to %n second(s)</source>
-        <translation>
-            <numerusform>Autodestrucción en %n segundo</numerusform>
-            <numerusform>Autodestrucción en %n segundos</numerusform>
-        </translation>
     </message>
     <message>
         <source>Unpin from top</source>
@@ -521,18 +490,6 @@
         <translation>Fijar arriba</translation>
     </message>
     <message>
-        <source>%1 pinned message</source>
-        <translation>%1 fijó un mensaje</translation>
-    </message>
-    <message>
-        <source>Outgoing call</source>
-        <translation>Llamada saliente</translation>
-    </message>
-    <message>
-        <source>Incoming call</source>
-        <translation>Llamada entrante</translation>
-    </message>
-    <message>
         <source>Location</source>
         <translation>Ubicación</translation>
     </message>
@@ -541,16 +498,24 @@
         <translation>Contacto</translation>
     </message>
     <message>
-        <source>%1 joined telegram</source>
-        <translation>%1 se unió a telegram</translation>
-    </message>
-    <message>
         <source>Archive</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Main</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>VoiceNote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>VideoNote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>GIF</source>
+        <translation type="unfinished">GIF</translation>
     </message>
 </context>
 <context>
@@ -740,6 +705,10 @@
     <message>
         <source>%1 joined telegram</source>
         <translation>%1 se unió a telegram</translation>
+    </message>
+    <message>
+        <source>Group created</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

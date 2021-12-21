@@ -23,11 +23,28 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QDebug>
 #include "core.h"
 #include "tgsioplugin/tgsioplugin.h"
+#include <execinfo.h>
+#include <signal.h>
 
 Q_IMPORT_PLUGIN(TgsIOPlugin)
 
+void handler(int sig) {
+    void *array[10];
+    size_t size;
+
+    size = backtrace(array, 10);
+
+    fprintf(stderr, "Error: signal %d:\n", sig);
+    backtrace_symbols_fd(array, size, STDERR_FILENO);
+    exit(1);
+}
+
 int main(int argc, char *argv[])
 {
+    signal(SIGSEGV, handler);
+    signal(SIGABRT, handler);
+    Core *c;
+    c->init();
     QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
     QSharedPointer<QQuickView> view(SailfishApp::createView());
     qRegisterMetaType<int32_t>("int32_t");
@@ -45,6 +62,7 @@ int main(int argc, char *argv[])
     view->rootContext()->setContextProperty("savedAnimations", &core._savedAnimations);
     view->rootContext()->setContextProperty("calls", &core._calls);
     view->rootContext()->setContextProperty("chatListFilters", &core._chatListFilters);
+    view->rootContext()->setContextProperty("proxyModel", &core._proxyModel);
     view->rootContext()->setContextProperty("wifiAutoDownloadSettings", &core._wifiAutoDownloadSettings);
     view->rootContext()->setContextProperty("mobileAutoDownloadSettings", &core._mobileAutoDownloadSettings);
     view->rootContext()->setContextProperty("roamingAutoDownloadSettings", &core._roamingAutoDownloadSettings);

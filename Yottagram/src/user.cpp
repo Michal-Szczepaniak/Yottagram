@@ -71,31 +71,37 @@ void User::setUser(td_api::user *user)
 
 QString User::getFirstName() const
 {
+    if (_user == nullptr) return "";
     return QString::fromStdString(_user->first_name_);
 }
 
 QString User::getLastName() const
 {
+    if (_user == nullptr) return "";
     return QString::fromStdString(_user->last_name_);
 }
 
 QString User::getName() const
 {
+    if (_user == nullptr) return "";
     return QString::fromStdString(_user->first_name_) + " " + QString::fromStdString(_user->last_name_);
 }
 
 QString User::getUserame() const
 {
+    if (_user == nullptr) return "";
     return QString::fromStdString(_user->username_);
 }
 
 QString User::getPhoneNumber() const
 {
+    if (_user == nullptr) return "";
     return QString::fromStdString(_user->phone_number_);
 }
 
 User::Status User::getStatus() const
 {
+    if (_user == nullptr) return Status::Empty;
     switch (_user->status_->get_id()) {
     case td_api::userStatusEmpty::ID:
         return Status::Empty;
@@ -135,41 +141,49 @@ QString User::getStatusText() const
 
 bool User::isContact() const
 {
+    if (_user == nullptr) return false;
     return _user->is_contact_;
 }
 
 bool User::isMutualContact() const
 {
+    if (_user == nullptr) return false;
     return _user->is_mutual_contact_;
 }
 
 bool User::isVerified() const
 {
+    if (_user == nullptr) return false;
     return _user->is_verified_;
 }
 
 bool User::isSupport() const
 {
+    if (_user == nullptr) return false;
     return _user->is_support_;
 }
 
 QString User::getRestrictionReason() const
 {
+    if (_user == nullptr) return "";
     return QString::fromStdString(_user->restriction_reason_);
 }
 
 bool User::isScam() const
 {
+    if (_user == nullptr) return false;
     return _user->is_scam_;
 }
 
 bool User::haveAccess() const
 {
+    if (_user == nullptr) return false;
     return _user->have_access_;
 }
 
 User::Type User::getType() const
 {
+    if (_user == nullptr) return Type::Unknown;
     switch (_user->type_->get_id()) {
     case td_api::userTypeBot::ID:
         return Type::Bot;
@@ -186,6 +200,7 @@ User::Type User::getType() const
 
 bool User::hasPhoto() const
 {
+    if (_user == nullptr) return false;
     return _user->profile_photo_ != nullptr;
 }
 

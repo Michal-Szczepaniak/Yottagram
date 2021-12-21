@@ -22,6 +22,11 @@ SOURCES += \
 DISTFILES += \
     $$PWD/YottagramShare.qml
 
+qml.files = YottagramShare.qml
+qml.path = /usr/share/nemo-transferengine/plugins
+
+INSTALLS += qml
+
 target.path = $$[QT_INSTALL_LIBS]/nemo-transferengine/plugins
 INSTALLS += target
 

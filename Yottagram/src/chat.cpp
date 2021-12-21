@@ -56,6 +56,7 @@ Chat::Chat(td_api::chat* chat, shared_ptr<Files> files) :
     setLastReadOutboxMessageId(chat->last_read_outbox_message_id_);
     setUnreadCount(_chat->unread_count_);
     setUnreadMentionCount(_chat->unread_mention_count_);
+    if (_chat->last_message_) setLastMessage(move(_chat->last_message_));
 
     for (td_api::object_ptr<td_api::chatPosition> &position: _chat->positions_) {
         updatePosition(position.release());
@@ -569,43 +570,30 @@ QString Chat::actionText()
     switch (action) {
     case ChatAction::RecordingVideo:
         return tr("%1 is recording video").arg(userFirstName);
-        break;
     case ChatAction::UploadingVideo:
         return tr("%1 is uploading video").arg(userFirstName);
-        break;
     case ChatAction::RecordingVoiceNote:
         return tr("%1 is recording voicenote").arg(userFirstName);
-        break;
     case ChatAction::UploadingVoiceNote:
         return tr("%1 is uploading voicenote").arg(userFirstName);
-        break;
     case ChatAction::UploadingPhoto:
         return tr("%1 is uploading photo").arg(userFirstName);
-        break;
     case ChatAction::UploadingDocument:
         return tr("%1 is uploading document").arg(userFirstName);
-        break;
     case ChatAction::ChoosingSticker:
         return tr("%1 is choosing sticker").arg(userFirstName);
-        break;
     case ChatAction::ChoosingLocation:
         return tr("%1 is choosing location").arg(userFirstName);
-        break;
     case ChatAction::ChoosingContact:
         return tr("%1 is choosing contact").arg(userFirstName);
-        break;
     case ChatAction::StartPlayingGame:
         return tr("%1 is playing game").arg(userFirstName);
-        break;
     case ChatAction::RecordingVideoNote:
         return tr("%1 is recording videonote").arg(userFirstName);
-        break;
     case ChatAction::UploadingVideoNote:
         return tr("%1 is uploading videonote").arg(userFirstName);
-        break;
     case ChatAction::WatchingAnimations:
         return tr("%1 is watching animations").arg(userFirstName);
-        break;
     }
 }
 
@@ -626,6 +614,7 @@ void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), &TelegramManager::gotChatHistory, this, &Chat::onGotChatHistory);
     connect(_manager.get(), &TelegramManager::updateChatMessageTtlSetting, this, &Chat::updateChatMessageTtlSetting);
     connect(_manager.get(), &TelegramManager::updateUserChatAction, this, &Chat::updateUserChatAction);
+    connect(_manager.get(), &TelegramManager::gotMessage, this, &Chat::onGotMessage);
 }
 
 void Chat::setUsers(shared_ptr<Users> users)
@@ -676,6 +665,14 @@ QVariant Chat::data(const QModelIndex &index, int role) const
 {
     if (rowCount() <= 0 || index.row() < 0 || index.row() >= rowCount()) return QVariant();
 
+    if (!_messages.contains(_message_ids[index.row()])) {
+        if (!_getMessageCache.contains(_message_ids[index.row()])) {
+            const_cast<Chat*>(this)->_getMessageCache.append(_message_ids[index.row()]);
+            fetchMessage(_message_ids[index.row()]);
+        }
+        return QVariant();
+    }
+
     auto message = _messages[_message_ids[index.row()]];
     switch (role) {
     case MessageRoles::TypeRole:
@@ -683,13 +680,8 @@ QVariant Chat::data(const QModelIndex &index, int role) const
     case MessageRoles::IdRole:
         return QVariant::fromValue(message->getId());
     case MessageRoles::MessageRole:
-        if (message->getType() == "messageChatDeleteMember") {
-            return tr("%1 left").arg(_users->getUser(message->getDeleteMemberId())->getName());
-        } else if (message->getType() == "messageChatAddMembers") {
-            auto newUsers = message->getAddMembersIds();
-            for(auto userId: newUsers) {
-                return tr("%1 joined").arg(_users->getUser(userId)->getName());
-            }
+        if (message->getType() == "messageSupergroupChatCreate" && getChatType() == "channel") {
+            return tr("Channel created");
         }
         return message->getText();
     case MessageRoles::MessageTypeRole:
@@ -948,6 +940,11 @@ td_api::message *Chat::getLastMessage()
     return _chat->last_message_.get();
 }
 
+shared_ptr<Message> Chat::lastMessage()
+{
+    return _lastMessage;
+}
+
 int64_t Chat::getLastMessageId() const
 {
     if (_chat->last_message_ == nullptr) return 0;
@@ -958,6 +955,14 @@ int64_t Chat::getLastMessageId() const
 void Chat::setLastMessage(td_api::object_ptr<td_api::message> lastMessage)
 {
     _chat->last_message_ = move(lastMessage);
+
+    shared_ptr<Message> newLastMessage = make_shared<Message>();
+    newLastMessage->setTelegramManager(_manager);
+    newLastMessage->setUsers(_users);
+    newLastMessage->setFiles(_files);
+    newLastMessage->setMessage(_chat->last_message_.get());
+    newLastMessage->setChatId(getId());
+    _lastMessage = newLastMessage;
 
     emit lastMessageIdChanged(_chat->last_message_->id_);
 }
@@ -1397,8 +1402,60 @@ void Chat::unpinMessage(int64_t messageId)
 
 void Chat::clearCachedHistory()
 {
-    qDebug() << __PRETTY_FUNCTION__;
     _message_ids.clear();
+}
+
+void Chat::sendAction(ChatAction action)
+{
+    td_api::object_ptr<td_api::ChatAction> tdAction;
+    switch (action) {
+    case ChatAction::None:
+        tdAction = td_api::make_object<td_api::chatActionCancel>();
+        break;
+    case ChatAction::Typing:
+        tdAction = td_api::make_object<td_api::chatActionTyping>();
+        break;
+    case ChatAction::RecordingVideo:
+        tdAction = td_api::make_object<td_api::chatActionRecordingVideo>();
+        break;
+    case ChatAction::UploadingVideo:
+        tdAction = td_api::make_object<td_api::chatActionUploadingVideo>();
+        break;
+    case ChatAction::RecordingVoiceNote:
+        tdAction = td_api::make_object<td_api::chatActionRecordingVoiceNote>();
+        break;
+    case ChatAction::UploadingVoiceNote:
+        tdAction = td_api::make_object<td_api::chatActionUploadingVoiceNote>();
+        break;
+    case ChatAction::UploadingPhoto:
+        tdAction = td_api::make_object<td_api::chatActionUploadingPhoto>();
+        break;
+    case ChatAction::UploadingDocument:
+        tdAction = td_api::make_object<td_api::chatActionUploadingDocument>();
+        break;
+    case ChatAction::ChoosingSticker:
+        tdAction = td_api::make_object<td_api::chatActionChoosingSticker>();
+        break;
+    case ChatAction::ChoosingLocation:
+        tdAction = td_api::make_object<td_api::chatActionChoosingLocation>();
+        break;
+    case ChatAction::ChoosingContact:
+        tdAction = td_api::make_object<td_api::chatActionChoosingContact>();
+        break;
+    case ChatAction::StartPlayingGame:
+        tdAction = td_api::make_object<td_api::chatActionStartPlayingGame>();
+        break;
+    case ChatAction::RecordingVideoNote:
+        tdAction = td_api::make_object<td_api::chatActionRecordingVideoNote>();
+        break;
+    case ChatAction::UploadingVideoNote:
+        tdAction = td_api::make_object<td_api::chatActionUploadingVideoNote>();
+        break;
+    case ChatAction::WatchingAnimations:
+        tdAction = td_api::make_object<td_api::chatActionWatchingAnimations>();
+        break;
+    }
+    _manager->sendQuery(new td_api::sendChatAction(getId(), 0, move(tdAction)));
 }
 
 void Chat::setTtl(int32_t ttl)
@@ -1426,9 +1483,10 @@ void Chat::scrollToMessage(int64_t messageId)
     endResetModel();
 }
 
-void Chat::fetchMessage(int64_t messageId)
+void Chat::fetchMessage(int64_t messageId) const
 {
-    _manager->sendQuery(new td_api::getMessage(getId(), messageId));
+    if (messageId == 0) return;
+    _manager->sendQueryWithRespone(getId(), td_api::getMessage::ID, 0, new td_api::getMessage(getId(), messageId));
 }
 
 QVariant Chat::getMessage(int64_t messageId)
@@ -1498,12 +1556,16 @@ void Chat::updateDeleteMessages(td_api::updateDeleteMessages *updateDeleteMessag
 {
     if (updateDeleteMessages->chat_id_ == this->getId()) {
         for (auto messageId : updateDeleteMessages->message_ids_) {
-            auto index = getMessageIndex(messageId);
-            if (-1 != index) {
-                beginRemoveRows(QModelIndex(), index, index);
+            if (updateDeleteMessages->from_cache_) {
                 delete _messages.take(messageId);
-                _message_ids.remove(index);
-                endRemoveRows();
+            } else {
+                auto index = getMessageIndex(messageId);
+                if (-1 != index) {
+                    beginRemoveRows(QModelIndex(), index, index);
+                    delete _messages.take(messageId);
+                    _message_ids.remove(index);
+                    endRemoveRows();
+                }
             }
         }
     }
@@ -1569,6 +1631,10 @@ void Chat::onGotMessage(td_api::message *message)
         int64_t messageId = message->id_;
         newMessage(td_api::object_ptr<td_api::message>(message), false);
         emit gotMessage(messageId);
+        if (_getMessageCache.contains(messageId)) {
+            _getMessageCache.removeAll(messageId);
+            emit dataChanged(createIndex(getMessageIndex(messageId), 0), createIndex(getMessageIndex(messageId), 0), {});
+        }
     }
 }
 
@@ -1595,7 +1661,7 @@ void Chat::updateUserChatAction(td_api::updateUserChatAction *updateUserChatActi
         _chatActions.remove(updateUserChatAction->user_id_);
     }
 
-    ChatAction action;
+    ChatAction action = None;
     downcast_call(
         *updateUserChatAction->action_, overloaded(
             [&](td_api::chatActionTyping&) { action = Typing; },
@@ -1612,11 +1678,11 @@ void Chat::updateUserChatAction(td_api::updateUserChatAction *updateUserChatActi
             [&](td_api::chatActionRecordingVideoNote&) { action = RecordingVideoNote; },
             [&](td_api::chatActionUploadingVideoNote&) { action = UploadingVideoNote; },
             [&](td_api::chatActionWatchingAnimations&) { action = WatchingAnimations; },
-            [&](td_api::chatActionCancel&) { action = WatchingAnimations; }
+            [&](td_api::chatActionCancel&) { action = None; }
         )
     );
 
-    _chatActions[updateUserChatAction->user_id_] = action;
+    if (action != ChatAction::None) _chatActions[updateUserChatAction->user_id_] = action;
     emit actionTextChanged();
 }
 

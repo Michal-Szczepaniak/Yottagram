@@ -43,7 +43,7 @@ Column {
         Connections {
             target: chat
             onGotMessage: {
-                if (messageId === replyMessageId) {
+                if (messageId == replyMessageId) {
                     replyLoader.active = true
                 }
             }

@@ -40,6 +40,14 @@ public:
 public Q_SLOTS:
     bool dial(const QString &msisdn);
     void newCall(const QString &callerName, const bool &incoming);
+    void callReady();
+    void discardCall();
+
+Q_SIGNALS:
+    void accept();
+    void changeSpeakerMode(bool loudspeaker);
+    void discard();
+    void muteMicrophone(bool mute);
 
 private:
     class YottagramVoiceCallProviderPrivate *d_ptr;

@@ -216,6 +216,7 @@ public:
     Q_INVOKABLE int getMessageIndex(int64_t messageId);
     int64_t getLatestMessageId() const;
     td_api::message* getLastMessage();
+    shared_ptr<Message> lastMessage();
     int64_t getLastMessageId() const;
     void setLastMessage(td_api::object_ptr<td_api::message> lastMessage);
     void newMessage(td_api::object_ptr<td_api::message> message, bool addToList = true);
@@ -225,7 +226,7 @@ public:
     Q_INVOKABLE void sendMessage(QString message, int64_t replyToMessageId);
     Q_INVOKABLE void getChatHistory(int64_t from_message, int limit = 20, int offset = 0, bool localOnly = false);
     Q_INVOKABLE void scrollToMessage(int64_t messageId);
-    Q_INVOKABLE void fetchMessage(int64_t messageId);
+    Q_INVOKABLE void fetchMessage(int64_t messageId) const;
     Q_INVOKABLE QVariant getMessage(int64_t messageId);
     Q_INVOKABLE void getMoreChatHistory();
     Q_INVOKABLE void getMoreChatMessages();
@@ -255,6 +256,7 @@ public:
     Q_INVOKABLE void pinMessage(int64_t messageId, bool notify = true, bool onlyForSelf = false);
     Q_INVOKABLE void unpinMessage(int64_t messageId);
     Q_INVOKABLE void clearCachedHistory();
+    Q_INVOKABLE void sendAction(ChatAction action);
     void setTtl(int32_t ttl);
 
     bool hasPhoto();
@@ -333,6 +335,8 @@ private:
     td_api::chatPosition* _archivePosition;
     QHash<int32_t, td_api::chatPosition*> _filterPositions;
     QHash<int64_t, ChatAction> _chatActions;
+    QVector<int64_t> _getMessageCache;
+    shared_ptr<Message> _lastMessage;
 };
 Q_DECLARE_METATYPE(Chat*)
 

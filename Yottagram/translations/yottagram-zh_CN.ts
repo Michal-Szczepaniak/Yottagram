@@ -223,14 +223,6 @@
 <context>
     <name>Chat</name>
     <message>
-        <source>%1 left</source>
-        <translation>%1 离开</translation>
-    </message>
-    <message>
-        <source>%1 joined</source>
-        <translation>%1 加入</translation>
-    </message>
-    <message>
         <source>Open secret chat</source>
         <translation>打开私密对话</translation>
     </message>
@@ -434,6 +426,10 @@
         <source>%1 is watching animations</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Channel created</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
@@ -462,24 +458,8 @@
         <translation>储存消息</translation>
     </message>
     <message>
-        <source>%1 left</source>
-        <translation>%1 离开</translation>
-    </message>
-    <message>
-        <source>%1 joined</source>
-        <translation>%1 加入</translation>
-    </message>
-    <message>
         <source>Audio</source>
         <translation>音频</translation>
-    </message>
-    <message>
-        <source>Video note</source>
-        <translation>视频消息</translation>
-    </message>
-    <message>
-        <source>Voice note</source>
-        <translation>语言消息</translation>
     </message>
     <message>
         <source>Photo</source>
@@ -498,18 +478,8 @@
         <translation>文档</translation>
     </message>
     <message>
-        <source>GIF</source>
-        <translation>GIF</translation>
-    </message>
-    <message>
         <source>Poll</source>
         <translation>投票</translation>
-    </message>
-    <message numerus="yes">
-        <source>Self-destruct timer set to %n second(s)</source>
-        <translation>
-            <numerusform>自毁计时器设定为 %n 秒</numerusform>
-        </translation>
     </message>
     <message>
         <source>Unpin from top</source>
@@ -520,27 +490,11 @@
         <translation>置顶</translation>
     </message>
     <message>
-        <source>%1 pinned message</source>
-        <translation type="unfinished">%1 条置顶消息</translation>
-    </message>
-    <message>
-        <source>Outgoing call</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Incoming call</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Location</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Contact</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 joined telegram</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -550,6 +504,18 @@
     <message>
         <source>Main</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>VoiceNote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>VideoNote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>GIF</source>
+        <translation type="unfinished">GIF</translation>
     </message>
 </context>
 <context>
@@ -737,6 +703,10 @@
     </message>
     <message>
         <source>%1 joined telegram</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Group created</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
