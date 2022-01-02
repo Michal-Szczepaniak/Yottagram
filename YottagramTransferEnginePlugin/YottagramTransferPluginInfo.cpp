@@ -44,6 +44,7 @@ void YottagramPluginInfo::query()
     info.displayName     = QLatin1String("Yottagram");
     info.methodId        = QLatin1String("YottagramTransferEnginePlugin");
     info.shareUIPath     = QLatin1String("/usr/share/nemo-transferengine/plugins/YottagramShare.qml");
+    info.accountIcon     = QLatin1String("/usr/share/icons/hicolor/172x172/apps/yottagram.png");
     info.capabilitities  = capabilities;
     m_infoList << info;
     m_ready = true;

@@ -40,7 +40,7 @@ QString YottagramMediaTransfer::displayName() const
 
 QUrl YottagramMediaTransfer::serviceIcon() const
 {
-    return QUrl::fromLocalFile("/usr/share/icons/hicolor/172x172/apps/Yottagram.png");
+    return QUrl::fromLocalFile("/usr/share/icons/hicolor/172x172/apps/yottagram.png");
 }
 
 bool YottagramMediaTransfer::cancelEnabled() const

@@ -44,21 +44,30 @@ Page {
 
             width: page.width
             spacing: Theme.paddingLarge
+
             PageHeader {
                 title: qsTr("Login")
             }
+
             Label {
                 x: Theme.horizontalPageMargin
                 text: qsTr("Password")
                 color: Theme.secondaryHighlightColor
                 font.pixelSize: Theme.fontSizeExtraLarge
             }
+
             TextField {
                 id: password
                 width: column.width
                 Keys.onReturnPressed: {
                     authorization.sendPassword(password.text)
                 }
+            }
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Submit")
+                onClicked: authorization.sendPassword(password.text)
             }
         }
     }

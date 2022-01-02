@@ -47,15 +47,18 @@ Page {
 
             width: page.width
             spacing: Theme.paddingLarge
+
             PageHeader {
                 title: qsTr("Login")
             }
+
             Label {
                 x: Theme.horizontalPageMargin
                 text: qsTr("Code")
                 color: Theme.secondaryHighlightColor
                 font.pixelSize: Theme.fontSizeExtraLarge
             }
+
             TextField {
                 id: code
                 width: column.width
@@ -63,6 +66,12 @@ Page {
                 Keys.onReturnPressed: {
                     authorization.sendCode(code.text)
                 }
+            }
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Submit")
+                onClicked: authorization.sendCode(code.text)
             }
         }
     }

@@ -62,7 +62,7 @@ Item {
             uniform lowp float qt_Opacity;
             void main() {
                 lowp vec4 tex = texture2D(src, qt_TexCoord0);
-                float is_outside_circle = step(distance(qt_TexCoord0, vec2(0.5)), 0.5);
+                lowp float is_outside_circle = step(distance(qt_TexCoord0, vec2(0.5)), 0.5);
                 gl_FragColor = mix(vec4(0.0),tex, is_outside_circle);
                 }"
     }

@@ -60,6 +60,10 @@
         <source>Login</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Submit</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>AuthorizationNumber</name>
@@ -88,6 +92,10 @@
     </message>
     <message>
         <source>Login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Submit</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
