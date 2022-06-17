@@ -29,23 +29,23 @@ YottagramPluginInfo::~YottagramPluginInfo()
 
 }
 
-QList<TransferMethodInfo> YottagramPluginInfo::info() const
+QList<SharingMethodInfo> YottagramPluginInfo::info() const
 {
     return m_infoList;
 }
 
 void YottagramPluginInfo::query()
 {
-    TransferMethodInfo info;
+    SharingMethodInfo info;
 
     QStringList capabilities;
     capabilities << QLatin1String("*");
 
-    info.displayName     = QLatin1String("Yottagram");
-    info.methodId        = QLatin1String("YottagramTransferEnginePlugin");
-    info.shareUIPath     = QLatin1String("/usr/share/nemo-transferengine/plugins/YottagramShare.qml");
-    info.accountIcon     = QLatin1String("/usr/share/icons/hicolor/172x172/apps/yottagram.png");
-    info.capabilitities  = capabilities;
+    info.setDisplayName(QLatin1String("Yottagram"));
+    info.setMethodId(QLatin1String("YottagramTransferEnginePlugin"));
+    info.setShareUIPath(QLatin1String("/usr/share/nemo-transferengine/plugins/YottagramShare.qml"));
+    info.setMethodIcon(QLatin1String("/usr/share/icons/hicolor/172x172/apps/yottagram.png"));
+    info.setCapabilities(capabilities);
     m_infoList << info;
     m_ready = true;
     emit infoReady();

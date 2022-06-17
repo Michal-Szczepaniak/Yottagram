@@ -43,7 +43,7 @@ bool YottagramSharePlugin::enabled() const
     return true;
 }
 
-TransferPluginInfo *YottagramSharePlugin::infoObject()
+SharingPluginInfo *YottagramSharePlugin::infoObject()
 {
     return new YottagramPluginInfo;
 }

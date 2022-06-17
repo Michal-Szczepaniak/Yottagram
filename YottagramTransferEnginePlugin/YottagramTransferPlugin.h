@@ -22,8 +22,8 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #define YOTTAGRAMTRANSFERIFACE_H
 
 #include <TransferEngine-qt5/transferplugininterface.h>
-#include <TransferEngine-qt5/transferplugininfo.h>
-#include <TransferEngine-qt5/transfermethodinfo.h>
+#include <TransferEngine-qt5/sharingplugininfo.h>
+#include <TransferEngine-qt5/sharingmethodinfo.h>
 #include <TransferEngine-qt5/mediatransferinterface.h>
 
 class Q_DECL_EXPORT YottagramSharePlugin : public QObject, public TransferPluginInterface
@@ -36,7 +36,7 @@ public:
     ~YottagramSharePlugin();
 
     MediaTransferInterface *transferObject();
-    TransferPluginInfo *infoObject();
+    SharingPluginInfo *infoObject();
     QString pluginId() const;
     bool enabled() const;
 };

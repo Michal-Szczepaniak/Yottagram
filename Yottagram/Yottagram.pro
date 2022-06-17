@@ -136,6 +136,7 @@ DISTFILES += qml/yottagram.qml \
     qml/pages/ChatList.qml \
     qml/pages/Loading.qml \
     qml/pages/Settings.qml \
+    sailjail/yottagram.desktop \
     translations/*.ts \
     yottagram.desktop
 

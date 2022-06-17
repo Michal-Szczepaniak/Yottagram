@@ -21,22 +21,22 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #ifndef YOTTAGRAMPLUGININFO_H
 #define YOTTAGRAMPLUGININFO_H
 
-#include <TransferEngine-qt5/transferplugininfo.h>
-#include <TransferEngine-qt5/transfermethodinfo.h>
+#include <TransferEngine-qt5/sharingplugininfo.h>
+#include <TransferEngine-qt5/sharingmethodinfo.h>
 
-class YottagramPluginInfo : public TransferPluginInfo
+class YottagramPluginInfo : public SharingPluginInfo
 {
     Q_OBJECT
 public:
     YottagramPluginInfo();
     ~YottagramPluginInfo();
 
-    QList<TransferMethodInfo> info() const;
+    QList<SharingMethodInfo> info() const;
     void query();
     bool ready() const;
 
 private:
-    QList<TransferMethodInfo> m_infoList;
+    QList<SharingMethodInfo> m_infoList;
     bool m_ready;
 
 };

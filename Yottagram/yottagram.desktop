@@ -4,3 +4,9 @@ X-Nemo-Application-Type=generic
 Icon=yottagram
 Exec=dbus-send --type="method_call" --dest=com.verdanditeam.yottagram / com.verdanditeam.yottagram.openApp
 Name=yottagram
+
+[X-Sailjail]
+Permissions=Internet;Audio;Location;Microphone;UserDirs;RemovableMedia
+OrganizationName=com.verdanditeam
+ApplicationName=Yottagram
+Sandboxing=Disabled
