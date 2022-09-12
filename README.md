@@ -1,7 +1,7 @@
 
 # Description
 
-![Yottagram Logo](/icons/128x128/yottagram.png "Yottagram icon") It's a [Telegram](https://telegram.org/ "Telegram website")  client app for [Sailfish OS](https://sailfishos.org/ "Sailfish OS website").
+![Yottagram Logo](/Yottagram/icons/128x128/yottagram.png "Yottagram icon") It's a [Telegram](https://telegram.org/ "Telegram website")  client app for [Sailfish OS](https://sailfishos.org/ "Sailfish OS website").
 Telegram, is a cloud-based instant messaging and voice over IP service. Telegram client apps are available for Android, iOS, Windows Phone, Windows, macOS and Linux. Users can send messages and exchange photos, videos, stickers, audio and files of any type. [Wikipedia](https://en.wikipedia.org/wiki/Telegram_(software) "Wikipedia article on Telegram")
 
 # Installing
