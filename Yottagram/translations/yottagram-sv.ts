@@ -47,7 +47,7 @@
     </message>
     <message>
         <source>dashinfantry for chinese translation.</source>
-        <translation type="unfinished"></translation>
+        <translation>dashinfantry för Kinesisk översättning.</translation>
     </message>
 </context>
 <context>
@@ -58,11 +58,11 @@
     </message>
     <message>
         <source>Login</source>
-        <translation type="unfinished"></translation>
+        <translation>Logga in</translation>
     </message>
     <message>
         <source>Submit</source>
-        <translation type="unfinished"></translation>
+        <translation>Skicka</translation>
     </message>
 </context>
 <context>
@@ -73,15 +73,15 @@
     </message>
     <message>
         <source>Proxy settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Proxy-inställningar</translation>
     </message>
     <message>
         <source>Login</source>
-        <translation type="unfinished"></translation>
+        <translation>Logga in</translation>
     </message>
     <message>
         <source>Submit</source>
-        <translation type="unfinished"></translation>
+        <translation>Skicka</translation>
     </message>
 </context>
 <context>
@@ -92,11 +92,11 @@
     </message>
     <message>
         <source>Login</source>
-        <translation type="unfinished"></translation>
+        <translation>Inloggningsnamn</translation>
     </message>
     <message>
         <source>Submit</source>
-        <translation type="unfinished"></translation>
+        <translation>Skicka</translation>
     </message>
 </context>
 <context>
@@ -206,34 +206,34 @@
     </message>
     <message>
         <source>Clear history</source>
-        <translation type="unfinished">Rensa historik</translation>
+        <translation>Rensa historik</translation>
     </message>
 </context>
 <context>
     <name>CallSettings</name>
     <message>
         <source>Call settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Samtalsinställningar</translation>
     </message>
     <message>
         <source>Echo cancellation</source>
-        <translation type="unfinished"></translation>
+        <translation>Ekodämpning</translation>
     </message>
     <message>
         <source>Noise suppression</source>
-        <translation type="unfinished"></translation>
+        <translation>Bullerdämpning</translation>
     </message>
     <message>
         <source>Auto gain control</source>
-        <translation type="unfinished"></translation>
+        <translation>Automatisk förstärkningskontroll</translation>
     </message>
     <message>
         <source>Highpass filter</source>
-        <translation type="unfinished"></translation>
+        <translation>Högpassfilter</translation>
     </message>
     <message>
         <source>Typing detection</source>
-        <translation type="unfinished"></translation>
+        <translation>Skrivavkänning</translation>
     </message>
 </context>
 <context>
@@ -344,107 +344,107 @@
     </message>
     <message>
         <source>Scroll to first unread mention</source>
-        <translation type="unfinished"></translation>
+        <translation>Skrolla till första olästa omnämnande</translation>
     </message>
     <message>
         <source>Set as read</source>
-        <translation type="unfinished">Ange som läst</translation>
+        <translation>Ange som läst</translation>
     </message>
     <message>
         <source>Also pin for %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Fäst också för %1</translation>
     </message>
     <message>
         <source>Unpin message</source>
-        <translation type="unfinished"></translation>
+        <translation>Lösgör meddelande</translation>
     </message>
     <message>
         <source>GIF</source>
-        <translation type="unfinished">GIF</translation>
+        <translation>GIF</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation type="unfinished"></translation>
+        <translation>Plats</translation>
     </message>
     <message>
         <source>Call</source>
-        <translation type="unfinished"></translation>
+        <translation>Ring upp</translation>
     </message>
     <message>
         <source>Swipe from bottom to access upload options</source>
-        <translation type="unfinished"></translation>
+        <translation>Svep från botten för att komma åt uppladdningsalternativ</translation>
     </message>
     <message>
         <source>%1 online</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 online</translation>
     </message>
     <message>
         <source>Many people are typing...</source>
-        <translation type="unfinished"></translation>
+        <translation>Många användare skriver...</translation>
     </message>
     <message>
         <source>%1 and %2 are typing...</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 och %2 skriver...</translation>
     </message>
     <message>
         <source>%1 is typing...</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 skriver...</translation>
     </message>
     <message>
         <source>%1 is recording video</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 spelar in video</translation>
     </message>
     <message>
         <source>%1 is uploading video</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 laddar upp video</translation>
     </message>
     <message>
         <source>%1 is recording voicenote</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 spelar in röstmeddelande</translation>
     </message>
     <message>
         <source>%1 is uploading voicenote</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 laddar upp röstmeddelande</translation>
     </message>
     <message>
         <source>%1 is uploading photo</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 laddar upp bild</translation>
     </message>
     <message>
         <source>%1 is uploading document</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 laddar upp dokument</translation>
     </message>
     <message>
         <source>%1 is choosing sticker</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 väljer dekal</translation>
     </message>
     <message>
         <source>%1 is choosing location</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 väljer plats</translation>
     </message>
     <message>
         <source>%1 is choosing contact</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 väljer kontakt</translation>
     </message>
     <message>
         <source>%1 is playing game</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 spelar spel</translation>
     </message>
     <message>
         <source>%1 is recording videonote</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 spelar in videomeddelande</translation>
     </message>
     <message>
         <source>%1 is uploading videonote</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 laddar upp videomeddelande</translation>
     </message>
     <message>
         <source>%1 is watching animations</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 kollar animationer</translation>
     </message>
     <message>
         <source>Channel created</source>
-        <translation type="unfinished"></translation>
+        <translation>Kanal skapad</translation>
     </message>
 </context>
 <context>
@@ -507,110 +507,110 @@
     </message>
     <message>
         <source>Location</source>
-        <translation type="unfinished"></translation>
+        <translation>Plats</translation>
     </message>
     <message>
         <source>Contact</source>
-        <translation type="unfinished"></translation>
+        <translation>Kontakt</translation>
     </message>
     <message>
         <source>Archive</source>
-        <translation type="unfinished"></translation>
+        <translation>Arkiv</translation>
     </message>
     <message>
         <source>Main</source>
-        <translation type="unfinished"></translation>
+        <translation>Chattlista</translation>
     </message>
     <message>
         <source>VoiceNote</source>
-        <translation type="unfinished"></translation>
+        <translation>Röstmeddelande</translation>
     </message>
     <message>
         <source>VideoNote</source>
-        <translation type="unfinished"></translation>
+        <translation>Videomeddelande</translation>
     </message>
     <message>
         <source>GIF</source>
-        <translation type="unfinished">GIF</translation>
+        <translation>GIF</translation>
     </message>
 </context>
 <context>
     <name>ChatNew</name>
     <message>
         <source>Open secret chat</source>
-        <translation type="unfinished">Öppna privat chatt</translation>
+        <translation>Öppna privat chatt</translation>
     </message>
     <message>
         <source>Close secret chat</source>
-        <translation type="unfinished">Stäng privat chatt</translation>
+        <translation>Stäng privat chatt</translation>
     </message>
     <message>
         <source>Set self-destruct timer</source>
-        <translation type="unfinished">Ställ in självförstörandetidur</translation>
+        <translation>Ställ in självförstörandetid</translation>
     </message>
     <message>
         <source>Cancel selection</source>
-        <translation type="unfinished">Avbryt markering</translation>
+        <translation>Avbryt markering</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation type="unfinished">Vidarebefordra</translation>
+        <translation>Vidarebefordra</translation>
     </message>
     <message>
         <source>Scroll to first unread mention</source>
-        <translation type="unfinished"></translation>
+        <translation>Skrolla till första olästa omnämnande</translation>
     </message>
     <message>
         <source>Saved messages</source>
-        <translation type="unfinished">Sparade meddelanden</translation>
+        <translation>Sparade meddelanden</translation>
     </message>
     <message>
         <source>%1 members</source>
-        <translation type="unfinished">%1 medlemmar</translation>
+        <translation>%1 medlemmar</translation>
     </message>
     <message>
         <source>%L1 forwarded messages</source>
-        <translation type="unfinished">%L1 meddelanden vidarebordrade</translation>
+        <translation>%L1 meddelanden vidarebordrade</translation>
     </message>
     <message>
         <source>Type the text...</source>
-        <translation type="unfinished">Skriv...</translation>
+        <translation>Skriv...</translation>
     </message>
     <message>
         <source>Image</source>
-        <translation type="unfinished">Bild</translation>
+        <translation>Bild</translation>
     </message>
     <message>
         <source>Video</source>
-        <translation type="unfinished">Video</translation>
+        <translation>Video</translation>
     </message>
     <message>
         <source>Audio</source>
-        <translation type="unfinished">Ljud</translation>
+        <translation>Ljud</translation>
     </message>
     <message>
         <source>Document</source>
-        <translation type="unfinished">Dokument</translation>
+        <translation>Dokument</translation>
     </message>
     <message>
         <source>File</source>
-        <translation type="unfinished">Fil</translation>
+        <translation>Fil</translation>
     </message>
     <message>
         <source>Poll</source>
-        <translation type="unfinished">Omröstning</translation>
+        <translation>Omröstning</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation type="unfinished">Dekal</translation>
+        <translation>Dekal</translation>
     </message>
     <message>
         <source>Voice Note</source>
-        <translation type="unfinished">Röstmeddelande</translation>
+        <translation>Röstmeddelande</translation>
     </message>
     <message>
         <source>Press and hold record button to record voice note.</source>
-        <translation type="unfinished">Tryck och håll ner inspelningsknappen för att spela in röstmeddelande.</translation>
+        <translation>Tryck och håll ner inspelningsknappen för att spela in röstmeddelande.</translation>
     </message>
 </context>
 <context>
@@ -666,15 +666,15 @@
     <name>LocationPicker</name>
     <message>
         <source>Location Picker</source>
-        <translation type="unfinished"></translation>
+        <translation>Platsväljare</translation>
     </message>
     <message>
         <source>Latitude:</source>
-        <translation type="unfinished"></translation>
+        <translation>Latitud:</translation>
     </message>
     <message>
         <source>Longitude:</source>
-        <translation type="unfinished"></translation>
+        <translation>Longitud:</translation>
     </message>
 </context>
 <context>
@@ -700,31 +700,31 @@
     </message>
     <message>
         <source>Forwarded from %1</source>
-        <translation type="unfinished">Vidarebefordrat från %1</translation>
+        <translation>Vidarebefordrat från %1</translation>
     </message>
     <message>
         <source>Edited</source>
-        <translation type="unfinished">Redigerat</translation>
+        <translation>Redigerat</translation>
     </message>
     <message>
         <source>Message was pinned</source>
-        <translation type="unfinished"></translation>
+        <translation>Meddelandet fäst</translation>
     </message>
     <message>
         <source>Outgoing call</source>
-        <translation type="unfinished"></translation>
+        <translation>Utgående samtal</translation>
     </message>
     <message>
         <source>Incoming call</source>
-        <translation type="unfinished"></translation>
+        <translation>Inkommande samtal</translation>
     </message>
     <message>
         <source>%1 joined telegram</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 anslöt till Telegram</translation>
     </message>
     <message>
         <source>Group created</source>
-        <translation type="unfinished"></translation>
+        <translation>Grupp skapad</translation>
     </message>
 </context>
 <context>
@@ -831,51 +831,51 @@
     <name>ProxySettings</name>
     <message>
         <source>Add server</source>
-        <translation type="unfinished"></translation>
+        <translation>Lägg till server</translation>
     </message>
     <message>
         <source>Disable proxy</source>
-        <translation type="unfinished"></translation>
+        <translation>Inaktivera proxy</translation>
     </message>
     <message>
         <source>Proxy settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Proxy-inställningar</translation>
     </message>
     <message>
         <source>Enable</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktivera</translation>
     </message>
     <message>
         <source>Test</source>
-        <translation type="unfinished"></translation>
+        <translation>Testa</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Ta bort</translation>
+        <translation>Ta bort</translation>
     </message>
     <message>
         <source>Server settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Serverinställningar</translation>
     </message>
     <message>
         <source>Server</source>
-        <translation type="unfinished"></translation>
+        <translation>Server</translation>
     </message>
     <message>
         <source>Port</source>
-        <translation type="unfinished"></translation>
+        <translation>Port</translation>
     </message>
     <message>
         <source>Username</source>
-        <translation type="unfinished">Användarnamn</translation>
+        <translation>Användarnamn</translation>
     </message>
     <message>
         <source>Password</source>
-        <translation type="unfinished">Lösenord</translation>
+        <translation>Lösenord</translation>
     </message>
     <message>
         <source>Secret</source>
-        <translation type="unfinished"></translation>
+        <translation>Hemlighet</translation>
     </message>
 </context>
 <context>
@@ -996,11 +996,11 @@
     </message>
     <message>
         <source>Call settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Samtalsinställningar</translation>
     </message>
     <message>
         <source>Proxy settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Proxy-inställningar</translation>
     </message>
 </context>
 <context>
@@ -1059,7 +1059,7 @@
     </message>
     <message>
         <source>Clear history</source>
-        <translation type="unfinished">Rensa historik</translation>
+        <translation>Rensa historik</translation>
     </message>
 </context>
 <context>
@@ -1141,22 +1141,22 @@
     </message>
     <message>
         <source>Clear history</source>
-        <translation type="unfinished">Rensa historik</translation>
+        <translation>Rensa historik</translation>
     </message>
 </context>
 <context>
     <name>foramtDuration</name>
     <message>
         <source>%L1 s</source>
-        <translation type="unfinished"></translation>
+        <translation>%L1 s</translation>
     </message>
     <message>
         <source>%L1 min</source>
-        <translation type="unfinished"></translation>
+        <translation>%L1 min</translation>
     </message>
     <message>
         <source>%L1 h</source>
-        <translation type="unfinished"></translation>
+        <translation>%L1 tim</translation>
     </message>
 </context>
 <context>
