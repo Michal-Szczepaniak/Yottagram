@@ -970,6 +970,7 @@ int64_t Chat::getLastMessageId() const
 
 void Chat::setLastMessage(td_api::object_ptr<td_api::message> lastMessage)
 {
+    if (lastMessage == nullptr) return;
     _chat->last_message_ = move(lastMessage);
 
     shared_ptr<Message> newLastMessage = make_shared<Message>();

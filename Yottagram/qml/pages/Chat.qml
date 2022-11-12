@@ -1188,14 +1188,20 @@ Page {
             MultiFilePickerDialog {
                 allowedOrientations: Orientation.All
                 title: "Select file"
+                property bool doneOnce: false
+
+                onOpened: doneOnce = false
                 onAccepted: {
-                    var urls = []
-                    for (var i = 0; i < selectedContent.count; ++i) {
-                        chat.sendFile(selectedContent.get(i).filePath, chatPage.newReplyMessageId)
-                        chatPage.newReplyMessageId = 0
+                    if (doneOnce === false) {
+                        doneOnce = true;
+                        var urls = []
+                        for (var i = 0; i < selectedContent.count; ++i) {
+                            chat.sendFile(selectedContent.get(i).filePath, chatPage.newReplyMessageId)
+                            chatPage.newReplyMessageId = 0
+                        }
+                        uploadFlickable.scrollToTop()
+//                        pageStack.navigateBack(PageStackAction.Immediate)
                     }
-                    uploadFlickable.scrollToTop()
-                    pageStack.navigateBack(PageStackAction.Immediate)
                 }
             }
         }
@@ -1269,14 +1275,34 @@ Page {
         property string path
 
         allowedOrientations: Orientation.All
+        onOpened: {
+            photo.x = photo.y = 0
+            photo.scale = 1
+        }
 
         SilicaFlickable {
             anchors.fill: parent
 
             Image {
-                anchors.fill: parent
+                id: photo
+                width: chatPage.width
+                height: chatPage.height
                 source: bigPhoto.path
                 fillMode: Image.PreserveAspectFit
+
+                PinchArea {
+                    anchors.fill: parent
+                    pinch.target: parent
+                    pinch.minimumScale: 1
+                    pinch.maximumScale: 4
+
+                    MouseArea{
+                        anchors.fill: parent
+                        drag.target: photo
+                        drag.axis: Drag.XAndYAxis
+                        propagateComposedEvents: true
+                    }
+                }
             }
         }
     }

@@ -51,7 +51,7 @@ Page {
             }
 
             Label {
-                text: "Yottagram 0.2.9 Alpha"
+                text: "Yottagram 0.3.0 Alpha"
                 font.pixelSize: Theme.fontSizeExtraLarge
                 anchors.horizontalCenter: parent.horizontalCenter
                 wrapMode: Text.WordWrap

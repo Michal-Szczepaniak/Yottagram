@@ -352,9 +352,11 @@ void Message::handleMessageContent(td_api::object_ptr<td_api::MessageContent> me
     if (messageContent == nullptr) return;
     _contentTypeId = messageContent->get_id();
     if (_contentTypeId == td_api::messageText::ID) {
-        if (static_cast<td_api::messageText*>(messageContent.get())->web_page_ != nullptr) {
-            if (_webPage == nullptr)
+        if (static_cast<td_api::messageText*>(messageContent.get())->web_page_) {
+            if (_webPage == nullptr) {
                 _webPage = new WebPage();
+                _webPage->setFiles(_files);
+            }
 
             _webPage->setWebpage(std::move(static_cast<td_api::messageText*>(messageContent.get())->web_page_));
         }

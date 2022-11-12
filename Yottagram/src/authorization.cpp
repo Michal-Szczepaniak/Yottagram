@@ -140,6 +140,7 @@ void Authorization::sendPassword(QString password)
 
 void Authorization::messageReceived(uint64_t id, td_api::Object *object)
 {
+    Q_UNUSED(id)
     downcast_call(
         *object, overloaded(
             [this](td_api::updateAuthorizationState &update_authorization_state) {

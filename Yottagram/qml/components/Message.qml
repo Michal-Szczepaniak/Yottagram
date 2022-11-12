@@ -364,63 +364,7 @@ Column {
     Component {
         id: webPageComponent
 
-        Row {
-            id: webPagePreviewMessage
-
-            Rectangle {
-                width: 3
-                height: parent.height
-                color: Theme.highlightColor
-            }
-
-            Item {
-                height: 1
-                width: Theme.paddingMedium
-            }
-
-            Column {
-                Label {
-                    id: webPageName
-                    text: webPage.name
-                    truncationMode: TruncationMode.Fade
-                    font.family: Theme.fontFamilyHeading
-                    font.bold: true
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.highlightColor
-
-                    MouseArea {
-                        anchors.fill: parent
-                    }
-                }
-
-                Label {
-                    id: webPageTitle
-                    text: webPage.title
-                    width: webPageDescription.width
-                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                    font.bold: true
-                    font.pixelSize: Theme.fontSizeSmall
-                    truncationMode: TruncationMode.Fade
-
-                    MouseArea {
-                        anchors.fill: parent
-                    }
-                }
-
-                Label {
-                    id: webPageDescription
-                    text: webPage.description
-                    width: chatPage.width/chatPage.messageWidth - Theme.paddingLarge
-                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                    maximumLineCount: 5
-                    font.pixelSize: Theme.fontSizeSmall
-
-                    MouseArea {
-                        anchors.fill: parent
-                    }
-                }
-            }
-        }
+        WebPage {}
     }
 
     Row {
