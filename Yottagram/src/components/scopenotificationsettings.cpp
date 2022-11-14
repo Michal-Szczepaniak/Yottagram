@@ -58,7 +58,7 @@ void ScopeNotificationSettings::setMuteFor(int32_t muteFor)
 {
     auto settings = td_api::make_object<td_api::scopeNotificationSettings>(
         _scopeNotificationSettings->mute_for_,
-        _scopeNotificationSettings->sound_,
+        _scopeNotificationSettings->sound_id_,
         _scopeNotificationSettings->show_preview_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
@@ -76,7 +76,7 @@ void ScopeNotificationSettings::setShowPreview(bool showPreview)
 {
     auto settings = td_api::make_object<td_api::scopeNotificationSettings>(
         _scopeNotificationSettings->mute_for_,
-        _scopeNotificationSettings->sound_,
+        _scopeNotificationSettings->sound_id_,
         _scopeNotificationSettings->show_preview_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
@@ -94,7 +94,7 @@ void ScopeNotificationSettings::setDisablePinnedMessageNotifications(bool disabl
 {
     auto settings = td_api::make_object<td_api::scopeNotificationSettings>(
         _scopeNotificationSettings->mute_for_,
-        _scopeNotificationSettings->sound_,
+        _scopeNotificationSettings->sound_id_,
         _scopeNotificationSettings->show_preview_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
@@ -112,7 +112,7 @@ void ScopeNotificationSettings::setDisableMentionNotifications(bool disableMenti
 {
     auto settings = td_api::make_object<td_api::scopeNotificationSettings>(
         _scopeNotificationSettings->mute_for_,
-        _scopeNotificationSettings->sound_,
+        _scopeNotificationSettings->sound_id_,
         _scopeNotificationSettings->show_preview_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_

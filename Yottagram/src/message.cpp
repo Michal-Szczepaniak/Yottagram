@@ -104,9 +104,9 @@ QString Message::getText()
     case td_api::messageChatSetTtl::ID:
         return tr("Self-destruct timer set to %n second(s)", "", static_cast<td_api::messageChatSetTtl*>(_message->content_.get())->ttl_);
     case td_api::messagePinMessage::ID:
-        if (_message->sender_->get_id() == td_api::messageSenderUser::ID) {
+        if (_message->sender_id_->get_id() == td_api::messageSenderUser::ID) {
             return tr("%1 pinned message").arg(_users->getUser(getSenderUserId())->getName());
-        } else if (_message->sender_->get_id() == td_api::messageSenderChat::ID) {
+        } else if (_message->sender_id_->get_id() == td_api::messageSenderChat::ID) {
             return tr("Message was pinned");
         }
     case td_api::messageCall::ID:
@@ -277,19 +277,19 @@ td_api::messageForwardInfo* Message::getForwardedInfo()
 
 int64_t Message::getSenderUserId()
 {
-    if (_message->sender_->get_id() != td_api::messageSenderUser::ID) return 0;
-    return static_cast<td_api::messageSenderUser*>(_message->sender_.get())->user_id_;
+    if (_message->sender_id_->get_id() != td_api::messageSenderUser::ID) return 0;
+    return static_cast<td_api::messageSenderUser*>(_message->sender_id_.get())->user_id_;
 }
 
 int64_t Message::getSenderChatId()
 {
-    if (_message->sender_->get_id() != td_api::messageSenderChat::ID) return 0;
-    return static_cast<td_api::messageSenderChat*>(_message->sender_.get())->chat_id_;
+    if (_message->sender_id_->get_id() != td_api::messageSenderChat::ID) return 0;
+    return static_cast<td_api::messageSenderChat*>(_message->sender_id_.get())->chat_id_;
 }
 
 QString Message::getSender()
 {
-    if (_message->sender_->get_id() == td_api::messageSenderChat::ID) return "chat";
+    if (_message->sender_id_->get_id() == td_api::messageSenderChat::ID) return "chat";
     else return "user";
 }
 

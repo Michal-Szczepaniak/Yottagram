@@ -89,12 +89,11 @@ QHash<int, QByteArray> StickerSets::roleNames() const
 
 void StickerSets::getStickerSets()
 {
-    _manager->sendQuery(new td_api::getInstalledStickerSets(false));
+    _manager->sendQuery(new td_api::getInstalledStickerSets(td_api::make_object<td_api::stickerTypeRegular>()));
 }
 
 void StickerSets::updateInstalledStickerSets(td_api::updateInstalledStickerSets *updateInstalledStickerSets)
 {
-    qDebug() << __PRETTY_FUNCTION__;
     beginResetModel();
     _installedStickerSetIds.clear();
 
@@ -125,6 +124,6 @@ void StickerSets::onGotStickerSet(td_api::stickerSet *stickerSet)
 void StickerSets::onIsAuthorizedChanged(bool isAuthorized)
 {
     if (isAuthorized) {
-        _manager->sendQuery(new td_api::getInstalledStickerSets(false));
+        _manager->sendQuery(new td_api::getInstalledStickerSets(td_api::make_object<td_api::stickerTypeRegular>()));
     }
 }

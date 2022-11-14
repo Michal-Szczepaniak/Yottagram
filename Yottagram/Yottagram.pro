@@ -7,6 +7,9 @@ QT += dbus multimedia location
 CONFIG += c++2a link_pkgconfig sailfishapp iostream
 
 QMAKE_CXXFLAGS += -std=c++2a
+QMAKE_CXXFLAGS_DEBUG -= -O1
+QMAKE_CXXFLAGS_DEBUG -= -O2
+QMAKE_CXXFLAGS_DEBUG *= -O0 -Wno-unused-parameter
 
 INCLUDEPATH += /usr/include/glib-2.0 $$PWD/src
 
@@ -103,21 +106,27 @@ DISTFILES += qml/yottagram.qml \
     qml/components/messageContent/AnimatedStickerContent.qml \
     qml/components/messageContent/AnimationContent.qml \
     qml/components/messageContent/AudioContent.qml \
-    qml/components/Avatar.qml \
     qml/components/messageContent/ContactContent.qml \
     qml/components/messageContent/DocumentContent.qml \
-    qml/components/HighlightLabelIconButton.qml \
     qml/components/messageContent/ImageContent.qml \
-    qml/components/LabelWithMenu.qml \
-    qml/components/MessageBubble.qml \
-    qml/components/MessageContextMenu.qml \
     qml/components/messageContent/LocationContent.qml \
     qml/components/messageContent/Poll.qml \
     qml/components/messageContent/StickerContent.qml \
-    qml/components/TextSwitchWithMenu.qml \
     qml/components/messageContent/VideoContent.qml \
     qml/components/messageContent/VideoNoteContent.qml \
     qml/components/messageContent/VoiceNoteContent.qml \
+    qml/components/Avatar.qml \
+    qml/components/HighlightLabelIconButton.qml \
+    qml/components/LabelWithMenu.qml \
+    qml/components/MessageBubble.qml \
+    qml/components/MessageContextMenu.qml \
+    qml/components/TextSwitchWithMenu.qml \
+    qml/components/WebPage.qml \
+    qml/components/webPageContent/AnimationContent.qml \
+    qml/components/webPageContent/AudioContent.qml \
+    qml/components/webPageContent/DocumentContent.qml \
+    qml/components/webPageContent/ImageContent.qml \
+    qml/components/webPageContent/VideoContent.qml \
     qml/components/private/BoundsBehavior.qml \
     qml/components/private/FastScrollAnimation.js \
     qml/components/private/FastScrollAnimation.qml \

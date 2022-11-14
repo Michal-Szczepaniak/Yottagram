@@ -67,10 +67,10 @@ QString Sticker::getEmoji() const
 
 bool Sticker::isAnimated() const
 {
-    return _sticker->sticker_->is_animated_;
+    return _sticker->sticker_->format_->get_id() != td_api::stickerFormatWebp::ID;
 }
 
 bool Sticker::isMask() const
 {
-    return _sticker->sticker_->is_mask_;
+    return _sticker->sticker_->type_->get_id() == td_api::stickerTypeMask::ID;
 }

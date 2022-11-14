@@ -62,7 +62,7 @@ int64_t StickerSet::getId() const
 
 bool StickerSet::getIsAnimated() const
 {
-    return _stickerSet->is_animated_;
+    return _stickerSet->sticker_format_->get_id() != td_api::stickerFormatWebp::ID;
 }
 
 shared_ptr<File> StickerSet::getThumbnail()

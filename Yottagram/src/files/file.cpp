@@ -79,7 +79,7 @@ void File::cancelDownload()
 
 void File::cancelUpload()
 {
-    _manager->sendQuery(new td_api::cancelUploadFile(getId()));
+    _manager->sendQuery(new td_api::cancelPreliminaryUploadFile(getId()));
 }
 
 bool File::isDownloaded()

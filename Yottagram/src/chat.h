@@ -304,8 +304,8 @@ public slots:
     void scopeNotificationSettingsChanged(td_api::scopeNotificationSettings *scopeNotificationSettings);
     void onGotMessage(td_api::message *message);
     void updateChatPermissions(td_api::updateChatPermissions *updateChatPermissions);
-    void updateChatMessageTtlSetting(td_api::updateChatMessageTtlSetting *updateChatMessageTtlSetting);
-    void updateUserChatAction(td_api::updateUserChatAction *updateUserChatAction);
+    void updateChatMessageTtl(td_api::updateChatMessageTtl *updateChatMessageTtl);
+    void updateChatAction(td_api::updateChatAction *updateChatAction);
     void onGotSearchChatMessagesFilterUnreadMention(int64_t chatId, td_api::messages *messages);
 
     void onGotChatHistory(int64_t chatId, td_api::messages *messages);

@@ -60,12 +60,7 @@ bool UserFullInfo::needPhoneNumberPrivacyException() const
 QString UserFullInfo::getBio() const
 {
     if (_userFullInfo == nullptr) return "";
-    return QString::fromStdString(_userFullInfo->bio_);
-}
-
-QString UserFullInfo::getShareText() const
-{
-    return QString::fromStdString(_userFullInfo->share_text_);
+    return QString::fromStdString(_userFullInfo->bio_->text_);
 }
 
 int32_t UserFullInfo::getGroupInCommonCount() const

@@ -116,7 +116,6 @@ Page {
             }
 
             if (messages.count < 20) {
-                console.log("GETCHATHISTORY")
                 chat.getChatHistory(startMessage, 40, -20)
             }
             if (chat.draftMessage !== "") {
@@ -124,7 +123,6 @@ Page {
                 textInput.text = textInput.text
             }
             if (chat.draftMessageReplyId != 0) {
-                console.log(chat.draftMessageReplyId)
                 chatPage.newReplyMessageId = chat.draftMessageReplyId
                 chatPage.newReplyMessageId = chatPage.newReplyMessageId
             }
@@ -389,7 +387,6 @@ Page {
             asynchronous: true
             sourceComponent: pinnedComponent
             active: pinnedMessages.id != 0
-            onActiveChanged: console.log(pinnedMessages.id, pinnedMessages.id != 0)
             visible: active
             height: active ? Theme.fontSizeSmall*2 + Theme.paddingLarge : 0
         }
@@ -455,7 +452,6 @@ Page {
                 Connections {
                     target: chat
                     onGotChatHistory: {
-                        console.log("got chat history ", chat.rowCount(), messages.creationDone)
                         messages.countChanged(chat.rowCount())
                     }
 
@@ -466,7 +462,6 @@ Page {
                             if (messageItem.containsUnreadMention || messageItem.containsUnreadReply) {
                                 messages.blinkMessage = highlightMessage
                                 messages.blinkMessage = messages.blinkMessage
-                                console.log(messages.blinkMessage)
                             }
                             chat.setMessageAsRead(messageItem.messageId)
                         }
@@ -474,7 +469,6 @@ Page {
                 }
 
                 function countChanged(chagedCount) {
-                    console.log(initDone, chagedCount, creationDone, chagedCount === 1)
                     if (initDone || !creationDone) return;
                     if (chagedCount <= 1) {
                         chat.getChatHistory(chatPage.startMessage, 40, -20)
@@ -768,13 +762,18 @@ Page {
 
                     Message {
                         id: message
-                        width: parent.width/chatPage.messageWidth
 
                         anchors {
                             left: parent.left
                             right: parent.right
-                            leftMargin: isService ? 0 : ((received && displayAvatar ? (Theme.itemSizeExtraSmall + Theme.paddingMedium + Theme.paddingMedium) : Theme.horizontalPageMargin) + (received ? 0 : parent.width/3))
-                            rightMargin: isService ? 0 : (Theme.horizontalPageMargin + (received ? parent.width/3 : 0))
+                            leftMargin: isService ? 0 :
+                                                    (received ?
+                                                         (chat.getChatType() === "group" || chat.getChatType() === "supergroup" ?
+                                                              Theme.itemSizeExtraSmall + Theme.paddingMedium + Theme.paddingMedium
+                                                            : Theme.horizontalPageMargin
+                                                          )
+                                                       : (chatPage.width-(chatPage.width/chatPage.messageWidth)) - Theme.horizontalPageMargin)
+                            rightMargin: isService ? 0 : (received ? (chatPage.width-(chatPage.width/chatPage.messageWidth)) - Theme.horizontalPageMargin : Theme.horizontalPageMargin)
                         }
                     }
                 }

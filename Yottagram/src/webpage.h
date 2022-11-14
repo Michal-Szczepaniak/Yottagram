@@ -35,7 +35,17 @@ class WebPage : public QObject
     Q_PROPERTY(QString name READ getName NOTIFY webPageChanged)
     Q_PROPERTY(QString title READ getTitle NOTIFY webPageChanged)
     Q_PROPERTY(QString description READ getDescription NOTIFY webPageChanged)
+    Q_PROPERTY(QString mediaAuthor READ getMediaAuthor NOTIFY webPageChanged)
+    Q_PROPERTY(QString mediaTitle READ getMediaTitle NOTIFY webPageChanged)
+    Q_PROPERTY(int mediaDuration READ getMediaDuration NOTIFY webPageChanged)
+    Q_PROPERTY(QByteArray miniThumbnail READ getMiniThumbnail NOTIFY webPageChanged)
+    Q_PROPERTY(float mediaRatio READ getMediaRatio NOTIFY webPageChanged)
     Q_PROPERTY(File* photo READ getPhoto NOTIFY webPageChanged)
+    Q_PROPERTY(File* thumbnail READ getThumbnail NOTIFY webPageChanged)
+    Q_PROPERTY(File* video READ getVideo NOTIFY webPageChanged)
+    Q_PROPERTY(File* audio READ getAudio NOTIFY webPageChanged)
+    Q_PROPERTY(File* document READ getDocument NOTIFY webPageChanged)
+    Q_PROPERTY(File* animation READ getAnimation NOTIFY webPageChanged)
 public:
     explicit WebPage(QObject *parent = nullptr);
     void setWebpage(td_api::object_ptr<td_api::webPage> webPage);
@@ -47,13 +57,33 @@ public:
     QString getName();
     QString getTitle();
     QString getDescription();
+    QByteArray getMiniThumbnail();
+    float getMediaRatio();
+    QString getMediaAuthor();
+    QString getMediaTitle();
+    int getMediaDuration();
     File* getPhoto();
+    File* getThumbnail();
+    File* getVideo();
+    File* getAudio();
+    File* getDocument();
+    File* getAnimation();
 
 signals:
     void webPageChanged();
 
 private:
+    float _mediaRatio;
     int32_t _photoId;
+    int32_t _videoId;
+    int32_t _audioId;
+    int32_t _documentId;
+    int32_t _animationId;
+    int32_t _thumbnailId;
+    QByteArray _miniThumbnail;
+    QString _mediaAuthor;
+    QString _mediaTitle;
+    int _mediaDuration;
     td_api::object_ptr<td_api::webPage> _webPage;
     std::shared_ptr<Files> _files;
 };

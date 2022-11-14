@@ -146,7 +146,7 @@ bool BasicGroupInfo::getCanChangeInfo() const
     auto status = _basicGroup->status_.get();
     switch (status->get_id()) {
     case td_api::chatMemberStatusAdministrator::ID:
-        return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->can_change_info_;
+        return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->rights_->can_change_info_;
     case td_api::chatMemberStatusBanned::ID:
         return false;
     case td_api::chatMemberStatusCreator::ID:
@@ -167,7 +167,7 @@ bool BasicGroupInfo::getCanInviteUsers() const
     auto status = _basicGroup->status_.get();
     switch (status->get_id()) {
     case td_api::chatMemberStatusAdministrator::ID:
-        return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->can_invite_users_;
+        return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->rights_->can_invite_users_;
     case td_api::chatMemberStatusBanned::ID:
         return false;
     case td_api::chatMemberStatusCreator::ID:
@@ -188,7 +188,7 @@ bool BasicGroupInfo::getCanPinMessages() const
     auto status = _basicGroup->status_.get();
     switch (status->get_id()) {
     case td_api::chatMemberStatusAdministrator::ID:
-        return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->can_pin_messages_;
+        return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->rights_->can_pin_messages_;
     case td_api::chatMemberStatusBanned::ID:
         return false;
     case td_api::chatMemberStatusCreator::ID:

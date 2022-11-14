@@ -42,7 +42,7 @@ bool SupergroupInfo::getCanSendMessages() const
     switch (status->get_id()) {
     case td_api::chatMemberStatusAdministrator::ID:
         if (_supergroup->is_channel_)
-            return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->can_post_messages_;
+            return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->rights_->can_post_messages_;
         else return true;
     case td_api::chatMemberStatusBanned::ID:
         return false;
@@ -148,7 +148,7 @@ bool SupergroupInfo::getCanChangeInfo() const
     auto status = _supergroup->status_.get();
     switch (status->get_id()) {
     case td_api::chatMemberStatusAdministrator::ID:
-        return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->can_change_info_;
+        return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->rights_->can_change_info_;
     case td_api::chatMemberStatusBanned::ID:
         return false;
     case td_api::chatMemberStatusCreator::ID:
@@ -169,7 +169,7 @@ bool SupergroupInfo::getCanInviteUsers() const
     auto status = _supergroup->status_.get();
     switch (status->get_id()) {
     case td_api::chatMemberStatusAdministrator::ID:
-        return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->can_invite_users_;
+        return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->rights_->can_invite_users_;
     case td_api::chatMemberStatusBanned::ID:
         return false;
     case td_api::chatMemberStatusCreator::ID:
@@ -190,7 +190,7 @@ bool SupergroupInfo::getCanPinMessages() const
     auto status = _supergroup->status_.get();
     switch (status->get_id()) {
     case td_api::chatMemberStatusAdministrator::ID:
-        return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->can_pin_messages_;
+        return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->rights_->can_pin_messages_;
     case td_api::chatMemberStatusBanned::ID:
         return false;
     case td_api::chatMemberStatusCreator::ID:
@@ -214,7 +214,7 @@ bool SupergroupInfo::getEditMessages() const
 
     switch (status->get_id()) {
     case td_api::chatMemberStatusAdministrator::ID:
-        return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->can_edit_messages_;
+        return static_cast<const td_api::chatMemberStatusAdministrator*>(status)->rights_->can_edit_messages_;
     case td_api::chatMemberStatusCreator::ID:
         return true;
     default:

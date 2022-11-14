@@ -89,8 +89,8 @@ QString User::getName() const
 
 QString User::getUserame() const
 {
-    if (_user == nullptr) return "";
-    return QString::fromStdString(_user->username_);
+    if (_user == nullptr || !_user->usernames_ || _user->usernames_->active_usernames_.empty()) return "";
+    return QString::fromStdString(_user->usernames_->active_usernames_.front());
 }
 
 QString User::getPhoneNumber() const

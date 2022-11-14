@@ -46,7 +46,6 @@ Page {
               </interface>'
 
         function share(configuration) {
-            console.log(JSON.stringify(configuration));
             page.shareConfiguration = configuration
             pageStack.pop(page, PageStackAction.Immediate)
             app.activate()
@@ -162,7 +161,6 @@ Page {
             width: parent.width
             anchors.top: chatListFilterList.visible ? chatListFilterList.bottom : parent.top
             placeholderText: qsTr("Search")
-            onFocusChanged: console.log(chatList.rowCount())
             Keys.onReturnPressed: {
                 if(searchField.text.length != 0) {
                     app.playlistModel.search(searchField.text)

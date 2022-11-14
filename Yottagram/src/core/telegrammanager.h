@@ -103,10 +103,10 @@ signals:
     void updateSavedAnimations(td_api::updateSavedAnimations *updateSavedAnimations);
     void updateNewCallSignalingData(td_api::updateNewCallSignalingData *updateNewCallSignalingData);
     void updateCall(td_api::updateCall *updateCall);
-    void updateChatMessageTtlSetting(td_api::updateChatMessageTtlSetting *updateChatMessageTtlSetting);
+    void updateChatMessageTtl(td_api::updateChatMessageTtl *updateChatMessageTtl);
     void updateChatFilters(td_api::updateChatFilters *updateChatFilters);
     void updateChatDraftMessage(td_api::updateChatDraftMessage *updateChatDraftMessage);
-    void updateUserChatAction(td_api::updateUserChatAction *updateUserChatAction);
+    void updateChatAction(td_api::updateChatAction *updateChatAction);
     void updateUserStatus(td_api::updateUserStatus *updateUserStatus);
 
 // Responses

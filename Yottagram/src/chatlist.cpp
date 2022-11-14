@@ -176,11 +176,11 @@ QVariant ChatList::data(const QModelIndex &index, int role) const
             lastMessageInfo += "You: ";
         } else if (chatNode->getChatType() == "group" || chatNode->getChatType() == "supergroup") {
             QString name;
-            if (message->sender_->get_id() == td_api::messageSenderUser::ID) {
-                shared_ptr<User> user = _users->getUser(static_cast<td_api::messageSenderUser*>(message->sender_.get())->user_id_);
+            if (message->sender_id_->get_id() == td_api::messageSenderUser::ID) {
+                shared_ptr<User> user = _users->getUser(static_cast<td_api::messageSenderUser*>(message->sender_id_.get())->user_id_);
                 if(user != nullptr) name = user->getName();
-            } else if (message->sender_->get_id() == td_api::messageSenderChat::ID){
-                Chat* chat = getChat(static_cast<td_api::messageSenderChat*>(message->sender_.get())->chat_id_);
+            } else if (message->sender_id_->get_id() == td_api::messageSenderChat::ID){
+                Chat* chat = getChat(static_cast<td_api::messageSenderChat*>(message->sender_id_.get())->chat_id_);
                 if (chat != nullptr) name = chat->getTitle();
             }
             if(name != "") {

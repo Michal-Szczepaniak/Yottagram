@@ -67,7 +67,6 @@ private:
     void authorizationStateWaitCode();
     void authorizationStateWaitPassword();
     void authorizationStateWaitPhoneNumber();
-    void authorizationStateWaitEncryptionKey();
     void authorizationStateWaitTdlibParameters();
 };
 

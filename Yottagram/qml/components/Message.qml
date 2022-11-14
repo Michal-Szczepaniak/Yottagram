@@ -8,6 +8,7 @@ import "functions/twemoji.js" as Twemoji
 Column {
     id: column
     spacing: 0
+    width: parent.width
 
     Label {
         id: name
@@ -357,7 +358,7 @@ Column {
 
     Loader {
         id: webPageLoader
-        asynchronous: true
+        asynchronous: false
         sourceComponent: if (hasWebPage) webPageComponent
     }
 

@@ -63,6 +63,12 @@ void Authorization::updateAuthorizationState(td_api::updateAuthorizationState &u
 //                need_restart_ = true;
 //                std::cerr << "Terminated" << std::endl;
             },
+            [this](td_api::authorizationStateWaitEmailAddress &) {
+
+            },
+            [this](td_api::authorizationStateWaitEmailCode &) {
+
+            },
             [this](td_api::authorizationStateWaitCode &) {
                 authorizationStateWaitCode();
 //                std::string first_name;
@@ -101,9 +107,6 @@ void Authorization::updateAuthorizationState(td_api::updateAuthorizationState &u
             },
             [this](td_api::authorizationStateWaitPhoneNumber &) {
                 authorizationStateWaitPhoneNumber();
-            },
-            [this](td_api::authorizationStateWaitEncryptionKey &) {
-                authorizationStateWaitEncryptionKey();
             },
             [this](td_api::authorizationStateWaitTdlibParameters &) {
                 authorizationStateWaitTdlibParameters();
@@ -194,12 +197,6 @@ void Authorization::authorizationStateWaitPhoneNumber()
     emit waitingForPhoneNumber();
 }
 
-void Authorization::authorizationStateWaitEncryptionKey()
-{
-    qDebug()<<"authorizationStateWaitEncryptionKey";
-    _manager->sendQuery(new td_api::checkDatabaseEncryptionKey());
-}
-
 void Authorization::authorizationStateWaitTdlibParameters()
 {
     qDebug()<<"authorizationStateWaitTdlibParameters";
@@ -207,7 +204,7 @@ void Authorization::authorizationStateWaitTdlibParameters()
     AboutSettings aboutSettings;
     DeviceInfo deviceInfo;
 
-    auto parameters = td_api::make_object<td_api::tdlibParameters>();
+    auto parameters = new td_api::setTdlibParameters();
     parameters->database_directory_ = QDir::homePath().toStdString() + "/.local/share/Yottagram";
     parameters->files_directory_ = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation).toStdString() + "/Yottagram";
     parameters->use_message_database_ = true;
@@ -220,7 +217,7 @@ void Authorization::authorizationStateWaitTdlibParameters()
     parameters->system_language_code_ = "en";
     parameters->device_model_ = (deviceInfo.manufacturer() + " " + deviceInfo.prettyName()).toStdString();
     parameters->system_version_ = (aboutSettings.localizedOperatingSystemName() + " " + aboutSettings.localizedSoftwareVersion()).toStdString();
-    parameters->application_version_ = "0.2.2";
+    parameters->application_version_ = "0.3.0";
     parameters->enable_storage_optimizer_ = true;
-    _manager->sendQuery(new td_api::setTdlibParameters(std::move(parameters)));
+    _manager->sendQuery(parameters);
 }

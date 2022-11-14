@@ -302,7 +302,7 @@ bool Chat::isPinned(td_api::object_ptr<td_api::ChatList> list) const
 
 int32_t Chat::getTtl() const
 {
-    return _chat->message_ttl_setting_;
+    return _chat->message_ttl_;
 }
 
 int32_t Chat::getMuteFor() const
@@ -322,7 +322,7 @@ void Chat::setMuteFor(int32_t muteFor)
                 _notificationSettings->use_default_mute_for_,
                 _notificationSettings->mute_for_,
                 _notificationSettings->use_default_sound_,
-                _notificationSettings->sound_,
+                _notificationSettings->sound_id_,
                 _notificationSettings->use_default_show_preview_,
                 _notificationSettings->show_preview_,
                 _notificationSettings->use_default_disable_pinned_message_notifications_,
@@ -359,7 +359,7 @@ void Chat::setShowPreview(bool showPreview)
                 _notificationSettings->use_default_mute_for_,
                 _notificationSettings->mute_for_,
                 _notificationSettings->use_default_sound_,
-                _notificationSettings->sound_,
+                _notificationSettings->sound_id_,
                 _notificationSettings->use_default_show_preview_,
                 _notificationSettings->show_preview_,
                 _notificationSettings->use_default_disable_pinned_message_notifications_,
@@ -396,7 +396,7 @@ void Chat::setDisablePinnedMessageNotifications(bool disablePinnedMessageNotific
                 _notificationSettings->use_default_mute_for_,
                 _notificationSettings->mute_for_,
                 _notificationSettings->use_default_sound_,
-                _notificationSettings->sound_,
+                _notificationSettings->sound_id_,
                 _notificationSettings->use_default_show_preview_,
                 _notificationSettings->show_preview_,
                 _notificationSettings->use_default_disable_pinned_message_notifications_,
@@ -433,7 +433,7 @@ void Chat::setDisableMentionNotifications(bool disableMentionNotifications)
                 _notificationSettings->use_default_mute_for_,
                 _notificationSettings->mute_for_,
                 _notificationSettings->use_default_sound_,
-                _notificationSettings->sound_,
+                _notificationSettings->sound_id_,
                 _notificationSettings->use_default_show_preview_,
                 _notificationSettings->show_preview_,
                 _notificationSettings->use_default_disable_pinned_message_notifications_,
@@ -618,8 +618,8 @@ void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), &TelegramManager::updateChatNotificationSettings, this, &Chat::updateChatNotificationSettings);
     connect(_manager.get(), &TelegramManager::updateChatPermissions, this, &Chat::updateChatPermissions);
     connect(_manager.get(), &TelegramManager::gotChatHistory, this, &Chat::onGotChatHistory);
-    connect(_manager.get(), &TelegramManager::updateChatMessageTtlSetting, this, &Chat::updateChatMessageTtlSetting);
-    connect(_manager.get(), &TelegramManager::updateUserChatAction, this, &Chat::updateUserChatAction);
+    connect(_manager.get(), &TelegramManager::updateChatMessageTtl, this, &Chat::updateChatMessageTtl);
+    connect(_manager.get(), &TelegramManager::updateChatAction, this, &Chat::updateChatAction);
     connect(_manager.get(), &TelegramManager::gotMessage, this, &Chat::onGotMessage);
     connect(_manager.get(), &TelegramManager::gotSearchChatMessagesFilterUnreadMention, this, &Chat::onGotSearchChatMessagesFilterUnreadMention);
 
@@ -709,7 +709,8 @@ QVariant Chat::data(const QModelIndex &index, int role) const
     case MessageRoles::DisplayAvatarRole:
     {
         bool display = true;
-        if (_message_ids.contains(index.row()-1)) {
+        int prevRow = index.row()-1;
+        if (prevRow >= 0 && prevRow < _message_ids.count()) {
             Message* prev = _messages[_message_ids[index.row()-1]];
             if (message->getSenderUserId() != 0) display = prev->getSenderUserId() != message->getSenderUserId();
             if (message->getSenderChatId() != 0) display = prev->getSenderChatId() != message->getSenderChatId();
@@ -1477,7 +1478,7 @@ void Chat::sendAction(ChatAction action)
 
 void Chat::setTtl(int32_t ttl)
 {
-    _manager->sendQuery(new td_api::setChatMessageTtlSetting(getId(), ttl));
+    _manager->sendQuery(new td_api::setChatMessageTtl(getId(), ttl));
 }
 
 void Chat::getChatHistory(int64_t from_message, int limit, int offset, bool localOnly)
@@ -1663,24 +1664,26 @@ void Chat::updateChatPermissions(td_api::updateChatPermissions *updateChatPermis
     emit permissionsChanged();
 }
 
-void Chat::updateChatMessageTtlSetting(td_api::updateChatMessageTtlSetting *updateChatMessageTtlSetting)
+void Chat::updateChatMessageTtl(td_api::updateChatMessageTtl *updateChatMessageTtl)
 {
-    if (updateChatMessageTtlSetting->chat_id_ != getId()) return;
-    _chat->message_ttl_setting_ = updateChatMessageTtlSetting->message_ttl_setting_;
-    emit ttlChanged(_chat->message_ttl_setting_);
+    if (updateChatMessageTtl->chat_id_ != getId()) return;
+    _chat->message_ttl_ = updateChatMessageTtl->message_ttl_;
+    emit ttlChanged(_chat->message_ttl_);
 }
 
-void Chat::updateUserChatAction(td_api::updateUserChatAction *updateUserChatAction)
+void Chat::updateChatAction(td_api::updateChatAction *updateChatAction)
 {
-    if (updateUserChatAction->chat_id_ != getId()) return;
+    if (updateChatAction->chat_id_ != getId() || updateChatAction->sender_id_->get_id() == td_api::messageSenderChat::ID) return;
 
-    if (updateUserChatAction->action_->get_id() == td_api::chatActionCancel::ID && _chatActions.contains(updateUserChatAction->user_id_)) {
-        _chatActions.remove(updateUserChatAction->user_id_);
+    int64_t userId = static_cast<const td_api::messageSenderUser &>(*updateChatAction->sender_id_).user_id_;
+
+    if (updateChatAction->action_->get_id() == td_api::chatActionCancel::ID) {
+        _chatActions.remove(userId);
     }
 
     ChatAction action = None;
     downcast_call(
-        *updateUserChatAction->action_, overloaded(
+        *updateChatAction->action_, overloaded(
             [&](td_api::chatActionTyping&) { action = Typing; },
             [&](td_api::chatActionRecordingVideo&) { action = RecordingVideo; },
             [&](td_api::chatActionUploadingVideo&) { action = UploadingVideo; },
@@ -1699,7 +1702,10 @@ void Chat::updateUserChatAction(td_api::updateUserChatAction *updateUserChatActi
         )
     );
 
-    if (action != ChatAction::None) _chatActions[updateUserChatAction->user_id_] = action;
+    if (action != ChatAction::None && updateChatAction->action_->get_id() == td_api::chatActionCancel::ID) {
+        _chatActions[userId] = action;
+    }
+
     emit actionTextChanged();
 }
 
