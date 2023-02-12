@@ -1,16 +1,17 @@
 
 [submodule "Yottagram/vendor/fr/grecko/sortfilterproxymodel"]
 	path = Yottagram/vendor/fr/grecko/sortfilterproxymodel
-	url = https://github.com/oKcerG/SortFilterProxyModel.git
+	url = https://github.com/Michal-Szczepaniak/SortFilterProxyModel.git
 [submodule "Yottagram/vendor/rlottie"]
 	path = Yottagram/vendor/rlottie
 	url = https://github.com/Samsung/rlottie.git
-[submodule "Yottagram/vendor/tgcalls/upstream"]
-	path = Yottagram/vendor/tgcalls/upstream
-	url = https://github.com/TelegramMessenger/tgcalls.git
 [submodule "Yottagram/vendor/tg_owt/upstream"]
 	path = Yottagram/vendor/tg_owt/upstream
 	url = https://github.com/desktop-app/tg_owt/
 [submodule "YottagramVoicecallPlugin/upstream"]
 	path = YottagramVoicecallPlugin/upstream
 	url = https://github.com/sailfishos/voicecall/
+[submodule "Yottagram/vendor/tgcalls/upstream"]
+	path = Yottagram/vendor/tgcalls/upstream
+	url = https://github.com/Michal-Szczepaniak/tgcalls
+	branch = yottagram

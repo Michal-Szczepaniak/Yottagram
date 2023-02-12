@@ -39,7 +39,6 @@ Fastest telegram client for sailfishos on the earth!
 
 %package voicecall-plugin
 Summary:        Yottagram's Voicecall plugin
-BuildRequires:  voicecall-qt5-devel
 Requires:       voicecall-qt5
 Requires:       %{name} >= %{version}
 
