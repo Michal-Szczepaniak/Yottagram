@@ -7,7 +7,8 @@
 	url = https://github.com/Samsung/rlottie.git
 [submodule "Yottagram/vendor/tg_owt/upstream"]
 	path = Yottagram/vendor/tg_owt/upstream
-	url = https://github.com/desktop-app/tg_owt/
+	url = https://github.com/Michal-Szczepaniak/tg_owt/
+	branch = yottagram
 [submodule "YottagramVoicecallPlugin/upstream"]
 	path = YottagramVoicecallPlugin/upstream
 	url = https://github.com/sailfishos/voicecall/
