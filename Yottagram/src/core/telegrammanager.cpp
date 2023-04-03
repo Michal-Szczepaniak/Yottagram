@@ -155,6 +155,9 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
     case td_api::testProxy::ID:
         emit proxyTestSuccessful();
         break;
+    case td_api::getScopeNotificationSettings::ID:
+        emit gotScopeNotificationSettings(response.subType, static_cast<td_api::scopeNotificationSettings*>(message));
+        break;
     }
 }
 
@@ -224,7 +227,7 @@ void TelegramManager::onUpdateOption(td_api::updateOption *updateOption)
 
 void TelegramManager::defaultRouteChanged(NetworkService *networkService)
 {
-    if (networkService == nullptr) {
+    if (!networkService) {
         setNetworkType("none");
         return;
     }

@@ -44,7 +44,7 @@ Chat::Chat(td_api::chat* chat, shared_ptr<Files> files) :
     _bigPhotoId(0),
     _chat(chat),
     _files(files),
-    _notificationSettings(nullptr),
+    _notificationSettings(move(chat->notification_settings_)),
     _scopeNotificationSettings(nullptr),
     _mainPosition(nullptr),
     _archivePosition(nullptr),
@@ -52,7 +52,6 @@ Chat::Chat(td_api::chat* chat, shared_ptr<Files> files) :
 {
     _basicGroupFullInfo = new BasicGroupFullInfo();
     _supergroupFullInfo = new SupergroupFullInfo();
-    _notificationSettings = move(chat->notification_settings_);
     setLastReadInboxMessageId(chat->last_read_inbox_message_id_);
     setLastReadOutboxMessageId(chat->last_read_outbox_message_id_);
     setUnreadCount(_chat->unread_count_);
@@ -307,7 +306,7 @@ int32_t Chat::getTtl() const
 
 int32_t Chat::getMuteFor() const
 {
-    if (_notificationSettings == nullptr) return 0;
+    if (!_notificationSettings) return 0;
 
     if (_notificationSettings->use_default_mute_for_) return _scopeNotificationSettings->mute_for_;
 
@@ -316,7 +315,7 @@ int32_t Chat::getMuteFor() const
 
 void Chat::setMuteFor(int32_t muteFor)
 {
-    if (_notificationSettings == nullptr) return;
+    if (!_notificationSettings) return;
 
     auto settings = td_api::make_object<td_api::chatNotificationSettings>(
                 _notificationSettings->use_default_mute_for_,
@@ -337,14 +336,14 @@ void Chat::setMuteFor(int32_t muteFor)
 
 bool Chat::getDefaultMuteFor() const
 {
-    if (_notificationSettings == nullptr) return false;
+    if (!_notificationSettings) return false;
 
     return _scopeNotificationSettings->mute_for_ == _notificationSettings->mute_for_;
 }
 
 bool Chat::getShowPreview() const
 {
-    if (_notificationSettings == nullptr) return 0;
+    if (!_notificationSettings) return 0;
 
     if (_notificationSettings->use_default_show_preview_) return _scopeNotificationSettings->show_preview_;
 
@@ -353,7 +352,7 @@ bool Chat::getShowPreview() const
 
 void Chat::setShowPreview(bool showPreview)
 {
-    if (_notificationSettings == nullptr) return;
+    if (!_notificationSettings) return;
 
     auto settings = td_api::make_object<td_api::chatNotificationSettings>(
                 _notificationSettings->use_default_mute_for_,
@@ -374,14 +373,14 @@ void Chat::setShowPreview(bool showPreview)
 
 bool Chat::getDefaultShowPreview() const
 {
-    if (_notificationSettings == nullptr) return false;
+    if (!_notificationSettings) return false;
 
     return _scopeNotificationSettings->show_preview_ == _notificationSettings->show_preview_;
 }
 
 bool Chat::getDisablePinnedMessageNotifications() const
 {
-    if (_notificationSettings == nullptr) return 0;
+    if (!_notificationSettings) return 0;
 
     if (_notificationSettings->use_default_disable_pinned_message_notifications_) return _scopeNotificationSettings->disable_pinned_message_notifications_;
 
@@ -390,7 +389,7 @@ bool Chat::getDisablePinnedMessageNotifications() const
 
 void Chat::setDisablePinnedMessageNotifications(bool disablePinnedMessageNotifications)
 {
-    if (_notificationSettings == nullptr) return;
+    if (!_notificationSettings) return;
 
     auto settings = td_api::make_object<td_api::chatNotificationSettings>(
                 _notificationSettings->use_default_mute_for_,
@@ -411,14 +410,14 @@ void Chat::setDisablePinnedMessageNotifications(bool disablePinnedMessageNotific
 
 bool Chat::getDefaultDisablePinnedMessageNotifications() const
 {
-    if (_notificationSettings == nullptr) return false;
+    if (!_notificationSettings) return false;
 
     return _scopeNotificationSettings->disable_pinned_message_notifications_ == _notificationSettings->disable_pinned_message_notifications_;
 }
 
 bool Chat::getDisableMentionNotifications() const
 {
-    if (_notificationSettings == nullptr) return 0;
+    if (!_notificationSettings) return 0;
 
     if (_notificationSettings->use_default_disable_mention_notifications_) return _scopeNotificationSettings->disable_mention_notifications_;
 
@@ -427,7 +426,7 @@ bool Chat::getDisableMentionNotifications() const
 
 void Chat::setDisableMentionNotifications(bool disableMentionNotifications)
 {
-    if (_notificationSettings == nullptr) return;
+    if (!_notificationSettings) return;
 
     auto settings = td_api::make_object<td_api::chatNotificationSettings>(
                 _notificationSettings->use_default_mute_for_,
@@ -448,7 +447,7 @@ void Chat::setDisableMentionNotifications(bool disableMentionNotifications)
 
 bool Chat::getDefaultDisableMentionNotifications() const
 {
-    if (_notificationSettings == nullptr) return false;
+    if (!_notificationSettings) return false;
 
     return _scopeNotificationSettings->disable_mention_notifications_ == _notificationSettings->disable_mention_notifications_;
 }
@@ -712,8 +711,10 @@ QVariant Chat::data(const QModelIndex &index, int role) const
         int prevRow = index.row()-1;
         if (prevRow >= 0 && prevRow < _message_ids.count()) {
             Message* prev = _messages[_message_ids[index.row()-1]];
-            if (message->getSenderUserId() != 0) display = prev->getSenderUserId() != message->getSenderUserId();
-            if (message->getSenderChatId() != 0) display = prev->getSenderChatId() != message->getSenderChatId();
+            if (prev != nullptr) {
+                if (message->getSenderUserId() != 0) display = prev->getSenderUserId() != message->getSenderUserId();
+                if (message->getSenderChatId() != 0) display = prev->getSenderChatId() != message->getSenderChatId();
+            }
         }
         return message->received() && (getChatType() == "group" || getChatType() == "supergroup") && !message->isService() && display;
     }
@@ -1640,7 +1641,10 @@ void Chat::updateChatNotificationSettings(td_api::updateChatNotificationSettings
 
 void Chat::scopeNotificationSettingsChanged(td_api::scopeNotificationSettings *scopeNotificationSettings)
 {
-    _scopeNotificationSettings = scopeNotificationSettings;
+    // TODO: Handle null scopeNotificationSettings
+    if (scopeNotificationSettings != nullptr) {
+        _scopeNotificationSettings = scopeNotificationSettings;
+    }
 }
 
 void Chat::onGotMessage(td_api::message *message)

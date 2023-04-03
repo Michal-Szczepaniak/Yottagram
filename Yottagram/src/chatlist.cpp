@@ -66,6 +66,7 @@ void ChatList::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), &TelegramManager::updateMessageMentionRead, this, &ChatList::updateMessageMentionRead);
     connect(_manager.get(), &TelegramManager::updateChatDraftMessage, this, &ChatList::updateChatDraftMessage);
     connect(_manager.get(), &TelegramManager::gotChats, this, &ChatList::onGotChats);
+    connect(_manager.get(), &TelegramManager::gotScopeNotificationSettings, this, &ChatList::onGotScopeNotificationSettings);
 }
 
 void ChatList::setUsers(shared_ptr<Users> users)
@@ -345,6 +346,16 @@ void ChatList::fetchChatList()
     _manager->sendQueryWithRespone(0, td_api::getChats::ID, 0, new td_api::loadChats(move(list), std::numeric_limits<int32_t>::max()));
 }
 
+void ChatList::fetchAllScopeNotificationSettings()
+{
+    auto settingsQuerty = new td_api::getScopeNotificationSettings(td_api::make_object<td_api::notificationSettingsScopePrivateChats>());
+    _manager->sendQueryWithRespone(0, td_api::getScopeNotificationSettings::ID, td_api::notificationSettingsScopePrivateChats::ID, settingsQuerty);
+    settingsQuerty = new td_api::getScopeNotificationSettings(td_api::make_object<td_api::notificationSettingsScopeGroupChats>());
+    _manager->sendQueryWithRespone(0, td_api::getScopeNotificationSettings::ID, td_api::notificationSettingsScopeGroupChats::ID, settingsQuerty);
+    settingsQuerty = new td_api::getScopeNotificationSettings(td_api::make_object<td_api::notificationSettingsScopeChannelChats>());
+    _manager->sendQueryWithRespone(0, td_api::getScopeNotificationSettings::ID, td_api::notificationSettingsScopeChannelChats::ID, settingsQuerty);
+}
+
 QVariant ChatList::openChat(int64_t chatId)
 {
     auto chat = getChat(chatId);
@@ -448,6 +459,7 @@ void ChatList::onIsAuthorizedChanged(bool isAuthorized)
 {
     _isAuthorized = isAuthorized;
 
+    fetchAllScopeNotificationSettings();
     fetchChatList();
 }
 
@@ -464,6 +476,24 @@ void ChatList::onUnreadCountChanged(int64_t chatId, int32_t unreadCount)
 
 void ChatList::onGotChats(td_api::chats *chats)
 {
+}
+
+void ChatList::onGotScopeNotificationSettings(int32_t scope, td_api::scopeNotificationSettings *scopeNotificationSettings)
+{
+    switch (scope) {
+    case td_api::notificationSettingsScopeChannelChats::ID:
+        _channelNotificationSettings.setScopeNotificationSettings(td_api::object_ptr<td_api::scopeNotificationSettings>(scopeNotificationSettings), "channel");
+        emit channelNotificationSettingsChanged(_channelNotificationSettings.getScopeNotificationSettings());
+        return;
+    case td_api::notificationSettingsScopeGroupChats::ID:
+        _groupNotificationSettings.setScopeNotificationSettings(td_api::object_ptr<td_api::scopeNotificationSettings>(scopeNotificationSettings), "group");
+        emit groupNotificationSettingsChanged(_groupNotificationSettings.getScopeNotificationSettings());
+        return;
+    case td_api::notificationSettingsScopePrivateChats::ID:
+        _privateNotificationSettings.setScopeNotificationSettings(td_api::object_ptr<td_api::scopeNotificationSettings>(scopeNotificationSettings), "private");
+        emit privateNotificationSettingsChanged(_privateNotificationSettings.getScopeNotificationSettings());
+        return;
+    }
 }
 
 void ChatList::newChat(td_api::updateNewChat *updateNewChat)
@@ -521,7 +551,7 @@ void ChatList::updateChatLastMessage(td_api::updateChatLastMessage *updateChatLa
         setChatPosition(updateChatLastMessage->chat_id_, position.release());
     }
 
-    if (updateChatLastMessage->last_message_ != nullptr) {
+    if (updateChatLastMessage->last_message_) {
         _chats[updateChatLastMessage->chat_id_]->setLastMessage(move(updateChatLastMessage->last_message_));
         updateChat(updateChatLastMessage->chat_id_, {LastMessageRole, LastMessageAuthorRole});
     }

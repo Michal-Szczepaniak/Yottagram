@@ -74,7 +74,7 @@ QString Animation::getMimeType() const
 
 QByteArray Animation::getThumbnail() const
 {
-    if (_animation->animation_->minithumbnail_ != nullptr) {
+    if (_animation->animation_->minithumbnail_) {
         return QByteArray::fromStdString(_animation->animation_->minithumbnail_->data_);
     } else {
         return "";

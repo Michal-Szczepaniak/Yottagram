@@ -74,7 +74,7 @@ QString Video::getMimeType() const
 
 QByteArray Video::getThumbnail() const
 {
-    if (_video->video_->minithumbnail_ != nullptr) {
+    if (_video->video_->minithumbnail_) {
         return QByteArray::fromStdString(_video->video_->minithumbnail_->data_);
     } else {
         return "";

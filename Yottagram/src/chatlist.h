@@ -93,6 +93,7 @@ public:
     QHash<int, QByteArray> roleNames() const;
 
     void fetchChatList();
+    void fetchAllScopeNotificationSettings();
 
     Q_INVOKABLE QVariant openChat(int64_t chatId);
     Q_INVOKABLE void closeChat(int64_t chatId);
@@ -128,6 +129,7 @@ public slots:
     void onChatPhotoChanged(int64_t chatId);
     void onUnreadCountChanged(int64_t chatId, int32_t unreadCount);
     void onGotChats(td_api::chats *chats);
+    void onGotScopeNotificationSettings(int32_t scope, td_api::scopeNotificationSettings *scopeNotificationSettings);
     void newChat(td_api::updateNewChat *updateNewChat);
     void updateChatPhoto(td_api::updateChatPhoto *updateChatPhoto);
     void updateChatLastMessage(td_api::updateChatLastMessage *updateChatLastMessage);

@@ -201,7 +201,7 @@ User::Type User::getType() const
 bool User::hasPhoto() const
 {
     if (_user == nullptr) return false;
-    return _user->profile_photo_ != nullptr;
+    return (bool)_user->profile_photo_;
 }
 
 File* User::getSmallPhoto() const

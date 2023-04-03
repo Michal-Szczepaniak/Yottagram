@@ -51,7 +51,11 @@ td_api::object_ptr<td_api::NotificationSettingsScope> ScopeNotificationSettings:
 
 int32_t ScopeNotificationSettings::getMuteFor() const
 {
-    return _scopeNotificationSettings->mute_for_;
+    if (_scopeNotificationSettings) {
+        return _scopeNotificationSettings->mute_for_;
+    } else {
+        return -1;
+    }
 }
 
 void ScopeNotificationSettings::setMuteFor(int32_t muteFor)
@@ -69,7 +73,11 @@ void ScopeNotificationSettings::setMuteFor(int32_t muteFor)
 
 bool ScopeNotificationSettings::getShowPreview() const
 {
-    return _scopeNotificationSettings->show_preview_;
+    if (_scopeNotificationSettings) {
+        return _scopeNotificationSettings->show_preview_;
+    } else {
+        return false;
+    }
 }
 
 void ScopeNotificationSettings::setShowPreview(bool showPreview)
@@ -87,7 +95,11 @@ void ScopeNotificationSettings::setShowPreview(bool showPreview)
 
 bool ScopeNotificationSettings::getDisablePinnedMessageNotifications() const
 {
-    return _scopeNotificationSettings->disable_pinned_message_notifications_;
+    if (_scopeNotificationSettings) {
+       return _scopeNotificationSettings->disable_pinned_message_notifications_;
+    } else {
+        return false;
+    }
 }
 
 void ScopeNotificationSettings::setDisablePinnedMessageNotifications(bool disablePinnedMessageNotifications)
@@ -105,7 +117,11 @@ void ScopeNotificationSettings::setDisablePinnedMessageNotifications(bool disabl
 
 bool ScopeNotificationSettings::getDisableMentionNotifications() const
 {
-    return _scopeNotificationSettings->disable_mention_notifications_;
+    if (_scopeNotificationSettings) {
+        return _scopeNotificationSettings->disable_mention_notifications_;
+    } else {
+        return false;
+    }
 }
 
 void ScopeNotificationSettings::setDisableMentionNotifications(bool disableMentionNotifications)

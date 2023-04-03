@@ -227,7 +227,7 @@ void AutoDownloadSettings::applyPreset(td_api::object_ptr<td_api::autoDownloadSe
 
 void AutoDownloadSettings::autoDownloadSettingsPresets(td_api::autoDownloadSettingsPresets *autoDownloadSettingsPresets)
 {
-    if (_presetLoading == "" || autoDownloadSettingsPresets->low_ == nullptr || autoDownloadSettingsPresets->medium_ == nullptr || autoDownloadSettingsPresets->high_ == nullptr) return;
+    if (_presetLoading == "" || !autoDownloadSettingsPresets->low_ || !autoDownloadSettingsPresets->medium_|| !autoDownloadSettingsPresets->high_) return;
 
     if (_presetLoading == "low") applyPreset(std::move(autoDownloadSettingsPresets->low_));
     if (_presetLoading == "medium") applyPreset(std::move(autoDownloadSettingsPresets->medium_));

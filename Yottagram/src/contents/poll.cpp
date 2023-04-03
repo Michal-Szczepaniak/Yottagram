@@ -38,7 +38,7 @@ int Poll::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
 
-    if (_poll != nullptr) {
+    if (_poll) {
         return static_cast<int>(_poll->options_.size());
     }
 

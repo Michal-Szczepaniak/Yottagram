@@ -34,13 +34,13 @@ void BasicGroupFullInfo::setBasicGroupFullInfo(td_api::object_ptr<td_api::basicG
 
 QString BasicGroupFullInfo::getDescription() const
 {
-    if (_basicGroupFullInfo == nullptr) return "";
+    if (!_basicGroupFullInfo) return "";
     return QString::fromStdString(_basicGroupFullInfo->description_);
 }
 
 int64_t BasicGroupFullInfo::getCreatorUserId() const
 {
-    if (_basicGroupFullInfo == nullptr) return 0;
+    if (!_basicGroupFullInfo) return 0;
     return _basicGroupFullInfo->creator_user_id_;
 }
 
@@ -54,7 +54,7 @@ int BasicGroupFullInfo::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
 
-    if (_basicGroupFullInfo == nullptr) return 0;
+    if (!_basicGroupFullInfo) return 0;
     return _basicGroupFullInfo->members_.size();
 }
 

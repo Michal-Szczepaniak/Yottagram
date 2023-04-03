@@ -34,13 +34,13 @@ void SupergroupFullInfo::setSupergroupFullInfo(td_api::object_ptr<td_api::superg
 
 QString SupergroupFullInfo::getDescription() const
 {
-    if (_supergroupFullInfo == nullptr) return "";
+    if (!_supergroupFullInfo) return "";
     return QString::fromStdString(_supergroupFullInfo->description_);
 }
 
 int32_t SupergroupFullInfo::getMemberCount() const
 {
-    if (_supergroupFullInfo == nullptr) return 0;
+    if (!_supergroupFullInfo) return 0;
     return _supergroupFullInfo->member_count_;
 }
 

@@ -120,6 +120,7 @@ signals:
     void gotMessage(td_api::message *message);
     void gotProxies(td_api::proxies *proxies);
     void proxyTestSuccessful();
+    void gotScopeNotificationSettings(int32_t scope, td_api::scopeNotificationSettings *scopeNotificationSettings);
 
     void myIdChanged(int32_t myId);
     void error(int64_t chatId, int32_t type, int32_t subType, int32_t code, QString message);

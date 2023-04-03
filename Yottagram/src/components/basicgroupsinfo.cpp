@@ -21,7 +21,7 @@ BasicGroupInfo *BasicGroupsInfo::getBasicGroup(int32_t id)
 
 void BasicGroupsInfo::updateBasicGroup(td_api::updateBasicGroup *updateBasicGroup)
 {
-    if (updateBasicGroup->basic_group_ == nullptr) return;
+    if (!updateBasicGroup->basic_group_) return;
 
     int32_t chatId = updateBasicGroup->basic_group_->id_;
     if (!_basicGroups.contains(chatId)) {

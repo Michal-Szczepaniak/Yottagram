@@ -232,7 +232,7 @@ int Message::getEditedDate()
 
 int Message::getViews()
 {
-    if (_message->interaction_info_ == nullptr) return -1;
+    if (!_message->interaction_info_) return -1;
     return _message->interaction_info_->view_count_;
 }
 
@@ -311,7 +311,7 @@ QString Message::getFormattedTimestamp()
 
 QString Message::getFormattedForwardTimestamp()
 {
-    if (_message->forward_info_ == nullptr) return "";
+    if (!_message->forward_info_) return "";
 
     QString format;
     QDateTime current(QDateTime::currentDateTime());
@@ -349,7 +349,7 @@ WebPage* Message::getWebPage() const
 
 void Message::handleMessageContent(td_api::object_ptr<td_api::MessageContent> messageContent)
 {
-    if (messageContent == nullptr) return;
+    if (!messageContent) return;
     _contentTypeId = messageContent->get_id();
     if (_contentTypeId == td_api::messageText::ID) {
         if (static_cast<td_api::messageText*>(messageContent.get())->web_page_) {
@@ -424,7 +424,7 @@ void Message::handleMessageContent(td_api::object_ptr<td_api::MessageContent> me
 
 void Message::updateMessageSendSucceeded(td_api::updateMessageSendSucceeded *updateMessageSendSucceeded)
 {
-    if (updateMessageSendSucceeded->message_ != nullptr && updateMessageSendSucceeded->old_message_id_ == getId()) {
+    if (updateMessageSendSucceeded->message_ && updateMessageSendSucceeded->old_message_id_ == getId()) {
         _message = updateMessageSendSucceeded->message_.release();
         handleMessageContent(std::move(_message->content_));
         emit messageIdChanged(updateMessageSendSucceeded->old_message_id_, getId());

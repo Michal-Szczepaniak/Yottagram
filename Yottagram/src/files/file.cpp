@@ -119,7 +119,7 @@ int32_t File::getUploadedSize()
 
 void File::fileUpdated(td_api::updateFile *update_file)
 {
-    if (update_file->file_ != nullptr && update_file->file_ != nullptr && update_file->file_->id_ == getId()) {
+    if (update_file->file_ && update_file->file_->id_ == getId()) {
         setFile(std::move(update_file->file_));
 
         emit fileChanged(getId());

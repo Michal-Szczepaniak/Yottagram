@@ -34,7 +34,7 @@ void StickerSet::setStickerSet(td_api::stickerSet *stickerSet)
     while (_stickerIds.count())
         _stickerIds.removeLast();
 
-    if (_stickerSet->thumbnail_ != nullptr && _stickerSet->thumbnail_->format_->get_id() != td_api::thumbnailFormatMpeg4::ID) {
+    if (_stickerSet->thumbnail_ && _stickerSet->thumbnail_->format_->get_id() != td_api::thumbnailFormatMpeg4::ID) {
         _thumbnailId = _stickerSet->thumbnail_->file_->id_;
         _files->appendFile(move(_stickerSet->thumbnail_->file_), "sticker");
     }
@@ -67,7 +67,7 @@ bool StickerSet::getIsAnimated() const
 
 shared_ptr<File> StickerSet::getThumbnail()
 {
-    if (_stickerSet->thumbnail_ == nullptr || getIsAnimated()) {
+    if (!_stickerSet->thumbnail_|| getIsAnimated()) {
         return _files->getFile(_stickerIds[0]);
     }
 

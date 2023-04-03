@@ -60,7 +60,7 @@ bool Photo::getHasStickers() const
 
 QByteArray Photo::getThumbnail() const
 {
-    if (_photo->photo_->minithumbnail_ != nullptr) {
+    if (_photo->photo_->minithumbnail_) {
         return QByteArray::fromStdString(_photo->photo_->minithumbnail_->data_);
     } else {
         return "";

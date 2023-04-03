@@ -34,7 +34,7 @@ void UserFullInfo::setUserFullInfo(td_api::object_ptr<td_api::userFullInfo> user
 
 bool UserFullInfo::hasInfo() const
 {
-    return _userFullInfo != nullptr;
+    return (bool)_userFullInfo;
 }
 
 bool UserFullInfo::isBlocked() const
@@ -59,7 +59,7 @@ bool UserFullInfo::needPhoneNumberPrivacyException() const
 
 QString UserFullInfo::getBio() const
 {
-    if (_userFullInfo == nullptr) return "";
+    if (!_userFullInfo || !_userFullInfo->bio_) return "";
     return QString::fromStdString(_userFullInfo->bio_->text_);
 }
 

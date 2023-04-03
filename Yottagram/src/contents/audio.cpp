@@ -79,9 +79,9 @@ QString Audio::getMimeType() const
 
 QByteArray Audio::getThumbnail() const
 {
-    if (_audio->audio_->album_cover_minithumbnail_ != nullptr) {
-        return QByteArray::fromStdString(_audio->audio_->album_cover_minithumbnail_->data_);
-    } else {
+    if (!_audio || !_audio->audio_ || !_audio->audio_->album_cover_minithumbnail_) {
         return "";
+    } else {
+        return QByteArray::fromStdString(_audio->audio_->album_cover_minithumbnail_->data_);
     }
 }

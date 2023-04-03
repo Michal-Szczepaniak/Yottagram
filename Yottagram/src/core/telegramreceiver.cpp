@@ -32,7 +32,7 @@ TelegramReceiver::TelegramReceiver()
 void TelegramReceiver::run() {
     while(true) {
         auto response = client->receive(WAIT_TIMEOUT);
-        if (response.object != nullptr)
+        if (response.object)
             emit messageReceived(response.id, response.object.release());
     }
 }

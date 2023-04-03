@@ -22,7 +22,7 @@ SecretChatInfo *SecretChatsInfo::getSecretChat(int32_t id)
 
 void SecretChatsInfo::updateSecretChat(td_api::updateSecretChat *updateSecretChat)
 {
-    if (updateSecretChat->secret_chat_ == nullptr) return;
+    if (!updateSecretChat->secret_chat_) return;
 
     int32_t chatId = updateSecretChat->secret_chat_->id_;
     if (!_secretChats.contains(chatId)) {

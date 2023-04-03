@@ -61,8 +61,10 @@ void WebPage::setWebpage(td_api::object_ptr<td_api::webPage> webPage)
         _videoId = _webPage->video_->video_->id_;
         _files->appendFile(move(_webPage->video_->video_), "video");
         _files->considerAutoDownloading(_videoId, "video");
-        _thumbnailId = _webPage->video_->thumbnail_->file_->id_;
-        _files->appendFile(move(_webPage->video_->thumbnail_->file_), "thumbnail");
+        if (_webPage->video_->thumbnail_) {
+            _thumbnailId = _webPage->video_->thumbnail_->file_->id_;
+            _files->appendFile(move(_webPage->video_->thumbnail_->file_), "thumbnail");
+        }
         _mediaDuration = _webPage->video_->duration_;
     }
 

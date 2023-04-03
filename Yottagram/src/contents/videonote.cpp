@@ -43,7 +43,7 @@ File *VideoNote::getVideoNote() const
 
 QByteArray VideoNote::getThumbnail() const
 {
-    if (_videoNote->video_note_->minithumbnail_ != nullptr) {
+    if (_videoNote->video_note_->minithumbnail_) {
         return QByteArray::fromStdString(_videoNote->video_note_->minithumbnail_->data_);
     } else {
         return "";

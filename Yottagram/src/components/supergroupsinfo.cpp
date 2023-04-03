@@ -21,7 +21,7 @@ SupergroupInfo *SupergroupsInfo::getSupergroup(int32_t id)
 
 void SupergroupsInfo::updateSupergroup(td_api::updateSupergroup *updateSupergroup)
 {
-    if (updateSupergroup->supergroup_ == nullptr) return;
+    if (!updateSupergroup->supergroup_) return;
 
     int32_t chatId = updateSupergroup->supergroup_->id_;
     if (!_supergroups.contains(chatId)) {
