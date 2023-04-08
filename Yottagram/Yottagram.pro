@@ -2,7 +2,7 @@ include(vendor/vendor.pri)
 
 TARGET = yottagram
 
-QT += dbus multimedia location
+QT += dbus multimedia location contacts
 
 CONFIG += c++2a link_pkgconfig sailfishapp iostream
 
@@ -62,6 +62,7 @@ SOURCES += src/core.cpp \
     src/files/files.cpp \
     src/message.cpp \
     src/notifications.cpp \
+    src/pimcontactsmodel.cpp \
     src/proxymodel.cpp \
     src/pulseaudiohelper.cpp \
     src/savedanimations.cpp \
@@ -76,6 +77,7 @@ SOURCES += src/core.cpp \
     src/authorization.cpp \
     src/core/telegramreceiver.cpp \
     src/core/telegrammanager.cpp \
+    src/contacts.cpp \
     src/chatlist.cpp \
     src/chat.cpp
 
@@ -137,12 +139,14 @@ DISTFILES += qml/yottagram.qml \
     qml/cover/CoverPage.qml \
     qml/dialogs/PollDialog.qml \
     qml/dialogs/SetTtlDialog.qml \
+    qml/dialogs/ContactsImport.qml \
     qml/pages/About.qml \
     qml/pages/AuthorizationCode.qml \
     qml/pages/AuthorizationNumber.qml \
     qml/pages/AuthorizationPassword.qml \
     qml/pages/Chat.qml \
     qml/pages/ChatList.qml \
+    qml/pages/Contacts.qml \
     qml/pages/Loading.qml \
     qml/pages/Settings.qml \
     sailjail/yottagram.desktop \
@@ -202,6 +206,7 @@ HEADERS += \
     src/core/telegrammanager.h \
     src/chatlist.h \
     src/chat.h \
+    src/pimcontactsmodel.h \
     src/proxymodel.h \
     src/pulseaudiohelper.h \
     src/savedanimations.h \
@@ -210,6 +215,7 @@ HEADERS += \
     src/tgsioplugin/tgsioplugin.h \
     src/tgsioplugin/tgsiohandler.h \
     src/user.h \
+    src/contacts.h \
     src/users.h \
     src/webpage.h
 

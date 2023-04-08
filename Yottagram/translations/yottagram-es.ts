@@ -239,146 +239,6 @@
 <context>
     <name>Chat</name>
     <message>
-        <source>Open secret chat</source>
-        <translation>Abrir chat secreto</translation>
-    </message>
-    <message>
-        <source>Close secret chat</source>
-        <translation>Cerrar chat secreto</translation>
-    </message>
-    <message>
-        <source>Set self-destruct timer</source>
-        <translation>Configurar autodestrucción</translation>
-    </message>
-    <message>
-        <source>Saved messages</source>
-        <translation>Mensajes guardados</translation>
-    </message>
-    <message>
-        <source>%1 members</source>
-        <translation>%1 miembros</translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation>Responder</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>Editar</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Copiar</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Borrar</translation>
-    </message>
-    <message>
-        <source>Deselect</source>
-        <translation>Borrar selección</translation>
-    </message>
-    <message>
-        <source>Select</source>
-        <translation>Seleccionar</translation>
-    </message>
-    <message>
-        <source>Cancel selection</source>
-        <translation>Cancelar selección</translation>
-    </message>
-    <message>
-        <source>Forward</source>
-        <translation>Reenviar</translation>
-    </message>
-    <message>
-        <source>%L1 forwarded messages</source>
-        <translation>%L1 mensajes reenviados</translation>
-    </message>
-    <message>
-        <source>Type the text...</source>
-        <translation>Escribe texto...</translation>
-    </message>
-    <message>
-        <source>Image</source>
-        <translation>Imagen</translation>
-    </message>
-    <message>
-        <source>Video</source>
-        <translation>Vídeo</translation>
-    </message>
-    <message>
-        <source>Audio</source>
-        <translation>Audio</translation>
-    </message>
-    <message>
-        <source>Document</source>
-        <translation>Doc.</translation>
-    </message>
-    <message>
-        <source>File</source>
-        <translation>Archivo</translation>
-    </message>
-    <message>
-        <source>Poll</source>
-        <translation>Encuesta</translation>
-    </message>
-    <message>
-        <source>Sticker</source>
-        <translation>Sticker</translation>
-    </message>
-    <message>
-        <source>Voice Note</source>
-        <translation>Nota voz</translation>
-    </message>
-    <message>
-        <source>Pin message</source>
-        <translation>Fijar mensaje</translation>
-    </message>
-    <message>
-        <source>Notify members</source>
-        <translation>Notificar a los miembros</translation>
-    </message>
-    <message>
-        <source>Press and hold record button to record voice note.</source>
-        <translation>Mantén pulsado el botón de grabar para grabar nota de voz.</translation>
-    </message>
-    <message>
-        <source>Scroll to first unread mention</source>
-        <translation>Ir a la primera mención no leída</translation>
-    </message>
-    <message>
-        <source>Set as read</source>
-        <translation>Marcar como leído</translation>
-    </message>
-    <message>
-        <source>Also pin for %1</source>
-        <translation>Fijar también para %1</translation>
-    </message>
-    <message>
-        <source>Unpin message</source>
-        <translation>Quitar mensaje fijado</translation>
-    </message>
-    <message>
-        <source>GIF</source>
-        <translation>GIF</translation>
-    </message>
-    <message>
-        <source>Location</source>
-        <translation>Ubicación</translation>
-    </message>
-    <message>
-        <source>Call</source>
-        <translation>Llamar</translation>
-    </message>
-    <message>
-        <source>Swipe from bottom to access upload options</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 online</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Many people are typing...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -446,13 +306,149 @@
         <source>Channel created</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Swipe from bottom to access upload options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open secret chat</source>
+        <translation type="unfinished">Abrir chat secreto</translation>
+    </message>
+    <message>
+        <source>Close secret chat</source>
+        <translation type="unfinished">Cerrar chat secreto</translation>
+    </message>
+    <message>
+        <source>Set self-destruct timer</source>
+        <translation type="unfinished">Configurar autodestrucción</translation>
+    </message>
+    <message>
+        <source>Cancel selection</source>
+        <translation type="unfinished">Cancelar selección</translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished">Reenviar</translation>
+    </message>
+    <message>
+        <source>Scroll to first unread mention</source>
+        <translation type="unfinished">Ir a la primera mención no leída</translation>
+    </message>
+    <message>
+        <source>Call</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Saved messages</source>
+        <translation type="unfinished">Mensajes guardados</translation>
+    </message>
+    <message>
+        <source>%1 members</source>
+        <translation type="unfinished">%1 miembros</translation>
+    </message>
+    <message>
+        <source>%1 online</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reply</source>
+        <translation type="unfinished">Responder</translation>
+    </message>
+    <message>
+        <source>Pin message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unpin message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation type="unfinished">Editar</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished">Copiar</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation type="unfinished">Borrar</translation>
+    </message>
+    <message>
+        <source>Deselect</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set as read</source>
+        <translation type="unfinished">Marcar como leído</translation>
+    </message>
+    <message>
+        <source>%L1 forwarded messages</source>
+        <translation type="unfinished">%L1 mensajes reenviados</translation>
+    </message>
+    <message>
+        <source>Type the text...</source>
+        <translation type="unfinished">Escribe texto...</translation>
+    </message>
+    <message>
+        <source>Image</source>
+        <translation type="unfinished">Imagen</translation>
+    </message>
+    <message>
+        <source>Video</source>
+        <translation type="unfinished">Vídeo</translation>
+    </message>
+    <message>
+        <source>Audio</source>
+        <translation type="unfinished">Audio</translation>
+    </message>
+    <message>
+        <source>Document</source>
+        <translation type="unfinished">Documento</translation>
+    </message>
+    <message>
+        <source>File</source>
+        <translation type="unfinished">Archivo</translation>
+    </message>
+    <message>
+        <source>Poll</source>
+        <translation type="unfinished">Encuesta</translation>
+    </message>
+    <message>
+        <source>Sticker</source>
+        <translation type="unfinished">Sticker</translation>
+    </message>
+    <message>
+        <source>GIF</source>
+        <translation type="unfinished">GIF</translation>
+    </message>
+    <message>
+        <source>Voice Note</source>
+        <translation type="unfinished">Nota voz</translation>
+    </message>
+    <message>
+        <source>Press and hold record button to record voice note.</source>
+        <translation type="unfinished">Mantén pulsado el botón de grabar para grabar nota de voz.</translation>
+    </message>
+    <message>
+        <source>Location</source>
+        <translation type="unfinished">Ubicación</translation>
+    </message>
+    <message>
+        <source>Also pin for %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Notify members</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
-    <message>
-        <source>About</source>
-        <translation>Acerca de</translation>
-    </message>
     <message>
         <source>Settings</source>
         <translation>Ajustes</translation>
@@ -532,6 +528,10 @@
     <message>
         <source>GIF</source>
         <translation type="unfinished">GIF</translation>
+    </message>
+    <message>
+        <source>Contacts</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -638,6 +638,40 @@
     <message>
         <source>Pinned messages</source>
         <translation>Mensajes fijados</translation>
+    </message>
+</context>
+<context>
+    <name>Contacts</name>
+    <message>
+        <source>Imported %1 contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Buscar</translation>
+    </message>
+</context>
+<context>
+    <name>ContactsImport</name>
+    <message>
+        <source>Unselect all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select contacts to import</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Buscar</translation>
     </message>
 </context>
 <context>
@@ -1002,6 +1036,10 @@
         <source>Proxy settings</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>About</source>
+        <translation type="unfinished">Acerca de</translation>
+    </message>
 </context>
 <context>
     <name>SupergroupInfo</name>
@@ -1142,6 +1180,10 @@
     <message>
         <source>Clear history</source>
         <translation>Limpiar historial</translation>
+    </message>
+    <message>
+        <source>Open chat</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

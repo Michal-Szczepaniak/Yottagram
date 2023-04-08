@@ -69,6 +69,12 @@ void User::setUser(td_api::user *user)
     emit hasPhotoChanged(hasPhoto());
 }
 
+int64_t User::getId() const
+{
+    if (_user == nullptr) return 0;
+    return _user->id_;
+}
+
 QString User::getFirstName() const
 {
     if (_user == nullptr) return "";

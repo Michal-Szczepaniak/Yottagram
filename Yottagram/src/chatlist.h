@@ -87,6 +87,7 @@ public:
     int32_t getChatUnreadUnmutedCount() const;
     int32_t getMessageUnreadCount() const;
     int32_t getMessageUnreadUnmutedCount() const;
+    void createChat(td_api::chat *chat);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = TypeRole) const;
@@ -99,6 +100,7 @@ public:
     Q_INVOKABLE void closeChat(int64_t chatId);
     Chat* getChat(int64_t chatId) const;
     Q_INVOKABLE QVariant getChatAsVariant(int64_t chatId) const;
+    Q_INVOKABLE QVariant getChatAsVariantForUser(int64_t userId);
     Q_INVOKABLE void markChatAsRead(int64_t chatId);
     Q_INVOKABLE QVariant getChannelNotificationSettings();
     Q_INVOKABLE QVariant getGroupNotificationSettings();
@@ -123,6 +125,7 @@ signals:
     void forwardedFromChanged();
     void unreadChatCountChanged();
     void unreadMessageCountChanegd();
+    void chatCreated(int64_t chatId);
 
 public slots:
     void onIsAuthorizedChanged(bool isAuthorized);
@@ -143,6 +146,7 @@ public slots:
     void updateChatUnreadMentionCount(td_api::updateChatUnreadMentionCount *updateChatUnreadMentionCount);
     void updateMessageMentionRead(td_api::updateMessageMentionRead *updateMessageMentionRead);
     void updateChatDraftMessage(td_api::updateChatDraftMessage *updateChatDraftMessage);
+    void onCreatedPrivateChat(td_api::chat *chat);
 
 protected:
     void updateChat(int64_t chat, const QVector<int> &roles = {IdRole, NameRole});

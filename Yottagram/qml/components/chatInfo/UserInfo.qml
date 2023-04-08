@@ -31,6 +31,18 @@ Page {
     property var userId
     readonly property var user: users.getUserAsVariant(userId)
 
+    Connections {
+        target: chatList
+        onChatCreated: {
+            if (chat === null || chat === undefined) {
+                var newChat = chatList.getChatAsVariantForUser(userId)
+                if (newChat !== null || newChat !== undefined) {
+                    chat = newChat
+                }
+            }
+        }
+    }
+
     SilicaFlickable {
         anchors.fill: parent
 
@@ -48,11 +60,20 @@ Page {
                     chat.clearHistory()
                 })
             }
+
+            MenuItem {
+                text: qsTr("Open chat")
+                onClicked: {
+                    while (pageStack.depth > 1)
+                        pageStack.pop(undefined, PageStackAction.Immediate)
+
+                    pageStack.push(Qt.resolvedUrl("../../pages/Chat.qml"), { chat: chat, shareConfiguration: null })
+                }
+            }
         }
 
         Column {
             id: column
-//            spacing: Theme.paddingLarge
             anchors.top: parent.top
             anchors.topMargin: header.height
             width: parent.width

@@ -52,24 +52,29 @@ Chat::Chat(td_api::chat* chat, shared_ptr<Files> files) :
 {
     _basicGroupFullInfo = new BasicGroupFullInfo();
     _supergroupFullInfo = new SupergroupFullInfo();
-    setLastReadInboxMessageId(chat->last_read_inbox_message_id_);
-    setLastReadOutboxMessageId(chat->last_read_outbox_message_id_);
-    setUnreadCount(_chat->unread_count_);
-    setUnreadMentionCount(_chat->unread_mention_count_);
-    if (_chat->last_message_) setLastMessage(move(_chat->last_message_));
-
-    for (td_api::object_ptr<td_api::chatPosition> &position: _chat->positions_) {
-        updatePosition(position.release());
-    }
-
-    if (this->hasPhoto()) {
-        setChatPhoto(std::move(chat->photo_));
-    }
 }
 
 Chat::~Chat()
 {
     delete _chat;
+}
+
+void Chat::initialize()
+{
+    setLastReadInboxMessageId(_chat->last_read_inbox_message_id_);
+    setLastReadOutboxMessageId(_chat->last_read_outbox_message_id_);
+    setUnreadCount(_chat->unread_count_);
+    setUnreadMentionCount(_chat->unread_mention_count_);
+
+    if (_chat->last_message_) setLastMessage(move(_chat->last_message_));
+
+    for (td_api::object_ptr<td_api::chatPosition> &position: _chat->positions_) {
+        if(!position && position != nullptr) updatePosition(position.release());
+    }
+
+    if (this->hasPhoto()) {
+        setChatPhoto(std::move(_chat->photo_));
+    }
 }
 
 int64_t Chat::getId() const
@@ -209,7 +214,7 @@ void Chat::setUnreadMentionCount(int32_t unreadMentionCount)
 
     if (unreadMentionCount > 0) {
         if (_manager) {
-            _manager->sendQueryWithRespone(
+            _manager->sendQueryWithResponse(
                 getId(),
                 td_api::searchChatMessages::ID,
                 td_api::searchMessagesFilterUnreadMention::ID,
@@ -254,10 +259,14 @@ void Chat::setChatPhoto(td_api::object_ptr<td_api::chatPhotoInfo> chatPhoto)
         _smallPhotoId = 0;
         _bigPhotoId = 0;
     } else {
-        _smallPhotoId = chatPhoto->small_->id_;
-        _files->appendFile(std::move(chatPhoto->small_), "avatar");
-        _bigPhotoId = chatPhoto->big_->id_;
-        _files->appendFile(std::move(chatPhoto->big_), "");
+        if (chatPhoto->small_) {
+            _smallPhotoId = chatPhoto->small_->id_;
+            _files->appendFile(std::move(chatPhoto->small_), "avatar");
+        }
+        if (chatPhoto->big_) {
+            _bigPhotoId = chatPhoto->big_->id_;
+            _files->appendFile(std::move(chatPhoto->big_), "");
+        }
     }
     _chat->photo_ = std::move(chatPhoto);
     emit chatPhotoChanged(getId());
@@ -492,13 +501,52 @@ bool Chat::getCanPinMessages() const
     return _chat->permissions_->can_pin_messages_;
 }
 
-QVector<int32_t> Chat::getFoundChatMembers() const
+QStringList Chat::getFoundChatMembers() const
 {
-    return _foundChatMembers;
+    QStringList out;
+
+    for (int64_t id : _foundChatMembers)
+        out.append(QString::number(id));
+
+    return out;
+}
+
+void Chat::setFoundChatMembers(QStringList members)
+{
+    _foundChatMembers.clear();
+
+    for (QString member : members)
+        _foundChatMembers.append(member.toLong());
+
+    emit foundChatMembersChanged();
+}
+
+QStringList Chat::getRecentInlineBots() const
+{
+    QStringList out;
+
+    for (int64_t id : _recentBots) {
+        qDebug() << id;
+        out.append(QString::number(id));
+    }
+
+    return out;
+}
+
+void Chat::setRecentInlineBots(QStringList bots)
+{
+    _recentBots.clear();
+
+    for (QString bot : bots)
+        _foundChatMembers.append(bot.toLong());
+
+    emit recentInlineBotsChanged();
 }
 
 void Chat::updatePosition(td_api::chatPosition *position)
 {
+    if (!position->list_) return;
+
     td_api::chatPosition** listPosition;
     switch (position->list_->get_id()) {
     case td_api::chatListMain::ID:
@@ -621,9 +669,11 @@ void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), &TelegramManager::updateChatAction, this, &Chat::updateChatAction);
     connect(_manager.get(), &TelegramManager::gotMessage, this, &Chat::onGotMessage);
     connect(_manager.get(), &TelegramManager::gotSearchChatMessagesFilterUnreadMention, this, &Chat::onGotSearchChatMessagesFilterUnreadMention);
+    connect(_manager.get(), &TelegramManager::gotSearchChatMembers, this, &Chat::onGotSearchChatMembers);
+    connect(_manager.get(), &TelegramManager::gotRecentInlineBots, this, &Chat::onGotRecentInlineBots);
 
     if (_unreadMentionCount > 0) {
-        _manager->sendQueryWithRespone(
+        _manager->sendQueryWithResponse(
             getId(),
             td_api::searchChatMessages::ID,
             td_api::searchMessagesFilterUnreadMention::ID,
@@ -972,7 +1022,7 @@ int64_t Chat::getLastMessageId() const
 
 void Chat::setLastMessage(td_api::object_ptr<td_api::message> lastMessage)
 {
-    if (lastMessage == nullptr) return;
+    if (!lastMessage) return;
     _chat->last_message_ = move(lastMessage);
 
     shared_ptr<Message> newLastMessage = make_shared<Message>();
@@ -1477,6 +1527,15 @@ void Chat::sendAction(ChatAction action)
     _manager->sendQuery(new td_api::sendChatAction(getId(), 0, move(tdAction)));
 }
 
+void Chat::searchChatMembers(QString query)
+{
+    _manager->sendQueryWithResponse(getId(), td_api::getRecentInlineBots::ID, 0, new td_api::getRecentInlineBots());
+
+    if (_chat->type_->get_id() == td_api::chatTypeBasicGroup::ID || _chat->type_->get_id() == td_api::chatTypeSupergroup::ID) {
+        _manager->sendQueryWithResponse(getId(), td_api::searchChatMembers::ID, 0, new td_api::searchChatMembers(getId(), query.toStdString(), 20, td_api::make_object<td_api::chatMembersFilterMembers>()));
+    }
+}
+
 void Chat::setTtl(int32_t ttl)
 {
     _manager->sendQuery(new td_api::setChatMessageTtl(getId(), ttl));
@@ -1491,7 +1550,7 @@ void Chat::getChatHistory(int64_t from_message, int limit, int offset, bool loca
     getChatHistoryQuery->limit_ = limit;
     getChatHistoryQuery->only_local_ = localOnly;
 
-    _manager->sendQueryWithRespone(getId(), td_api::getChatHistory::ID, 0, getChatHistoryQuery);
+    _manager->sendQueryWithResponse(getId(), td_api::getChatHistory::ID, 0, getChatHistoryQuery);
 }
 
 void Chat::scrollToMessage(int64_t messageId)
@@ -1505,7 +1564,7 @@ void Chat::scrollToMessage(int64_t messageId)
 void Chat::fetchMessage(int64_t messageId) const
 {
     if (messageId == 0) return;
-    _manager->sendQueryWithRespone(getId(), td_api::getMessage::ID, 0, new td_api::getMessage(getId(), messageId));
+    _manager->sendQueryWithResponse(getId(), td_api::getMessage::ID, 0, new td_api::getMessage(getId(), messageId));
 }
 
 QVariant Chat::getMessage(int64_t messageId)
@@ -1767,4 +1826,31 @@ void Chat::onGotChatHistory(int64_t chatId, td_api::messages *messages)
     endInsertRows();
 
     emit gotChatHistory();
+}
+
+void Chat::onGotSearchChatMembers(int64_t chatId, td_api::chatMembers *chatMembers)
+{
+    if (chatId != getId()) return;
+
+    _foundChatMembers.clear();
+
+    for (auto& member : chatMembers->members_) {
+        if (member->member_id_->get_id() == td_api::messageSenderUser::ID) {
+            _foundChatMembers << static_cast<td_api::messageSenderUser*>(member->member_id_.get())->user_id_;
+            qDebug() << static_cast<td_api::messageSenderUser*>(member->member_id_.get())->user_id_;
+        }
+    }
+
+    emit foundChatMembersChanged();
+}
+
+void Chat::onGotRecentInlineBots(int64_t chatId, td_api::users *users)
+{
+    if (chatId != getId()) return;
+
+    _recentBots.clear();
+
+    std::copy(users->user_ids_.begin(), users->user_ids_.end(), std::back_inserter(_recentBots));
+
+    emit recentInlineBotsChanged();
 }

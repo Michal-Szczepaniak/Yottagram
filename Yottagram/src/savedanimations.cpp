@@ -67,7 +67,7 @@ void SavedAnimations::onUpdateSavedAnimations(td_api::updateSavedAnimations *upd
         _savedAnimationsId.append(animationId);
     endResetModel();
 
-    _manager->sendQueryWithRespone(0, td_api::getSavedAnimations::ID, 0, new td_api::getSavedAnimations());
+    _manager->sendQueryWithResponse(0, td_api::getSavedAnimations::ID, 0, new td_api::getSavedAnimations());
 }
 
 void SavedAnimations::onGotSavedAnimations(td_api::animations *animations)
@@ -89,5 +89,5 @@ void SavedAnimations::onGotSavedAnimations(td_api::animations *animations)
 
 void SavedAnimations::onIsAuthorizedChanged(bool isAuthorized)
 {
-    if (isAuthorized) _manager->sendQueryWithRespone(0, td_api::getSavedAnimations::ID, 0, new td_api::getSavedAnimations());
+    if (isAuthorized) _manager->sendQueryWithResponse(0, td_api::getSavedAnimations::ID, 0, new td_api::getSavedAnimations());
 }

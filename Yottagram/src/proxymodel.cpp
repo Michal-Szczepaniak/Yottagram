@@ -91,7 +91,7 @@ QHash<int, QByteArray> ProxyModel::roleNames() const
 
 void ProxyModel::getProxies()
 {
-    _manager->sendQueryWithRespone(0, td_api::getProxies::ID, 0, new td_api::getProxies());
+    _manager->sendQueryWithResponse(0, td_api::getProxies::ID, 0, new td_api::getProxies());
 }
 
 void ProxyModel::enable(int index)
@@ -116,7 +116,7 @@ void ProxyModel::test(int index)
 
     Proxy proxy = _proxyList[index];
 
-    _manager->sendQueryWithRespone(0, td_api::testProxy::ID, 0, new td_api::testProxy(proxy.server.toStdString(), proxy.port, getProxyType(proxy.type, proxy.username, proxy.password), -1, 5000));
+    _manager->sendQueryWithResponse(0, td_api::testProxy::ID, 0, new td_api::testProxy(proxy.server.toStdString(), proxy.port, getProxyType(proxy.type, proxy.username, proxy.password), -1, 5000));
 }
 
 TelegramManager::ConnectionState ProxyModel::connectionState() const

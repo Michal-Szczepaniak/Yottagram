@@ -32,6 +32,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 class User : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(int64_t id READ getId NOTIFY userChanged)
     Q_PROPERTY(bool hasPhoto READ hasPhoto NOTIFY hasPhotoChanged)
     Q_PROPERTY(QString name READ getName NOTIFY userChanged)
     Q_PROPERTY(QString username READ getUserame NOTIFY userChanged)
@@ -76,6 +77,7 @@ public:
     td_api::user *user() const;
     void setUser(td_api::user *user);
 
+    int64_t getId() const;
     QString getFirstName() const;
     QString getLastName() const;
     QString getName() const;

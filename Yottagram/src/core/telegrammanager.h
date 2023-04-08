@@ -52,7 +52,11 @@ public:
     void init();
     void sendQuery(td_api::Function* message);
     void sendQuerySync(td_api::Function* message);
-    void sendQueryWithRespone(int64_t chatId, int32_t type, int32_t subType, td_api::Function* message);
+    td_api::object_ptr<td_api::Object> sendQuerySyncWithResponse(td_api::Function* message);
+    void sendQueryWithResponse(int64_t chatId, int32_t type, int32_t subType, td_api::Function* message);
+    void sendQueryWithResponse(int64_t chatId, int32_t type, td_api::Function* message);
+    void sendQueryWithResponse(int32_t type, int32_t subType, td_api::Function* message);
+    void sendQueryWithResponse(int32_t type, td_api::Function* message);
     int32_t getMyId() const;
     bool getDaemonEnabled() const;
     void setDaemonEnabled(bool daemonEnabled);
@@ -121,6 +125,11 @@ signals:
     void gotProxies(td_api::proxies *proxies);
     void proxyTestSuccessful();
     void gotScopeNotificationSettings(int32_t scope, td_api::scopeNotificationSettings *scopeNotificationSettings);
+    void gotSearchChatMembers(int64_t chatId, td_api::chatMembers *chatMembers);
+    void gotRecentInlineBots(int64_t chatId, td_api::users *users);
+    void gotContacts(td_api::users *contacts);
+    void createdPrivateChat(td_api::chat *chat);
+    void importedContacts(td_api::importedContacts *importedContacts);
 
     void myIdChanged(int32_t myId);
     void error(int64_t chatId, int32_t type, int32_t subType, int32_t code, QString message);

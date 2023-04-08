@@ -99,7 +99,7 @@ void PinnedMessages::fetchMessages(int64_t fromMessage)
     searchMessages->from_message_id_ = fromMessage;
     searchMessages->limit_ = 2;
 
-    _manager->sendQueryWithRespone(_chatId, td_api::searchChatMessages::ID, td_api::searchMessagesFilterPinned::ID, searchMessages);
+    _manager->sendQueryWithResponse(_chatId, td_api::searchChatMessages::ID, td_api::searchMessagesFilterPinned::ID, searchMessages);
 }
 
 void PinnedMessages::onGotSearchChatMessagesFilterPinned(int64_t chatId, td_api::messages *messages)

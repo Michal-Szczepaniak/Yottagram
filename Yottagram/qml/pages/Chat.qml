@@ -91,9 +91,10 @@ Page {
         }
     }
 
-
     onStatusChanged: {
         if (status === PageStatus.Deactivating) {
+            chat.foundChatMembers = []
+            chat.recentInlineBots = []
             chatList.closeChat(chat.id)
         }
         if (status === PageStatus.Active) {
@@ -409,7 +410,7 @@ Page {
                 right: parent.right
                 bottom: parent.bottom
             }
-            contentHeight: messages.height + inputItem.height
+            contentHeight: height + uploadMediaPanel.actualHeight
             clip: true
 
             onMovementEnded: {
@@ -427,7 +428,7 @@ Page {
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: uploadFlickable.height - ((stickerPicker.visible || animationPicker.visible) ? (Theme.itemSizeLarge + inputItem.editReplyPanel) : (textInput.height + inputItem.editReplyPanel))
+                height: uploadFlickable.contentHeight - inputItem.height
                 width: parent.width
                 verticalLayoutDirection: ListView.BottomToTop
                 clip: true
@@ -550,12 +551,6 @@ Page {
                         chat.getMoreChatHistory()
                     }
                 }
-
-//                add: Transition {
-//                    to: item.height
-//                    PauseAnimation { duration: 500 }
-//                    NumberAnimation { properties: "y"; duration: 200; easing.type: Easing.InOutQuad }
-//                }
 
                 delegate:
                 ListItem {
@@ -691,6 +686,7 @@ Page {
                                     visible: canBeEdited && chatList.selection.length == 0
                                     onClicked: {
                                         textInput.text = messageText
+                                        textInput.cursorPosition = messageText.length
                                         chatPage.newEditMessageId = messageId
                                         chatPage.newReplyMessageId = 0
                                     }
@@ -781,24 +777,83 @@ Page {
                 VerticalScrollDecorator {}
             }
 
-            Item {
+            Column {
                 id: inputItem
                 anchors.top: messages.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: visible ? uploadMediaPanel.height + textInput.height + editReplyPanel + stickerPicker.height + animationPicker.height : 0
-                property var editReplyPanel: (replyRow.visible ? replyRow.height : 0) + (editRow.visible ? editRow.height : 0) + (forwardRow.visible ? forwardRow.height : 0)
                 visible: !(chat.getChatType() === "secret" && (chat.secretChatState === "closed" || chat.secretChatState === "pending"))
+
+                SilicaListView {
+                    id: chatMembers
+                    anchors.left: parent.left
+                    anchors.leftMargin: Theme.paddingLarge
+                    anchors.right: parent.right
+                    anchors.rightMargin: Theme.paddingLarge
+                    height: visible ? Math.min(Theme.itemSizeSmall*4, contentHeight) : 0
+                    spacing: Theme.paddingSmall
+                    clip: true
+                    model: [].concat(chat.recentInlineBots, chat.foundChatMembers)
+                    onCountChanged: console.log(chat.recentInlineBots, chat.foundChatMembers, [].concat(chat.recentInlineBots, chat.foundChatMembers))
+                    visible: count > 0
+
+                    delegate: ListItem {
+                        width: parent.width
+                        contentHeight: Theme.itemSizeExtraSmall
+                        readonly property var user: users.getUserAsVariant(modelData)
+
+                        Row {
+                            anchors.fill: parent
+                            spacing: Theme.paddingLarge
+
+                            Avatar {
+                                id: avatar
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: height
+                                height: parent.height - Theme.paddingSmall
+                                userName: user.name
+                                avatarPhoto: user.smallPhoto.localPath
+                            }
+
+                            DetailItem {
+                                width: parent.width - Theme.paddingLarge - avatar.width - Theme.paddingLarge
+                                anchors.verticalCenter: parent.verticalCenter
+                                label: user.name
+                                value: "@" + user.username
+                                alignment: Qt.AlignLeft
+                                leftMargin: 0
+                                rightMargin: 0
+                            }
+                        }
+
+                        onClicked: {
+                            var txtinput = textInput
+                            var tmpChat = chat
+                            var position = txtinput.cursorPosition
+
+                            var cutText = txtinput.text.slice(0,position)
+                            var result = (/(?:^|\s)\@\S*$/.exec(cutText))[0].trim().slice(1)
+
+                            txtinput.text = txtinput.text.slice(0,position-result.length) + user.username + txtinput.text.slice(position,txtinput.text.length) + " "
+                            txtinput.cursorPosition = position + user.username.length - result.length + 1
+
+                            tmpChat.foundChatMembers = []
+                            tmpChat.recentInlineBots = []
+                        }
+                    }
+
+                    VerticalScrollDecorator { }
+                }
 
                 Row {
                     id: forwardRow
-                    anchors.top: parent.topz
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.paddingLarge
                     anchors.right: parent.right
                     anchors.rightMargin: Theme.paddingLarge
                     spacing: Theme.paddingLarge
                     visible: chatList.selection.length != 0
+                    height: visible ? implicitHeight : 0
 
                     Icon {
                         id: forwardIcon
@@ -824,13 +879,13 @@ Page {
 
                 Row {
                     id: replyRow
-                    anchors.top: parent.topz
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.paddingLarge
                     anchors.right: parent.right
                     anchors.rightMargin: Theme.paddingLarge
                     spacing: Theme.paddingLarge
                     visible: chatPage.newReplyMessageId != 0
+                    height: visible ? implicitHeight : 0
 
                     function getReplyData(roleName) {
                         return chatProxyModel.data(chatProxyModel.index(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.newReplyMessageId)), 0), chatProxyModel.roleForName(roleName))
@@ -871,13 +926,13 @@ Page {
 
                 Row {
                     id: editRow
-                    anchors.bottom: textInput.top
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.paddingLarge
                     anchors.right: parent.right
                     anchors.rightMargin: Theme.paddingLarge
                     spacing: Theme.paddingLarge
                     visible: chatPage.newEditMessageId != 0
+                    height: visible ? implicitHeight : 0
 
                     function getEditData(roleName) {
                         return chatProxyModel.data(chatProxyModel.index(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.newEditMessageId)), 0), chatProxyModel.roleForName(roleName))
@@ -948,8 +1003,6 @@ Page {
                     id: stickerPicker
                     height: visible ? Screen.height/2 + Theme.paddingLarge : 0
                     width: parent.width
-                    anchors.top: parent.top
-                    anchors.topMargin: inputItem.editReplyPanel
                     visible: false
                     page: chatPage
                     opacity: uploadFlickable.contentY/(inputItem.height- Theme.itemSizeLarge)
@@ -968,7 +1021,6 @@ Page {
                     id: animationPicker
                     height: visible ? Screen.height/2 + Theme.paddingLarge : 0
                     width: parent.width
-                    anchors.top: parent.top
                     visible: false
                     animationPreview: animationPreview
                     page: chatPage
@@ -982,72 +1034,104 @@ Page {
                     }
                 }
 
-                TextArea {
-                    id: textInput
-                    enabled: {
-                        var type = chat.getChatType()
-                        if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canSendMessages
-                        if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canSendMessages
-                        return chat.canSendMessages
-                    }
-                    anchors.top: parent.top
-                    anchors.topMargin: inputItem.editReplyPanel
-                    anchors.right: sendButton.visible ? sendButton.left : parent.right
-                    anchors.left: parent.left
-                    placeholderText: qsTr("Type the text...")
-                    color: Theme.primaryColor
-                    focusOutBehavior: FocusBehavior.KeepFocus
-                    height: visible ? Math.min(implicitHeight, Theme.itemSizeExtraLarge) : 0
-                    visible: !(stickerPicker.visible || animationPicker.visible)
-                    onFocusChanged: {
-                        if (!focus) chat.setDraftMessage(textInput.text, chatPage.newReplyMessageId)
-                        messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.startMessage)), ListView.SnapPosition)
-                    }
-                    EnterKey.onClicked: {
-                        if (!settings.sendButton) {
-                            textInput.text = textInput.text.slice(0,textInput.cursorPosition-1) + textInput.text.slice(textInput.cursorPosition,textInput.text.length)
-                            sendMessage()
+                Row {
+                    height: textInput.height
+                    width: parent.width
+
+                    TextArea {
+                        id: textInput
+
+                        property bool typingUsername: false
+
+                        enabled: {
+                            var type = chat.getChatType()
+                            if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canSendMessages
+                            if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canSendMessages
+                            return chat.canSendMessages
                         }
-                    }
+                        placeholderText: qsTr("Type the text...")
+                        color: Theme.primaryColor
+                        focusOutBehavior: FocusBehavior.KeepFocus
+                        height: visible ? Math.min(implicitHeight, Theme.itemSizeExtraLarge) : 0
+                        width: parent.width - (sendButton.visible ? sendButton.width : 0)
+                        visible: !(stickerPicker.visible || animationPicker.visible)
+                        inputMethodHints: if (typingUsername) Qt.ImhNoPredictiveText
 
-                    onTextChanged: chat.sendAction(text.length > 0 ? Chat.Typing : Chat.None)
+                        onFocusChanged: {
+                            if (!focus) chat.setDraftMessage(textInput.text, chatPage.newReplyMessageId)
+                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.startMessage)), ListView.SnapPosition)
+                        }
 
-                    function sendMessage() {
-                        if(textInput.text.length != 0) {
-                            if (chatPage.newEditMessageId != 0) {
-                                chat.editMessageText(chatPage.newEditMessageId, textInput.text)
-                                chatPage.newEditMessageId = 0
-                            } else {
-                                chat.sendMessage(textInput.text, chatPage.newReplyMessageId)
-                                chatPage.newReplyMessageId = 0
+                        EnterKey.onClicked: {
+                            if (!settings.sendButton) {
+                                textInput.text = textInput.text.slice(0,textInput.cursorPosition-1) + textInput.text.slice(textInput.cursorPosition,textInput.text.length)
+                                sendMessage()
                             }
-                            textInput.text = ""
-                            textInput.focus = false
-                            textInput.focus = true
                         }
 
-                        if (chatList.selection.length != 0) {
-                            chat.sendForwardedMessages(chatList.selection, chatList.forwardedFrom)
-                            chatList.selection = []
-                            chatList.forwardedFrom = 0
+                        onCursorPositionChanged: {
+                            taggingTimeout.start()
+                        }
+
+                        onTextChanged: {
+                            chat.sendAction(text.length > 0 ? Chat.Typing : Chat.None)
+                            taggingTimeout.start()
+                        }
+
+                        Timer {
+                            id: taggingTimeout
+                            repeat: false
+                            interval: 100
+                            onTriggered: {
+                                var cutText = textInput.text.slice(0,textInput.cursorPosition)
+                                var results = (/(?:^|\s)\@\S*$/.exec(cutText))
+
+                                if (results !== null) {
+                                    textInput.typingUsername = true
+                                    chat.searchChatMembers(results[0].trim().substring(1))
+                                } else {
+                                    chat.foundChatMembers = []
+                                    chat.recentInlineBots = []
+                                    textInput.typingUsername = false
+                                }
+                            }
+                        }
+
+                        function sendMessage() {
+                            if(textInput.text.length != 0) {
+                                if (chatPage.newEditMessageId != 0) {
+                                    chat.editMessageText(chatPage.newEditMessageId, textInput.text)
+                                    chatPage.newEditMessageId = 0
+                                } else {
+                                    chat.sendMessage(textInput.text, chatPage.newReplyMessageId)
+                                    chatPage.newReplyMessageId = 0
+                                }
+                                textInput.text = ""
+                                textInput.focus = false
+                                textInput.focus = true
+                            }
+
+                            if (chatList.selection.length != 0) {
+                                chat.sendForwardedMessages(chatList.selection, chatList.forwardedFrom)
+                                chatList.selection = []
+                                chatList.forwardedFrom = 0
+                            }
                         }
                     }
-                }
 
-                IconButton {
-                    id: sendButton
-                    anchors.top: parent.top
-                    anchors.topMargin: inputItem.editReplyPanel
-                    anchors.right: parent.right
-                    icon.source: "image://theme/icon-m-send"
-                    visible: settings.sendButton && !(stickerPicker.visible || animationPicker.visible)
-                    onClicked: textInput.sendMessage()
+                    IconButton {
+                        id: sendButton
+                        anchors.verticalCenter: textInput.verticalCenter
+                        height: visible ? textInput.height : 0
+                        icon.source: "image://theme/icon-m-send"
+                        visible: settings.sendButton && !(stickerPicker.visible || animationPicker.visible)
+                        onClicked: textInput.sendMessage()
+                    }
                 }
 
                 Column {
                     id: uploadMediaPanel
                     width: parent.width
-                    anchors.top: textInput.bottom
                     spacing: Theme.paddingLarge
                     padding: Theme.paddingLarge
                     visible: {
@@ -1059,9 +1143,21 @@ Page {
                     height: if (!visible) 0
                     property int columns: 5
                     property real cellWidth: (width-Theme.paddingLarge*2)/columns
+                    property int actualHeight: if (stickerPicker.visible) {
+                                                   stickerPicker.height - textInput.implicitHeight
+                                                } else if (animationPicker.visible) {
+                                                   animationPicker.height - textInput.implicitHeight
+                                                } else if (!textInput.enabled) {
+                                                   0
+                                                } else {
+                                                   implicitHeight
+                                               }
+
                     Row {
-                        width: parent.width
+                        x: Theme.paddingMedium
+                        width: parent.width - Theme.paddingMedium*2
                         id: firstRow
+                        visible: !uploadMediaPanel.hidePickers
 
                         HighlightLabelIconButton {
                             width: uploadMediaPanel.cellWidth
@@ -1098,8 +1194,11 @@ Page {
                             onClicked: pageStack.push(filePickerPage)
                         }
                     }
+
                     Row {
-                        width: parent.width
+                        x: Theme.paddingMedium
+                        width: parent.width - Theme.paddingMedium*2
+                        visible: !uploadMediaPanel.hidePickers
 
                         HighlightLabelIconButton {
                             width: uploadMediaPanel.cellWidth
@@ -1120,7 +1219,11 @@ Page {
                             onClicked: {
                                 textInput.focus = false
                                 stickerPicker.visible = true
-                                uploadFlickable.scrollToBottom()
+                                var timer = Qt.createQmlObject("import QtQuick 2.0; Timer {}", root);
+                                timer.interval = 1
+                                timer.repeat = false
+                                timer.triggered.connect(function () {uploadFlickable.scrollToBottom()})
+                                timer.start()
                             }
                         }
 
@@ -1168,6 +1271,13 @@ Page {
                             }
                         }
                     }
+
+                    Row {
+                        x: Theme.horizontalPageMargin
+                        width: parent.width - Theme.horizontalPageMargin*2
+                        height: 1
+                        visible: !uploadMediaPanel.hidePickers
+                    }
                 }
             }
         }
@@ -1199,7 +1309,6 @@ Page {
                             chatPage.newReplyMessageId = 0
                         }
                         uploadFlickable.scrollToTop()
-//                        pageStack.navigateBack(PageStackAction.Immediate)
                     }
                 }
             }

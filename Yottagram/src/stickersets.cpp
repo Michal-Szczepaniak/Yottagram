@@ -50,7 +50,7 @@ QVariant StickerSets::data(const QModelIndex &index, int role) const
     if (rowCount() <= 0) return QVariant();
 
     if (!_stickerSets.contains(_installedStickerSetIds[index.row()])) {
-        _manager->sendQueryWithRespone(0, td_api::getStickerSet::ID, 0, new td_api::getStickerSet(_installedStickerSetIds[index.row()]));
+        _manager->sendQueryWithResponse(0, td_api::getStickerSet::ID, 0, new td_api::getStickerSet(_installedStickerSetIds[index.row()]));
         return QVariant();
     }
 

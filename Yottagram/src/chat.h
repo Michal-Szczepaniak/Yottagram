@@ -79,7 +79,8 @@ class Chat : public QAbstractListModel
     Q_PROPERTY(bool canChangeInfo READ getCanChangeInfo NOTIFY permissionsChanged)
     Q_PROPERTY(bool canInviteUsers READ getCanInviteUsers NOTIFY permissionsChanged)
     Q_PROPERTY(bool canPinMessages READ getCanPinMessages NOTIFY permissionsChanged)
-    Q_PROPERTY(QVector<int32_t> foundChatMembers READ getFoundChatMembers NOTIFY foundChatMembersChanged)
+    Q_PROPERTY(QStringList foundChatMembers READ getFoundChatMembers WRITE setFoundChatMembers NOTIFY foundChatMembersChanged)
+    Q_PROPERTY(QStringList recentInlineBots READ getRecentInlineBots WRITE setRecentInlineBots NOTIFY recentInlineBotsChanged)
     Q_PROPERTY(QString draftMessage READ draftMessage NOTIFY draftMessageChanged)
     Q_PROPERTY(int64_t draftMessageReplyId READ draftMessageReplyId NOTIFY draftMessageChanged)
     Q_PROPERTY(QString actionText READ actionText NOTIFY actionTextChanged)
@@ -144,6 +145,7 @@ public:
     Chat(td_api::chat* chat, shared_ptr<Files> files);
     ~Chat();
 
+    void initialize();
     int64_t getId() const;
     int64_t getIdFromType() const;
     int32_t getSecretChatId() const;
@@ -192,7 +194,10 @@ public:
     bool getCanChangeInfo() const;
     bool getCanInviteUsers() const;
     bool getCanPinMessages() const;
-    QVector<int32_t> getFoundChatMembers() const;
+    QStringList getFoundChatMembers() const;
+    void setFoundChatMembers(QStringList members);
+    QStringList getRecentInlineBots() const;
+    void setRecentInlineBots(QStringList bots);
     void updatePosition(td_api::chatPosition* position);
     QString draftMessage() const;
     int64_t draftMessageReplyId() const;
@@ -257,6 +262,7 @@ public:
     Q_INVOKABLE void unpinMessage(int64_t messageId);
     Q_INVOKABLE void clearCachedHistory();
     Q_INVOKABLE void sendAction(ChatAction action);
+    Q_INVOKABLE void searchChatMembers(QString query);
     void setTtl(int32_t ttl);
 
     bool hasPhoto();
@@ -289,6 +295,7 @@ signals:
     void draftMessageChanged();
     void actionTextChanged();
     void firstUnreadMentionChanged();
+    void recentInlineBotsChanged();
 
 public slots:
     void updateChatReadInbox(td_api::updateChatReadInbox *updateChatReadInbox);
@@ -309,6 +316,8 @@ public slots:
     void onGotSearchChatMessagesFilterUnreadMention(int64_t chatId, td_api::messages *messages);
 
     void onGotChatHistory(int64_t chatId, td_api::messages *messages);
+    void onGotSearchChatMembers(int64_t chatId, td_api::chatMembers *chatMembers);
+    void onGotRecentInlineBots(int64_t chatId, td_api::users *users);
 
 private:
     int32_t _smallPhotoId;
@@ -332,7 +341,7 @@ private:
     SupergroupFullInfo* _supergroupFullInfo{};
     td_api::object_ptr<td_api::chatNotificationSettings> _notificationSettings{};
     td_api::scopeNotificationSettings* _scopeNotificationSettings{};
-    QVector<int32_t> _foundChatMembers{};
+    QList<int64_t> _foundChatMembers{};
     td_api::chatPosition* _mainPosition{};
     td_api::chatPosition* _archivePosition{};
     QHash<int32_t, td_api::chatPosition*> _filterPositions{};
@@ -340,6 +349,7 @@ private:
     QVector<int64_t> _getMessageCache{};
     shared_ptr<Message> _lastMessage{};
     int64_t _firstUnreadMention;
+    QList<int64_t> _recentBots{};
 };
 Q_DECLARE_METATYPE(Chat*)
 

@@ -21,6 +21,14 @@ Column {
         width: Math.min(implicitWidth, column.width)
         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
 
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                if (sender === "user")
+                    pageStack.push(Qt.resolvedUrl("../components/chatInfo/UserInfo.qml"), { userId: senderId, chat: chatList.getChatAsVariantForUser(senderId) })
+            }
+        }
+
         function getName() {
             if (forwardUserId != 0) return users.getUserAsVariant(forwardUserId).name
             if (forwardChatId != 0) return chatList.getChatAsVariant(forwardChatId).title

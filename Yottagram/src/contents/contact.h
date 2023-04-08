@@ -15,13 +15,14 @@ class Contact : public QObject, public ContentInterface
 public:
     explicit Contact(QObject *parent = nullptr);
     void handleContent(td_api::object_ptr<td_api::MessageContent> content) override;
+    void setContact(td_api::object_ptr<td_api::contact> contact);
 
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setUsers(shared_ptr<Users> users);
 
-    int64_t userId();
-    QString name();
-    QString phoneNumber();
+    int64_t userId() const;
+    QString name() const;
+    QString phoneNumber() const;
 signals:
     void contactChanged();
 

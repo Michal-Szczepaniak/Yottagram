@@ -23,6 +23,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "overloaded.h"
 #include "user.h"
 #include <QtQml>
+#include "pimcontactsmodel.h"
 #include "components/thumbnail.h"
 #include "components/audiorecorder.h"
 #include "components/pinnedmessages.h"
@@ -43,6 +44,8 @@ Core::Core(QObject *parent) : QObject(parent)
     qmlRegisterType<Chat>("com.verdanditeam.chat", 1, 0, "Chat");
     qmlRegisterType<ProxyModel>("com.verdanditeam.proxy", 1, 0, "ProxyModel");
     qmlRegisterType<TelegramManager>("com.verdanditeam.manager", 1, 0, "TelegramManager");
+    qmlRegisterType<Contacts>("com.verdanditeam.contacts", 1, 0, "Contacts");
+    qmlRegisterType<PIMContactsModel>("com.verdanditeam.contacts", 1, 0, "PIMContacts");
 
     _files->setTelegramManager(_manager);
     _files->setWifiAutoDownloadSettings(&_wifiAutoDownloadSettings);
@@ -91,6 +94,9 @@ Core::Core(QObject *parent) : QObject(parent)
 
     _chatListFilters.setTelegramManager(_manager);
     _proxyModel.setTelegramManager(_manager);
+
+    _contacts.setTelegramManager(_manager);
+    _contacts.setUsers(_users);
 }
 
 void Core::init()

@@ -58,12 +58,36 @@ void TelegramManager::sendQuerySync(td_api::Function *message)
     receiver.client->execute({_messageId, td_api::object_ptr<td_api::Function>(message)});
 }
 
-void TelegramManager::sendQueryWithRespone(int64_t chatId, int32_t type, int32_t subType, td_api::Function *message)
+td_api::object_ptr<td_api::Object> TelegramManager::sendQuerySyncWithResponse(td_api::Function *message)
+{
+    _messageId++;
+    _messages[_messageId] = {0, message->get_id(), 0};
+
+    auto result = receiver.client->execute({_messageId, td_api::object_ptr<td_api::Function>(message)});
+    return move(result.object);
+}
+
+void TelegramManager::sendQueryWithResponse(int64_t chatId, int32_t type, int32_t subType, td_api::Function *message)
 {
     _messageId++;
     _messages[_messageId] = {chatId, type, subType};
 
     receiver.client->send({_messageId, td_api::object_ptr<td_api::Function>(message)});
+}
+
+void TelegramManager::sendQueryWithResponse(int64_t chatId, int32_t type, td_api::Function *message)
+{
+    sendQueryWithResponse(chatId, type, 0, message);
+}
+
+void TelegramManager::sendQueryWithResponse(int32_t type, int32_t subType, td_api::Function *message)
+{
+    sendQueryWithResponse(0, type, subType, message);
+}
+
+void TelegramManager::sendQueryWithResponse(int32_t type, td_api::Function *message)
+{
+    sendQueryWithResponse(0, type, 0, message);
 }
 
 int32_t TelegramManager::getMyId() const
@@ -157,6 +181,21 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
         break;
     case td_api::getScopeNotificationSettings::ID:
         emit gotScopeNotificationSettings(response.subType, static_cast<td_api::scopeNotificationSettings*>(message));
+        break;
+    case td_api::searchChatMembers::ID:
+        emit gotSearchChatMembers(response.chatId, static_cast<td_api::chatMembers*>(message));
+        break;
+    case td_api::getRecentInlineBots::ID:
+        emit gotRecentInlineBots(response.chatId, static_cast<td_api::users*>(message));
+        break;
+    case td_api::getContacts::ID:
+        emit gotContacts(static_cast<td_api::users*>(message));
+        break;
+    case td_api::createPrivateChat::ID:
+        emit createdPrivateChat(static_cast<td_api::chat*>(message));
+        break;
+    case td_api::importContacts::ID:
+        emit importedContacts(static_cast<td_api::importedContacts*>(message));
         break;
     }
 }

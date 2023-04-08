@@ -43,6 +43,13 @@ Page {
         flickableDirection: Flickable.VerticalFlick
         contentHeight: column.height + header.height
 
+        PullDownMenu {
+            MenuItem {
+                text: qsTr("About")
+                onClicked: pageStack.push(Qt.resolvedUrl("About.qml"))
+            }
+        }
+
         PageHeader {
             id: header
             title: qsTr("Settings")

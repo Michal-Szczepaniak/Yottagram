@@ -239,146 +239,6 @@
 <context>
     <name>Chat</name>
     <message>
-        <source>Open secret chat</source>
-        <translation>打开私密对话</translation>
-    </message>
-    <message>
-        <source>Close secret chat</source>
-        <translation>关闭私密对话</translation>
-    </message>
-    <message>
-        <source>Set self-destruct timer</source>
-        <translation>设置自毁计时器</translation>
-    </message>
-    <message>
-        <source>Saved messages</source>
-        <translation>储存消息</translation>
-    </message>
-    <message>
-        <source>%1 members</source>
-        <translation>%1 位成员</translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation>回复</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>编辑</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>复制</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>删除</translation>
-    </message>
-    <message>
-        <source>Deselect</source>
-        <translation>取消选择</translation>
-    </message>
-    <message>
-        <source>Select</source>
-        <translation>选择</translation>
-    </message>
-    <message>
-        <source>Cancel selection</source>
-        <translation>取消选择</translation>
-    </message>
-    <message>
-        <source>Forward</source>
-        <translation>转发</translation>
-    </message>
-    <message>
-        <source>%L1 forwarded messages</source>
-        <translation>%L1 条转发消息</translation>
-    </message>
-    <message>
-        <source>Type the text...</source>
-        <translation>输入文本…</translation>
-    </message>
-    <message>
-        <source>Pin message</source>
-        <translation>置顶消息</translation>
-    </message>
-    <message>
-        <source>Image</source>
-        <translation>图片</translation>
-    </message>
-    <message>
-        <source>Video</source>
-        <translation>视频</translation>
-    </message>
-    <message>
-        <source>Audio</source>
-        <translation>音频</translation>
-    </message>
-    <message>
-        <source>Document</source>
-        <translation>文档</translation>
-    </message>
-    <message>
-        <source>File</source>
-        <translation>文件</translation>
-    </message>
-    <message>
-        <source>Poll</source>
-        <translation>投票</translation>
-    </message>
-    <message>
-        <source>Sticker</source>
-        <translation>表情贴图</translation>
-    </message>
-    <message>
-        <source>Voice Note</source>
-        <translation>语音消息</translation>
-    </message>
-    <message>
-        <source>Press and hold record button to record voice note.</source>
-        <translation>按下并握住录音按钮以录制语音消息。</translation>
-    </message>
-    <message>
-        <source>Notify members</source>
-        <translation>通知成员</translation>
-    </message>
-    <message>
-        <source>Scroll to first unread mention</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Set as read</source>
-        <translation type="unfinished">标记为已读</translation>
-    </message>
-    <message>
-        <source>Also pin for %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unpin message</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>GIF</source>
-        <translation type="unfinished">GIF</translation>
-    </message>
-    <message>
-        <source>Location</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Call</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Swipe from bottom to access upload options</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 online</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Many people are typing...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -446,13 +306,149 @@
         <source>Channel created</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Swipe from bottom to access upload options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open secret chat</source>
+        <translation type="unfinished">打开私密对话</translation>
+    </message>
+    <message>
+        <source>Close secret chat</source>
+        <translation type="unfinished">关闭私密对话</translation>
+    </message>
+    <message>
+        <source>Set self-destruct timer</source>
+        <translation type="unfinished">设置自毁计时器</translation>
+    </message>
+    <message>
+        <source>Cancel selection</source>
+        <translation type="unfinished">取消选择</translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished">转发</translation>
+    </message>
+    <message>
+        <source>Scroll to first unread mention</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Call</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Saved messages</source>
+        <translation type="unfinished">储存消息</translation>
+    </message>
+    <message>
+        <source>%1 members</source>
+        <translation type="unfinished">%1 位成员</translation>
+    </message>
+    <message>
+        <source>%1 online</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reply</source>
+        <translation type="unfinished">回复</translation>
+    </message>
+    <message>
+        <source>Pin message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unpin message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation type="unfinished">编辑</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished">复制</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation type="unfinished">删除</translation>
+    </message>
+    <message>
+        <source>Deselect</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set as read</source>
+        <translation type="unfinished">标记为已读</translation>
+    </message>
+    <message>
+        <source>%L1 forwarded messages</source>
+        <translation type="unfinished">%L1 条转发消息</translation>
+    </message>
+    <message>
+        <source>Type the text...</source>
+        <translation type="unfinished">输入文本…</translation>
+    </message>
+    <message>
+        <source>Image</source>
+        <translation type="unfinished">图片</translation>
+    </message>
+    <message>
+        <source>Video</source>
+        <translation type="unfinished">视频</translation>
+    </message>
+    <message>
+        <source>Audio</source>
+        <translation type="unfinished">音频</translation>
+    </message>
+    <message>
+        <source>Document</source>
+        <translation type="unfinished">文档</translation>
+    </message>
+    <message>
+        <source>File</source>
+        <translation type="unfinished">文件</translation>
+    </message>
+    <message>
+        <source>Poll</source>
+        <translation type="unfinished">投票</translation>
+    </message>
+    <message>
+        <source>Sticker</source>
+        <translation type="unfinished">表情贴图</translation>
+    </message>
+    <message>
+        <source>GIF</source>
+        <translation type="unfinished">GIF</translation>
+    </message>
+    <message>
+        <source>Voice Note</source>
+        <translation type="unfinished">语音消息</translation>
+    </message>
+    <message>
+        <source>Press and hold record button to record voice note.</source>
+        <translation type="unfinished">按下并握住录音按钮以录制语音消息。</translation>
+    </message>
+    <message>
+        <source>Location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Also pin for %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Notify members</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
-    <message>
-        <source>About</source>
-        <translation>关于</translation>
-    </message>
     <message>
         <source>Settings</source>
         <translation>设置</translation>
@@ -532,6 +528,10 @@
     <message>
         <source>GIF</source>
         <translation type="unfinished">GIF</translation>
+    </message>
+    <message>
+        <source>Contacts</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -638,6 +638,40 @@
     <message>
         <source>Default</source>
         <translation>默认</translation>
+    </message>
+</context>
+<context>
+    <name>Contacts</name>
+    <message>
+        <source>Imported %1 contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">搜索</translation>
+    </message>
+</context>
+<context>
+    <name>ContactsImport</name>
+    <message>
+        <source>Unselect all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select contacts to import</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">搜索</translation>
     </message>
 </context>
 <context>
@@ -1001,6 +1035,10 @@
         <source>Proxy settings</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>About</source>
+        <translation type="unfinished">关于</translation>
+    </message>
 </context>
 <context>
     <name>SupergroupInfo</name>
@@ -1141,6 +1179,10 @@
     <message>
         <source>Clear history</source>
         <translation type="unfinished">清空历史</translation>
+    </message>
+    <message>
+        <source>Open chat</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

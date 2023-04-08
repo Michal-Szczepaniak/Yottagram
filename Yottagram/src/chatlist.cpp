@@ -67,6 +67,7 @@ void ChatList::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), &TelegramManager::updateChatDraftMessage, this, &ChatList::updateChatDraftMessage);
     connect(_manager.get(), &TelegramManager::gotChats, this, &ChatList::onGotChats);
     connect(_manager.get(), &TelegramManager::gotScopeNotificationSettings, this, &ChatList::onGotScopeNotificationSettings);
+    connect(_manager.get(), &TelegramManager::createdPrivateChat, this, &ChatList::onCreatedPrivateChat);
 }
 
 void ChatList::setUsers(shared_ptr<Users> users)
@@ -131,6 +132,47 @@ int32_t ChatList::getMessageUnreadCount() const
 int32_t ChatList::getMessageUnreadUnmutedCount() const
 {
     return _unreadMessageCount.unread_unmuted_count_;
+}
+
+void ChatList::createChat(td_api::chat *chat)
+{
+    if (chat != nullptr) {
+        if (true == _chats.contains(chat->id_)) {
+            qWarning() << "Deleting chat";
+            delete _chats[chat->id_];
+        }
+
+        auto newChat = new Chat(chat, _files);
+        newChat->setTelegramManager(_manager);
+        newChat->setUsers(_users);
+        newChat->setSecretChatsInfo(_secretChatsInfo);
+        newChat->setBasicGroupsInfo(_basicGroupsInfo);
+        newChat->setSupergroupsInfo(_supergroupsInfo);
+        newChat->initialize();
+        QQmlEngine::setObjectOwnership(newChat, QQmlEngine::CppOwnership);
+        connect(newChat, &Chat::chatPhotoChanged, this, &ChatList::onChatPhotoChanged);
+        connect(newChat, &Chat::unreadCountChanged, this, &ChatList::onUnreadCountChanged);
+        connect(newChat, &Chat::secretChatChanged, this, &ChatList::secretChatStateChanged);
+        connect(newChat, &Chat::lastReadInboxMessageIdChanged, this, &ChatList::lastReadInboxMessageIdChanged);
+        connect(newChat, &Chat::lastReadOutboxMessageIdChanged, this, &ChatList::lastReadOutboxMessageIdChanged);
+
+        if (newChat->getChatType() == "channel") {
+            connect(this, &ChatList::channelNotificationSettingsChanged, newChat, &Chat::scopeNotificationSettingsChanged);
+            newChat->scopeNotificationSettingsChanged(_channelNotificationSettings.getScopeNotificationSettings());
+        }
+        if (newChat->getChatType() == "group" || newChat->getChatType() == "supergroup") {
+            connect(this, &ChatList::groupNotificationSettingsChanged, newChat, &Chat::scopeNotificationSettingsChanged);
+            newChat->scopeNotificationSettingsChanged(_groupNotificationSettings.getScopeNotificationSettings());
+        }
+        if (newChat->getChatType() == "private" || newChat->getChatType() == "secret") {
+            connect(this, &ChatList::privateNotificationSettingsChanged, newChat, &Chat::scopeNotificationSettingsChanged);
+            newChat->scopeNotificationSettingsChanged(_privateNotificationSettings.getScopeNotificationSettings());
+        }
+        _chats[chat->id_] = newChat;
+
+        updateChat(chat->id_, {});
+        emit chatCreated(chat->id_);
+    }
 }
 
 int ChatList::rowCount(const QModelIndex &parent) const
@@ -343,17 +385,17 @@ void ChatList::fetchChatList()
 {
     td_api::object_ptr<td_api::ChatList> list = static_cast<td_api::object_ptr<td_api::ChatList>>(getSelectedChatList());
 
-    _manager->sendQueryWithRespone(0, td_api::getChats::ID, 0, new td_api::loadChats(move(list), std::numeric_limits<int32_t>::max()));
+    _manager->sendQueryWithResponse(0, td_api::getChats::ID, 0, new td_api::loadChats(move(list), std::numeric_limits<int32_t>::max()));
 }
 
 void ChatList::fetchAllScopeNotificationSettings()
 {
     auto settingsQuerty = new td_api::getScopeNotificationSettings(td_api::make_object<td_api::notificationSettingsScopePrivateChats>());
-    _manager->sendQueryWithRespone(0, td_api::getScopeNotificationSettings::ID, td_api::notificationSettingsScopePrivateChats::ID, settingsQuerty);
+    _manager->sendQueryWithResponse(0, td_api::getScopeNotificationSettings::ID, td_api::notificationSettingsScopePrivateChats::ID, settingsQuerty);
     settingsQuerty = new td_api::getScopeNotificationSettings(td_api::make_object<td_api::notificationSettingsScopeGroupChats>());
-    _manager->sendQueryWithRespone(0, td_api::getScopeNotificationSettings::ID, td_api::notificationSettingsScopeGroupChats::ID, settingsQuerty);
+    _manager->sendQueryWithResponse(0, td_api::getScopeNotificationSettings::ID, td_api::notificationSettingsScopeGroupChats::ID, settingsQuerty);
     settingsQuerty = new td_api::getScopeNotificationSettings(td_api::make_object<td_api::notificationSettingsScopeChannelChats>());
-    _manager->sendQueryWithRespone(0, td_api::getScopeNotificationSettings::ID, td_api::notificationSettingsScopeChannelChats::ID, settingsQuerty);
+    _manager->sendQueryWithResponse(0, td_api::getScopeNotificationSettings::ID, td_api::notificationSettingsScopeChannelChats::ID, settingsQuerty);
 }
 
 QVariant ChatList::openChat(int64_t chatId)
@@ -394,6 +436,22 @@ QVariant ChatList::getChatAsVariant(int64_t chatId) const
         return QVariant::fromValue(chat);
     } else {
         qWarning() << "Chat doesn't exist!";
+        return QVariant();
+    }
+}
+
+QVariant ChatList::getChatAsVariantForUser(int64_t userId)
+{
+    int64_t chatId;
+
+    auto result = std::find_if(_chats.begin(), _chats.end(), [&](Chat* chat){ return chat->getChatType() == "private" && chat->getIdFromType() == userId; });
+    if (result != _chats.end()) {
+        Chat* chat = *result;
+        chatId = chat->getId();
+        return getChatAsVariant(chatId);
+    } else {
+        _manager->sendQueryWithResponse(td_api::createPrivateChat::ID, new td_api::createPrivateChat(userId, false));
+
         return QVariant();
     }
 }
@@ -500,41 +558,7 @@ void ChatList::newChat(td_api::updateNewChat *updateNewChat)
 {
     auto chat = updateNewChat->chat_.release();
 
-    if (chat != nullptr) {
-        if (true == _chats.contains(chat->id_)) {
-            qWarning() << "Deleting chat";
-            delete _chats[chat->id_];
-        }
-
-        auto newChat = new Chat(chat, _files);
-        newChat->setTelegramManager(_manager);
-        newChat->setUsers(_users);
-        newChat->setSecretChatsInfo(_secretChatsInfo);
-        newChat->setBasicGroupsInfo(_basicGroupsInfo);
-        newChat->setSupergroupsInfo(_supergroupsInfo);
-        QQmlEngine::setObjectOwnership(newChat, QQmlEngine::CppOwnership);
-        connect(newChat, &Chat::chatPhotoChanged, this, &ChatList::onChatPhotoChanged);
-        connect(newChat, &Chat::unreadCountChanged, this, &ChatList::onUnreadCountChanged);
-        connect(newChat, &Chat::secretChatChanged, this, &ChatList::secretChatStateChanged);
-        connect(newChat, &Chat::lastReadInboxMessageIdChanged, this, &ChatList::lastReadInboxMessageIdChanged);
-        connect(newChat, &Chat::lastReadOutboxMessageIdChanged, this, &ChatList::lastReadOutboxMessageIdChanged);
-
-        if (newChat->getChatType() == "channel") {
-            connect(this, &ChatList::channelNotificationSettingsChanged, newChat, &Chat::scopeNotificationSettingsChanged);
-            newChat->scopeNotificationSettingsChanged(_channelNotificationSettings.getScopeNotificationSettings());
-        }
-        if (newChat->getChatType() == "group" || newChat->getChatType() == "supergroup") {
-            connect(this, &ChatList::groupNotificationSettingsChanged, newChat, &Chat::scopeNotificationSettingsChanged);
-            newChat->scopeNotificationSettingsChanged(_groupNotificationSettings.getScopeNotificationSettings());
-        }
-        if (newChat->getChatType() == "private" || newChat->getChatType() == "secret") {
-            connect(this, &ChatList::privateNotificationSettingsChanged, newChat, &Chat::scopeNotificationSettingsChanged);
-            newChat->scopeNotificationSettingsChanged(_privateNotificationSettings.getScopeNotificationSettings());
-        }
-        _chats[chat->id_] = newChat;
-
-        this->updateChat(chat->id_, {});
-    }
+    createChat(chat);
 }
 
 void ChatList::updateChatPhoto(td_api::updateChatPhoto *updateChatPhoto)
@@ -634,4 +658,11 @@ void ChatList::updateChatDraftMessage(td_api::updateChatDraftMessage *updateChat
     }
 
     _chats[updateChatDraftMessage->chat_id_]->setDraftMessage(move(updateChatDraftMessage->draft_message_));
+}
+
+void ChatList::onCreatedPrivateChat(td_api::chat *chat)
+{
+    if (chat != nullptr && !_chats.contains(chat->id_)) {
+        createChat(chat);
+    }
 }

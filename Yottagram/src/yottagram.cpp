@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
     qRegisterMetaType<uint32_t>("uint32_t");
     qRegisterMetaType<int64_t>("int64_t");
     qRegisterMetaType<uint64_t>("uint64_t");
+    qRegisterMetaType<QList<int64_t>>("QList<int64_t>");
 
     Core core;
     core.init();
@@ -61,6 +62,7 @@ int main(int argc, char *argv[])
     view->rootContext()->setContextProperty("calls", &core._calls);
     view->rootContext()->setContextProperty("chatListFilters", &core._chatListFilters);
     view->rootContext()->setContextProperty("proxyModel", &core._proxyModel);
+    view->rootContext()->setContextProperty("contactsModel", &core._contacts);
     view->rootContext()->setContextProperty("wifiAutoDownloadSettings", &core._wifiAutoDownloadSettings);
     view->rootContext()->setContextProperty("mobileAutoDownloadSettings", &core._mobileAutoDownloadSettings);
     view->rootContext()->setContextProperty("roamingAutoDownloadSettings", &core._roamingAutoDownloadSettings);

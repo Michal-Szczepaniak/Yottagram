@@ -95,13 +95,13 @@ Page {
 
         PullDownMenu {
             MenuItem {
-                text: qsTr("About")
-                onClicked: pageStack.push(Qt.resolvedUrl("About.qml"))
+                text: qsTr("Settings")
+                onClicked: pageStack.push(Qt.resolvedUrl("Settings.qml"))
             }
 
             MenuItem {
-                text: qsTr("Settings")
-                onClicked: pageStack.push(Qt.resolvedUrl("Settings.qml"))
+                text: qsTr("Contacts")
+                onClicked: pageStack.push(Qt.resolvedUrl("Contacts.qml"))
             }
 
             MenuItem {
@@ -161,11 +161,6 @@ Page {
             width: parent.width
             anchors.top: chatListFilterList.visible ? chatListFilterList.bottom : parent.top
             placeholderText: qsTr("Search")
-            Keys.onReturnPressed: {
-                if(searchField.text.length != 0) {
-                    app.playlistModel.search(searchField.text)
-                }
-            }
         }
 
         SortFilterProxyModel {
