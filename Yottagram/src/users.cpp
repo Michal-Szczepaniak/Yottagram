@@ -99,6 +99,16 @@ QVariant Users::getUserAsVariant(int64_t userId) const
     }
 }
 
+std::shared_ptr<User> Users::getUserByUsername(QString username)
+{
+    auto result = std::find_if(_users.begin(), _users.end(), [&](std::shared_ptr<User> user){ return user->getUserame() == username; });
+    if (result != _users.end()) {
+        return *result;
+    } else {
+        return nullptr;
+    }
+}
+
 void Users::updateUser(td_api::updateUser *updateUser)
 {
     auto userId = updateUser->user_->id_;

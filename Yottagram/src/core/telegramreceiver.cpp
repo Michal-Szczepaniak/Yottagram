@@ -22,6 +22,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <td/telegram/Log.h>
 #include <td/telegram/Client.h>
 #include <QDebug>
+#include <QDateTime>
 
 TelegramReceiver::TelegramReceiver()
 {
@@ -32,7 +33,11 @@ TelegramReceiver::TelegramReceiver()
 void TelegramReceiver::run() {
     while(true) {
         auto response = client->receive(WAIT_TIMEOUT);
-        if (response.object)
+
+        if (response.object) {
             emit messageReceived(response.id, response.object.release());
+
+            msleep(40);
+        }
     }
 }

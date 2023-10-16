@@ -37,6 +37,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "chatlistfilters.h"
 #include "proxymodel.h"
 #include "contacts.h"
+#include "telegramstatus.h"
 
 using namespace std;
 
@@ -49,6 +50,7 @@ public:
     void init();
 
     Authorization _authorization;
+    TelegramStatus _telegramStatus;
     Notifications _notifications;
     StickerSets _stickerSets;
     SavedAnimations _savedAnimations;

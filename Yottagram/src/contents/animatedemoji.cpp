@@ -47,6 +47,7 @@ File *AnimatedEmoji::getSticker() const
 
 void AnimatedEmoji::addUpdateFiles()
 {
+    if (!_animatedEmoji || !_animatedEmoji->sticker_ || !_animatedEmoji->sticker_->sticker_) return;
     _stickerFileId = _animatedEmoji->sticker_->sticker_->id_;
     _files->appendFile(std::move(_animatedEmoji->sticker_->sticker_), "sticker");
 }

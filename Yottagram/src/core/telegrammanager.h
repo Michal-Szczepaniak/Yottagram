@@ -69,6 +69,7 @@ private:
 
 signals:
     void onMessageReceived(uint64_t id, td_api::Object* message);
+    void bootupComplete();
     void send(td_api::Function* message);
     void updateNewChat(td_api::updateNewChat *newChat);
     void updateChatTitle(td_api::updateChatTitle *updateChatTitle);

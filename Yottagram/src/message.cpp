@@ -64,11 +64,14 @@ int64_t Message::getId()
     return _message->id_;
 }
 
-QString Message::getText()
+QString Message::getText(bool formatted)
 {
     switch (_contentTypeId) {
     case td_api::messageText::ID:
-        return QString::fromStdString(_text->text_->text_);
+        if (formatted)
+            return formatTextAsHTML(_text->text_.get());
+        else
+            return QString::fromStdString(_text->text_->text_);
     case td_api::messageChatDeleteMember::ID:
         return tr("%1 left").arg(_users->getUser(getDeleteMemberId())->getName());
     case td_api::messageChatAddMembers::ID:
@@ -451,4 +454,107 @@ int64_t Message::getChatId() const
 void Message::setChatId(const int64_t &chatId)
 {
     _chatId = chatId;
+}
+
+QString Message::formatTextAsHTML(td_api::formattedText *formattedText)
+{
+    QString originalText = QString::fromStdString(formattedText->text_);
+    QString modifiedText = "";
+
+    for (int i = 0; i < originalText.length(); i++) {
+        for (td_api::object_ptr<td_api::textEntity> &entity : formattedText->entities_) {
+            modifiedText += getHTMLEntityForIndex(i, entity.get(), originalText, true);
+        }
+
+        modifiedText += originalText[i];
+
+        for (auto it = formattedText->entities_.rbegin(); it != formattedText->entities_.rend(); it++) {
+            modifiedText += getHTMLEntityForIndex(i, (*it).get(), originalText, false);
+        }
+    }
+
+    return modifiedText;
+}
+
+QString Message::getHTMLEntityForIndex(int index, td_api::textEntity *entity, QString originalText, bool startTag)
+{
+    if (startTag && index != entity->offset_) return "";
+    else if (!startTag && index != (entity->offset_ + entity->length_ - 1)) return "";
+
+    switch (entity->type_->get_id()) {
+    case td_api::textEntityTypeBankCardNumber::ID:
+        return "";
+    case td_api::textEntityTypeBold::ID:
+        return startTag ? "<b>" : "</b>";
+    case td_api::textEntityTypeBotCommand::ID:
+        if (startTag) {
+            return "<a href=\"command://" + originalText.mid(entity->offset_, entity->length_) + "\">";
+        } else {
+            return "</a>";
+        }
+    case td_api::textEntityTypeCashtag::ID:
+        return "";
+    case td_api::textEntityTypeCode::ID:
+        return startTag ? "<code>" : "</code>";
+    case td_api::textEntityTypeCustomEmoji::ID:
+        return "";
+    case td_api::textEntityTypeEmailAddress::ID:
+        if (startTag) {
+            return "<a href=\"mailto:" + originalText.mid(entity->offset_, entity->length_) + "\">";
+        } else {
+            return "</a>";
+        }
+    case td_api::textEntityTypeHashtag::ID:
+        return "";
+    case td_api::textEntityTypeItalic::ID:
+        return startTag ? "<i>" : "</i>";
+    case td_api::textEntityTypeMediaTimestamp::ID:
+        return "";
+    case td_api::textEntityTypeMention::ID:
+        if (startTag) {
+            std::shared_ptr<User> user = _users->getUserByUsername(originalText.mid(entity->offset_ + 1, entity->length_ - 1));
+            if (user)
+                return "<a href=\"userid://" + QString::number(user->getId()) + "\">";
+            else
+                return "<a>";
+        } else {
+            return "</a>";
+        }
+    case td_api::textEntityTypeMentionName::ID:
+        if (startTag) {
+            return "<a href=\"userid://" + QString::number(static_cast<td_api::textEntityTypeMentionName*>(entity->type_.get())->user_id_) + "\">";
+        } else {
+            return "</a>";
+        }
+    case td_api::textEntityTypePhoneNumber::ID:
+        if (startTag) {
+            return "<a href=\"tel:" + originalText.mid(entity->offset_, entity->length_) + "\">";
+        } else {
+            return "</a>";
+        }
+    case td_api::textEntityTypePre::ID:
+        return startTag ? "<pre>" : "</pre>";
+    case td_api::textEntityTypePreCode::ID:
+        return startTag ? "<pre><code>" : "</code></pre>";
+    case td_api::textEntityTypeSpoiler::ID:
+        return "";
+    case td_api::textEntityTypeStrikethrough::ID:
+        return startTag ? "<strike>" : "</strike>";
+    case td_api::textEntityTypeTextUrl::ID:
+        if (startTag) {
+            return "<a href=\"" + QString::fromStdString(static_cast<td_api::textEntityTypeTextUrl*>(entity->type_.get())->url_) + "\">";
+        } else {
+            return "</a>";
+        }
+    case td_api::textEntityTypeUnderline::ID:
+        return startTag ? "<u>" : "</u>";
+    case td_api::textEntityTypeUrl::ID:
+        if (startTag) {
+            return "<a href=\"" + originalText.mid(entity->offset_, entity->length_) + "\">";
+        } else {
+            return "</a>";
+        }
+    default:
+        return "";
+    }
 }

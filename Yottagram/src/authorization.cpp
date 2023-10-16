@@ -34,9 +34,9 @@ Authorization::Authorization(QObject *parent) : QObject(parent)
 
 void Authorization::setTelegramManager(shared_ptr<TelegramManager> manager)
 {
-    this->_manager = manager;
+    _manager = manager;
 
-    connect(this->_manager.get(), SIGNAL(onMessageReceived(uint64_t,td_api::Object*)), this, SLOT(messageReceived(uint64_t,td_api::Object*)));
+    connect(_manager.get(), SIGNAL(onMessageReceived(uint64_t,td_api::Object*)), this, SLOT(messageReceived(uint64_t,td_api::Object*)));
 }
 
 void Authorization::updateAuthorizationState(td_api::updateAuthorizationState &updateAuthorizationState)
@@ -217,7 +217,7 @@ void Authorization::authorizationStateWaitTdlibParameters()
     parameters->system_language_code_ = "en";
     parameters->device_model_ = (deviceInfo.manufacturer() + " " + deviceInfo.prettyName()).toStdString();
     parameters->system_version_ = (aboutSettings.localizedOperatingSystemName() + " " + aboutSettings.localizedSoftwareVersion()).toStdString();
-    parameters->application_version_ = "0.3.0";
+    parameters->application_version_ = "0.4.1";
     parameters->enable_storage_optimizer_ = true;
     _manager->sendQuery(parameters);
 }

@@ -32,11 +32,11 @@ void TelegramManager::init()
 {
     _networkManager = NetworkManager::instance();
 
-    connect(&receiver, SIGNAL(messageReceived(uint64_t, td_api::Object*)),
-            this, SLOT(messageReceived(uint64_t, td_api::Object*)), Qt::DirectConnection);
-    connect(this, SIGNAL(updateOption(td_api::updateOption*)), this, SLOT(onUpdateOption(td_api::updateOption*)));
+    connect(&receiver, &TelegramReceiver::messageReceived, this, &TelegramManager::messageReceived);
+    connect(this, &TelegramManager::updateOption, this, &TelegramManager::onUpdateOption);
+    connect(_networkManager, &NetworkManager::defaultRouteChanged, this, &TelegramManager::defaultRouteChanged);
+    connect(&receiver, &TelegramReceiver::bootupComplete, this, &TelegramManager::bootupComplete);
 
-    connect(_networkManager, SIGNAL(defaultRouteChanged(NetworkService*)), this, SLOT(defaultRouteChanged(NetworkService*)));
     defaultRouteChanged(_networkManager->defaultRoute());
 
     receiver.start();

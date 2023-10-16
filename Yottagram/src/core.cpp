@@ -53,6 +53,7 @@ Core::Core(QObject *parent) : QObject(parent)
     _files->setRoamingAutoDownloadSettings(&_wifiAutoDownloadSettings);
     _files->setOtherAutoDownloadSettings(&_wifiAutoDownloadSettings);
     _authorization.setTelegramManager(_manager);
+    _telegramStatus.setTelegramManager(_manager);
     _chatList->setTelegramManager(_manager);
     _chatList->setUsers(_users);
     _chatList->setFiles(_files);

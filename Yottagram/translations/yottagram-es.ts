@@ -58,11 +58,11 @@
     </message>
     <message>
         <source>Login</source>
-        <translation type="unfinished"></translation>
+        <translation>Acceso</translation>
     </message>
     <message>
         <source>Submit</source>
-        <translation type="unfinished"></translation>
+        <translation>Enviar</translation>
     </message>
 </context>
 <context>
@@ -73,15 +73,15 @@
     </message>
     <message>
         <source>Proxy settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajustes de proxy</translation>
     </message>
     <message>
         <source>Login</source>
-        <translation type="unfinished"></translation>
+        <translation>Acceso</translation>
     </message>
     <message>
         <source>Submit</source>
-        <translation type="unfinished"></translation>
+        <translation>Enviar</translation>
     </message>
 </context>
 <context>
@@ -92,11 +92,11 @@
     </message>
     <message>
         <source>Login</source>
-        <translation type="unfinished"></translation>
+        <translation>Acceso</translation>
     </message>
     <message>
         <source>Submit</source>
-        <translation type="unfinished"></translation>
+        <translation>Enviar</translation>
     </message>
 </context>
 <context>
@@ -240,211 +240,211 @@
     <name>Chat</name>
     <message>
         <source>Many people are typing...</source>
-        <translation type="unfinished"></translation>
+        <translation>Varios están escribiendo...</translation>
     </message>
     <message>
         <source>%1 and %2 are typing...</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 y %2 están escribiendo...</translation>
     </message>
     <message>
         <source>%1 is typing...</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está escribiendo...</translation>
     </message>
     <message>
         <source>%1 is recording video</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está grabando un vídeo</translation>
     </message>
     <message>
         <source>%1 is uploading video</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está enviando un vídeo</translation>
     </message>
     <message>
         <source>%1 is recording voicenote</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está grabando una nota de voz</translation>
     </message>
     <message>
         <source>%1 is uploading voicenote</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está enviando una nota de voz</translation>
     </message>
     <message>
         <source>%1 is uploading photo</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está enviando una foto</translation>
     </message>
     <message>
         <source>%1 is uploading document</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está enviando un documento</translation>
     </message>
     <message>
         <source>%1 is choosing sticker</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está seleccionando sticker</translation>
     </message>
     <message>
         <source>%1 is choosing location</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está seleccionando ubicación</translation>
     </message>
     <message>
         <source>%1 is choosing contact</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está seleccionando contacto</translation>
     </message>
     <message>
         <source>%1 is playing game</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está jugando</translation>
     </message>
     <message>
         <source>%1 is recording videonote</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está grabando un videomensaje</translation>
     </message>
     <message>
         <source>%1 is uploading videonote</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está enviando un videomensaje</translation>
     </message>
     <message>
         <source>%1 is watching animations</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está viendo animaciones</translation>
     </message>
     <message>
         <source>Channel created</source>
-        <translation type="unfinished"></translation>
+        <translation>Canal creado</translation>
     </message>
     <message>
         <source>Swipe from bottom to access upload options</source>
-        <translation type="unfinished"></translation>
+        <translation>Desliza desde abajo para acceder a las opciones de envío</translation>
     </message>
     <message>
         <source>Open secret chat</source>
-        <translation type="unfinished">Abrir chat secreto</translation>
+        <translation>Abrir chat secreto</translation>
     </message>
     <message>
         <source>Close secret chat</source>
-        <translation type="unfinished">Cerrar chat secreto</translation>
+        <translation>Cerrar chat secreto</translation>
     </message>
     <message>
         <source>Set self-destruct timer</source>
-        <translation type="unfinished">Configurar autodestrucción</translation>
+        <translation>Configurar autodestrucción</translation>
     </message>
     <message>
         <source>Cancel selection</source>
-        <translation type="unfinished">Cancelar selección</translation>
+        <translation>Cancelar selección</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation type="unfinished">Reenviar</translation>
+        <translation>Reenviar</translation>
     </message>
     <message>
         <source>Scroll to first unread mention</source>
-        <translation type="unfinished">Ir a la primera mención no leída</translation>
+        <translation>Ir a la primera mención no leída</translation>
     </message>
     <message>
         <source>Call</source>
-        <translation type="unfinished"></translation>
+        <translation>Llamar</translation>
     </message>
     <message>
         <source>Saved messages</source>
-        <translation type="unfinished">Mensajes guardados</translation>
+        <translation>Mensajes guardados</translation>
     </message>
     <message>
         <source>%1 members</source>
-        <translation type="unfinished">%1 miembros</translation>
+        <translation>%1 miembros</translation>
     </message>
     <message>
         <source>%1 online</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 en línea</translation>
     </message>
     <message>
         <source>Reply</source>
-        <translation type="unfinished">Responder</translation>
+        <translation>Responder</translation>
     </message>
     <message>
         <source>Pin message</source>
-        <translation type="unfinished"></translation>
+        <translation>Fijar mensaje</translation>
     </message>
     <message>
         <source>Unpin message</source>
-        <translation type="unfinished"></translation>
+        <translation>Desfijar mensaje</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">Editar</translation>
+        <translation>Editar</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation type="unfinished">Copiar</translation>
+        <translation>Copiar</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Borrar</translation>
+        <translation>Borrar</translation>
     </message>
     <message>
         <source>Deselect</source>
-        <translation type="unfinished"></translation>
+        <translation>Quitar selección</translation>
     </message>
     <message>
         <source>Select</source>
-        <translation type="unfinished"></translation>
+        <translation>Seleccionar</translation>
     </message>
     <message>
         <source>Set as read</source>
-        <translation type="unfinished">Marcar como leído</translation>
+        <translation>Marcar como leído</translation>
     </message>
     <message>
         <source>%L1 forwarded messages</source>
-        <translation type="unfinished">%L1 mensajes reenviados</translation>
+        <translation>%L1 mensajes reenviados</translation>
     </message>
     <message>
         <source>Type the text...</source>
-        <translation type="unfinished">Escribe texto...</translation>
+        <translation>Escribe texto...</translation>
     </message>
     <message>
         <source>Image</source>
-        <translation type="unfinished">Imagen</translation>
+        <translation>Imagen</translation>
     </message>
     <message>
         <source>Video</source>
-        <translation type="unfinished">Vídeo</translation>
+        <translation>Vídeo</translation>
     </message>
     <message>
         <source>Audio</source>
-        <translation type="unfinished">Audio</translation>
+        <translation>Audio</translation>
     </message>
     <message>
         <source>Document</source>
-        <translation type="unfinished">Documento</translation>
+        <translation>Doc.</translation>
     </message>
     <message>
         <source>File</source>
-        <translation type="unfinished">Archivo</translation>
+        <translation>Archivo</translation>
     </message>
     <message>
         <source>Poll</source>
-        <translation type="unfinished">Encuesta</translation>
+        <translation>Encuesta</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation type="unfinished">Sticker</translation>
+        <translation>Sticker</translation>
     </message>
     <message>
         <source>GIF</source>
-        <translation type="unfinished">GIF</translation>
+        <translation>GIF</translation>
     </message>
     <message>
         <source>Voice Note</source>
-        <translation type="unfinished">Nota voz</translation>
+        <translation>Nota voz</translation>
     </message>
     <message>
         <source>Press and hold record button to record voice note.</source>
-        <translation type="unfinished">Mantén pulsado el botón de grabar para grabar nota de voz.</translation>
+        <translation>Mantén pulsado el botón de grabar para grabar nota de voz.</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation type="unfinished">Ubicación</translation>
+        <translation>Ubicación</translation>
     </message>
     <message>
         <source>Also pin for %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Fijar también para %1</translation>
     </message>
     <message>
         <source>Notify members</source>
-        <translation type="unfinished"></translation>
+        <translation>Notificar a los miembros</translation>
     </message>
 </context>
 <context>
@@ -511,27 +511,27 @@
     </message>
     <message>
         <source>Archive</source>
-        <translation type="unfinished"></translation>
+        <translation>Archivo</translation>
     </message>
     <message>
         <source>Main</source>
-        <translation type="unfinished"></translation>
+        <translation>Principal</translation>
     </message>
     <message>
         <source>VoiceNote</source>
-        <translation type="unfinished"></translation>
+        <translation>Nota de voz</translation>
     </message>
     <message>
         <source>VideoNote</source>
-        <translation type="unfinished"></translation>
+        <translation>Videomensaje</translation>
     </message>
     <message>
         <source>GIF</source>
-        <translation type="unfinished">GIF</translation>
+        <translation>GIF</translation>
     </message>
     <message>
         <source>Contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Contactos</translation>
     </message>
 </context>
 <context>
@@ -644,34 +644,34 @@
     <name>Contacts</name>
     <message>
         <source>Imported %1 contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 contactos importados</translation>
     </message>
     <message>
         <source>Import contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Importar contactos</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Buscar</translation>
+        <translation>Buscar</translation>
     </message>
 </context>
 <context>
     <name>ContactsImport</name>
     <message>
         <source>Unselect all</source>
-        <translation type="unfinished"></translation>
+        <translation>Quitar selección</translation>
     </message>
     <message>
         <source>Select all</source>
-        <translation type="unfinished"></translation>
+        <translation>Seleccionar todo</translation>
     </message>
     <message>
         <source>Select contacts to import</source>
-        <translation type="unfinished"></translation>
+        <translation>Seleccionar contactos para importar</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Buscar</translation>
+        <translation>Buscar</translation>
     </message>
 </context>
 <context>
@@ -758,7 +758,7 @@
     </message>
     <message>
         <source>Group created</source>
-        <translation type="unfinished"></translation>
+        <translation>Grupo creado</translation>
     </message>
 </context>
 <context>
@@ -865,51 +865,51 @@
     <name>ProxySettings</name>
     <message>
         <source>Add server</source>
-        <translation type="unfinished"></translation>
+        <translation>Añadir servidor</translation>
     </message>
     <message>
         <source>Disable proxy</source>
-        <translation type="unfinished"></translation>
+        <translation>Desactivar proxy</translation>
     </message>
     <message>
         <source>Proxy settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajustes de proxy</translation>
     </message>
     <message>
         <source>Enable</source>
-        <translation type="unfinished"></translation>
+        <translation>Activar</translation>
     </message>
     <message>
         <source>Test</source>
-        <translation type="unfinished"></translation>
+        <translation>Probar</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Borrar</translation>
+        <translation>Borrar</translation>
     </message>
     <message>
         <source>Server settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajustes del servidor</translation>
     </message>
     <message>
         <source>Server</source>
-        <translation type="unfinished"></translation>
+        <translation>Servidor</translation>
     </message>
     <message>
         <source>Port</source>
-        <translation type="unfinished"></translation>
+        <translation>Puerto</translation>
     </message>
     <message>
         <source>Username</source>
-        <translation type="unfinished">Nombre de usuario</translation>
+        <translation>Nombre de usuario</translation>
     </message>
     <message>
         <source>Password</source>
-        <translation type="unfinished">Contraseña</translation>
+        <translation>Contraseña</translation>
     </message>
     <message>
         <source>Secret</source>
-        <translation type="unfinished"></translation>
+        <translation>Secreto</translation>
     </message>
 </context>
 <context>
@@ -1034,11 +1034,11 @@
     </message>
     <message>
         <source>Proxy settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajustes de proxy</translation>
     </message>
     <message>
         <source>About</source>
-        <translation type="unfinished">Acerca de</translation>
+        <translation>Acerca de</translation>
     </message>
 </context>
 <context>
@@ -1183,7 +1183,7 @@
     </message>
     <message>
         <source>Open chat</source>
-        <translation type="unfinished"></translation>
+        <translation>Abrir chat</translation>
     </message>
 </context>
 <context>

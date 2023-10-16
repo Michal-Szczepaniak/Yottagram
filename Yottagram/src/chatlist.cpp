@@ -378,7 +378,7 @@ QString ChatList::getMessageText(shared_ptr<Message> message) const
         return tr("VideoNote");
     }
 
-    return message->getText();
+    return message->getText(false);
 }
 
 void ChatList::fetchChatList()

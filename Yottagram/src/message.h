@@ -49,6 +49,7 @@ class Message : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString text READ getText NOTIFY messageChanged)
+    Q_PROPERTY(QString unformattedText READ getTextUnformatted NOTIFY messageChanged)
     Q_PROPERTY(QString type READ getType NOTIFY messageChanged)
     Q_PROPERTY(QString sender READ getSender NOTIFY messageChanged)
     Q_PROPERTY(int64_t senderChatId READ getSenderChatId NOTIFY messageChanged)
@@ -64,7 +65,8 @@ public:
     void setFiles(shared_ptr<Files> files);
 
     int64_t getId();
-    QString getText();
+    QString getText(bool formatted = true);
+    QString getTextUnformatted() { return getText(false); }
     QString getType() const;
     int32_t getContentType();
     bool isService() const;
@@ -102,6 +104,10 @@ public:
 
     int64_t getChatId() const;
     void setChatId(const int64_t &chatId);
+
+private:
+    QString formatTextAsHTML(td_api::formattedText* formattedText);
+    QString getHTMLEntityForIndex(int index, td_api::textEntity *entity, QString originalText, bool startTag);
 
 signals:
     void contentChanged(int64_t messageId);

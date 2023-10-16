@@ -62,7 +62,7 @@ Item {
                 onCanceled: animationPreview.path = ""
 
                 Loader {
-                    active: true
+                    active: thumbnail !== undefined
                     sourceComponent: videoThumbnail ? videoComponent : imageComponent
                     asynchronous: true
 

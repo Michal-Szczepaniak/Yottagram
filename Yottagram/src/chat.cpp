@@ -749,6 +749,11 @@ QVariant Chat::data(const QModelIndex &index, int role) const
             return tr("Channel created");
         }
         return message->getText();
+    case MessageRoles::UnformattedMessageRole:
+        if (message->getType() == "messageSupergroupChatCreate" && getChatType() == "channel") {
+            return tr("Channel created");
+        }
+        return message->getText(false);
     case MessageRoles::MessageTypeRole:
         return message->getType();
     case MessageRoles::ReceivedRole:
@@ -756,18 +761,7 @@ QVariant Chat::data(const QModelIndex &index, int role) const
     case MessageRoles::ReplyMessageIdRole:
         return QVariant::fromValue(message->replyMessageId());
     case MessageRoles::DisplayAvatarRole:
-    {
-        bool display = true;
-        int prevRow = index.row()-1;
-        if (prevRow >= 0 && prevRow < _message_ids.count()) {
-            Message* prev = _messages[_message_ids[index.row()-1]];
-            if (prev != nullptr) {
-                if (message->getSenderUserId() != 0) display = prev->getSenderUserId() != message->getSenderUserId();
-                if (message->getSenderChatId() != 0) display = prev->getSenderChatId() != message->getSenderChatId();
-            }
-        }
-        return message->received() && (getChatType() == "group" || getChatType() == "supergroup") && !message->isService() && display;
-    }
+        return message->received() && (getChatType() == "group" || getChatType() == "supergroup") && !message->isService();
     case MessageRoles::IsServiceRole:
         return message->isService();
     case MessageRoles::IsForwardedRole:
@@ -940,6 +934,7 @@ QHash<int, QByteArray> Chat::roleNames() const
     roles[TypeRole] = "type";
     roles[IdRole]   = "messageId";
     roles[MessageRole] = "messageText";
+    roles[UnformattedMessageRole] = "messageTextUnformatted";
     roles[MessageTypeRole] = "messageType";
     roles[ReceivedRole] = "received";
     roles[ReplyMessageIdRole] = "replyMessageId";

@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
     core.init();
 
     view->rootContext()->setContextProperty("authorization", &core._authorization);
+    view->rootContext()->setContextProperty("telegramStatus", &core._telegramStatus);
     view->rootContext()->setContextProperty("chatList", core._chatList.get());
     view->rootContext()->setContextProperty("users", core._users.get());
     view->rootContext()->setContextProperty("stickerSets", &core._stickerSets);

@@ -21,7 +21,7 @@
     </message>
     <message>
         <source>Thanks to</source>
-	<translation>Podziękowania kierujemy do</translation>
+        <translation>Podziękowania kierujemy do</translation>
     </message>
     <message>
         <source>Donate</source>
@@ -34,7 +34,7 @@
     <message>
         <source>Everyone in my 
 &lt;a href=&quot;https://t.me/SFOSFanclub&quot;&gt;SFOS Fanclub&lt;/a&gt; group&lt;br/&gt;for keeping me motivated!</source>
-	<translation>Wszyscy z grupy wsparcia:
+        <translation>Wszyscy z grupy wsparcia:
 &lt;a href=&quot;https://t.me/SFOSFanclub&quot;&gt;SFOS Fanclub&lt;/a&gt;&lt;br/&gt;</translation>
     </message>
     <message>
@@ -268,11 +268,11 @@
     </message>
     <message>
         <source>Copy</source>
-	<translation>Kopiuj</translation>
+        <translation>Kopiuj</translation>
     </message>
     <message>
         <source>Delete</source>
-	<translation>Usuń</translation>
+        <translation>Usuń</translation>
     </message>
     <message>
         <source>Deselect</source>
@@ -288,7 +288,7 @@
     </message>
     <message>
         <source>Forward</source>
-	<translation>Wróć</translation>
+        <translation>Wróć</translation>
     </message>
     <message>
         <source>%L1 forwarded messages</source>
@@ -450,10 +450,6 @@
 <context>
     <name>ChatList</name>
     <message>
-        <source>About</source>
-        <translation>O </translation>
-    </message>
-    <message>
         <source>Settings</source>
         <translation>Ustawienia</translation>
     </message>
@@ -532,6 +528,10 @@
     <message>
         <source>GIF</source>
         <translation type="unfinished">GIF</translation>
+    </message>
+    <message>
+        <source>Contacts</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -641,6 +641,40 @@
     </message>
 </context>
 <context>
+    <name>Contacts</name>
+    <message>
+        <source>Imported %1 contacts</source>
+        <translation>Zaimportowano %1 kontaktów</translation>
+    </message>
+    <message>
+        <source>Import contacts</source>
+        <translation>Importuj kontakty</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation>Szukaj</translation>
+    </message>
+</context>
+<context>
+    <name>ContactsImport</name>
+    <message>
+        <source>Unselect all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select contacts to import</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Szukaj</translation>
+    </message>
+</context>
+<context>
     <name>CoverPage</name>
     <message>
         <source>Unread chats: %L1</source>
@@ -681,7 +715,7 @@
     <name>Message</name>
     <message>
         <source>%1 left</source>
-	<translation>%1 pozostało</translation>
+        <translation>%1 pozostało</translation>
     </message>
     <message>
         <source>%1 joined</source>
@@ -762,7 +796,7 @@
     </message>
     <message>
         <source>Secret chat</source>
-	<translation>Czat potajemny</translation>
+        <translation>Czat potajemny</translation>
     </message>
     <message>
         <source>New message from %1</source>
@@ -1002,6 +1036,10 @@
         <source>Proxy settings</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>About</source>
+        <translation>O programie</translation>
+    </message>
 </context>
 <context>
     <name>SupergroupInfo</name>
@@ -1113,7 +1151,7 @@
     </message>
     <message>
         <source>Notifications</source>
-	<translation>Powiadomienia</translation>
+        <translation>Powiadomienia</translation>
     </message>
     <message>
         <source>Copy</source>
@@ -1142,6 +1180,10 @@
     <message>
         <source>Clear history</source>
         <translation>Wyczyść historię</translation>
+    </message>
+    <message>
+        <source>Open chat</source>
+        <translation>Otwórz czat</translation>
     </message>
 </context>
 <context>

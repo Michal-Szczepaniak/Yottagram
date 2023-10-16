@@ -17,7 +17,11 @@ Column {
         font.bold: true
         horizontalAlignment: received ? Text.AlignLeft : Text.AlignRight
         color: Theme.highlightColor
-        visible: (displayAvatar || isForwarded || chat.getChatType() === "channel") && !serviceMessage.visible
+        visible: (
+                     (displayAvatar && (listItem.prevMessage !== undefined ? (listItem.prevMessage.sender !== sender || listItem.prevMessage.senderId !== senderId) : true)) ||
+                     isForwarded ||
+                     chat.getChatType() === "channel"
+                 )
         width: Math.min(implicitWidth, column.width)
         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
 
@@ -108,7 +112,7 @@ Column {
                     id: replyText
                     width: replyMessage.width - Theme.paddingLarge
                     font.pixelSize: Theme.fontSizeSmall
-                    text: chat.getMessage(replyMessageId).type === "text" ? chat.getMessage(replyMessageId).text.trim().replace(/\r?\n|\r/g, " ")
+                    text: chat.getMessage(replyMessageId).type === "text" ? chat.getMessage(replyMessageId).unformattedText.trim().replace(/\r?\n|\r/g, " ")
                                                                                    : chat.getMessage(replyMessageId).type
                     truncationMode: TruncationMode.Fade
 
@@ -327,8 +331,8 @@ Column {
 
     Label {
         id: textField
-        textFormat: Text.StyledText
-        text: Twemoji.emojify(parser.linkedText.replace(/\n/g, '<br>'), Theme.fontSizeSmall)
+        textFormat: Text.AutoText
+        text: Twemoji.emojify(messageText.replace(/\n/g, '<br>'), Theme.fontSizeSmall)
         font.pixelSize: settings.fontSize
         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
         width: parent.width
@@ -336,14 +340,20 @@ Column {
         anchors.left: if (received) parent.left
         color: Theme.primaryColor
         linkColor: Theme.highlightColor
-        onLinkActivated: Qt.openUrlExternally(link)
+        onLinkActivated: {
+            if (link.substring(0, 9) === "userid://") {
+                while (pageStack.depth > 1)
+                    pageStack.pop(undefined, PageStackAction.Immediate)
+
+                pageStack.push(Qt.resolvedUrl("../components/chatInfo/UserInfo.qml"), { userId: link.substring(9), chat: chatList.getChatAsVariantForUser(link.substring(9)) })
+            } else if (link.substring(0, 10) === "command://") {
+                chat.sendMessage(link.substring(10), 0)
+            } else {
+                Qt.openUrlExternally(link)
+            }
+        }
         visible: messageText !== "" && !serviceMessage.visible
         horizontalAlignment: received ? Text.AlignLeft : Text.AlignRight
-
-        LinkParser {
-            id: parser
-            text: messageText
-        }
     }
 
     Loader {

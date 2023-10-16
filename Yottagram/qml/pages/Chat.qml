@@ -559,6 +559,8 @@ Page {
                     contentHeight: Math.max(message.height + Theme.paddingSmall, Theme.itemSizeExtraSmall)
                     contentWidth: width
                     highlighted: selection.indexOf(messageId) !== -1
+                    property var prevMessage: chatProxyModel.get(index+1)
+                    property var nextMessage: chatProxyModel.get(index-1)
 
                     Rectangle {
                         id: blinkBackground
@@ -694,7 +696,7 @@ Page {
 
                                 MenuItem {
                                     text: qsTr("Copy")
-                                    onClicked: Clipboard.text = messageText.trim()
+                                    onClicked: Clipboard.text = messageTextUnformatted.trim()
                                 }
 
                                 MenuItem {
@@ -750,7 +752,9 @@ Page {
                         anchors.leftMargin: Theme.paddingMedium
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: Theme.paddingMedium
-                        visible: displayAvatar
+                        visible: displayAvatar && (listItem.nextMessage !== undefined ?
+                                ( listItem.nextMessage.sender !== sender || listItem.nextMessage.senderId !== senderId  ) : true)
+
                         userName: sender === "chat" ? chatList.getChatAsVariant(senderId).title : users.getUserAsVariant(senderId).name
                         avatarPhoto: if (sender === "chat" && chatList.getChatAsVariant(senderId).hasPhoto) chatList.getChatAsVariant(senderId).smallPhoto.localPath
                                      else if (users.getUserAsVariant(senderId).hasPhoto) users.getUserAsVariant(senderId).smallPhoto.localPath
@@ -973,6 +977,38 @@ Page {
                     }
                 }
 
+//                SilicaListView {
+//                    id: formatRow
+//                    anchors.left: parent.left
+//                    anchors.leftMargin: Theme.paddingLarge
+//                    anchors.right: parent.right
+//                    anchors.rightMargin: Theme.paddingLarge
+//                    spacing: Theme.paddingLarge
+//                    visible: textInput.selectedText !== ""
+//                    height: visible ? Theme.itemSizeMedium : 0
+//                    orientation: Qt.Horizontal
+//                    layoutDirection: Qt.LeftToRight
+//                    model: ["bold", "italic", "underline", "strikethrough", "monospace"]
+//                    property var names: [qsTr("bold"), qsTr("italic"), qsTr("underline"), qsTr("strikethrough"), qsTr("monospace")]
+//                    delegate: Label {
+//                        anchors.verticalCenter: parent.verticalCenter
+//                        text: formatRow.names[index]
+
+//                        MouseArea {
+//                            anchors.fill: parent
+
+//                            onPressed: parent.highlighted = pressed
+
+//                            onClicked: {
+//                                switch(index) {
+//                                case 0:
+//                                    textInput.text = "<b>" + textInput.text + "</b>"
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+
                 AudioRecorder {
                     id: audioRecorder
                     onStateChanged: voiceNoteTimer.start()
@@ -1055,7 +1091,7 @@ Page {
                         height: visible ? Math.min(implicitHeight, Theme.itemSizeExtraLarge) : 0
                         width: parent.width - (sendButton.visible ? sendButton.width : 0)
                         visible: !(stickerPicker.visible || animationPicker.visible)
-                        inputMethodHints: if (typingUsername) Qt.ImhNoPredictiveText
+                        inputMethodHints: typingUsername ? Qt.ImhNoPredictiveText : Qt.ImhNone
 
                         onFocusChanged: {
                             if (!focus) chat.setDraftMessage(textInput.text, chatPage.newReplyMessageId)

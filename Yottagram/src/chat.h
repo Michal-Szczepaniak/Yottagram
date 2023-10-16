@@ -89,6 +89,7 @@ public:
         TypeRole = Qt::UserRole + 1,
         IdRole,
         MessageRole,
+        UnformattedMessageRole,
         MessageTypeRole,
         ReceivedRole,
         ReplyMessageIdRole,

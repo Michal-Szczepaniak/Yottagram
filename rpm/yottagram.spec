@@ -5,7 +5,7 @@ Name:       yottagram
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    Yottagram
-Version:    0.3.0
+Version:    0.4.1
 Release:    1
 Group:      Qt/Qt
 License:    GPLv3
@@ -19,6 +19,7 @@ BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(Qt5Quick)
 BuildRequires:  pkgconfig(Qt5DBus)
+BuildRequires:  pkgconfig(Qt5Contacts)
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  pkgconfig(connman-qt5)
 BuildRequires:  pkgconfig(vorbisfile)
@@ -39,6 +40,7 @@ Fastest telegram client for sailfishos on the earth!
 
 %package voicecall-plugin
 Summary:        Yottagram's Voicecall plugin
+BuildRequires:  voicecall-qt5
 Requires:       voicecall-qt5
 Requires:       %{name} >= %{version}
 
@@ -71,8 +73,9 @@ desktop-file-install --delete-original       \
    %{buildroot}%{_datadir}/applications/*.desktop
 
 %files
-%defattr(-,root,root,-)
+%defattr(2755,root,privileged,-)
 %{_bindir}
+%defattr(-,root,root,-)
 %{_datadir}/%{name}
 %{_datadir}/dbus-1/services/com.verdanditeam.yottagram.service
 %{_datadir}/lipstick/notificationcategories/x-verdanditeam.yottagram.im.conf

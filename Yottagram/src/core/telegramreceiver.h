@@ -40,6 +40,7 @@ public:
 
 signals:
     void messageReceived(uint64_t id, td_api::Object* object);
+    void bootupComplete();
 
 private:
     const double WAIT_TIMEOUT = 1000;

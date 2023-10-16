@@ -47,6 +47,7 @@ public:
 
     std::shared_ptr<User> getUser(int64_t userId);
     Q_INVOKABLE QVariant getUserAsVariant(int64_t userId) const;
+    std::shared_ptr<User> getUserByUsername(QString username);
 
 public slots:
     void updateUser(td_api::updateUser *updateUser);

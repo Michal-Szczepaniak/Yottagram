@@ -79,7 +79,8 @@ SOURCES += src/core.cpp \
     src/core/telegrammanager.cpp \
     src/contacts.cpp \
     src/chatlist.cpp \
-    src/chat.cpp
+    src/chat.cpp \
+    src/telegramstatus.cpp
 
 DISTFILES += qml/yottagram.qml \
     com.verdanditeam.yottagram.calls.xml \
@@ -218,7 +219,8 @@ HEADERS += \
     src/user.h \
     src/contacts.h \
     src/users.h \
-    src/webpage.h
+    src/webpage.h \
+    src/telegramstatus.h
 
 RESOURCES += \
     qml/resources/icons.qrc
