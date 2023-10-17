@@ -416,8 +416,7 @@ Page {
             onMovementEnded: {
                 if (contentY <= (inputItem.height/2)) {
                     scrollToTop()
-                    if (stickerPicker.visible) stickerPicker.visible = false
-                    if (animationPicker.visible) animationPicker.visible = false
+                    if (attachmentLoader.active) attachmentLoader.active = false
                 } else {
                     scrollToBottom()
                 }
@@ -1029,44 +1028,57 @@ Page {
                     target: chatPage
                     onStatusChanged: {
                         if (chatPage.status === PageStatus.Deactivating) {
-                            stickerPicker.visible = false
+                            attachmentLoader.active = false
                             uploadFlickable.scrollToTop()
                         }
                     }
                 }
 
-                StickerPicker {
-                    id: stickerPicker
-                    height: visible ? Screen.height/2 + Theme.paddingLarge : 0
-                    width: parent.width
-                    visible: false
-                    page: chatPage
-                    opacity: uploadFlickable.contentY/(inputItem.height- Theme.itemSizeLarge)
-                    onVisibleChanged: chat.sendAction(visible ? Chat.ChoosingSticker : Chat.None)
+                Loader {
+                    id: attachmentLoader
+                    active: false
+                    asynchronous: true
 
-                    onStickerFileIdChanged: {
-                        chat.sendSticker(stickerFileId, chatPage.newReplyMessageId)
-                        stickerPicker.visible = false
-                        chatPage.newReplyMessageId = 0
-                        stickerFileId = 0
-                        uploadFlickable.scrollToTop()
+                    height: active ? Screen.height/2 + Theme.paddingLarge : 0
+                    width: parent.width
+                    opacity: uploadFlickable.contentY/(inputItem.height- Theme.itemSizeLarge)
+                }
+
+                Component {
+                    id: stickerPicker
+
+                    StickerPicker {
+                        height: visible ? Screen.height/2 + Theme.paddingLarge : 0
+                        width: attachmentLoader.width
+                        page: chatPage
+                        opacity: uploadFlickable.contentY/(inputItem.height- Theme.itemSizeLarge)
+                        onVisibleChanged: chat.sendAction(visible ? Chat.ChoosingSticker : Chat.None)
+
+                        onStickerFileIdChanged: {
+                            chat.sendSticker(stickerFileId, chatPage.newReplyMessageId)
+                            attachmentLoader.active = false
+                            chatPage.newReplyMessageId = 0
+                            stickerFileId = 0
+                            uploadFlickable.scrollToTop()
+                        }
                     }
                 }
 
-                AnimationPicker {
+                Component {
                     id: animationPicker
-                    height: visible ? Screen.height/2 + Theme.paddingLarge : 0
-                    width: parent.width
-                    visible: false
-                    animationPreview: animationPreview
-                    page: chatPage
-                    opacity: uploadFlickable.contentY/(inputItem.height- Theme.itemSizeLarge)
-                    onAnimationFileIdChanged: {
-                        chat.sendAnimation(animationFileId, animationWidth, animationHeight, chatPage.newReplyMessageId)
-                        animationPicker.visible = false
-                        chatPage.newReplyMessageId = 0
-                        animationFileId = 0
-                        uploadFlickable.scrollToTop()
+
+                    AnimationPicker {
+                        height: visible ? Screen.height/2 + Theme.paddingLarge : 0
+                        width: attachmentLoader.width
+                        page: chatPage
+                        opacity: uploadFlickable.contentY/(inputItem.height- Theme.itemSizeLarge)
+                        onAnimationFileIdChanged: {
+                            chat.sendAnimation(animationFileId, animationWidth, animationHeight, chatPage.newReplyMessageId)
+                            attachmentLoader.active = false
+                            chatPage.newReplyMessageId = 0
+                            animationFileId = 0
+                            uploadFlickable.scrollToTop()
+                        }
                     }
                 }
 
@@ -1090,7 +1102,7 @@ Page {
                         focusOutBehavior: FocusBehavior.KeepFocus
                         height: visible ? Math.min(implicitHeight, Theme.itemSizeExtraLarge) : 0
                         width: parent.width - (sendButton.visible ? sendButton.width : 0)
-                        visible: !(stickerPicker.visible || animationPicker.visible)
+                        visible: !attachmentLoader.active
                         inputMethodHints: typingUsername ? Qt.ImhNoPredictiveText : Qt.ImhNone
 
                         onFocusChanged: {
@@ -1160,7 +1172,7 @@ Page {
                         anchors.verticalCenter: textInput.verticalCenter
                         height: visible ? textInput.height : 0
                         icon.source: "image://theme/icon-m-send"
-                        visible: settings.sendButton && !(stickerPicker.visible || animationPicker.visible)
+                        visible: settings.sendButton && !attachmentLoader.active
                         onClicked: textInput.sendMessage()
                     }
                 }
@@ -1171,7 +1183,7 @@ Page {
                     spacing: Theme.paddingLarge
                     padding: Theme.paddingLarge
                     visible: {
-                        if (stickerPicker.visible || animationPicker.visible) return false
+                        if (attachmentLoader.active) return false
                         if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canSendMediaMessages
                         if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canSendMediaMessages
                         return chat.canSendMediaMessages
@@ -1179,10 +1191,8 @@ Page {
                     height: if (!visible) 0
                     property int columns: 5
                     property real cellWidth: (width-Theme.paddingLarge*2)/columns
-                    property int actualHeight: if (stickerPicker.visible) {
-                                                   stickerPicker.height - textInput.implicitHeight
-                                                } else if (animationPicker.visible) {
-                                                   animationPicker.height - textInput.implicitHeight
+                    property int actualHeight: if (attachmentLoader.active) {
+                                                   attachmentLoader.height - textInput.implicitHeight
                                                 } else if (!textInput.enabled) {
                                                    0
                                                 } else {
@@ -1254,7 +1264,8 @@ Page {
                             source: "image://theme/icon-m-other"
                             onClicked: {
                                 textInput.focus = false
-                                stickerPicker.visible = true
+                                attachmentLoader.sourceComponent = stickerPicker
+                                attachmentLoader.active = true
                                 var timer = Qt.createQmlObject("import QtQuick 2.0; Timer {}", root);
                                 timer.interval = 1
                                 timer.repeat = false
@@ -1269,7 +1280,8 @@ Page {
                             source: "image://theme/icon-m-play"
                             onClicked: {
                                 textInput.focus = false
-                                animationPicker.visible = true
+                                attachmentLoader.sourceComponent = animationPicker
+                                attachmentLoader.active = true
                                 uploadFlickable.scrollToBottom()
                             }
                         }
@@ -1280,7 +1292,7 @@ Page {
                             text: qsTr("Voice Note")
                             source: audioRecorder.recording ? (Theme.LightOnDark ? "image://theme/icon-m-call-recording-on-light" : "image://theme/icon-m-call-recording-on-dark"): "image://theme/icon-m-mic"
                             onPressed: audioRecorder.startRecording()
-                            visible: !stickerPicker.visible
+                            visible: !attachmentLoader.active
                             property var duration
                             onReleased: {
                                 duration = audioRecorder.duration

@@ -201,9 +201,12 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
 }
 
 void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
-{   
+{
     emit onMessageReceived(id, message);
-    if (id > 1) handleMessageWithResponse(id, message);
+    if (id > 1) {
+        handleMessageWithResponse(id, message);
+        return;
+    }
 
     downcast_call(
         *message, overloaded(

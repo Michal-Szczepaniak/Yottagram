@@ -28,7 +28,6 @@ import org.nemomobile.configuration 1.0
 Item {
     id: root
     property var page
-    property var animationPreview
     property int animationFileId: 0
     property int animationWidth: 0
     property int animationHeight: 0

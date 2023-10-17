@@ -37,7 +37,7 @@ void TelegramReceiver::run() {
         if (response.object) {
             emit messageReceived(response.id, response.object.release());
 
-            msleep(40);
+            msleep(10);
         }
     }
 }
