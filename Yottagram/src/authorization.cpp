@@ -217,7 +217,7 @@ void Authorization::authorizationStateWaitTdlibParameters()
     parameters->system_language_code_ = "en";
     parameters->device_model_ = (deviceInfo.manufacturer() + " " + deviceInfo.prettyName()).toStdString();
     parameters->system_version_ = (aboutSettings.localizedOperatingSystemName() + " " + aboutSettings.localizedSoftwareVersion()).toStdString();
-    parameters->application_version_ = "0.4.1";
+    parameters->application_version_ = "0.5.0";
     parameters->enable_storage_optimizer_ = true;
     _manager->sendQuery(parameters);
 }

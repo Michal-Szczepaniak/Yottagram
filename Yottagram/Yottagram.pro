@@ -28,7 +28,7 @@ CONFIG(release, debug|release): {
 
 SOURCES += src/core.cpp \
     src/calls.cpp \
-    src/chatlistfilters.cpp \
+    src/chatlistfolders.cpp \
     src/components/audiorecorder.cpp \
     src/components/autodownloadsettings.cpp \
     src/components/basicgroupfullinfo.cpp \
@@ -166,7 +166,7 @@ TRANSLATIONS += \
 
 HEADERS += \
     src/calls.h \
-    src/chatlistfilters.h \
+    src/chatlistfolders.h \
     src/components/audiorecorder.h \
     src/components/autodownloadsettings.h \
     src/components/basicgroupfullinfo.h \

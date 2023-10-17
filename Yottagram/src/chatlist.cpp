@@ -30,7 +30,7 @@ ChatList::ChatList() :
     _groupNotificationSettings(nullptr),
     _privateNotificationSettings(nullptr),
     _selectedChatList(0),
-    _selectedFilterChatList(-1)
+    _selectedFolderChatList(-1)
 {
     _secretChatsInfo = std::make_shared<SecretChatsInfo>();
     _basicGroupsInfo = std::make_shared<BasicGroupsInfo>();
@@ -306,8 +306,8 @@ QVector<int64_t> *ChatList::getChatList(td_api::ChatList *list)
     case td_api::chatListArchive::ID:
         return &_archive_chats_ids;
         break;
-    case td_api::chatListFilter::ID:
-        return &_filter_chats_ids[static_cast<const td_api::chatListFilter *>(list)->chat_filter_id_];
+    case td_api::chatListFolder::ID:
+        return &_filter_chats_ids[static_cast<const td_api::chatListFolder *>(list)->chat_folder_id_];
         break;
     }
 }
@@ -320,7 +320,7 @@ td_api::object_ptr<td_api::ChatList> ChatList::getSelectedChatList() const
     case 1:
         return td_api::make_object<td_api::chatListArchive>();
     case 2:
-        return td_api::make_object<td_api::chatListFilter>(_selectedFilterChatList);
+        return td_api::make_object<td_api::chatListFolder>(_selectedFolderChatList);
     default:
         qCritical() << "Wrong _selectedChatList!";
         return nullptr;
@@ -458,7 +458,7 @@ QVariant ChatList::getChatAsVariantForUser(int64_t userId)
 
 void ChatList::markChatAsRead(int64_t chatId)
 {
-    _manager->sendQuery(new td_api::viewMessages(getChat(chatId)->getId(), 0, {getChat(chatId)->getLastMessage()->id_}, true));
+    _manager->sendQuery(new td_api::viewMessages(getChat(chatId)->getId(), {getChat(chatId)->getLastMessage()->id_}, td_api::make_object<td_api::messageSourceChatList>(),true));
     _manager->sendQuery(new td_api::toggleChatIsMarkedAsUnread(chatId, false));
 }
 
@@ -507,7 +507,7 @@ void ChatList::switchChatList(int chatList, int64_t filterId)
 {
     beginResetModel();
     _selectedChatList = chatList;
-    if (chatList == 2) _selectedFilterChatList = filterId;
+    if (chatList == 2) _selectedFolderChatList = filterId;
     _chats_ids = getChatList(getSelectedChatList().get());
     if (_chats_ids->empty()) fetchChatList();
     endResetModel();

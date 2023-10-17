@@ -46,6 +46,7 @@ void AutoDownloadSettings::loadSettings()
     _videoUploadBitrate = qsettings.value("videoBitrate", 1048576).toInt();
     _preloadLargeVideos = qsettings.value("preloadLargeVideos", false).toBool();
     _preloadNextAudio = qsettings.value("preloadNextAudio", false).toBool();
+    _preloadStories = qsettings.value("preloadStories", false).toBool();
     _useLessDataForCalls = qsettings.value("useLessDataForCalls", true).toBool();
     qsettings.endGroup();
 
@@ -57,6 +58,7 @@ void AutoDownloadSettings::loadSettings()
         _videoUploadBitrate,
         _preloadLargeVideos,
         _preloadNextAudio,
+        _preloadStories,
         _useLessDataForCalls
     );
     _manager->sendQuery(new td_api::setAutoDownloadSettings(move(settings), getNetworkType()));
@@ -146,6 +148,18 @@ void AutoDownloadSettings::setPreloadNextAudio(bool preloadNextAudio)
     emit preloadNextAudioChanged();
 }
 
+bool AutoDownloadSettings::getPreloadStories() const
+{
+    return _preloadStories;
+}
+
+void AutoDownloadSettings::setPreloadStories(bool preloadStories)
+{
+    _preloadNextAudio = preloadStories;
+    saveSettings();
+    emit preloadStoriesChanged();
+}
+
 bool AutoDownloadSettings::getUseLessDataForCalls() const
 {
     return _useLessDataForCalls;
@@ -178,6 +192,7 @@ void AutoDownloadSettings::saveSettings()
         _videoUploadBitrate,
         _preloadLargeVideos,
         _preloadNextAudio,
+        _preloadStories,
         _useLessDataForCalls
     );
 
@@ -190,6 +205,7 @@ void AutoDownloadSettings::saveSettings()
     qsettings.setValue("videoBitrate", _videoUploadBitrate);
     qsettings.setValue("preloadLargeVideos", _preloadLargeVideos);
     qsettings.setValue("preloadNextAudio", _preloadNextAudio);
+    qsettings.setValue("preloadStories", _preloadStories);
     qsettings.setValue("useLessDataForCalls", _useLessDataForCalls);
     qsettings.endGroup();
 
@@ -200,6 +216,7 @@ void AutoDownloadSettings::saveSettings()
     emit videoUploadBitrateChanged();
     emit preloadLargeVideosChanged();
     emit preloadNextAudioChanged();
+    emit preloadStoriesChanged();
     emit useLessDataForCallsChanged();
 
     _manager->sendQuery(new td_api::setAutoDownloadSettings(move(settings), getNetworkType()));
@@ -222,6 +239,7 @@ void AutoDownloadSettings::applyPreset(td_api::object_ptr<td_api::autoDownloadSe
     _videoUploadBitrate = settings->video_upload_bitrate_;
     _preloadLargeVideos = settings->preload_large_videos_;
     _preloadNextAudio = settings->preload_next_audio_;
+    _preloadStories = settings->preload_stories_;
     _useLessDataForCalls = settings->use_less_data_for_calls_;
 }
 

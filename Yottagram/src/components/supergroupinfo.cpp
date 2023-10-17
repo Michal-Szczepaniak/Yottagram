@@ -53,7 +53,7 @@ bool SupergroupInfo::getCanSendMessages() const
     case td_api::chatMemberStatusMember::ID:
         return true;
     case td_api::chatMemberStatusRestricted::ID:
-        return static_cast<const td_api::chatMemberStatusRestricted*>(status)->permissions_->can_send_messages_;
+        return static_cast<const td_api::chatMemberStatusRestricted*>(status)->permissions_->can_send_basic_messages_;
     default:
         return true;
     }
@@ -74,7 +74,16 @@ bool SupergroupInfo::getCanSendMediaMessages() const
     case td_api::chatMemberStatusMember::ID:
         return true;
     case td_api::chatMemberStatusRestricted::ID:
-        return static_cast<const td_api::chatMemberStatusRestricted*>(status)->permissions_->can_send_media_messages_;
+    {
+        auto& permissions = static_cast<const td_api::chatMemberStatusRestricted*>(status)->permissions_;
+        return permissions->can_send_audios_ ||
+               permissions->can_send_documents_ ||
+               permissions->can_send_photos_ ||
+               permissions->can_send_videos_ ||
+               permissions->can_send_video_notes_ ||
+               permissions->can_send_voice_notes_ ||
+               permissions->can_send_polls_;
+    }
     default:
         return true;
     }

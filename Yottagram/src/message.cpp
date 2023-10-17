@@ -104,8 +104,8 @@ QString Message::getText(bool formatted)
         return QString::fromStdString(static_cast<VoiceNote*>(_messageContent)->getCaption()->text_);
     case td_api::messagePoll::ID:
         return static_cast<Poll*>(_messageContent)->getQuestion();
-    case td_api::messageChatSetTtl::ID:
-        return tr("Self-destruct timer set to %n second(s)", "", static_cast<td_api::messageChatSetTtl*>(_message->content_.get())->ttl_);
+    case td_api::messageChatSetMessageAutoDeleteTime::ID:
+        return tr("Self-destruct timer set to %n second(s)", "", static_cast<td_api::messageChatSetMessageAutoDeleteTime*>(_message->content_.get())->message_auto_delete_time_);
     case td_api::messagePinMessage::ID:
         if (_message->sender_id_->get_id() == td_api::messageSenderUser::ID) {
             return tr("%1 pinned message").arg(_users->getUser(getSenderUserId())->getName());
@@ -161,8 +161,8 @@ QString Message::getType() const
         return "document";
     case td_api::messagePoll::ID:
         return "poll";
-    case td_api::messageChatSetTtl::ID:
-        return "chatSetTtl";
+    case td_api::messageChatSetMessageAutoDeleteTime::ID:
+        return "chatSetAutoDeleteTime";
     case td_api::messageCustomServiceAction::ID:
         return "messageCustomServiceAction";
     case td_api::messagePinMessage::ID:
@@ -270,7 +270,13 @@ QVector<int32_t> Message::getAddMembersIds()
 
 int64_t Message::replyMessageId()
 {
-    return _message->reply_to_message_id_;
+    if (!_message->reply_to_) return -1;
+    // TODO: handle messageReplyToStory
+    if (_message->reply_to_->get_id() == td_api::messageReplyToMessage::ID) {
+        return static_cast<td_api::messageReplyToMessage*>(_message->reply_to_.get())->message_id_;
+    }
+
+    return -1;
 }
 
 td_api::messageForwardInfo* Message::getForwardedInfo()

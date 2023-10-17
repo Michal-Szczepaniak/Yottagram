@@ -94,7 +94,14 @@ int32_t Poll::getTotalVoterCount() const
 
 std::vector<int64_t> Poll::getRecentVoterUserIds() const
 {
-    return _poll->recent_voter_user_ids_;
+    std::vector<int64_t> ids;
+
+    for (const td_api::object_ptr<td_api::MessageSender> &sender : _poll->recent_voter_ids_) {
+        if (sender->get_id() == td_api::messageSenderUser::ID) {
+            ids.push_back(static_cast<const td_api::messageSenderUser*>(sender.get())->user_id_);
+        }
+    }
+    return ids;
 }
 
 bool Poll::isAnonymous() const

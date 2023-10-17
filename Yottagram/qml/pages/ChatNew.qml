@@ -125,7 +125,7 @@ Page {
         }
 
         Rectangle {
-            visible: chat.getChatType() === "secret" && chat.ttl > 0
+            visible: chat.getChatType() === "secret" && chat.autoDeleteTime > 0
             anchors.right: chatPhoto.right
             anchors.bottom: chatPhoto.bottom
             width: Theme.itemSizeExtraSmall/2
@@ -139,7 +139,7 @@ Page {
                 anchors.margins: Theme.paddingSmall/2
                 anchors.fill: parent
                 color: Theme.primaryColor
-                text: TimeFormat.formatAutoDestruct(chat.ttl)
+                text: TimeFormat.formatAutoDestruct(chat.autoDeleteTime)
                 font.pixelSize: Theme.fontSizeTiny
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter

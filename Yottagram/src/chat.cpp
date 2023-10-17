@@ -165,10 +165,10 @@ int64_t Chat::getOrder(td_api::ChatList* list) const
     case td_api::chatListArchive::ID:
         if (_archivePosition != nullptr) return _archivePosition->order_;
         break;
-    case td_api::chatListFilter::ID:
-        auto filterListId = static_cast<td_api::chatListFilter*>(list)->chat_filter_id_;
-        if (_filterPositions.contains(filterListId)) {
-            return _filterPositions[filterListId]->order_;
+    case td_api::chatListFolder::ID:
+        auto folderListId = static_cast<td_api::chatListFolder*>(list)->chat_folder_id_;
+        if (_folderPositions.contains(folderListId)) {
+            return _folderPositions[folderListId]->order_;
         }
     }
     return 0;
@@ -297,10 +297,10 @@ bool Chat::isPinned(td_api::object_ptr<td_api::ChatList> list) const
         return _mainPosition->is_pinned_;
     case td_api::chatListArchive::ID:
         return _archivePosition->is_pinned_;
-    case td_api::chatListFilter::ID:
-        auto filterListId = static_cast<td_api::chatListFilter*>(list.get())->chat_filter_id_;
-        if (_filterPositions.contains(filterListId)) {
-            return _filterPositions[filterListId]->is_pinned_;
+    case td_api::chatListFolder::ID:
+        auto folderListId = static_cast<td_api::chatListFolder*>(list.get())->chat_folder_id_;
+        if (_folderPositions.contains(folderListId)) {
+            return _folderPositions[folderListId]->is_pinned_;
         } else {
             return -1;
         }
@@ -308,9 +308,9 @@ bool Chat::isPinned(td_api::object_ptr<td_api::ChatList> list) const
     return 0;
 }
 
-int32_t Chat::getTtl() const
+int32_t Chat::getAutoDeleteTime() const
 {
-    return _chat->message_ttl_;
+    return _chat->message_auto_delete_time_;
 }
 
 int32_t Chat::getMuteFor() const
@@ -333,6 +333,12 @@ void Chat::setMuteFor(int32_t muteFor)
                 _notificationSettings->sound_id_,
                 _notificationSettings->use_default_show_preview_,
                 _notificationSettings->show_preview_,
+                _notificationSettings->use_default_mute_stories_,
+                _notificationSettings->mute_stories_,
+                _notificationSettings->use_default_story_sound_,
+                _notificationSettings->story_sound_id_,
+                _notificationSettings->use_default_show_story_sender_,
+                _notificationSettings->show_story_sender_,
                 _notificationSettings->use_default_disable_pinned_message_notifications_,
                 _notificationSettings->disable_pinned_message_notifications_,
                 _notificationSettings->use_default_disable_mention_notifications_,
@@ -370,6 +376,12 @@ void Chat::setShowPreview(bool showPreview)
                 _notificationSettings->sound_id_,
                 _notificationSettings->use_default_show_preview_,
                 _notificationSettings->show_preview_,
+                _notificationSettings->use_default_mute_stories_,
+                _notificationSettings->mute_stories_,
+                _notificationSettings->use_default_story_sound_,
+                _notificationSettings->story_sound_id_,
+                _notificationSettings->use_default_show_story_sender_,
+                _notificationSettings->show_story_sender_,
                 _notificationSettings->use_default_disable_pinned_message_notifications_,
                 _notificationSettings->disable_pinned_message_notifications_,
                 _notificationSettings->use_default_disable_mention_notifications_,
@@ -407,6 +419,12 @@ void Chat::setDisablePinnedMessageNotifications(bool disablePinnedMessageNotific
                 _notificationSettings->sound_id_,
                 _notificationSettings->use_default_show_preview_,
                 _notificationSettings->show_preview_,
+                _notificationSettings->use_default_mute_stories_,
+                _notificationSettings->mute_stories_,
+                _notificationSettings->use_default_story_sound_,
+                _notificationSettings->story_sound_id_,
+                _notificationSettings->use_default_show_story_sender_,
+                _notificationSettings->show_story_sender_,
                 _notificationSettings->use_default_disable_pinned_message_notifications_,
                 _notificationSettings->disable_pinned_message_notifications_,
                 _notificationSettings->use_default_disable_mention_notifications_,
@@ -444,6 +462,12 @@ void Chat::setDisableMentionNotifications(bool disableMentionNotifications)
                 _notificationSettings->sound_id_,
                 _notificationSettings->use_default_show_preview_,
                 _notificationSettings->show_preview_,
+                _notificationSettings->use_default_mute_stories_,
+                _notificationSettings->mute_stories_,
+                _notificationSettings->use_default_story_sound_,
+                _notificationSettings->story_sound_id_,
+                _notificationSettings->use_default_show_story_sender_,
+                _notificationSettings->show_story_sender_,
                 _notificationSettings->use_default_disable_pinned_message_notifications_,
                 _notificationSettings->disable_pinned_message_notifications_,
                 _notificationSettings->use_default_disable_mention_notifications_,
@@ -463,12 +487,20 @@ bool Chat::getDefaultDisableMentionNotifications() const
 
 bool Chat::getCanSendMessages() const
 {
-    return _chat->permissions_->can_send_messages_;
+    return _chat->permissions_->can_send_basic_messages_;
 }
 
 bool Chat::getCanSendMediaMessages() const
 {
-    return _chat->permissions_->can_send_media_messages_;
+    auto& permissions = _chat->permissions_;
+    return
+        permissions->can_send_audios_ ||
+        permissions->can_send_documents_ ||
+        permissions->can_send_photos_ ||
+        permissions->can_send_videos_ ||
+        permissions->can_send_video_notes_ ||
+        permissions->can_send_voice_notes_ ||
+        permissions->can_send_polls_;
 }
 
 bool Chat::getCanSendPolls() const
@@ -555,8 +587,8 @@ void Chat::updatePosition(td_api::chatPosition *position)
     case td_api::chatListArchive::ID:
         listPosition = &_archivePosition;
         break;
-    case td_api::chatListFilter::ID:
-        listPosition = &_filterPositions[static_cast<td_api::chatListFilter*>(position->list_.get())->chat_filter_id_];
+    case td_api::chatListFolder::ID:
+        listPosition = &_folderPositions[static_cast<td_api::chatListFolder*>(position->list_.get())->chat_folder_id_];
         break;
     }
 
@@ -665,7 +697,7 @@ void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), &TelegramManager::updateChatNotificationSettings, this, &Chat::updateChatNotificationSettings);
     connect(_manager.get(), &TelegramManager::updateChatPermissions, this, &Chat::updateChatPermissions);
     connect(_manager.get(), &TelegramManager::gotChatHistory, this, &Chat::onGotChatHistory);
-    connect(_manager.get(), &TelegramManager::updateChatMessageTtl, this, &Chat::updateChatMessageTtl);
+    connect(_manager.get(), &TelegramManager::updateChatMessageAutoDeleteTime, this, &Chat::updateChatMessageAutoDeleteTime);
     connect(_manager.get(), &TelegramManager::updateChatAction, this, &Chat::updateChatAction);
     connect(_manager.get(), &TelegramManager::gotMessage, this, &Chat::onGotMessage);
     connect(_manager.get(), &TelegramManager::gotSearchChatMessagesFilterUnreadMention, this, &Chat::onGotSearchChatMessagesFilterUnreadMention);
@@ -1086,7 +1118,7 @@ void Chat::sendMessage(QString message, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_message_id_ = replyToMessageId;
+        sendMessage->reply_to_ = td_api::make_object<td_api::messageReplyToMessage>(_chat->id_, replyToMessageId);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageText>();
@@ -1124,9 +1156,9 @@ int64_t Chat::getAuthorByIndex(int32_t index)
     return _messages[_message_ids[index]]->getSenderUserId();
 }
 
-void Chat::setMessageAsRead(int64_t messageId, int64_t threadId)
+void Chat::setMessageAsRead(int64_t messageId)
 {
-    _manager->sendQuery(new td_api::viewMessages(this->getId(), threadId, {messageId}, false));
+    _manager->sendQuery(new td_api::viewMessages(this->getId(), {messageId}, td_api::make_object<td_api::messageSourceChatHistory>(), false));
 }
 
 void Chat::sendPhoto(QString path, int64_t replyToMessageId)
@@ -1135,7 +1167,7 @@ void Chat::sendPhoto(QString path, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_message_id_ = replyToMessageId;
+        sendMessage->reply_to_ = td_api::make_object<td_api::messageReplyToMessage>(_chat->id_, replyToMessageId);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessagePhoto>();
@@ -1156,7 +1188,7 @@ void Chat::sendPhotos(QStringList paths, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_message_id_ = replyToMessageId;
+        sendMessage->reply_to_ = td_api::make_object<td_api::messageReplyToMessage>(_chat->id_, replyToMessageId);
     }
 
     std::vector<td_api::object_ptr<td_api::InputMessageContent>> contents;
@@ -1179,7 +1211,7 @@ void Chat::sendFile(QString path, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_message_id_ = replyToMessageId;
+        sendMessage->reply_to_ = td_api::make_object<td_api::messageReplyToMessage>(_chat->id_, replyToMessageId);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageDocument>();
@@ -1198,7 +1230,7 @@ void Chat::sendMusic(QString path, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_message_id_ = replyToMessageId;
+        sendMessage->reply_to_ = td_api::make_object<td_api::messageReplyToMessage>(_chat->id_, replyToMessageId);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageAudio>();
@@ -1219,7 +1251,7 @@ void Chat::sendMusics(QStringList paths, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_message_id_ = replyToMessageId;
+        sendMessage->reply_to_ = td_api::make_object<td_api::messageReplyToMessage>(_chat->id_, replyToMessageId);
     }
 
     std::vector<td_api::object_ptr<td_api::InputMessageContent>> contents;
@@ -1242,7 +1274,7 @@ void Chat::sendVideo(QString path, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_message_id_ = replyToMessageId;
+        sendMessage->reply_to_ = td_api::make_object<td_api::messageReplyToMessage>(_chat->id_, replyToMessageId);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageVideo>();
@@ -1263,7 +1295,7 @@ void Chat::sendVideos(QStringList paths, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_message_id_ = replyToMessageId;
+        sendMessage->reply_to_ = td_api::make_object<td_api::messageReplyToMessage>(_chat->id_, replyToMessageId);
     }
 
     std::vector<td_api::object_ptr<td_api::InputMessageContent>> contents;
@@ -1309,7 +1341,7 @@ void Chat::sendVoiceNote(QString path, QString waveform, int64_t duration, int64
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_message_id_ = replyToMessageId;
+        sendMessage->reply_to_ = td_api::make_object<td_api::messageReplyToMessage>(_chat->id_, replyToMessageId);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageVoiceNote>();
@@ -1330,7 +1362,7 @@ void Chat::sendSticker(int32_t fileId, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_message_id_ = replyToMessageId;
+        sendMessage->reply_to_ = td_api::make_object<td_api::messageReplyToMessage>(_chat->id_, replyToMessageId);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageSticker>();
@@ -1350,7 +1382,7 @@ void Chat::sendLocation(float latitude, float longitude, float horizontalAccurac
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_message_id_ = replyToMessageId;
+        sendMessage->reply_to_ = td_api::make_object<td_api::messageReplyToMessage>(_chat->id_, replyToMessageId);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageLocation>();
@@ -1367,7 +1399,7 @@ void Chat::sendAnimation(int32_t fileId, int32_t width, int32_t height, int64_t 
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_message_id_ = replyToMessageId;
+        sendMessage->reply_to_ = td_api::make_object<td_api::messageReplyToMessage>(_chat->id_, replyToMessageId);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageAnimation>();
@@ -1531,9 +1563,9 @@ void Chat::searchChatMembers(QString query)
     }
 }
 
-void Chat::setTtl(int32_t ttl)
+void Chat::setAutoDeleteTime(int32_t autoDeleteTime)
 {
-    _manager->sendQuery(new td_api::setChatMessageTtl(getId(), ttl));
+    _manager->sendQuery(new td_api::setChatMessageAutoDeleteTime(getId(), autoDeleteTime));
 }
 
 void Chat::getChatHistory(int64_t from_message, int limit, int offset, bool localOnly)
@@ -1722,11 +1754,11 @@ void Chat::updateChatPermissions(td_api::updateChatPermissions *updateChatPermis
     emit permissionsChanged();
 }
 
-void Chat::updateChatMessageTtl(td_api::updateChatMessageTtl *updateChatMessageTtl)
+void Chat::updateChatMessageAutoDeleteTime(td_api::updateChatMessageAutoDeleteTime *updateChatMessageAutoDeleteTime)
 {
-    if (updateChatMessageTtl->chat_id_ != getId()) return;
-    _chat->message_ttl_ = updateChatMessageTtl->message_ttl_;
-    emit ttlChanged(_chat->message_ttl_);
+    if (updateChatMessageAutoDeleteTime->chat_id_ != getId()) return;
+    _chat->message_auto_delete_time_ = updateChatMessageAutoDeleteTime->message_auto_delete_time_;
+    emit autoDeleteTimeChanged(_chat->message_auto_delete_time_);
 }
 
 void Chat::updateChatAction(td_api::updateChatAction *updateChatAction)

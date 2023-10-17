@@ -34,6 +34,7 @@ class AutoDownloadSettings : public QObject
     Q_PROPERTY(int32_t videoUploadBitrate READ getVideoUploadBitrate WRITE setVideoUploadBitrate NOTIFY videoUploadBitrateChanged)
     Q_PROPERTY(bool preloadLargeVideos READ getPreloadLargeVideos WRITE setPreloadLargeVideos NOTIFY preloadLargeVideosChanged)
     Q_PROPERTY(bool preloadNextAudio READ getPreloadNextAudio WRITE setPreloadNextAudio NOTIFY preloadNextAudioChanged)
+    Q_PROPERTY(bool preloadStories READ getPreloadStories WRITE setPreloadStories NOTIFY preloadStoriesChanged)
     Q_PROPERTY(bool useLessDataForCalls READ getUseLessDataForCalls WRITE setUseLessDataForCalls NOTIFY useLessDataForCallsChanged)
 public:
     explicit AutoDownloadSettings(QObject *parent = nullptr);
@@ -55,6 +56,8 @@ public:
     void setPreloadLargeVideos(bool preloadLargeVideos);
     bool getPreloadNextAudio() const;
     void setPreloadNextAudio(bool preloadNextAudio);
+    bool getPreloadStories() const;
+    void setPreloadStories(bool preloadStories);
     bool getUseLessDataForCalls() const;
     void setUseLessDataForCalls(bool useLessDataForCalls);
 
@@ -71,6 +74,7 @@ signals:
     void videoUploadBitrateChanged();
     void preloadLargeVideosChanged();
     void preloadNextAudioChanged();
+    void preloadStoriesChanged();
     void useLessDataForCallsChanged();
     void resetPendingChanged();
 
@@ -87,6 +91,7 @@ private:
     int32_t 	_videoUploadBitrate;
     bool 	_preloadLargeVideos;
     bool 	_preloadNextAudio;
+    bool 	_preloadStories;
     bool 	_useLessDataForCalls;
     QString _presetLoading;
 };

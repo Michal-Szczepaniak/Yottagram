@@ -62,7 +62,7 @@ class Chat : public QAbstractListModel
     Q_PROPERTY(int32_t unreadMentionCount READ getUnreadMentionCount NOTIFY unreadMentionCountChanged)
     Q_PROPERTY(int64_t firstUnreadMention READ firstUnreadMention NOTIFY firstUnreadMentionChanged)
     Q_PROPERTY(bool isSelf READ isSelf NOTIFY isSelfChanged)
-    Q_PROPERTY(int32_t ttl READ getTtl WRITE setTtl NOTIFY ttlChanged)
+    Q_PROPERTY(int32_t autoDeleteTime READ getAutoDeleteTime WRITE setAutoDeleteTime NOTIFY autoDeleteTimeChanged)
     Q_PROPERTY(int32_t muteFor READ getMuteFor WRITE setMuteFor NOTIFY chatNotificationSettingsChanged)
     Q_PROPERTY(int32_t defaultMuteFor READ getDefaultMuteFor NOTIFY chatNotificationSettingsChanged)
     Q_PROPERTY(bool showPreview READ getShowPreview WRITE setShowPreview NOTIFY chatNotificationSettingsChanged)
@@ -174,7 +174,7 @@ public:
     void setIsOpen(bool isOpen);
     bool isOpen() const;
     bool isPinned(td_api::object_ptr<td_api::ChatList> list) const;
-    int32_t getTtl() const;
+    int32_t getAutoDeleteTime() const;
     int32_t getMuteFor() const;
     void setMuteFor(int32_t muteFor);
     bool getDefaultMuteFor() const;
@@ -237,7 +237,7 @@ public:
     Q_INVOKABLE void getMoreChatHistory();
     Q_INVOKABLE void getMoreChatMessages();
     Q_INVOKABLE int64_t getAuthorByIndex(int32_t index);
-    Q_INVOKABLE void setMessageAsRead(int64_t messageId, int64_t threadId = 0);
+    Q_INVOKABLE void setMessageAsRead(int64_t messageId);
     Q_INVOKABLE void sendPhoto(QString path, int64_t replyToMessageId);
     Q_INVOKABLE void sendPhotos(QStringList paths, int64_t replyToMessageId);
     Q_INVOKABLE void sendFile(QString path, int64_t replyToMessageId);
@@ -264,7 +264,7 @@ public:
     Q_INVOKABLE void clearCachedHistory();
     Q_INVOKABLE void sendAction(ChatAction action);
     Q_INVOKABLE void searchChatMembers(QString query);
-    void setTtl(int32_t ttl);
+    void setAutoDeleteTime(int32_t autoDeleteTime);
 
     bool hasPhoto();
     File* getSmallPhoto();
@@ -284,7 +284,7 @@ signals:
     void secretChatChanged(int64_t chatId);
     void basicGroupChanged(int64_t chatId);
     void supergroupChanged(int64_t chatId);
-    void ttlChanged(int32_t ttl);
+    void autoDeleteTimeChanged(int32_t autoDeleteTime);
     void chatNotificationSettingsChanged();
     void permissionsChanged();
     void gotMessage(int64_t messageId);
@@ -312,7 +312,7 @@ public slots:
     void scopeNotificationSettingsChanged(td_api::scopeNotificationSettings *scopeNotificationSettings);
     void onGotMessage(td_api::message *message);
     void updateChatPermissions(td_api::updateChatPermissions *updateChatPermissions);
-    void updateChatMessageTtl(td_api::updateChatMessageTtl *updateChatMessageTtl);
+    void updateChatMessageAutoDeleteTime(td_api::updateChatMessageAutoDeleteTime *updateChatMessageAutoDeleteTime);
     void updateChatAction(td_api::updateChatAction *updateChatAction);
     void onGotSearchChatMessagesFilterUnreadMention(int64_t chatId, td_api::messages *messages);
 
@@ -345,7 +345,7 @@ private:
     QList<int64_t> _foundChatMembers{};
     td_api::chatPosition* _mainPosition{};
     td_api::chatPosition* _archivePosition{};
-    QHash<int32_t, td_api::chatPosition*> _filterPositions{};
+    QHash<int32_t, td_api::chatPosition*> _folderPositions{};
     QHash<int64_t, ChatAction> _chatActions{};
     QVector<int64_t> _getMessageCache{};
     shared_ptr<Message> _lastMessage{};

@@ -34,7 +34,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "savedanimations.h"
 #include "calls.h"
 #include "dbushelper.h"
-#include "chatlistfilters.h"
+#include "chatlistfolders.h"
 #include "proxymodel.h"
 #include "contacts.h"
 #include "telegramstatus.h"
@@ -55,7 +55,7 @@ public:
     StickerSets _stickerSets;
     SavedAnimations _savedAnimations;
     Calls _calls;
-    ChatListFilters _chatListFilters;
+    ChatListFolders _chatListFilters;
     ProxyModel _proxyModel;
     Contacts _contacts;
     shared_ptr<ChatList> _chatList;

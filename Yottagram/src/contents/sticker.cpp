@@ -72,5 +72,5 @@ bool Sticker::isAnimated() const
 
 bool Sticker::isMask() const
 {
-    return _sticker->sticker_->type_->get_id() == td_api::stickerTypeMask::ID;
+    return _sticker->sticker_->full_type_->get_id() == td_api::stickerTypeMask::ID;
 }

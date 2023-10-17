@@ -39,7 +39,7 @@ bool UserFullInfo::hasInfo() const
 
 bool UserFullInfo::isBlocked() const
 {
-    return _userFullInfo->is_blocked_;
+    return (bool)_userFullInfo->block_list_;
 }
 
 bool UserFullInfo::canBeCalled() const

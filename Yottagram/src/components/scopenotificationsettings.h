@@ -29,6 +29,10 @@ class ScopeNotificationSettings : public QObject
     Q_OBJECT
     Q_PROPERTY(int32_t muteFor READ getMuteFor WRITE setMuteFor NOTIFY scopeNotificationSettingsChanged)
     Q_PROPERTY(bool showPreview READ getShowPreview WRITE setShowPreview NOTIFY scopeNotificationSettingsChanged)
+    Q_PROPERTY(bool useDefaultMuteStories READ getUseDefaultMuteStories WRITE setUseDefaultMuteStories NOTIFY scopeNotificationSettingsChanged)
+    Q_PROPERTY(bool muteStories READ getMuteStories WRITE setMuteStories NOTIFY scopeNotificationSettingsChanged)
+    Q_PROPERTY(int64_t storySoundId READ getStorySoundId WRITE setStorySoundId NOTIFY scopeNotificationSettingsChanged)
+    Q_PROPERTY(bool showStorySender READ getShowStorySender WRITE setShowStorySender NOTIFY scopeNotificationSettingsChanged)
     Q_PROPERTY(bool disablePinnedMessageNotifications READ getDisablePinnedMessageNotifications WRITE setDisablePinnedMessageNotifications NOTIFY scopeNotificationSettingsChanged)
     Q_PROPERTY(bool disableMentionNotifications READ getDisableMentionNotifications WRITE setDisableMentionNotifications NOTIFY scopeNotificationSettingsChanged)
 public:
@@ -43,6 +47,14 @@ public:
     void setMuteFor(int32_t muteFor);
     bool getShowPreview() const;
     void setShowPreview(bool showPreview);
+    bool getUseDefaultMuteStories() const;
+    void setUseDefaultMuteStories(bool useDefaultMuteStories);
+    bool getMuteStories() const;
+    void setMuteStories(bool muteStories);
+    int64_t getStorySoundId() const;
+    void setStorySoundId(int64_t storySoundId);
+    bool getShowStorySender() const;
+    void setShowStorySender(bool showStorySender);
     bool getDisablePinnedMessageNotifications() const;
     void setDisablePinnedMessageNotifications(bool disablePinnedMessageNotifications);
     bool getDisableMentionNotifications() const;

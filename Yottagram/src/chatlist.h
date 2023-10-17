@@ -173,7 +173,7 @@ private:
     UnreadChatCount _unreadChatCount;
     UnreadMessageCount _unreadMessageCount;
     quint8 _selectedChatList;
-    int32_t _selectedFilterChatList;
+    int32_t _selectedFolderChatList;
 };
 
 #endif // CHATLIST_H

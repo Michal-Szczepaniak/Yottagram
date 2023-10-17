@@ -64,6 +64,10 @@ void ScopeNotificationSettings::setMuteFor(int32_t muteFor)
         _scopeNotificationSettings->mute_for_,
         _scopeNotificationSettings->sound_id_,
         _scopeNotificationSettings->show_preview_,
+        _scopeNotificationSettings->use_default_mute_stories_,
+        _scopeNotificationSettings->mute_stories_,
+        _scopeNotificationSettings->story_sound_id_,
+        _scopeNotificationSettings->show_story_sender_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
     );
@@ -86,10 +90,118 @@ void ScopeNotificationSettings::setShowPreview(bool showPreview)
         _scopeNotificationSettings->mute_for_,
         _scopeNotificationSettings->sound_id_,
         _scopeNotificationSettings->show_preview_,
+        _scopeNotificationSettings->use_default_mute_stories_,
+        _scopeNotificationSettings->mute_stories_,
+        _scopeNotificationSettings->story_sound_id_,
+        _scopeNotificationSettings->show_story_sender_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
     );
     settings->show_preview_ = showPreview;
+    _manager->sendQuery(new td_api::setScopeNotificationSettings(getScope(), move(settings)));
+}
+
+bool ScopeNotificationSettings::getUseDefaultMuteStories() const
+{
+    if (_scopeNotificationSettings) {
+        return _scopeNotificationSettings->use_default_mute_stories_;
+    } else {
+        return false;
+    }
+}
+
+void ScopeNotificationSettings::setUseDefaultMuteStories(bool useDefaultMuteStories)
+{
+    auto settings = td_api::make_object<td_api::scopeNotificationSettings>(
+        _scopeNotificationSettings->mute_for_,
+        _scopeNotificationSettings->sound_id_,
+        _scopeNotificationSettings->show_preview_,
+        _scopeNotificationSettings->use_default_mute_stories_,
+        _scopeNotificationSettings->mute_stories_,
+        _scopeNotificationSettings->story_sound_id_,
+        _scopeNotificationSettings->show_story_sender_,
+        _scopeNotificationSettings->disable_pinned_message_notifications_,
+        _scopeNotificationSettings->disable_mention_notifications_
+        );
+    settings->use_default_mute_stories_ = useDefaultMuteStories;
+    _manager->sendQuery(new td_api::setScopeNotificationSettings(getScope(), move(settings)));
+}
+
+bool ScopeNotificationSettings::getMuteStories() const
+{
+    if (_scopeNotificationSettings) {
+        return _scopeNotificationSettings->mute_stories_;
+    } else {
+        return false;
+    }
+}
+
+void ScopeNotificationSettings::setMuteStories(bool muteStories)
+{
+    auto settings = td_api::make_object<td_api::scopeNotificationSettings>(
+        _scopeNotificationSettings->mute_for_,
+        _scopeNotificationSettings->sound_id_,
+        _scopeNotificationSettings->show_preview_,
+        _scopeNotificationSettings->use_default_mute_stories_,
+        _scopeNotificationSettings->mute_stories_,
+        _scopeNotificationSettings->story_sound_id_,
+        _scopeNotificationSettings->show_story_sender_,
+        _scopeNotificationSettings->disable_pinned_message_notifications_,
+        _scopeNotificationSettings->disable_mention_notifications_
+        );
+    settings->mute_for_ = muteStories;
+    _manager->sendQuery(new td_api::setScopeNotificationSettings(getScope(), move(settings)));
+}
+
+int64_t ScopeNotificationSettings::getStorySoundId() const
+{
+    if (_scopeNotificationSettings) {
+        return _scopeNotificationSettings->story_sound_id_;
+    } else {
+        return false;
+    }
+}
+
+void ScopeNotificationSettings::setStorySoundId(int64_t storySoundId)
+{
+    auto settings = td_api::make_object<td_api::scopeNotificationSettings>(
+        _scopeNotificationSettings->mute_for_,
+        _scopeNotificationSettings->sound_id_,
+        _scopeNotificationSettings->show_preview_,
+        _scopeNotificationSettings->use_default_mute_stories_,
+        _scopeNotificationSettings->mute_stories_,
+        _scopeNotificationSettings->story_sound_id_,
+        _scopeNotificationSettings->show_story_sender_,
+        _scopeNotificationSettings->disable_pinned_message_notifications_,
+        _scopeNotificationSettings->disable_mention_notifications_
+        );
+    settings->story_sound_id_ = storySoundId;
+    _manager->sendQuery(new td_api::setScopeNotificationSettings(getScope(), move(settings)));
+}
+
+bool ScopeNotificationSettings::getShowStorySender() const
+{
+    if (_scopeNotificationSettings) {
+        return _scopeNotificationSettings->show_story_sender_;
+    } else {
+        return false;
+    }
+}
+
+void ScopeNotificationSettings::setShowStorySender(bool showStorySender)
+{
+    auto settings = td_api::make_object<td_api::scopeNotificationSettings>(
+        _scopeNotificationSettings->mute_for_,
+        _scopeNotificationSettings->sound_id_,
+        _scopeNotificationSettings->show_preview_,
+        _scopeNotificationSettings->use_default_mute_stories_,
+        _scopeNotificationSettings->mute_stories_,
+        _scopeNotificationSettings->story_sound_id_,
+        _scopeNotificationSettings->show_story_sender_,
+        _scopeNotificationSettings->disable_pinned_message_notifications_,
+        _scopeNotificationSettings->disable_mention_notifications_
+        );
+    settings->show_story_sender_ = showStorySender;
     _manager->sendQuery(new td_api::setScopeNotificationSettings(getScope(), move(settings)));
 }
 
@@ -108,6 +220,10 @@ void ScopeNotificationSettings::setDisablePinnedMessageNotifications(bool disabl
         _scopeNotificationSettings->mute_for_,
         _scopeNotificationSettings->sound_id_,
         _scopeNotificationSettings->show_preview_,
+        _scopeNotificationSettings->use_default_mute_stories_,
+        _scopeNotificationSettings->mute_stories_,
+        _scopeNotificationSettings->story_sound_id_,
+        _scopeNotificationSettings->show_story_sender_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
     );
@@ -130,6 +246,10 @@ void ScopeNotificationSettings::setDisableMentionNotifications(bool disableMenti
         _scopeNotificationSettings->mute_for_,
         _scopeNotificationSettings->sound_id_,
         _scopeNotificationSettings->show_preview_,
+        _scopeNotificationSettings->use_default_mute_stories_,
+        _scopeNotificationSettings->mute_stories_,
+        _scopeNotificationSettings->story_sound_id_,
+        _scopeNotificationSettings->show_story_sender_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
     );
