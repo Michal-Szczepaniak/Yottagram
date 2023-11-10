@@ -308,143 +308,143 @@
     </message>
     <message>
         <source>Swipe from bottom to access upload options</source>
-        <translation type="unfinished"></translation>
+        <translation>Svep från botten för att komma åt uppladdningsalternativ</translation>
     </message>
     <message>
         <source>Open secret chat</source>
-        <translation type="unfinished">Öppna privat chatt</translation>
+        <translation>Öppna privat chatt</translation>
     </message>
     <message>
         <source>Close secret chat</source>
-        <translation type="unfinished">Stäng privat chatt</translation>
+        <translation>Stäng privat chatt</translation>
     </message>
     <message>
         <source>Set self-destruct timer</source>
-        <translation type="unfinished">Ställ in självförstörandetid</translation>
+        <translation>Ställ in självförstörandetid</translation>
     </message>
     <message>
         <source>Cancel selection</source>
-        <translation type="unfinished">Avbryt markering</translation>
+        <translation>Avbryt markering</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation type="unfinished">Vidarebefordra</translation>
+        <translation>Vidarebefordra</translation>
     </message>
     <message>
         <source>Scroll to first unread mention</source>
-        <translation type="unfinished">Skrolla till första olästa omnämnande</translation>
+        <translation>Skrolla till första olästa omnämnande</translation>
     </message>
     <message>
         <source>Call</source>
-        <translation type="unfinished"></translation>
+        <translation>Ring upp</translation>
     </message>
     <message>
         <source>Saved messages</source>
-        <translation type="unfinished">Sparade meddelanden</translation>
+        <translation>Sparade meddelanden</translation>
     </message>
     <message>
         <source>%1 members</source>
-        <translation type="unfinished">%1 medlemmar</translation>
+        <translation>%1 medlemmar</translation>
     </message>
     <message>
         <source>%1 online</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 online</translation>
     </message>
     <message>
         <source>Reply</source>
-        <translation type="unfinished">Svara</translation>
+        <translation>Svara</translation>
     </message>
     <message>
         <source>Pin message</source>
-        <translation type="unfinished"></translation>
+        <translation>Fäst meddelande</translation>
     </message>
     <message>
         <source>Unpin message</source>
-        <translation type="unfinished"></translation>
+        <translation>Lösgör meddelande</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">Redigera</translation>
+        <translation>Redigera</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation type="unfinished">Kopiera</translation>
+        <translation>Kopiera</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Ta bort</translation>
+        <translation>Ta bort</translation>
     </message>
     <message>
         <source>Deselect</source>
-        <translation type="unfinished"></translation>
+        <translation>Avmarkera</translation>
     </message>
     <message>
         <source>Select</source>
-        <translation type="unfinished"></translation>
+        <translation>Markera</translation>
     </message>
     <message>
         <source>Set as read</source>
-        <translation type="unfinished">Ange som läst</translation>
+        <translation>Ange som läst</translation>
     </message>
     <message>
         <source>%L1 forwarded messages</source>
-        <translation type="unfinished">%L1 meddelanden vidarebordrade</translation>
+        <translation>%L1 vidarebordrade meddelanden</translation>
     </message>
     <message>
         <source>Type the text...</source>
-        <translation type="unfinished">Skriv...</translation>
+        <translation>Skriv...</translation>
     </message>
     <message>
         <source>Image</source>
-        <translation type="unfinished">Bild</translation>
+        <translation>Bild</translation>
     </message>
     <message>
         <source>Video</source>
-        <translation type="unfinished">Video</translation>
+        <translation>Video</translation>
     </message>
     <message>
         <source>Audio</source>
-        <translation type="unfinished">Ljud</translation>
+        <translation>Ljud</translation>
     </message>
     <message>
         <source>Document</source>
-        <translation type="unfinished">Dokument</translation>
+        <translation>Dokument</translation>
     </message>
     <message>
         <source>File</source>
-        <translation type="unfinished">Fil</translation>
+        <translation>Fil</translation>
     </message>
     <message>
         <source>Poll</source>
-        <translation type="unfinished">Omröstning</translation>
+        <translation>Omröstning</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation type="unfinished">Dekal</translation>
+        <translation>Dekal</translation>
     </message>
     <message>
         <source>GIF</source>
-        <translation type="unfinished">GIF</translation>
+        <translation>GIF</translation>
     </message>
     <message>
         <source>Voice Note</source>
-        <translation type="unfinished">Röstmeddelande</translation>
+        <translation>Röstmeddelande</translation>
     </message>
     <message>
         <source>Press and hold record button to record voice note.</source>
-        <translation type="unfinished">Tryck och håll ner inspelningsknappen för att spela in röstmeddelande.</translation>
+        <translation>Tryck och håll ner inspelningsknappen för att spela in röstmeddelande.</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation type="unfinished">Plats</translation>
+        <translation>Plats</translation>
     </message>
     <message>
         <source>Also pin for %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Fäst också för %1</translation>
     </message>
     <message>
         <source>Notify members</source>
-        <translation type="unfinished"></translation>
+        <translation>Meddela medlemmar</translation>
     </message>
 </context>
 <context>
@@ -531,7 +531,7 @@
     </message>
     <message>
         <source>Contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Kontakter</translation>
     </message>
 </context>
 <context>
@@ -644,34 +644,34 @@
     <name>Contacts</name>
     <message>
         <source>Imported %1 contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Importerade %1 kontakter</translation>
     </message>
     <message>
         <source>Import contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Importera kontakter</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Sök</translation>
+        <translation>Sök</translation>
     </message>
 </context>
 <context>
     <name>ContactsImport</name>
     <message>
         <source>Unselect all</source>
-        <translation type="unfinished"></translation>
+        <translation>Avmarkera alla</translation>
     </message>
     <message>
         <source>Select all</source>
-        <translation type="unfinished"></translation>
+        <translation>Markera alla</translation>
     </message>
     <message>
         <source>Select contacts to import</source>
-        <translation type="unfinished"></translation>
+        <translation>Välj kontakter att importera</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Sök</translation>
+        <translation>Sök</translation>
     </message>
 </context>
 <context>
@@ -1038,7 +1038,7 @@
     </message>
     <message>
         <source>About</source>
-        <translation type="unfinished">Om</translation>
+        <translation>Om</translation>
     </message>
 </context>
 <context>
@@ -1183,7 +1183,7 @@
     </message>
     <message>
         <source>Open chat</source>
-        <translation type="unfinished"></translation>
+        <translation>Öppna chatt</translation>
     </message>
 </context>
 <context>
