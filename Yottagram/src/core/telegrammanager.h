@@ -125,6 +125,7 @@ signals:
     void gotMessage(td_api::message *message);
     void gotProxies(td_api::proxies *proxies);
     void proxyTestSuccessful();
+    void proxyAdded();
     void gotScopeNotificationSettings(int32_t scope, td_api::scopeNotificationSettings *scopeNotificationSettings);
     void gotSearchChatMembers(int64_t chatId, td_api::chatMembers *chatMembers);
     void gotRecentInlineBots(int64_t chatId, td_api::users *users);

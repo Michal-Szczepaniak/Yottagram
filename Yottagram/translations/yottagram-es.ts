@@ -911,6 +911,10 @@
         <source>Secret</source>
         <translation>Secreto</translation>
     </message>
+    <message>
+        <source>Proxy Url</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ScopeNotificationSettings</name>

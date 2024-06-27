@@ -14,6 +14,7 @@ void ProxyModel::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), &TelegramManager::error, this, &ProxyModel::onError);
     connect(_manager.get(), &TelegramManager::proxyTestSuccessful, this, &ProxyModel::testSuccessful);
     connect(_manager.get(), &TelegramManager::connectionStateChanged, this, &ProxyModel::connectionStateChanged);
+    connect(_manager.get(), &TelegramManager::proxyAdded, [&](){ getProxies(); });
 }
 
 int ProxyModel::rowCount(const QModelIndex &parent) const
@@ -126,9 +127,7 @@ TelegramManager::ConnectionState ProxyModel::connectionState() const
 
 void ProxyModel::add()
 {
-    _manager->sendQuery(new td_api::addProxy("new proxy", 1234, false, td_api::make_object<td_api::proxyTypeSocks5>()));
-
-    getProxies();
+    _manager->sendQueryWithResponse(0, td_api::addProxy::ID, 0, new td_api::addProxy("new proxy", 1234, false, td_api::make_object<td_api::proxyTypeSocks5>()));
 }
 
 void ProxyModel::remove(int index)

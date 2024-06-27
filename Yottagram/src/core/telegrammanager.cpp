@@ -179,6 +179,9 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
     case td_api::testProxy::ID:
         emit proxyTestSuccessful();
         break;
+    case td_api::addProxy::ID:
+        emit proxyAdded();
+        break;
     case td_api::getScopeNotificationSettings::ID:
         emit gotScopeNotificationSettings(response.subType, static_cast<td_api::scopeNotificationSettings*>(message));
         break;

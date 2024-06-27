@@ -118,6 +118,33 @@ Page {
                                     title: qsTr("Server settings")
                                 }
 
+                                TextField {
+                                    width: parent.width
+                                    label: qsTr("Proxy Url")
+                                    placeholderText: "https://t.me/proxy"
+                                    onTextChanged: {
+                                        var qd = {};
+                                        text.split("?")[1].split("&").forEach(function(item) {var s = item.split("="), k = s[0], v = s[1] && decodeURIComponent(s[1]); (qd[k] = qd[k] || []).push(v)});
+
+                                        if (text.lastIndexOf("https://t.me/proxy", 0) === 0) {
+                                            typeSwitch.currentIndex = 2;
+                                            serverField.text = qd.server.toString();
+                                            portField.text = parseInt(qd.port);
+                                            userField.text = qd.secret.toString();
+                                        }
+
+                                        if (text.lastIndexOf("https://t.me/socks", 0) === 0) {
+                                            typeSwitch.currentIndex = 0;
+                                            serverField.text = qd.server.toString();
+                                            portField.text = parseInt(qd.port);
+                                            userField.text = qd.user.toString();
+                                            passField.text = qd.pass.toString();
+                                        }
+                                    }
+
+                                    inputMethodHints: Qt.ImhNoAutoUppercase
+                                }
+
                                 ComboBox {
                                     id: typeSwitch
                                     width: parent.width
@@ -131,6 +158,7 @@ Page {
                                 }
 
                                 TextField {
+                                    id: serverField
                                     width: parent.width
                                     label: qsTr("Server")
                                     text: server
@@ -139,6 +167,7 @@ Page {
                                 }
 
                                 TextField {
+                                    id: portField
                                     width: parent.width
                                     label: qsTr("Port")
                                     text: port
@@ -147,6 +176,7 @@ Page {
                                 }
 
                                 TextField {
+                                    id: userField
                                     width: parent.width
                                     label: typeSwitch.currentIndex === 2 ? qsTr("Secret") : qsTr("Username")
                                     text: username
@@ -155,6 +185,7 @@ Page {
                                 }
 
                                 PasswordField {
+                                    id: passField
                                     width: parent.width
                                     label: qsTr("Password")
                                     text: password
