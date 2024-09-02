@@ -5,7 +5,7 @@ Name:       yottagram
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    Yottagram
-Version:    0.5.1
+Version:    0.5.2
 Release:    1
 Group:      Qt/Qt
 License:    GPLv3
@@ -74,7 +74,7 @@ desktop-file-install --delete-original       \
 
 %files
 %defattr(2755,root,privileged,-)
-%{_bindir}
+%{_bindir}/%{name}
 %defattr(-,root,root,-)
 %{_datadir}/%{name}
 %{_datadir}/dbus-1/services/com.verdanditeam.yottagram.service
