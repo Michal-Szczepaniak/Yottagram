@@ -48,7 +48,7 @@ Dialog {
         ComboBox {
             id: durationComboBox
             width: parent.width
-            label: "Self-destruct timer"
+            label: qsTr("Self-destruct timer")
 
             menu: ContextMenu {
                 Repeater {

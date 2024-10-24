@@ -13,11 +13,15 @@ public:
     ~PulseaudioHelper();
 
     void setDefaultSink(QString sink);
+    QString getDefaultSink() const;
+    void setDefaultSource(QString source);
+    QString getDefaultSource() const;
     static void sinkInfoListCallback(pa_context *c, const pa_sink_info *i, int eol, void *userdata);
     static void successCallback(pa_context *c, int success, void *userdata);
 
 public slots:
-    void changeSinkPort(QString port);
+    void changeLoudspeakerMode(bool isLoudspeaker);
+    void probeOutputs();
 
 signals:
 
@@ -27,7 +31,8 @@ private:
     pa_context* _context;
     pa_signal_event* _signal;
     QString _defaultSink;
-    QString _port;
+    QString _defaultSource;
+    bool _isLoudspeaker;
 };
 
 #endif // PULSEAUDIOHELPER_H

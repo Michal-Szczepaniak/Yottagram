@@ -49,6 +49,10 @@
         <source>dashinfantry for chinese translation.</source>
         <translation>dashinfantry för Kinesisk översättning.</translation>
     </message>
+    <message>
+        <source>legacychimera247 for italian translation.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>AuthorizationCode</name>
@@ -210,33 +214,6 @@
     </message>
 </context>
 <context>
-    <name>CallSettings</name>
-    <message>
-        <source>Call settings</source>
-        <translation>Samtalsinställningar</translation>
-    </message>
-    <message>
-        <source>Echo cancellation</source>
-        <translation>Ekodämpning</translation>
-    </message>
-    <message>
-        <source>Noise suppression</source>
-        <translation>Bullerdämpning</translation>
-    </message>
-    <message>
-        <source>Auto gain control</source>
-        <translation>Automatisk förstärkningskontroll</translation>
-    </message>
-    <message>
-        <source>Highpass filter</source>
-        <translation>Högpassfilter</translation>
-    </message>
-    <message>
-        <source>Typing detection</source>
-        <translation>Skrivavkänning</translation>
-    </message>
-</context>
-<context>
     <name>Chat</name>
     <message>
         <source>Many people are typing...</source>
@@ -351,10 +328,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Reply</source>
-        <translation type="unfinished">Svara</translation>
-    </message>
-    <message>
         <source>Pin message</source>
         <translation type="unfinished"></translation>
     </message>
@@ -381,10 +354,6 @@
     <message>
         <source>Select</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Set as read</source>
-        <translation type="unfinished">Ange som läst</translation>
     </message>
     <message>
         <source>%L1 forwarded messages</source>
@@ -445,6 +414,22 @@
     <message>
         <source>Notify members</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save to gallery</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Saved to: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You must download it first</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reply</source>
+        <translation type="unfinished">Svara</translation>
     </message>
 </context>
 <context>
@@ -697,6 +682,13 @@
     </message>
 </context>
 <context>
+    <name>LocationContent</name>
+    <message>
+        <source>Telegram location</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>LocationPicker</name>
     <message>
         <source>Location Picker</source>
@@ -778,6 +770,29 @@
     <message>
         <source>Delete</source>
         <translation>Ta bort</translation>
+    </message>
+</context>
+<context>
+    <name>MoveFilesDialog</name>
+    <message>
+        <source>Move yottagram&apos;s data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Old path: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Path already exists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>App will be closed upon accepting</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No permission to create directory</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -961,6 +976,10 @@
         <source>30 seconds</source>
         <translation>30 sekunder</translation>
     </message>
+    <message>
+        <source>Self-destruct timer</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Settings</name>
@@ -1033,16 +1052,24 @@
         <translation>Teckenstorlek för meddelande</translation>
     </message>
     <message>
-        <source>Call settings</source>
-        <translation>Samtalsinställningar</translation>
-    </message>
-    <message>
         <source>Proxy settings</source>
         <translation>Proxy-inställningar</translation>
     </message>
     <message>
         <source>About</source>
         <translation type="unfinished">Om</translation>
+    </message>
+    <message>
+        <source>Move yottagram&apos;s data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Animated emoji</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Chat bubbles</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

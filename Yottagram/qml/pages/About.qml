@@ -51,7 +51,7 @@ Page {
             }
 
             Label {
-                text: "Yottagram 0.5.2 Alpha"
+                text: "Yottagram " + authorization.version + " Alpha"
                 font.pixelSize: Theme.fontSizeExtraLarge
                 anchors.horizontalCenter: parent.horizontalCenter
                 wrapMode: Text.WordWrap
@@ -142,6 +142,12 @@ Page {
 
             Label {
                 text: qsTr("Carmen F. B. for spanish translation.")
+                font.pixelSize: Theme.fontSizeSmall
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+
+            Label {
+                text: qsTr("legacychimera247 for italian translation.")
                 font.pixelSize: Theme.fontSizeSmall
                 anchors.horizontalCenter: parent.horizontalCenter
             }

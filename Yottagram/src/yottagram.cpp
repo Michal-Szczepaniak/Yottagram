@@ -73,5 +73,10 @@ int main(int argc, char *argv[])
     view->setSource(SailfishApp::pathTo("qml/yottagram.qml"));
     view->show();
 
-    return app->exec();
+    int ret = app->exec();
+
+    view.reset();
+    app.reset();
+
+    return ret;
 }

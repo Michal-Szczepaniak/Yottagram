@@ -51,7 +51,7 @@ public slots:
 private:
     td_api::object_ptr<td_api::animatedEmoji> _animatedEmoji;
     int32_t _stickerFileId;
-    QString _emoji;
+    QString _emoji = "";
 };
 
 #endif // ANIMATEDEMOJI_H

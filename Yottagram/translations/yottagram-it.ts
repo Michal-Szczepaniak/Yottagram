@@ -48,6 +48,10 @@
         <source>dashinfantry for chinese translation.</source>
         <translation>dashinfantry per la traduzione cinese.</translation>
     </message>
+    <message>
+        <source>legacychimera247 for italian translation.</source>
+        <translation>legacychimera247 per la traduzione italiana.</translation>
+    </message>
 </context>
 <context>
     <name>AuthorizationCode</name>
@@ -209,33 +213,6 @@
     </message>
 </context>
 <context>
-    <name>CallSettings</name>
-    <message>
-        <source>Call settings</source>
-        <translation>Impostazioni chiamate</translation>
-    </message>
-    <message>
-        <source>Echo cancellation</source>
-        <translation>Cancellazione eco</translation>
-    </message>
-    <message>
-        <source>Noise suppression</source>
-        <translation>Riduzione del rumore</translation>
-    </message>
-    <message>
-        <source>Auto gain control</source>
-        <translation>Controllo automatico guadagno</translation>
-    </message>
-    <message>
-        <source>Highpass filter</source>
-        <translation>Filtro highpass</translation>
-    </message>
-    <message>
-        <source>Typing detection</source>
-        <translation>Rilevaqmento scrittura</translation>
-    </message>
-</context>
-<context>
     <name>Chat</name>
     <message>
         <source>Many people are typing...</source>
@@ -382,10 +359,6 @@
         <translation>Scegli</translation>
     </message>
     <message>
-        <source>Set as read</source>
-        <translation>Segna come letto</translation>
-    </message>
-    <message>
         <source>%L1 forwarded messages</source>
         <translation>%L1 messaggi inoltrati</translation>
     </message>
@@ -444,6 +417,18 @@
     <message>
         <source>Notify members</source>
         <translation>Notifica membri</translation>
+    </message>
+    <message>
+        <source>Save to gallery</source>
+        <translation>Salva nella galleria</translation>
+    </message>
+    <message>
+        <source>Saved to: %1</source>
+        <translation>Salvato in: %1</translation>
+    </message>
+    <message>
+        <source>You must download it first</source>
+        <translation>Devi scaricarlo prima</translation>
     </message>
 </context>
 <context>
@@ -696,6 +681,13 @@
     </message>
 </context>
 <context>
+    <name>LocationContent</name>
+    <message>
+        <source>Telegram location</source>
+        <translation>Posizione Telegram</translation>
+    </message>
+</context>
+<context>
     <name>LocationPicker</name>
     <message>
         <source>Location Picker</source>
@@ -777,6 +769,29 @@
     <message>
         <source>Delete</source>
         <translation>Elimina</translation>
+    </message>
+</context>
+<context>
+    <name>MoveFilesDialog</name>
+    <message>
+        <source>Move yottagram&apos;s data</source>
+        <translation>Sposta dati di yottagram</translation>
+    </message>
+    <message>
+        <source>App will be closed upon accepting</source>
+        <translation>Applicazione verrà chiusa dopo aver accettato</translation>
+    </message>
+    <message>
+        <source>Old path: %1</source>
+        <translation>Vecchio percorso: %1</translation>
+    </message>
+    <message>
+        <source>Path already exists</source>
+        <translation>Il percorso è già esistente</translation>
+    </message>
+    <message>
+        <source>No permission to create directory</source>
+        <translation>Non hai i permessi per creare una cartella</translation>
     </message>
 </context>
 <context>
@@ -910,6 +925,10 @@
         <source>Secret</source>
         <translation>Segreto</translation>
     </message>
+    <message>
+        <source>Proxy Url</source>
+        <translation>Url proxy</translation>
+    </message>
 </context>
 <context>
     <name>ScopeNotificationSettings</name>
@@ -955,6 +974,10 @@
     <message>
         <source>30 seconds</source>
         <translation>30 secondi</translation>
+    </message>
+    <message>
+        <source>Self-destruct timer</source>
+        <translation>Times autodistruzione</translation>
     </message>
 </context>
 <context>
@@ -1028,16 +1051,24 @@
         <translation>Dimensioni caratteri messaggio</translation>
     </message>
     <message>
-        <source>Call settings</source>
-        <translation>Impostazioni chiamate</translation>
-    </message>
-    <message>
         <source>Proxy settings</source>
         <translation>Impostazioni proxy</translation>
     </message>
     <message>
         <source>About</source>
         <translation>Info</translation>
+    </message>
+    <message>
+        <source>Animated emoji</source>
+        <translation>Emoji animate</translation>
+    </message>
+    <message>
+        <source>Move yottagram&apos;s data</source>
+        <translation>Sposta dati di yottagram</translation>
+    </message>
+    <message>
+        <source>Chat bubbles</source>
+        <translation>bolle nelle chat</translation>
     </message>
 </context>
 <context>

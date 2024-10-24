@@ -39,6 +39,7 @@ public:
     ~AudioRecorder();
     enum AudioCodec
     {
+        Opus,
         Vorbis,
         Speex,
         PCM,
@@ -51,7 +52,6 @@ public:
     AudioRecorder::AudioCodec codec() const;
     bool autoRemove() const;
     bool recording() const;
-
 public slots:
     void setCodec(AudioRecorder::AudioCodec codec);
     void startRecording();
@@ -76,15 +76,17 @@ private:
     };
 
     static const QString defaultStoragePath;
-    QHash<AudioCodec, CodecSetting> codecSettingsMap;
-    QString m_location;
+    QHash<AudioCodec, CodecSetting> _codecSettingsMap;
+    QString _location;
     void setLocation(const QString &location);
+    void normalize();
 
-    AudioRecorder::AudioCodec m_codec;
-    QTemporaryFile *m_file;
 
-    bool m_autoRemove;
-    bool m_recording;
+    AudioRecorder::AudioCodec _codec;
+    QTemporaryFile *_file;
+
+    bool _autoRemove;
+    bool _recording;
 };
 
 #endif // AUDIORECORDER_H

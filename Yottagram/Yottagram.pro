@@ -13,9 +13,9 @@ QMAKE_CXXFLAGS_DEBUG *= -O0 -Wno-unused-parameter
 
 INCLUDEPATH += /usr/include/glib-2.0 $$PWD/src
 
-PKGCONFIG += zlib openssl nemonotifications-qt5 connman-qt5 vorbisfile systemsettings libavcodec libavformat libavutil opus libjpeg libpng libswresample libswscale protobuf gio-2.0 alsa glib-2.0 libpulse libpulse-mainloop-glib
+PKGCONFIG += zlib openssl nemonotifications-qt5 connman-qt5 vorbisfile systemsettings libavcodec libavformat libavutil opus libjpeg libpng libswresample libswscale protobuf gio-2.0 alsa glib-2.0 libpulse libpulse-mainloop-glib vpx openh264 audioresource-qt
 
-DEFINES += QT_STATICPLUGIN
+DEFINES += QT_STATICPLUGIN APP_VERSION=$$(APP_VERSION)
 
 CONFIG -= debug_and_release
 CONFIG(debug, debug|release): {
@@ -56,6 +56,7 @@ SOURCES += src/core.cpp \
     src/contents/videonote.cpp \
     src/contents/voicenote.cpp \
     src/contents/animatedemoji.cpp \
+    src/datamanager.cpp \
     src/dbushelper.cpp \
     src/files/contentfile.cpp \
     src/files/file.cpp \
@@ -88,7 +89,6 @@ DISTFILES += qml/yottagram.qml \
     qml/components/AnimationPicker.qml \
     qml/components/AnimationPreview.qml \
     qml/components/AutoDownloadSettings.qml \
-    qml/components/CallSettings.qml \
     qml/components/ChatNotifications.qml \
     qml/components/Property.qml \
     qml/components/LocationPicker.qml \
@@ -160,6 +160,7 @@ CONFIG += sailfishapp_i18n
 
 TRANSLATIONS += \
     translations/yottagram-es.ts \
+    translations/yottagram-it.ts \
     translations/yottagram-pl.ts \
     translations/yottagram-sv.ts \
     translations/yottagram-zh_CN.ts
@@ -196,6 +197,7 @@ HEADERS += \
     src/contents/voicenote.h \
     src/contents/animatedemoji.h \
     src/core.h \
+    src/datamanager.h \
     src/dbushelper.h \
     src/files/contentfile.h \
     src/files/file.h \

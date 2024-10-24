@@ -505,6 +505,10 @@ bool Chat::getCanSendMediaMessages() const
 
 bool Chat::getCanSendPolls() const
 {
+    if (getChatType() == "private" || getChatType() == "secret") {
+        return false;
+    }
+
     return _chat->permissions_->can_send_polls_;
 }
 
@@ -1114,6 +1118,8 @@ std::vector<string> Chat::splitToVector(QString string, QString separator)
 
 void Chat::sendMessage(QString message, int64_t replyToMessageId)
 {
+    qDebug() << message;
+
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
 

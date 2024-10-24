@@ -42,7 +42,6 @@ Item {
             fillMode: VideoOutput.PreserveAspectFit
             muted: true
             autoPlay: true
-        //                                autoLoad: true
             onStopped: {
                 videoPlayer.seek(0)
                 videoPlayer.play()
@@ -67,11 +66,13 @@ Item {
         }
     }
 
-    Thumbnail {
+    Image {
         id: thumbnail
-        image: file.thumbnail
-        visible: videoLoader.active && videoLoader.item.playbackState === MediaPlayer.StoppedState
+        source: file.thumbnail.localPath
+        visible: !videoLoader.active || videoLoader.item.playbackState === MediaPlayer.StoppedState
         anchors.fill: parent
+        asynchronous: true
+        cache: true
     }
 
     FastBlur {
@@ -79,7 +80,7 @@ Item {
         source: thumbnail
         radius: 32
         cached: true
-        visible: videoLoader.active && videoLoader.item.playbackState === MediaPlayer.StoppedState
+        visible: !videoLoader.active || videoLoader.item.playbackState === MediaPlayer.StoppedState
     }
 
     Rectangle {

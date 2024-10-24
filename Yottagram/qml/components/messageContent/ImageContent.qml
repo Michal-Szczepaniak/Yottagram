@@ -34,11 +34,13 @@ Image {
     asynchronous: true
     cache: true
 
-    Thumbnail {
+    Image {
         id: thumbnail
-        image: file.thumbnail
-        visible: !file.biggestPhoto.isDownloaded
+        source: file.thumbnail.localPath
         anchors.fill: parent
+        asynchronous: true
+        visible: !file.biggestPhoto.isDownloaded
+        cache: true
     }
 
     FastBlur {

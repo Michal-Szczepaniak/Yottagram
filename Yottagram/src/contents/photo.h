@@ -35,7 +35,7 @@ class Photo : public ContentFile, public ContentInterface
     Q_OBJECT
     Q_PROPERTY(bool isSecret READ isSecret NOTIFY photoChanged)
     Q_PROPERTY(bool hasStickers READ getHasStickers NOTIFY photoChanged)
-    Q_PROPERTY(QByteArray thumbnail READ getThumbnail NOTIFY photoChanged)
+    Q_PROPERTY(File* thumbnail READ getThumbnail NOTIFY photoChanged)
     Q_PROPERTY(QList<QChar> photoSizes READ getPhotoSizes NOTIFY photoChanged)
     Q_PROPERTY(File* biggestPhoto READ getBiggestPhoto NOTIFY photoChanged)
     Q_PROPERTY(QSize biggestPhotoSize READ getBiggestPhotoSize NOTIFY photoChanged)
@@ -47,7 +47,7 @@ public:
 
     bool isSecret() const;
     bool getHasStickers() const;
-    QByteArray getThumbnail() const;
+    File* getThumbnail() const;
     td_api::formattedText* getCaption();
     QList<QChar> getPhotoSizes() const;
     File* getBiggestPhoto() const;

@@ -54,15 +54,18 @@ void AnimatedEmoji::addUpdateFiles()
 
 QSize AnimatedEmoji::getSize() const
 {
+    if (!_animatedEmoji) return QSize();
     return QSize(_animatedEmoji->sticker_->width_, _animatedEmoji->sticker_->height_);
 }
 
 int64_t AnimatedEmoji::getSetId() const
 {
+    if (!_animatedEmoji) return 0;
     return _animatedEmoji->sticker_->set_id_;
 }
 
 QString AnimatedEmoji::getEmoji() const
 {
+    if (!_animatedEmoji) return "";
     return _emoji;
 }

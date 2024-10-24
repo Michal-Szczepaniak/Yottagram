@@ -49,6 +49,10 @@
         <source>dashinfantry for chinese translation.</source>
         <translation>dashinfantry por la traducción al chino.</translation>
     </message>
+    <message>
+        <source>legacychimera247 for italian translation.</source>
+        <translation>legacychimera247 por la traducción al italiano.</translation>
+    </message>
 </context>
 <context>
     <name>AuthorizationCode</name>
@@ -210,33 +214,6 @@
     </message>
 </context>
 <context>
-    <name>CallSettings</name>
-    <message>
-        <source>Call settings</source>
-        <translation>Ajustes de llamada</translation>
-    </message>
-    <message>
-        <source>Echo cancellation</source>
-        <translation>Cancelación de eco</translation>
-    </message>
-    <message>
-        <source>Noise suppression</source>
-        <translation>Supresión de ruido</translation>
-    </message>
-    <message>
-        <source>Auto gain control</source>
-        <translation>Control automático de ganancia</translation>
-    </message>
-    <message>
-        <source>Highpass filter</source>
-        <translation>Filtro paso alto</translation>
-    </message>
-    <message>
-        <source>Typing detection</source>
-        <translation>Detección de escritura</translation>
-    </message>
-</context>
-<context>
     <name>Chat</name>
     <message>
         <source>Many people are typing...</source>
@@ -351,10 +328,6 @@
         <translation>%1 en línea</translation>
     </message>
     <message>
-        <source>Reply</source>
-        <translation>Responder</translation>
-    </message>
-    <message>
         <source>Pin message</source>
         <translation>Fijar mensaje</translation>
     </message>
@@ -381,10 +354,6 @@
     <message>
         <source>Select</source>
         <translation>Seleccionar</translation>
-    </message>
-    <message>
-        <source>Set as read</source>
-        <translation>Marcar como leído</translation>
     </message>
     <message>
         <source>%L1 forwarded messages</source>
@@ -445,6 +414,22 @@
     <message>
         <source>Notify members</source>
         <translation>Notificar a los miembros</translation>
+    </message>
+    <message>
+        <source>Save to gallery</source>
+        <translation>Guardar en la galería</translation>
+    </message>
+    <message>
+        <source>Saved to: %1</source>
+        <translation>Guardado en: %1</translation>
+    </message>
+    <message>
+        <source>You must download it first</source>
+        <translation>Primero debes descargarlo</translation>
+    </message>
+    <message>
+        <source>Reply</source>
+        <translation>Responder</translation>
     </message>
 </context>
 <context>
@@ -697,6 +682,13 @@
     </message>
 </context>
 <context>
+    <name>LocationContent</name>
+    <message>
+        <source>Telegram location</source>
+        <translation>Ubicación de telegram</translation>
+    </message>
+</context>
+<context>
     <name>LocationPicker</name>
     <message>
         <source>Location Picker</source>
@@ -778,6 +770,29 @@
     <message>
         <source>Delete</source>
         <translation>Borrar</translation>
+    </message>
+</context>
+<context>
+    <name>MoveFilesDialog</name>
+    <message>
+        <source>Move yottagram&apos;s data</source>
+        <translation>Mover datos de yottagram</translation>
+    </message>
+    <message>
+        <source>Old path: %1</source>
+        <translation>Ruta antigua: %1</translation>
+    </message>
+    <message>
+        <source>Path already exists</source>
+        <translation>La ruta ya existe</translation>
+    </message>
+    <message>
+        <source>App will be closed upon accepting</source>
+        <translation>La aplicación se cerrará al aceptar</translation>
+    </message>
+    <message>
+        <source>No permission to create directory</source>
+        <translation>No hay permiso para crear el directorio</translation>
     </message>
 </context>
 <context>
@@ -913,7 +928,7 @@
     </message>
     <message>
         <source>Proxy Url</source>
-        <translation type="unfinished"></translation>
+        <translation>Url del proxy</translation>
     </message>
 </context>
 <context>
@@ -960,6 +975,10 @@
     <message>
         <source>30 seconds</source>
         <translation>30 segundos</translation>
+    </message>
+    <message>
+        <source>Self-destruct timer</source>
+        <translation>Temporizador de autodestrucción</translation>
     </message>
 </context>
 <context>
@@ -1033,16 +1052,24 @@
         <translation>Tamaño de la fuente</translation>
     </message>
     <message>
-        <source>Call settings</source>
-        <translation>Ajustes de llamada</translation>
-    </message>
-    <message>
         <source>Proxy settings</source>
         <translation>Ajustes de proxy</translation>
     </message>
     <message>
         <source>About</source>
         <translation>Acerca de</translation>
+    </message>
+    <message>
+        <source>Move yottagram&apos;s data</source>
+        <translation>Mover datos de yottagram</translation>
+    </message>
+    <message>
+        <source>Animated emoji</source>
+        <translation>Emoticonos animados</translation>
+    </message>
+    <message>
+        <source>Chat bubbles</source>
+        <translation>Burbújas en conversaciones</translation>
     </message>
 </context>
 <context>

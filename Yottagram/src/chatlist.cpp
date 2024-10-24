@@ -35,6 +35,11 @@ ChatList::ChatList() :
     _secretChatsInfo = std::make_shared<SecretChatsInfo>();
     _basicGroupsInfo = std::make_shared<BasicGroupsInfo>();
     _supergroupsInfo = std::make_shared<SupergroupsInfo>();
+
+    _updateListTimer.setInterval(100);
+    _updateListTimer.setSingleShot(false);
+    connect(&_updateListTimer, &QTimer::timeout, this, &ChatList::updateChatList);
+    _updateListTimer.start();
 }
 
 ChatList::~ChatList()
@@ -192,7 +197,11 @@ QVariant ChatList::data(const QModelIndex &index, int role) const
     case ChatElementRoles::IdRole:
         return QVariant::fromValue(chatNode->getId());
     case ChatElementRoles::NameRole:
-        return chatNode->getTitle();
+        if (chatNode->isSelf()) {
+            return tr("Saved messages");
+        } else {
+            return chatNode->getTitle();
+        }
     case ChatElementRoles::OrderRole:
         return QVariant::fromValue(chatNode->getOrder(getSelectedChatList().get()));
     case ChatElementRoles::PhotoRole:
@@ -290,10 +299,8 @@ QHash<int, QByteArray> ChatList::roleNames() const
 void ChatList::updateChat(int64_t chat, const QVector<int> &roles) {
     if(rowCount() <= 0) return;
 
-    auto it = std::find(_chats_ids->begin(), _chats_ids->end(), chat);
-    if (it != _chats_ids->end()) {
-        auto index = std::distance(_chats_ids->begin(), it);
-        emit dataChanged(createIndex(index, 0), createIndex(index, 0), roles);
+    for (int role : roles) {
+        _chatsToUpdate[chat].insert(role);
     }
 }
 
@@ -346,7 +353,6 @@ void ChatList::setChatPosition(int64_t chatId, td_api::chatPosition *position)
         }
     }
     getChat(chatId)->updatePosition(position);
-    if (list == _chats_ids) updateChat(chatId, {OrderRole});
 }
 
 QString ChatList::getMessageText(shared_ptr<Message> message) const
@@ -566,24 +572,34 @@ void ChatList::updateChatPhoto(td_api::updateChatPhoto *updateChatPhoto)
     auto chat = updateChatPhoto->chat_id_;
     auto photo = move(updateChatPhoto->photo_);
     _chats[chat]->setChatPhoto(move(photo));
-    this->updateChat(chat, {PhotoRole, HasPhotoRole});
+    updateChat(chat, {PhotoRole, HasPhotoRole});
 }
 
 void ChatList::updateChatLastMessage(td_api::updateChatLastMessage *updateChatLastMessage)
 {
+    QVector<int> rolesToUpdate;
+
+    if (!updateChatLastMessage->positions_.empty()) {
+        rolesToUpdate.append(OrderRole);
+    }
+
     for (td_api::object_ptr<td_api::chatPosition> &position: updateChatLastMessage->positions_) {
         setChatPosition(updateChatLastMessage->chat_id_, position.release());
     }
 
     if (updateChatLastMessage->last_message_) {
         _chats[updateChatLastMessage->chat_id_]->setLastMessage(move(updateChatLastMessage->last_message_));
-        updateChat(updateChatLastMessage->chat_id_, {LastMessageRole, LastMessageAuthorRole});
+        rolesToUpdate.append(LastMessageRole);
+        rolesToUpdate.append(LastMessageAuthorRole);
     }
+
+    updateChat(updateChatLastMessage->chat_id_, rolesToUpdate);
 }
 
 void ChatList::updateChatPosition(td_api::updateChatPosition *updateChatPosition)
 {
     setChatPosition(updateChatPosition->chat_id_, updateChatPosition->position_.release());
+    updateChat(updateChatPosition->chat_id_, {OrderRole});
 }
 
 void ChatList::secretChatStateChanged(int64_t chatId)
@@ -658,6 +674,7 @@ void ChatList::updateChatDraftMessage(td_api::updateChatDraftMessage *updateChat
     }
 
     _chats[updateChatDraftMessage->chat_id_]->setDraftMessage(move(updateChatDraftMessage->draft_message_));
+    updateChat(updateChatDraftMessage->chat_id_, {OrderRole});
 }
 
 void ChatList::onCreatedPrivateChat(td_api::chat *chat)
@@ -665,4 +682,18 @@ void ChatList::onCreatedPrivateChat(td_api::chat *chat)
     if (chat != nullptr && !_chats.contains(chat->id_)) {
         createChat(chat);
     }
+}
+
+void ChatList::updateChatList()
+{
+    for (auto chatIt = _chatsToUpdate.begin(); chatIt != _chatsToUpdate.end(); ++chatIt) {
+        auto it = std::find(_chats_ids->begin(), _chats_ids->end(), chatIt.key());
+
+        if (it != _chats_ids->end()) {
+            auto index = std::distance(_chats_ids->begin(), it);
+            emit dataChanged(createIndex(index, 0), createIndex(index, 0), chatIt.value().toList().toVector());
+        }
+    }
+
+    _chatsToUpdate.clear();
 }

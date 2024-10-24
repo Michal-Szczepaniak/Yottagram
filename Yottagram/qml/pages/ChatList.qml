@@ -286,7 +286,7 @@ Page {
                         Label {
                             textFormat: Text.PlainText
                             anchors.verticalCenter: parent.verticalCenter
-                            text: isSelf ? qsTr("Saved messages") : name
+                            text: name
                             truncationMode: TruncationMode.Fade
                             width: parent.width - (secretChatIndicator.visible ? (Theme.paddingSmall + secretChatIndicator.width) : 0)
                         }

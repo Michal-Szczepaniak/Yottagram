@@ -29,8 +29,8 @@ void Notifications::setTelegramManager(shared_ptr<TelegramManager> manager)
 {
     _manager = manager;
 
-    connect(manager.get(), SIGNAL(updateNotification(td_api::updateNotification*)), this, SLOT(updateNotification(td_api::updateNotification*)));
-    connect(manager.get(), SIGNAL(updateNotificationGroup(td_api::updateNotificationGroup*)), this, SLOT(updateNotificationGroup(td_api::updateNotificationGroup*)));
+    connect(manager.get(), &TelegramManager::updateNotification, this, &Notifications::updateNotification);
+    connect(manager.get(), &TelegramManager::updateNotificationGroup, this, &Notifications::updateNotificationGroup);
 }
 
 void Notifications::setChatList(shared_ptr<ChatList> chatList)
@@ -69,9 +69,11 @@ void Notifications::updateActiveNotifications(td_api::updateActiveNotifications 
 
 void Notifications::updateNotificationGroup(td_api::updateNotificationGroup *updateNotificationGroup)
 {
+    qDebug() << __PRETTY_FUNCTION__;
     Chat* chat = _chatList->getChat(updateNotificationGroup->chat_id_);
 
     for (auto& notification : updateNotificationGroup->added_notifications_) {
+        qDebug() << "New notification: " << notification->id_ << " from: " << chat->getTitle() << " notification group id: " << updateNotificationGroup->notification_group_id_;
         if (chat->isOpen() || notification->is_silent_ || _notifications.contains(notification->id_)) continue;
         switch (notification->type_.get()->get_id()) {
         case td_api::notificationTypeNewMessage::ID:
@@ -93,9 +95,9 @@ void Notifications::updateNotificationGroup(td_api::updateNotificationGroup *upd
             newNotification->setCategory("x-verdanditeam.yottagram.im");
             newNotification->setAppName("Yottagram");
             newNotification->setPreviewSummary(tr("New message from %1").arg(chat->getTitle()));
-            newNotification->setPreviewBody(textFrom + message.getText().left(30));
+            newNotification->setPreviewBody(textFrom + message.getText(false).left(30));
             newNotification->setSummary(tr("New message from %1").arg(chat->getTitle()));
-            newNotification->setBody(textFrom + message.getText());
+            newNotification->setBody(textFrom + message.getText(false));
             newNotification->setReplacesId(static_cast<uint32_t>(notification->id_));
             newNotification->setTimestamp(QDateTime::fromTime_t(static_cast<uint>(notification->date_)));
             QVariantList arguments;
@@ -137,6 +139,7 @@ void Notifications::updateNotificationGroup(td_api::updateNotificationGroup *upd
             Notification* notification = _notifications.take(notificationId);
             notification->close();
             delete notification;
+            qDebug() << "Deleted notification: " << notificationId << " from: " << chat->getTitle() << " notification group id: " << updateNotificationGroup->notification_group_id_;
         }
     }
 }

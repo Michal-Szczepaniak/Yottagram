@@ -22,6 +22,7 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.nemomobile.configuration 1.0
 import "../components"
+import "../dialogs"
 
 Page {
     id: settingsPage
@@ -34,8 +35,16 @@ Page {
 
         property bool sendButton: false
         property bool animatedStickers: true
+        property bool animatedEmoji: true
         property bool combineWithMuted: false
         property int fontSize: Theme.fontSizeMedium
+        property bool chatBubbles: false
+    }
+
+    Component {
+        id: moveFilesDialog
+        MoveFilesDialog {
+        }
     }
 
     SilicaFlickable {
@@ -78,9 +87,23 @@ Page {
 
             TextSwitch {
                 width: parent.width
+                text: qsTr("Chat bubbles")
+                checked: settings.chatBubbles
+                onCheckedChanged: settings.chatBubbles = checked
+            }
+
+            TextSwitch {
+                width: parent.width
                 text: qsTr("Animated stickers")
                 checked: settings.animatedStickers
                 onCheckedChanged: settings.animatedStickers = checked
+            }
+
+            TextSwitch {
+                width: parent.width
+                text: qsTr("Animated emoji")
+                checked: settings.animatedEmoji
+                onCheckedChanged: settings.animatedEmoji = checked
             }
 
             TextSwitch {
@@ -279,8 +302,8 @@ Page {
 
             SubpageElement {
                 width: parent.width
-                text: qsTr("Call settings")
-                onClicked: pageStack.push(Qt.resolvedUrl("../components/CallSettings.qml"))
+                text: qsTr("Move yottagram's data")
+                onClicked: pageStack.push(moveFilesDialog)
             }
 
             SubpageElement {

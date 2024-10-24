@@ -44,7 +44,12 @@ void Photo::addUpdateFiles()
         _photoSizesTypes.append(QChar::fromLatin1(photoSize->type_[0]));
         _photoSizes.insert(QChar::fromLatin1(photoSize->type_[0]), QSize(photoSize->width_, photoSize->height_));
         _photoSizeFileIds.insert(QChar::fromLatin1(photoSize->type_[0]), photoSize->photo_->id_);
-        _files->appendFile(std::move(photoSize->photo_), "photo");
+
+        if (_photoSizes.size() == 1) {
+            _files->appendFile(std::move(photoSize->photo_), "thumbnail");
+        } else {
+            _files->appendFile(std::move(photoSize->photo_), "photo");
+        }
     }
 }
 
@@ -58,13 +63,10 @@ bool Photo::getHasStickers() const
     return _photo->photo_->has_stickers_;
 }
 
-QByteArray Photo::getThumbnail() const
+File* Photo::getThumbnail() const
 {
-    if (_photo->photo_->minithumbnail_) {
-        return QByteArray::fromStdString(_photo->photo_->minithumbnail_->data_);
-    } else {
-        return "";
-    }
+    if (_photoSizesTypes.empty()) return nullptr;
+    return _files->getFile(_photoSizeFileIds[_photoSizesTypes.first()]).get();
 }
 
 td_api::formattedText* Photo::getCaption()

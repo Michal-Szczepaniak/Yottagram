@@ -72,7 +72,6 @@ Page {
                         userName: chat.title
                         avatarPhoto: chat.smallPhoto.localPath
                         maskEnabled: false
-//                        onAvatarPhotoChanged: if (chat.smallPhoto && !chat.smallPhoto.isDownloading && !chat.smallPhoto.isDownloaded) chat.smallPhoto.download()
                     }
 
                     Column {

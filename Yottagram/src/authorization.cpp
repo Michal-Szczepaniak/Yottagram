@@ -50,18 +50,12 @@ void Authorization::updateAuthorizationState(td_api::updateAuthorizationState &u
             },
             [this](td_api::authorizationStateLoggingOut &) {
                 authorizationStateLoggingOut();
-//                are_authorized_ = false;
-//                std::cerr << "Logging out" << std::endl;
             },
             [this](td_api::authorizationStateClosing &) {
                 authorizationStateClosing();
-//                std::cerr << "Closing" << std::endl;
             },
             [this](td_api::authorizationStateClosed &) {
                 authorizationStateClosed();
-//                are_authorized_ = false;
-//                need_restart_ = true;
-//                std::cerr << "Terminated" << std::endl;
             },
             [this](td_api::authorizationStateWaitEmailAddress &) {
 
@@ -71,39 +65,13 @@ void Authorization::updateAuthorizationState(td_api::updateAuthorizationState &u
             },
             [this](td_api::authorizationStateWaitCode &) {
                 authorizationStateWaitCode();
-//                std::string first_name;
-//                std::string last_name;
-//                if (!wait_code.is_registered_) {
-//                    std::cerr << "Enter your first name: ";
-//                    std::cin >> first_name;
-//                    std::cerr << "Enter your last name: ";
-//                    std::cin >> last_name;
-//                }
-//                std::cerr << "Enter authentication code: ";
-//                std::string code;
-//                std::cin >> code;
-//                send_query(td_api::make_object<td_api::checkAuthenticationCode>(code, first_name, last_name),
-//                    create_authentication_query_handler());
             },
             [this](td_api::authorizationStateWaitRegistration &) {
-//                std::string first_name;
-//                std::string last_name;
-//                std::cerr << "Enter your first name: ";
-//                std::cin >> first_name;
-//                std::cerr << "Enter your last name: ";
-//                std::cin >> last_name;
-//                send_query(td_api::make_object<td_api::registerUser>(first_name, last_name),
-//                           create_authentication_query_handler());
             },
             [this](td_api::authorizationStateWaitOtherDeviceConfirmation &) {
             },
             [this](td_api::authorizationStateWaitPassword &) {
                 authorizationStateWaitPassword();
-//              std::cerr << "Enter authentication password: ";
-//              std::string password;
-//              std::cin >> password;
-//              send_query(td_api::make_object<td_api::checkAuthenticationPassword>(password),
-//                         create_authentication_query_handler());
             },
             [this](td_api::authorizationStateWaitPhoneNumber &) {
                 authorizationStateWaitPhoneNumber();
@@ -124,6 +92,11 @@ void Authorization::setIsAuthorized(bool isAuthorized)
 {
     _isAuthorized = isAuthorized;
     emit isAuthorizedChanged(_isAuthorized);
+}
+
+QString Authorization::getVersion()
+{
+    return STRINGIFY(APP_VERSION);
 }
 
 void Authorization::sendNumber(QString number)
@@ -206,7 +179,7 @@ void Authorization::authorizationStateWaitTdlibParameters()
 
     auto parameters = new td_api::setTdlibParameters();
     parameters->database_directory_ = QDir::homePath().toStdString() + "/.local/share/Yottagram";
-    parameters->files_directory_ = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation).toStdString() + "/Yottagram";
+    parameters->files_directory_ = QSettings().value("files_directory", QDir::homePath() + "/.local/share/Yottagram/data").toString().toStdString();
     parameters->use_message_database_ = true;
     parameters->use_chat_info_database_ = true;
     parameters->use_file_database_ = true;
@@ -217,7 +190,7 @@ void Authorization::authorizationStateWaitTdlibParameters()
     parameters->system_language_code_ = "en";
     parameters->device_model_ = (deviceInfo.manufacturer() + " " + deviceInfo.prettyName()).toStdString();
     parameters->system_version_ = (aboutSettings.localizedOperatingSystemName() + " " + aboutSettings.localizedSoftwareVersion()).toStdString();
-    parameters->application_version_ = "0.5.0";
+    parameters->application_version_ = STRINGIFY(APP_VERSION);
     parameters->enable_storage_optimizer_ = true;
     _manager->sendQuery(parameters);
 }

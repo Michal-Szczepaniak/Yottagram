@@ -45,6 +45,10 @@ void Animation::addUpdateFiles()
 {
     _animationFileId = _animation->animation_->animation_->id_;
     _files->appendFile(std::move(_animation->animation_->animation_), "other");
+    if (_animation->animation_->thumbnail_) {
+        _thumbnailFileId = _animation->animation_->thumbnail_->file_->id_;
+        _files->appendFile(std::move(_animation->animation_->thumbnail_->file_), "thumbnail");
+    }
 }
 
 bool Animation::isSecret() const
@@ -72,11 +76,11 @@ QString Animation::getMimeType() const
     return QString::fromStdString(_animation->animation_->mime_type_);
 }
 
-QByteArray Animation::getThumbnail() const
+File* Animation::getThumbnail() const
 {
-    if (_animation->animation_->minithumbnail_) {
-        return QByteArray::fromStdString(_animation->animation_->minithumbnail_->data_);
+    if (_animation->animation_->thumbnail_) {
+        return _files->getFile(_thumbnailFileId).get();
     } else {
-        return "";
+        return nullptr;
     }
 }

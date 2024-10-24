@@ -20,6 +20,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 #include "core.h"
 #include <QDebug>
+#include "datamanager.h"
 #include "overloaded.h"
 #include "user.h"
 #include <QtQml>
@@ -30,6 +31,9 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 Core::Core(QObject *parent) : QObject(parent)
 {
+    moveDataIfUnset();
+    moveDataIfNeeded();
+
     _manager = make_shared<TelegramManager>();
     _chatList = make_shared<ChatList>();
     _users = make_shared<Users>();
@@ -46,6 +50,7 @@ Core::Core(QObject *parent) : QObject(parent)
     qmlRegisterType<TelegramManager>("com.verdanditeam.manager", 1, 0, "TelegramManager");
     qmlRegisterType<Contacts>("com.verdanditeam.contacts", 1, 0, "Contacts");
     qmlRegisterType<PIMContactsModel>("com.verdanditeam.contacts", 1, 0, "PIMContacts");
+    qmlRegisterType<DataManager>("com.verdanditeam.data", 1, 0, "DataManager");
 
     _files->setTelegramManager(_manager);
     _files->setWifiAutoDownloadSettings(&_wifiAutoDownloadSettings);
@@ -106,6 +111,46 @@ void Core::init()
 
     _manager->init();
 
-    auto objectValue = td_api::make_object<td_api::optionValueInteger>(1);
+    auto objectValue = td_api::make_object<td_api::optionValueInteger>(25);
     _manager->sendQuery(new td_api::setOption("notification_group_count_max", std::move(objectValue)));
+}
+
+void Core::moveDataIfUnset()
+{
+    QSettings settings;
+    const QString oldPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation) + "/Yottagram";
+    const QString newPath = QDir::homePath() + "/.local/share/Yottagram/data";
+
+    if (!settings.contains("files_directory") && QFile::exists(oldPath)) {
+        if (QFile::exists(newPath)) QFile::remove(newPath);
+
+        QFile::rename(oldPath, newPath);
+
+        settings.setValue("files_directory", newPath);
+        return;
+    }
+
+    if (!settings.contains("files_directory")) {
+        settings.setValue("files_directory", QDir::homePath() + "/.local/share/Yottagram/data");
+    }
+}
+
+void Core::moveDataIfNeeded()
+{
+    QSettings settings;
+
+    if (!settings.contains("files_directory") || !settings.contains("new_files_directory") || settings.value("files_directory").toString() == settings.value("new_files_directory").toString()) {
+        return;
+    }
+
+    const QString oldPath = settings.value("files_directory").toString();
+    const QString newPath = settings.value("new_files_directory").toString();
+
+    if (!QFile::rename(oldPath, newPath)) {
+        settings.remove("new_files_directory");
+        return;
+    }
+
+    settings.setValue("files_directory", newPath);
+    settings.remove("new_files_directory");
 }

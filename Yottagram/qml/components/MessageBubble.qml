@@ -20,58 +20,34 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 import QtQuick 2.6
 import Sailfish.Silica 1.0
+import Sailfish.Silica.private 1.0
+import Sailfish.Silica.Background 1.0
 import QtGraphicalEffects 1.0
 
 Item {
     id: bubble
 
-    property alias color: canvas.bubbleColor
-    property alias bubbleOpacity: canvas.bubbleOpacity
-    property alias radius: canvas.radius
-    property alias canvas: canvas
     property bool leftSide: true
     property string source
 
-    Canvas {
-        id: canvas
-
-        property color bubbleColor
-        property real bubbleOpacity
-        property color _color: Theme.rgba(bubbleColor, bubbleOpacity)
-        property real radius: 30
-
+    ColorBackground {
+        id: colorBackground
         anchors.fill: parent
 
-        onWidthChanged: update()
-        onHeightChanged: update()
-        onRadiusChanged: update()
-        onBubbleColorChanged: update()
-        onOpacityChanged: update()
-        Component.onCompleted: update()
+        radius: Math.min(Theme.paddingLarge, height / 2)
+        roundedCorners: {
+            var result = Corners.None
+            result |= Corners.TopLeft | Corners.TopRight;
+            result |= leftSide ? Corners.BottomRight : Corners.BottomLeft
+            return result
+        }
 
-        onPaint: {
-            var ctx = canvas.getContext("2d");
-            ctx.strokeStyle = _color;
-            ctx.fillStyle = _color;
-            ctx.beginPath();
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + width - radius, y);
-            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-            if (leftSide) {
-                ctx.lineTo(x + width, y + height - radius);
-                ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-                ctx.lineTo(x, y + height);
-            } else {
-                ctx.lineTo(x + width, y + height);
-                ctx.lineTo(x + radius, y + height);
-                ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        color: {
+            if (Theme.colorScheme === Theme.DarkOnLight) {
+                return Theme.rgba(Theme.highlightColor, Theme.opacityFaint)
             }
 
-            ctx.lineTo(x, y + radius);
-            ctx.quadraticCurveTo(x, y, x + radius, y);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
+            return Theme.rgba(Theme.primaryColor, Theme.opacityFaint)
         }
     }
 
@@ -85,14 +61,13 @@ Item {
         source: bubble.source
         antialiasing: true
         visible: false
-
     }
 
     ColorOverlay {
         anchors.fill: messageCorner
         source: messageCorner
-        color: canvas.bubbleColor
-        opacity: canvas.bubbleOpacity
+        color: Theme.colorScheme === Theme.DarkOnLight ? Theme.highlightColor : Theme.primaryColor
+        opacity: Theme.opacityFaint
         antialiasing: true
         transform: leftSide ? matrixFlipped : dummyScale
         Matrix4x4 {

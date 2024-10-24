@@ -30,6 +30,7 @@ import com.verdanditeam.chat 1.0
 import com.verdanditeam.user 1.0
 import com.verdanditeam.audiorecorder 1.0
 import com.verdanditeam.pinnedmessages 1.0
+import com.verdanditeam.data 1.0
 import "../components/functions/muteFormat.js" as TimeFormat
 import "../components"
 import "../components/messageContent"
@@ -83,6 +84,10 @@ Page {
                 chatPage.newReplyMessageId = chatPage.newReplyMessageId
             }
         }
+    }
+
+    DataManager {
+        id: dataManager
     }
 
     onNewReplyMessageIdChanged: {
@@ -154,8 +159,10 @@ Page {
 
         property bool sendButton: false
         property bool animatedStickers: true
+        property bool animatedEmoji: true
         property int fontSize: Theme.fontSizeMedium
         property bool uploadHintShown: false
+        property bool chatBubbles: false
         Component.onCompleted: if (!uploadHintShown) hint.start()
     }
 
@@ -555,7 +562,7 @@ Page {
                 ListItem {
                     id: listItem
                     width: chatPage.width
-                    contentHeight: Math.max(message.height + Theme.paddingSmall, Theme.itemSizeExtraSmall)
+                    contentHeight: Math.max(message.height + Theme.paddingSmall + (settings.chatBubbles ? Theme.paddingMedium*2 : 0), Theme.itemSizeExtraSmall)
                     contentWidth: width
                     highlighted: selection.indexOf(messageId) !== -1
                     property var prevMessage: chatProxyModel.get(index+1)
@@ -612,6 +619,7 @@ Page {
                     onDoubleClicked: {
                         chatPage.newEditMessageId = 0
                         chatPage.newReplyMessageId = messageId
+                        textInput.focus = true
                     }
 
                     function remove() {
@@ -646,15 +654,6 @@ Page {
                                 id: contextMenu
 
                                 MenuItem {
-                                    text: qsTr("Reply")
-                                    visible: chatList.selection.length == 0
-                                    onClicked: {
-                                        chatPage.newEditMessageId = 0
-                                        chatPage.newReplyMessageId = messageId
-                                    }
-                                }
-
-                                MenuItem {
                                     text: qsTr("Pin message")
                                     visible: {
                                         if (pinnedMessages.contains(messageId)) return false
@@ -683,13 +682,24 @@ Page {
                                 }
 
                                 MenuItem {
+                                    text: qsTr("Reply")
+                                    visible: chatList.selection.length == 0
+                                    onClicked: {
+                                        chatPage.newEditMessageId = 0
+                                        chatPage.newReplyMessageId = messageId
+                                        textInput.focus = true
+                                    }
+                                }
+
+                                MenuItem {
                                     text: qsTr("Edit")
                                     visible: canBeEdited && chatList.selection.length == 0
                                     onClicked: {
-                                        textInput.text = messageText
+                                        textInput.text = messageTextUnformatted.trim()
                                         textInput.cursorPosition = messageText.length
                                         chatPage.newEditMessageId = messageId
                                         chatPage.newReplyMessageId = 0
+                                        textInput.focus = true
                                     }
                                 }
 
@@ -714,6 +724,52 @@ Page {
                                 }
 
                                 MenuItem {
+                                    text: qsTr("Save to gallery")
+                                    visible: messageType === "photo" || messageType === "video" || messageType === "animation" || messageType === "audio" || messageType === "voiceNote" || messageType === "videoNote" || messageType === "document"
+                                    onClicked: {
+                                        var savedPath = "";
+
+                                        switch(messageType) {
+                                        case "photo":
+                                            if (file.biggestPhoto.localPath) savedPath = dataManager.savePhoto(file.biggestPhoto.localPath)
+                                            break;
+                                        case "video":
+                                            if (file.video.localPath) savedPath = dataManager.saveVideo(file.video.localPath)
+                                            break;
+                                        case "animation":
+                                            if (file.animation.localPath) savedPath = dataManager.saveVideo(file.animation.localPath)
+                                            break;
+                                        case "audio":
+                                            if (file.audio.localPath) savedPath = dataManager.saveAudio(file.audio.localPath)
+                                            break;
+                                        case "voiceNote":
+                                            if (file.voicenote.localPath) savedPath = dataManager.saveAudio(file.voicenote.localPath)
+                                            break;
+                                        case "videoNote":
+                                            if (file.videonote.localPath) savedPath = dataManager.saveVideo(file.videonote.localPath)
+                                            break;
+                                        case "document":
+                                            if (file.document.localPath) savedPath = dataManager.saveDocument(file.document.localPath)
+                                            break;
+                                        }
+
+                                        if (savedPath !== "") {
+                                            saveNotification.summary = qsTr("Saved to: %1").arg(savedPath)
+                                            saveNotification.previewSummary = saveNotification.summary
+                                        } else {
+                                            saveNotification.summary = qsTr("You must download it first")
+                                            saveNotification.previewSummary = saveNotification.summary
+                                        }
+
+                                        saveNotification.publish()
+                                    }
+
+                                    Notification {
+                                        id: saveNotification
+                                    }
+                                }
+
+                                MenuItem {
                                     text: qsTr("Delete")
                                     visible: canBeDeleted
                                     onClicked: remove()
@@ -734,11 +790,6 @@ Page {
                                         listItem.selectionChanged()
                                     }
                                 }
-
-                                MenuItem {
-                                    text: qsTr("Set as read")
-                                    onClicked: chat.setMessageAsRead(messageId)
-                                }
                             }
                         }
                     }
@@ -755,13 +806,12 @@ Page {
                                 ( listItem.nextMessage.sender !== sender || listItem.nextMessage.senderId !== senderId  ) : true)
 
                         userName: sender === "chat" ? chatList.getChatAsVariant(senderId).title : users.getUserAsVariant(senderId).name
-                        avatarPhoto: if (sender === "chat" && chatList.getChatAsVariant(senderId).hasPhoto) chatList.getChatAsVariant(senderId).smallPhoto.localPath
-                                     else if (users.getUserAsVariant(senderId).hasPhoto) users.getUserAsVariant(senderId).smallPhoto.localPath
+                        avatarPhoto: if (sender === "chat" && chatList.getChatAsVariant(senderId) && chatList.getChatAsVariant(senderId).hasPhoto) chatList.getChatAsVariant(senderId).smallPhoto.localPath
+                                     else if (users.getUserAsVariant(senderId) && users.getUserAsVariant(senderId).hasPhoto) users.getUserAsVariant(senderId).smallPhoto.localPath
                     }
 
-                    Message {
-                        id: message
-
+                    Item {
+                        id: messageItem
                         anchors {
                             left: parent.left
                             right: parent.right
@@ -771,8 +821,41 @@ Page {
                                                               Theme.itemSizeExtraSmall + Theme.paddingMedium + Theme.paddingMedium
                                                             : Theme.horizontalPageMargin
                                                           )
-                                                       : (chatPage.width-(chatPage.width/chatPage.messageWidth)) - Theme.horizontalPageMargin)
-                            rightMargin: isService ? 0 : (received ? (chatPage.width-(chatPage.width/chatPage.messageWidth)) - Theme.horizontalPageMargin : Theme.horizontalPageMargin)
+                                                       : (chatPage.width-(chatPage.width/chatPage.messageWidth)) - (settings.chatBubbles ? Theme.paddingMedium*2 : 0) - Theme.horizontalPageMargin)
+                            rightMargin: isService ? 0 : (received ? (chatPage.width-(chatPage.width/chatPage.messageWidth)) - (settings.chatBubbles ? Theme.paddingMedium*2 : 0) - Theme.horizontalPageMargin : Theme.horizontalPageMargin)
+                        }
+                        height: message.height + (settings.chatBubbles ? Theme.paddingMedium*2 : 0)
+
+
+                        Component {
+                            id: bubbleComponent
+
+
+                            MessageBubble {
+                                id: messageBubble
+
+                                source: "qrc:/icons/corner.svg"
+                                leftSide: received
+
+                                width: messageItem.width
+                                height: messageItem.height
+                            }
+                        }
+
+                        Loader {
+                            active: settings.chatBubbles && !isService
+                            visible: status == Loader.Ready
+                            asynchronous: true
+                            sourceComponent: bubbleComponent
+                        }
+
+                        Message {
+                            id: message
+
+                            width: parent.width - (settings.chatBubbles ? Theme.paddingMedium*2 : 0)
+
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.horizontalCenter: parent.horizontalCenter
                         }
                     }
                 }
@@ -797,7 +880,6 @@ Page {
                     spacing: Theme.paddingSmall
                     clip: true
                     model: [].concat(chat.recentInlineBots, chat.foundChatMembers)
-                    onCountChanged: console.log(chat.recentInlineBots, chat.foundChatMembers, [].concat(chat.recentInlineBots, chat.foundChatMembers))
                     visible: count > 0
 
                     delegate: ListItem {

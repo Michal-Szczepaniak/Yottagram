@@ -48,7 +48,11 @@ class Core : public QObject
 public:
     explicit Core(QObject *parent = nullptr);
     void init();
+private:
+    void moveDataIfUnset();
+    void moveDataIfNeeded();
 
+public:
     Authorization _authorization;
     TelegramStatus _telegramStatus;
     Notifications _notifications;

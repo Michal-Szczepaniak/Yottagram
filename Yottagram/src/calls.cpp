@@ -7,10 +7,13 @@
 
 namespace tgcalls {
 class InstanceImpl;
-class InstanceImplReference;
+class InstanceV2Impl;
+class InstanceV2ReferenceImpl;
 }
 
-const auto RegisterTag = tgcalls::Register<tgcalls::InstanceImpl>();
+const auto Register = tgcalls::Register<tgcalls::InstanceImpl>();
+const auto RegisterV2 = tgcalls::Register<tgcalls::InstanceV2Impl>();
+const auto RegV2Ref = tgcalls::Register<tgcalls::InstanceV2ReferenceImpl>();
 
 Calls::Calls(QObject *parent) : QObject(parent), _state(State::Discarded)
 {
@@ -83,22 +86,25 @@ void Calls::updateCall(td_api::object_ptr<td_api::call> call)
                 discard(call->id_);
                 return;
             }
+            _paHelper.probeOutputs();
             _dbusHelper->newCall(_users->getUser(call->user_id_)->getName(), !call->is_outgoing_);
+            _paHelper.changeLoudspeakerMode(false);
         }
         break;
     case State::Ready:
         updateReadyCallData(move_tl_object_as<td_api::callStateReady>(call->state_));
         _dbusHelper->callReady();
-        changeSpeakerMode(false);
         break;
     case State::Error:
         qWarning() << QString::fromStdString(static_cast<td_api::callStateError*>(call->state_.get())->error_->message_);
         stopInstance();
         _dbusHelper->discardCall();
+        _paHelper.changeLoudspeakerMode(true);
         break;
     case State::Discarded:
         stopInstance();
         _dbusHelper->discardCall();
+        _paHelper.changeLoudspeakerMode(true);
         break;
     case State::ExchangingKeys:
         break;
@@ -116,7 +122,7 @@ void Calls::updateCall(td_api::object_ptr<td_api::call> call)
     qDebug() << "update call id: " << call->id_ << " userId: " << call->user_id_ << " isOutgoing: " << call->is_outgoing_ << " state: " << state();
 }
 
-void Calls::updateReadyCallData(td_api::object_ptr<td_api::callStateReady> callStateReady)
+    void Calls::updateReadyCallData(td_api::object_ptr<td_api::callStateReady> callStateReady)
 {
     td_api::object_ptr<td_api::callProtocol> protocol = move(callStateReady->protocol_);
     td_api::array<td_api::object_ptr<td_api::callServer>> servers = move(callStateReady->servers_);
@@ -129,57 +135,59 @@ void Calls::updateReadyCallData(td_api::object_ptr<td_api::callStateReady> callS
     auto encryptionKeyValue = std::make_shared<std::array<uint8_t, 256>>();
     memcpy(encryptionKeyValue->data(), encryption_key.data(), 256);
 
-    tgcalls::Descriptor descriptor = {
-        .config = tgcalls::Config{
-            .initializationTimeout = 5.,
-            .receiveTimeout = 5.,
-            .dataSaving = tgcalls::DataSaving::Never,
-            .enableP2P = allow_p2p,
-            .enableAEC = false,
-            .enableNS = true,
-            .enableAGC = true,
-            .enableVolumeControl = true,
-            .maxApiLayer = protocol->max_layer_,
-        },
-        .initialNetworkType = tgcalls::NetworkType::WiFi,
-        .encryptionKey = tgcalls::EncryptionKey(
-            encryptionKeyValue,
-            _isOutgoing),
-        .mediaDevicesConfig = tgcalls::MediaDevicesConfig{
-            .audioInputId = "#2",
-            .audioOutputId = "#1",
-            .inputVolume = 1.f,//settings.callInputVolume() / 100.f,
-            .outputVolume = 1.f,//settings.callOutputVolume() / 100.f,
-        },
-        .stateUpdated = [=](tgcalls::State state) {
-            qDebug() << "stateUpdated " << (int)state;
-            qDebug() << QString::fromStdString(_instance->getLastError());
-            qDebug() << QString::fromStdString(_instance->getDebugInfo());
-        },
-        .signalBarsUpdated = [=](int count) {
-            qDebug() << "signal bars updated " << count;
-        },
-        .remoteMediaStateUpdated = [=](
-                tgcalls::AudioState audio,
-                tgcalls::VideoState video) {
-            qDebug() << "remoteMediaStateUpdated";
-        },
-        .signalingDataEmitted = [=](const std::vector<uint8_t> &data) {
-            qDebug() << "signalingDataEmitted";
-            _manager->sendQuery(new td_api::sendCallSignalingData(_callId, std::string(data.begin(), data.end())));
-        },
-        .createAudioDeviceModule = [=](webrtc::TaskQueueFactory* factory) {
-            rtc::scoped_refptr<webrtc::AudioDeviceModule> module = webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::kLinuxPulseAudio, factory);
-//            ((webrtc::AudioDeviceLinuxPulse*)module.get())->SetPlayoutPort(0);
-            return module;
-        }
-    };
+        tgcalls::Descriptor descriptor = {
+            .config = tgcalls::Config{
+                .initializationTimeout = 5.,
+                .receiveTimeout = 5.,
+                .dataSaving = tgcalls::DataSaving::Never,
+                .enableP2P = allow_p2p,
+                .enableAEC = false,
+                .enableNS = true,
+                .enableAGC = true,
+                .enableVolumeControl = true,
+                .maxApiLayer = protocol->max_layer_,
+                },
+            .initialNetworkType = tgcalls::NetworkType::WiFi,
+            .encryptionKey = tgcalls::EncryptionKey(
+                encryptionKeyValue,
+                _isOutgoing),
+            .mediaDevicesConfig = tgcalls::MediaDevicesConfig{
+                .audioInputId = _paHelper.getDefaultSource().toStdString(),
+                .audioOutputId = _paHelper.getDefaultSink().toStdString(),
+                .inputVolume = 1.f,//settings.callInputVolume() / 100.f,
+                .outputVolume = 1.f,//settings.callOutputVolume() / 100.f,
+                },
+            .stateUpdated = [=](tgcalls::State state) {
+                qDebug() << "stateUpdated " << (int)state;
+                qDebug() << QString::fromStdString(_instance->getLastError());
+                qDebug() << QString::fromStdString(_instance->getDebugInfo());
+            },
+            .signalBarsUpdated = [=](int count) {
+                qDebug() << "signal bars updated " << count;
+            },
+            .remoteMediaStateUpdated = [=](
+                                           tgcalls::AudioState audio,
+                                           tgcalls::VideoState video) {
+                qDebug() << "remoteMediaStateUpdated";
+                qDebug() << "Audio state: " << (int)audio;
+                qDebug() << "Video state: " << (int)video;
+            },
+            .signalingDataEmitted = [=](const std::vector<uint8_t> &data) {
+                qDebug() << "signalingDataEmitted";
+                _manager->sendQuery(new td_api::sendCallSignalingData(_callId, std::string(data.begin(), data.end())));
+            },
+            .createAudioDeviceModule = [=](webrtc::TaskQueueFactory* factory) {
+                _audioResource.acquire();
+                rtc::scoped_refptr<webrtc::AudioDeviceModule> module = webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::kLinuxPulseAudio, factory);
+                return module;
+            }
+        };
 
     const auto callLogPath = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/last_call_log.txt";
     const auto callLogNative = QDir::toNativeSeparators(callLogPath);
     const auto callLogUtf = QFile::encodeName(callLogNative);
 //    descriptor.config.logPath.data = callLogPath.toStdString();
-//    descriptor.config.statsLogPath.data = (QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/stats.txt").toStdString();
+    //    descriptor.config.statsLogPath.data = (QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/stats.txt").toStdString();
 
     for (td_api::object_ptr<td_api::callServer> &server : servers) {
         if (static_cast<const td_api::callServerTypeTelegramReflector&>(*server->type_).peer_tag_.size() == 16) qDebug() << "peer tag";
@@ -189,7 +197,7 @@ void Calls::updateReadyCallData(td_api::object_ptr<td_api::callStateReady> callS
                 .endpointId = server->id_,
                 .host = tgcalls::EndpointHost{ server->ip_address_, server->ipv6_address_ },
                 .port = static_cast<uint16_t>(server->port_),
-                .type = tgcalls::EndpointType::UdpRelay
+                .type = static_cast<td_api::callServerTypeTelegramReflector*>(server->type_.get())->is_tcp_ ? tgcalls::EndpointType::TcpRelay : tgcalls::EndpointType::UdpRelay
             };
 
             const auto tag = static_cast<td_api::callServerTypeTelegramReflector*>(server->type_.get())->peer_tag_;
@@ -210,8 +218,8 @@ void Calls::updateReadyCallData(td_api::object_ptr<td_api::callStateReady> callS
                     .isTurn = false
                 };
                 descriptor.rtcServers.emplace_back(rtcServer);
-//                rtcServer.host = server->ipv6_address_;
-//                descriptor.rtcServers.emplace_back(rtcServer);
+                //                rtcServer.host = server->ipv6_address_;
+                //                descriptor.rtcServers.emplace_back(rtcServer);
             }
             if (callServerType->supports_turn_) {
                 tgcalls::RtcServer rtcServer = {
@@ -222,8 +230,8 @@ void Calls::updateReadyCallData(td_api::object_ptr<td_api::callStateReady> callS
                     .isTurn = true
                 };
                 descriptor.rtcServers.emplace_back(rtcServer);
-//                rtcServer.host = server->ipv6_address_;
-//                descriptor.rtcServers.emplace_back(rtcServer);
+                //                rtcServer.host = server->ipv6_address_;
+                //                descriptor.rtcServers.emplace_back(rtcServer);
             }
         }
     }
@@ -232,78 +240,17 @@ void Calls::updateReadyCallData(td_api::object_ptr<td_api::callStateReady> callS
     }
 
     _instance = tgcalls::Meta::Create(
-            protocol->library_versions_.front(),
-            std::move(descriptor));
+        protocol->library_versions_.front(),
+        std::move(descriptor));
+
+    if (!_instance) {
+        qWarning() << "Call Error: Wrong library version: " << QString::fromStdString(protocol->library_versions_.front());
+    }
 }
 
 int64_t Calls::userId() const
 {
     return _callUserId;
-}
-
-bool Calls::echoCancellation() const
-{
-    QSettings settings;
-    return settings.value("echo_cancellation", false).toBool();
-}
-
-void Calls::setEchoCancellation(bool echoCancellation)
-{
-    QSettings settings;
-    settings.setValue("echo_cancellation", echoCancellation);
-    emit echoCancellationChanged();
-}
-
-bool Calls::noiseSuppression() const
-{
-    QSettings settings;
-    return settings.value("noise_suppression", false).toBool();
-}
-
-void Calls::setNoiseSuppression(bool noiseSuppression)
-{
-    QSettings settings;
-    settings.setValue("noise_suppression", noiseSuppression);
-    emit noiseSuppressionChanged();
-}
-
-bool Calls::autoGainControl() const
-{
-    QSettings settings;
-    return settings.value("auto_gain_control", false).toBool();
-}
-
-void Calls::setAutoGainControl(bool autoGainControl)
-{
-    QSettings settings;
-    settings.setValue("auto_gain_control", autoGainControl);
-    emit autoGainControlChanged();
-}
-
-bool Calls::highpassFilter() const
-{
-    QSettings settings;
-    return settings.value("highpass_filter", false).toBool();
-}
-
-void Calls::setHighpassFilter(bool highpassFilter)
-{
-    QSettings settings;
-    settings.setValue("highpass_filter", highpassFilter);
-    emit highpassFilterChanged();
-}
-
-bool Calls::typingDetection() const
-{
-    QSettings settings;
-    return settings.value("typing_detection", false).toBool();
-}
-
-void Calls::setTypingDetection(bool typingDetection)
-{
-    QSettings settings;
-    settings.setValue("typing_detection", typingDetection);
-    emit typingDetectionChanged();
 }
 
 void Calls::call(int64_t userId)
@@ -393,5 +340,7 @@ void Calls::muteMicrophone(bool mute)
 
 void Calls::changeSpeakerMode(bool loudspeaker)
 {
-    _paHelper.changeSinkPort(loudspeaker ? "output-speaker" : "output-earpiece");
+    if (_state == State::Ready) {
+        _paHelper.changeLoudspeakerMode(loudspeaker);
+    }
 }

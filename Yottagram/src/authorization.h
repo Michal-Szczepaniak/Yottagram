@@ -32,6 +32,7 @@ class Authorization : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool isAuthorized READ isAuthorized WRITE setIsAuthorized NOTIFY isAuthorizedChanged)
+    Q_PROPERTY(QString version READ getVersion)
 public:
     explicit Authorization(QObject *parent = nullptr);
 
@@ -40,6 +41,8 @@ public:
 
     bool isAuthorized();
     void setIsAuthorized(bool isAuthorized);
+
+    QString getVersion();
 
     Q_INVOKABLE void sendNumber(QString number);
     Q_INVOKABLE void sendCode(QString code);

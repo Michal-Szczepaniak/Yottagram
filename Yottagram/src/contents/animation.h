@@ -33,7 +33,7 @@ class Animation : public ContentFile, public ContentInterface
     Q_PROPERTY(QSize size READ getSize NOTIFY animationChanged)
     Q_PROPERTY(QString name READ getName NOTIFY animationChanged)
     Q_PROPERTY(QString mimeType READ getMimeType NOTIFY animationChanged)
-    Q_PROPERTY(QByteArray thumbnail READ getThumbnail NOTIFY animationChanged)
+    Q_PROPERTY(File* thumbnail READ getThumbnail NOTIFY animationChanged)
     Q_PROPERTY(File* animation READ getAnimation NOTIFY animationChanged)
 public:
     explicit Animation(QObject *parent = nullptr);
@@ -47,7 +47,7 @@ public:
     QSize getSize() const;
     QString getName() const;
     QString getMimeType() const;
-    QByteArray getThumbnail() const;
+    File* getThumbnail() const;
 
 signals:
     void animationChanged();
@@ -57,6 +57,7 @@ public slots:
 private:
     td_api::object_ptr<td_api::messageAnimation> _animation;
     int32_t _animationFileId;
+    int32_t _thumbnailFileId;
 };
 
 #endif // ANIMATION_H

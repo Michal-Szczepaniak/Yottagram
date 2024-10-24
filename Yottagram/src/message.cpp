@@ -123,8 +123,9 @@ QString Message::getText(bool formatted)
     case td_api::messageContact::ID:
     case td_api::messageSticker::ID:
     case td_api::messageVideoNote::ID:
-    case td_api::messageAnimatedEmoji::ID:
         return "";
+    case td_api::messageAnimatedEmoji::ID:
+        return static_cast<AnimatedEmoji*>(_messageContent)->getEmoji();
     case td_api::messageContactRegistered::ID:
         return tr("%1 joined telegram").arg(_users->getUser(getSenderUserId())->getName());
     default:

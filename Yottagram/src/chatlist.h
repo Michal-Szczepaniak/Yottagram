@@ -22,6 +22,8 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #define CHATLIST_H
 
 #include <QAbstractListModel>
+#include <QMap>
+#include <QSet>
 #include "core/telegrammanager.h"
 #include "files/files.h"
 #include "chat.h"
@@ -147,6 +149,7 @@ public slots:
     void updateMessageMentionRead(td_api::updateMessageMentionRead *updateMessageMentionRead);
     void updateChatDraftMessage(td_api::updateChatDraftMessage *updateChatDraftMessage);
     void onCreatedPrivateChat(td_api::chat *chat);
+    void updateChatList();
 
 protected:
     void updateChat(int64_t chat, const QVector<int> &roles = {IdRole, NameRole});
@@ -174,6 +177,8 @@ private:
     UnreadMessageCount _unreadMessageCount;
     quint8 _selectedChatList;
     int32_t _selectedFolderChatList;
+    QTimer _updateListTimer;
+    QMap<int64_t, QSet<int>> _chatsToUpdate;
 };
 
 #endif // CHATLIST_H

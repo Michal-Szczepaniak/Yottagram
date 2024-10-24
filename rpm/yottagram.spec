@@ -5,8 +5,8 @@ Name:       yottagram
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    Yottagram
-Version:    0.5.2
-Release:    1
+Version:    0.6.0
+Release:    5
 Group:      Qt/Qt
 License:    GPLv3
 URL:        http://verdanditeam.com/
@@ -25,6 +25,7 @@ BuildRequires:  pkgconfig(connman-qt5)
 BuildRequires:  pkgconfig(vorbisfile)
 BuildRequires:  pkgconfig(nemonotifications-qt5)
 BuildRequires:  pkgconfig(libavcodec)
+BuildRequires:  pkgconfig(vpx)
 BuildRequires:  pkgconfig(opus)
 BuildRequires:  pkgconfig(libjpeg)
 BuildRequires:  pkgconfig(libpng)
@@ -32,7 +33,9 @@ BuildRequires:  pkgconfig(libpulse)
 BuildRequires:  pkgconfig(protobuf)
 BuildRequires:  pkgconfig(gio-2.0)
 BuildRequires:  pkgconfig(alsa)
+BuildRequires:  pkgconfig(openh264)
 BuildRequires:  desktop-file-utils
+BuildRequires:  pkgconfig(audioresource-qt)
 Recommends:     voicecall-yottagram-plugin
 
 %description
@@ -41,6 +44,7 @@ Fastest telegram client for sailfishos on the earth!
 %package voicecall-plugin
 Summary:        Yottagram's Voicecall plugin
 BuildRequires:  voicecall-qt5
+BuildRequires:  voicecall-qt5-devel
 Requires:       voicecall-qt5
 Requires:       %{name} >= %{version}
 
@@ -60,13 +64,24 @@ Yottagram's Transfer Engine plugin
 %setup -q -n %{name}-%{version}
 
 %build
-%qtc_qmake5 
+export APP_VERSION=%{version}
+%qtc_qmake5
 
 %qtc_make %{?_smp_mflags}
 
 %install
 rm -rf %{buildroot}
 %qmake5_install
+
+if [ -f /usr/lib64/libopenh264.so ]; then
+    cp /usr/lib64/libopenh264.so.2.3.1 %{buildroot}%{_libdir}
+    cp /usr/lib64/libopenh264.so.7 %{buildroot}%{_libdir}
+    cp /usr/lib64/libopenh264.so %{buildroot}%{_libdir}
+else
+    cp /usr/lib/libopenh264.so.2.3.1 %{buildroot}%{_libdir}
+    cp /usr/lib/libopenh264.so.7 %{buildroot}%{_libdir}
+    cp /usr/lib/libopenh264.so %{buildroot}%{_libdir}
+fi
 
 desktop-file-install --delete-original       \
   --dir %{buildroot}%{_datadir}/applications             \
@@ -81,6 +96,7 @@ desktop-file-install --delete-original       \
 %{_datadir}/lipstick/notificationcategories/x-verdanditeam.yottagram.im.conf
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
+%{_libdir}/libopenh264.so*
 
 %files voicecall-plugin
 %{_libdir}/voicecall/plugins/libyottagram-voicecall-plugin.so
