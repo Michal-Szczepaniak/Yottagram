@@ -212,6 +212,10 @@
         <source>Clear history</source>
         <translation>Limpiar historial</translation>
     </message>
+    <message>
+        <source>Long press to select mute duration</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Chat</name>
@@ -1069,7 +1073,15 @@
     </message>
     <message>
         <source>Chat bubbles</source>
-        <translation>Burbújas en conversaciones</translation>
+        <translation>Burbujas en conversaciones</translation>
+    </message>
+    <message>
+        <source>Long press to select mute duration</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Voice message volume boost</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1129,6 +1141,10 @@
     <message>
         <source>Clear history</source>
         <translation>Limpiar historial</translation>
+    </message>
+    <message>
+        <source>Long press to select mute duration</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1215,6 +1231,10 @@
     <message>
         <source>Open chat</source>
         <translation>Abrir chat</translation>
+    </message>
+    <message>
+        <source>Long press to select mute duration</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

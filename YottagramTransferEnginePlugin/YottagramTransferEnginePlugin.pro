@@ -10,23 +10,23 @@ PKGCONFIG += nemotransferengine-qt5
 CONFIG += c++11
 
 HEADERS += \
-    $$PWD/YottagramTransferPluginInfo.h \
+    $$PWD/YottagramSharePluginInfo.h \
     $$PWD/YottagramMediaTransfer.h \
-    $$PWD/YottagramTransferPlugin.h
+    $$PWD/YottagramSharePlugin.h
 
 SOURCES += \
-    $$PWD/YottagramTransferPluginInfo.cpp \
+    $$PWD/YottagramSharePluginInfo.cpp \
     $$PWD/YottagramMediaTransfer.cpp \
-    $$PWD/YottagramTransferPlugin.cpp
+    $$PWD/YottagramSharePlugin.cpp
 
 DISTFILES += \
     $$PWD/YottagramShare.qml
 
 qml.files = YottagramShare.qml
-qml.path = /usr/share/nemo-transferengine/plugins
+qml.path = /usr/share/nemo-transferengine/plugins/sharing
 
 INSTALLS += qml
 
-target.path = $$[QT_INSTALL_LIBS]/nemo-transferengine/plugins
+target.path = $$[QT_INSTALL_LIBS]/nemo-transferengine/plugins/sharing
 INSTALLS += target
 

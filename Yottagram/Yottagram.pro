@@ -159,6 +159,7 @@ SAILFISHAPP_ICONS = 86x86 108x108 128x128 172x172
 CONFIG += sailfishapp_i18n
 
 TRANSLATIONS += \
+    translations/yottagram-de.ts \
     translations/yottagram-es.ts \
     translations/yottagram-it.ts \
     translations/yottagram-pl.ts \

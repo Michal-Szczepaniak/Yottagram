@@ -20,6 +20,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import org.nemomobile.configuration 1.0
 import "../functions/muteFormat.js" as MuteFormat
 import "../"
 
@@ -28,6 +29,22 @@ Page {
 
     allowedOrientations: Orientation.All
     property var chat: null
+
+    ConfigurationGroup {
+        id: settings
+        path: "/apps/yottagram"
+
+        property bool basicGroupNotificationSettingsHintShown: false
+        Component.onCompleted: if (!basicGroupNotificationSettingsHintShown) hint.start()
+    }
+
+    InteractionHintLabel {
+        z: 10001
+        anchors.bottom: parent.bottom
+        text: qsTr("Long press to select mute duration")
+        opacity: hint.running ? 1.0 : 0.0
+        Behavior on opacity { FadeAnimation {} }
+    }
 
     SilicaFlickable {
         anchors.fill: parent
@@ -50,7 +67,6 @@ Page {
 
         Column {
             id: column
-//            spacing: Theme.paddingLarge
             anchors.top: parent.top
             anchors.topMargin: header.height
             width: parent.width
@@ -189,6 +205,15 @@ Page {
                                 onClicked: pageStack.push(Qt.resolvedUrl("../ChatNotifications.qml"), {chat: chat})
                             }
                         }
+                    }
+
+                    TapInteractionHint {
+                        id: hint
+                        loops: 3
+                        z: 10000
+                        running: false
+                        anchors.centerIn: parent
+                        onRunningChanged: if (!running) settings.basicGroupNotificationSettingsHintShown = true
                     }
                 }
             }

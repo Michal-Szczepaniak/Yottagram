@@ -33,6 +33,7 @@ class AudioRecorder : public QAudioRecorder
     Q_PROPERTY(bool autoRemove READ autoRemove WRITE setAutoRemove NOTIFY autoRemoveChanged)
     Q_PROPERTY(AudioRecorder::AudioCodec codec READ codec WRITE setCodec NOTIFY codecChanged)
     Q_PROPERTY(bool recording READ recording NOTIFY recordingChanged)
+    Q_PROPERTY(qreal volume READ getVolume WRITE setVolume NOTIFY volumeChanged)
 
 public:
     explicit AudioRecorder(QObject *parent = nullptr);
@@ -52,6 +53,8 @@ public:
     AudioRecorder::AudioCodec codec() const;
     bool autoRemove() const;
     bool recording() const;
+    qreal getVolume() const;
+    void setVolume(qreal volume);
 public slots:
     void setCodec(AudioRecorder::AudioCodec codec);
     void startRecording();
@@ -66,6 +69,7 @@ signals:
 
     void autoRemoveChanged(bool autoRemove);
     void recordingChanged(bool recording);
+    void volumeChanged();
 
 private:
     struct CodecSetting
@@ -81,12 +85,12 @@ private:
     void setLocation(const QString &location);
     void normalize();
 
-
     AudioRecorder::AudioCodec _codec;
     QTemporaryFile *_file;
 
     bool _autoRemove;
     bool _recording;
+    qreal _volume = 1.0f;
 };
 
 #endif // AUDIORECORDER_H

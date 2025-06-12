@@ -212,6 +212,10 @@
         <source>Clear history</source>
         <translation type="unfinished">清空历史</translation>
     </message>
+    <message>
+        <source>Long press to select mute duration</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Chat</name>
@@ -1070,6 +1074,14 @@
         <source>Chat bubbles</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Long press to select mute duration</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Voice message volume boost</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SupergroupInfo</name>
@@ -1128,6 +1140,10 @@
     <message>
         <source>Clear history</source>
         <translation type="unfinished">清空历史</translation>
+    </message>
+    <message>
+        <source>Long press to select mute duration</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1213,6 +1229,10 @@
     </message>
     <message>
         <source>Open chat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Long press to select mute duration</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

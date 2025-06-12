@@ -17,8 +17,8 @@
     along with Yottagram.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "YottagramTransferPlugin.h"
-#include "YottagramTransferPluginInfo.h"
+#include "YottagramSharePlugin.h"
+#include "YottagramSharePluginInfo.h"
 #include "YottagramMediaTransfer.h"
 
 #include <QtPlugin>

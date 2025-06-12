@@ -17,7 +17,7 @@
     along with Yottagram.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "YottagramTransferPluginInfo.h"
+#include "YottagramSharePluginInfo.h"
 #include <QDebug>
 
 YottagramPluginInfo::YottagramPluginInfo(): m_ready(false)
@@ -43,7 +43,7 @@ void YottagramPluginInfo::query()
 
     info.setDisplayName(QLatin1String("Yottagram"));
     info.setMethodId(QLatin1String("YottagramTransferEnginePlugin"));
-    info.setShareUIPath(QLatin1String("/usr/share/nemo-transferengine/plugins/YottagramShare.qml"));
+    info.setShareUIPath(QLatin1String("/usr/share/nemo-transferengine/plugins/sharing/YottagramShare.qml"));
     info.setMethodIcon(QLatin1String("/usr/share/icons/hicolor/172x172/apps/yottagram.png"));
     info.setCapabilities(capabilities);
     m_infoList << info;

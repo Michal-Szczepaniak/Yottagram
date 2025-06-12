@@ -163,6 +163,7 @@ Page {
         property int fontSize: Theme.fontSizeMedium
         property bool uploadHintShown: false
         property bool chatBubbles: false
+        property real voiceMessageBoost: 1.0
         Component.onCompleted: if (!uploadHintShown) hint.start()
     }
 
@@ -180,6 +181,7 @@ Page {
         direction: TouchInteraction.Up
         onRunningChanged: if (!running) settings.uploadHintShown = true
     }
+
     InteractionHintLabel {
         z: 10001
         anchors.bottom: parent.bottom
@@ -1093,6 +1095,7 @@ Page {
                 AudioRecorder {
                     id: audioRecorder
                     onStateChanged: voiceNoteTimer.start()
+                    volume: settings.voiceMessageBoost
                 }
 
                 Timer {

@@ -39,7 +39,7 @@ AudioRecorder::AudioRecorder(QObject *parent) : QAudioRecorder(parent), _autoRem
     };
     setAudioInput("pulseaudio:");
     setCodec(Vorbis);
-    setVolume(10.0f);
+    setVolume(_volume);
 }
 
 AudioRecorder::~AudioRecorder()
@@ -66,6 +66,18 @@ bool AudioRecorder::autoRemove() const
 bool AudioRecorder::recording() const
 {
     return _recording;
+}
+
+qreal AudioRecorder::getVolume() const
+{
+    return _volume;
+}
+
+void AudioRecorder::setVolume(qreal volume)
+{
+    _volume = volume;
+
+    QAudioRecorder::setVolume(volume);
 }
 
 void AudioRecorder::setLocation(const QString &location)

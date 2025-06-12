@@ -39,12 +39,23 @@ Page {
         property bool combineWithMuted: false
         property int fontSize: Theme.fontSizeMedium
         property bool chatBubbles: false
+        property bool textSwitchWithMenuHintShown: false
+        property real voiceMessageBoost: 1.0
+        Component.onCompleted: if (!textSwitchWithMenuHintShown) hint.start()
     }
 
     Component {
         id: moveFilesDialog
         MoveFilesDialog {
         }
+    }
+
+    InteractionHintLabel {
+        z: 10001
+        anchors.bottom: parent.bottom
+        text: qsTr("Long press to select mute duration")
+        opacity: hint.running ? 1.0 : 0.0
+        Behavior on opacity { FadeAnimation {} }
     }
 
     SilicaFlickable {
@@ -174,7 +185,19 @@ Page {
                 }
             }
 
+            Slider {
+                width: parent.width
+                label: qsTr("Voice message volume boost")
+                valueText: value
+                minimumValue: 1.0
+                maximumValue: 10.0
+                stepSize: 1.0
+                value: settings.voiceMessageBoost
+                onReleased: settings.voiceMessageBoost = value
+            }
+
             TextSwitchWithMenu {
+                id: privateChatNotificationGlobalSettingsMenu
                 width: parent.width
                 checked: chatList.getPrivateNotificationSettings().muteFor === 0
                 onCheckedChanged: {
@@ -205,6 +228,15 @@ Page {
                             onClicked: pageStack.push(Qt.resolvedUrl("../components/ScopeNotificationSettings.qml"), {chat: chatList.getPrivateNotificationSettings()})
                         }
                     }
+                }
+
+                TapInteractionHint {
+                    id: hint
+                    loops: 3
+                    z: 10000
+                    running: false
+                    anchors.centerIn: privateChatNotificationGlobalSettingsMenu
+                    onRunningChanged: if (!running) settings.textSwitchWithMenuHintShown = true
                 }
             }
 

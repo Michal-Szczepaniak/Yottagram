@@ -5,8 +5,8 @@ Name:       yottagram
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    Yottagram
-Version:    0.6.0
-Release:    5
+Version:    0.6.2
+Release:    0
 Group:      Qt/Qt
 License:    GPLv3
 URL:        http://verdanditeam.com/
@@ -102,5 +102,5 @@ desktop-file-install --delete-original       \
 %{_libdir}/voicecall/plugins/libyottagram-voicecall-plugin.so
 
 %files transferengine-plugin
-%{_libdir}/nemo-transferengine/plugins/libYottagramTransferEnginePlugin.so
-%{_datadir}/nemo-transferengine/plugins/YottagramShare.qml
+%{_libdir}/nemo-transferengine/plugins/sharing/libYottagramTransferEnginePlugin.so
+%{_datadir}/nemo-transferengine/plugins/sharing/YottagramShare.qml

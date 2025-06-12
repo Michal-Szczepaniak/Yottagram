@@ -1,215 +1,216 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="it_IT">
+<TS version="2.1" language="de_DE" sourcelanguage="en_US">
 <context>
     <name>About</name>
     <message>
         <source>About</source>
-        <translation>Info</translation>
+        <translation>Über</translation>
     </message>
     <message>
         <source>Made by Michał Szczepaniak. Based on tdlib.</source>
-        <translation>Sviluppato da Michał Szczepaniak. Basato su tdlib.</translation>
+        <translation>Erstellt von Michał Szczepaniak basierend auf tdlib.</translation>
     </message>
     <message>
         <source>Licensed under GPLv3</source>
-        <translation>Sotto licenza GPLv3</translation>
+        <translation>Lizenziert durch GPLv3</translation>
     </message>
     <message>
         <source>Links</source>
-        <translation>Collegamenti</translation>
+        <translation>Links</translation>
     </message>
     <message>
         <source>Thanks to</source>
-        <translation>Grazie a</translation>
+        <translation>Ein Dankeschön an</translation>
     </message>
     <message>
         <source>Donate</source>
-        <translation>Fai una donazione</translation>
+        <translation>Spenden</translation>
     </message>
     <message>
         <source>Carmen F. B. for spanish translation.</source>
-        <translation>Carmen F. B per la traduzione spagnola.</translation>
+        <translation>Carmen F. B für die spanische Übersetzung.</translation>
     </message>
     <message>
         <source>Everyone in my 
 &lt;a href=&quot;https://t.me/SFOSFanclub&quot;&gt;SFOS Fanclub&lt;/a&gt; group&lt;br/&gt;for keeping me motivated!</source>
-        <translation>Le persone nel gruppo &lt;a href=&quot;https://t.me/SFOSFanclub&quot;&gt;SFOS Fanclub&lt;/a&gt;&lt;br/&gt; per motivarmi!</translation>
+        <translation>Jeden in meiner 
+&lt;a href=&quot;https://t.me/SFOSFanclub&quot;&gt;SFOS Fanclub&lt;/a&gt; Gruppe&lt;br/&gt;Ihr motiviert mich!</translation>
     </message>
     <message>
         <source>Fernando Lanero, Mika, Leszek Lesner, A. Madani, Timo Könnecke, Rudi Timmermans for being awesome testers.</source>
-        <translation>Fernando Lanero, Mika, Leszek Lesner, A. Madani, Timo Könnecke, Rudi Timmermans per essere tester fantastici.</translation>
+        <translation>Fernando Lanero, Mika, Leszek Lesner, A. Madani, Timo Könnecke, Rudi Timmermans dafür, dass ihr großartige Tester seid.</translation>
     </message>
     <message>
         <source>Greg Goncharov (@gregguh at telegram) for icons.</source>
-        <translation>Greg Goncharov (@gregguh su telegram) per le icone.</translation>
+        <translation>Greg Goncharov (@gregguh auf Telegram) für die Icons.</translation>
     </message>
     <message>
         <source>dashinfantry for chinese translation.</source>
-        <translation>dashinfantry per la traduzione cinese.</translation>
+        <translation>dashinfantry für die chinesische Übersetzung.</translation>
     </message>
     <message>
         <source>legacychimera247 for italian translation.</source>
-        <translation>legacychimera247 per la traduzione italiana.</translation>
+        <translation>legacychimera247 für die italienische Übersetzung.</translation>
     </message>
 </context>
 <context>
     <name>AuthorizationCode</name>
     <message>
         <source>Code</source>
-        <translation>Codice</translation>
+        <translation>Anmeldecode</translation>
     </message>
     <message>
         <source>Login</source>
-        <translation>Accesso</translation>
+        <translation>Einloggen</translation>
     </message>
     <message>
         <source>Submit</source>
-        <translation>Immetti</translation>
+        <translation>Übermitteln</translation>
     </message>
 </context>
 <context>
     <name>AuthorizationNumber</name>
     <message>
         <source>Number with +XXX</source>
-        <translation>Numero con +XXX</translation>
+        <translation>Telefonnummer mit Ländercode +XXX</translation>
     </message>
     <message>
         <source>Proxy settings</source>
-        <translation>Impostazioni proxy</translation>
+        <translation>Proxy Einstellungen</translation>
     </message>
     <message>
         <source>Login</source>
-        <translation>Accesso</translation>
+        <translation>Einloggen</translation>
     </message>
     <message>
         <source>Submit</source>
-        <translation>Immetti</translation>
+        <translation>Übermitteln</translation>
     </message>
 </context>
 <context>
     <name>AuthorizationPassword</name>
     <message>
         <source>Password</source>
-        <translation>Password</translation>
+        <translation>Kennwort</translation>
     </message>
     <message>
         <source>Login</source>
-        <translation>Accesso</translation>
+        <translation>Einloggen</translation>
     </message>
     <message>
         <source>Submit</source>
-        <translation>Immetti</translation>
+        <translation>Übermitteln</translation>
     </message>
 </context>
 <context>
     <name>AutoDownloadSettings</name>
     <message>
         <source>Load slow preset</source>
-        <translation>Preimpostazione lenta carica</translation>
+        <translation>Voreinstellung für Langsam</translation>
     </message>
     <message>
         <source>Load medium preset</source>
-        <translation>Preimpostazione media carica</translation>
+        <translation>Voreinstellung für Mittel</translation>
     </message>
     <message>
         <source>Load high preset</source>
-        <translation>Preimpostazione veloce carica</translation>
+        <translation>Voreinstellung für Hoch</translation>
     </message>
     <message>
         <source>Auto download settings</source>
-        <translation>Impostazioni scaricamenti automatici</translation>
+        <translation>Einstellungen für automatisches Herunterladen</translation>
     </message>
     <message>
         <source>Enable auto download</source>
-        <translation>Abilita scaricamenti automatici</translation>
+        <translation>Automatisches Herunterladen einschalten</translation>
     </message>
     <message>
         <source>Maximum Photo File Size</source>
-        <translation>Dimensioni massime Immagini</translation>
+        <translation>Maximale Dateigröße für Bilder</translation>
     </message>
     <message>
         <source>%L1B</source>
-        <translation>%L1B</translation>
+        <translation>%L1Byte</translation>
     </message>
     <message>
         <source>%L1KB</source>
-        <translation>%L1KB</translation>
+        <translation>%L1Kilobyte</translation>
     </message>
     <message>
         <source>%L1MB</source>
-        <translation>%L1MB</translation>
+        <translation>%L1Megabyte</translation>
     </message>
     <message>
         <source>Maximum Video File Size</source>
-        <translation>Dimensioni massimeVideo</translation>
+        <translation>Maximale Dateigröße für Videos</translation>
     </message>
     <message>
         <source>Maximum Other File Size</source>
-        <translation>Dimensioni massime Altri file</translation>
+        <translation>Maximale Dateigröße für Andere</translation>
     </message>
 </context>
 <context>
     <name>BasicGroupInfo</name>
     <message>
         <source>Channel info</source>
-        <translation>Info canale</translation>
+        <translation>Kanalinfo</translation>
     </message>
     <message>
         <source>Group info</source>
-        <translation>Info gruppo</translation>
+        <translation>Gruppeninfo</translation>
     </message>
     <message>
         <source>Info</source>
-        <translation>Info</translation>
+        <translation></translation>
     </message>
     <message>
         <source>%1 members</source>
-        <translation>%1 membri</translation>
+        <translation>%1 Mitglieder</translation>
     </message>
     <message>
         <source>Description</source>
-        <translation>Descrizione</translation>
+        <translation>Beschreibung</translation>
     </message>
     <message>
         <source>Invite link</source>
-        <translation>Link d&apos;invito</translation>
+        <translation>Einladungslink</translation>
     </message>
     <message>
         <source>Users</source>
-        <translation>Utenti</translation>
+        <translation>Benutzer</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Copia</translation>
+        <translation>Kopieren</translation>
     </message>
     <message>
         <source>Notifications</source>
-        <translation>Notifiche</translation>
+        <translation>Benachichtigungen</translation>
     </message>
     <message>
         <source>Mute for 1 hour</source>
-        <translation>Silenzia per 1 ora</translation>
+        <translation>Stumm für 1 Stunde</translation>
     </message>
     <message>
         <source>Mute for 8 hours</source>
-        <translation>Silenzia per 8 ore</translation>
+        <translation>Stumm für 8 Stunden</translation>
     </message>
     <message>
         <source>Mute for 2 days</source>
-        <translation>Silenzia per 2 giorni</translation>
+        <translation>Stumm für 2 Tage</translation>
     </message>
     <message>
         <source>Customize</source>
-        <translation>Personalizza</translation>
+        <translation>Anpassen</translation>
     </message>
     <message>
         <source>Default</source>
-        <translation>Predefinito</translation>
+        <translation>Vorgabe</translation>
     </message>
     <message>
         <source>Clear history</source>
-        <translation>Cancella cronologia</translation>
+        <translation>Löschen des Verlaufs</translation>
     </message>
     <message>
         <source>Long press to select mute duration</source>
@@ -220,159 +221,155 @@
     <name>Chat</name>
     <message>
         <source>Many people are typing...</source>
-        <translation>Più persone stanno scrivendo...</translation>
+        <translation>Viele Benutzer tippen...</translation>
     </message>
     <message>
         <source>%1 and %2 are typing...</source>
-        <translation>%1 e %2 stanno scrivendo...</translation>
+        <translation>%1 und %2 tippen...</translation>
     </message>
     <message>
         <source>%1 is typing...</source>
-        <translation>%1 sta scrivendo...</translation>
+        <translation>%1 tippt...</translation>
     </message>
     <message>
         <source>%1 is recording video</source>
-        <translation>%1 sta registrando un video</translation>
+        <translation>%1 nimmt ein Video auf</translation>
     </message>
     <message>
         <source>%1 is uploading video</source>
-        <translation>%1 sta inviando un video</translation>
+        <translation>%1 lädt ein Video hoch</translation>
     </message>
     <message>
         <source>%1 is recording voicenote</source>
-        <translation>%1 sta registrando una nota vocale</translation>
+        <translation>%1 nimmt eine Sprachnachnicht auf</translation>
     </message>
     <message>
         <source>%1 is uploading voicenote</source>
-        <translation>%1 sta inviando una nota vocale</translation>
+        <translation>%1 lädt eine Sprachnachicht hoch</translation>
     </message>
     <message>
         <source>%1 is uploading photo</source>
-        <translation>%1 sta inviando un immagine</translation>
+        <translation>%1 lädt ein Bild hoch</translation>
     </message>
     <message>
         <source>%1 is uploading document</source>
-        <translation>%1 sta inviando un documento</translation>
+        <translation>%1 lädt ein Dokument hoch</translation>
     </message>
     <message>
         <source>%1 is choosing sticker</source>
-        <translation>%1 sta scegliendo un adesivo</translation>
+        <translation>%1 wählt einen Sticker aus</translation>
     </message>
     <message>
         <source>%1 is choosing location</source>
-        <translation>%1 sta scegliendo una posizione</translation>
+        <translation>%1 wählt einen Standort aus</translation>
     </message>
     <message>
         <source>%1 is choosing contact</source>
-        <translation>%1 sta scegliendo un contatto</translation>
+        <translation>%1 wählt einen Kontakt aus</translation>
     </message>
     <message>
         <source>%1 is playing game</source>
-        <translation>%1 sta giocando ad un gioco</translation>
+        <translation>%1 spielt ein Spiel</translation>
     </message>
     <message>
         <source>%1 is recording videonote</source>
-        <translation>%1 sta registrando un videomessaggio</translation>
+        <translation>%1 nimmt eine Videonachicht auf</translation>
     </message>
     <message>
         <source>%1 is uploading videonote</source>
-        <translation>%1 sta inviando un videomessaggio</translation>
+        <translation>%1 lädt eine Videonachicht hoch</translation>
     </message>
     <message>
         <source>%1 is watching animations</source>
-        <translation>%1 sta guardando le animazioni</translation>
+        <translation>%1 schaut sich GIFs an</translation>
     </message>
     <message>
         <source>Channel created</source>
-        <translation>Canale creato</translation>
+        <translation>Kanal erstellt</translation>
     </message>
     <message>
         <source>Swipe from bottom to access upload options</source>
-        <translation>Swipe dal basso per accedere alle opzioni d&apos;invio</translation>
+        <translation>Wische von unten, um auf die Optionen zum Hochladen zuzugreifen</translation>
     </message>
     <message>
         <source>Open secret chat</source>
-        <translation>Apri una chat segreta</translation>
+        <translation>Einen geheimen Chat öffnen</translation>
     </message>
     <message>
         <source>Close secret chat</source>
-        <translation>Chiudi la chat segreta</translation>
+        <translation>Schließen des geheimen Chats</translation>
     </message>
     <message>
         <source>Set self-destruct timer</source>
-        <translation>Imposta timer autodistruzione</translation>
+        <translation>Dauer für selbstlöschende Nachichten</translation>
     </message>
     <message>
         <source>Cancel selection</source>
-        <translation>Cancella selezione</translation>
+        <translation>Auswahl abbrechen</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation>Inoltra</translation>
+        <translation>Weiterleiten</translation>
     </message>
     <message>
         <source>Scroll to first unread mention</source>
-        <translation>Vai all primo non letto</translation>
+        <translation>Gehe zur ersten ungelesenen Nachicht</translation>
     </message>
     <message>
         <source>Call</source>
-        <translation>Chiama</translation>
+        <translation>Anruf</translation>
     </message>
     <message>
         <source>Saved messages</source>
-        <translation>Messaggi salvati</translation>
+        <translation>Gespeicherte Nachichten</translation>
     </message>
     <message>
         <source>%1 members</source>
-        <translation>%1 membri</translation>
+        <translation>%1 Mitglieder</translation>
     </message>
     <message>
         <source>%1 online</source>
-        <translation>%1 in linea</translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation>Rispondi</translation>
+        <translation>%1 Online</translation>
     </message>
     <message>
         <source>Pin message</source>
-        <translation>Fissa messaggio</translation>
+        <translation>PIN Nachicht</translation>
     </message>
     <message>
         <source>Unpin message</source>
-        <translation>Rimuovi messaggio fissato</translation>
+        <translation>Nachicht nicht mehr anheften</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation>Modifica</translation>
+        <translation>Bearbeiten</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Copia</translation>
+        <translation>Kopieren</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Elimina</translation>
+        <translation>Löschen</translation>
     </message>
     <message>
         <source>Deselect</source>
-        <translation>Deselezione</translation>
+        <translation>Abwählen</translation>
     </message>
     <message>
         <source>Select</source>
-        <translation>Scegli</translation>
+        <translation>Auswählen</translation>
     </message>
     <message>
         <source>%L1 forwarded messages</source>
-        <translation>%L1 messaggi inoltrati</translation>
+        <translation>%L1 Weitergeleitete Nachichten</translation>
     </message>
     <message>
         <source>Type the text...</source>
-        <translation>Scrivi il testo...</translation>
+        <translation>Gib einen Text ein...</translation>
     </message>
     <message>
         <source>Image</source>
-        <translation>Immagine</translation>
+        <translation>Bild</translation>
     </message>
     <message>
         <source>Video</source>
@@ -384,19 +381,19 @@
     </message>
     <message>
         <source>Document</source>
-        <translation>Documento</translation>
+        <translation>Dokument</translation>
     </message>
     <message>
         <source>File</source>
-        <translation>File</translation>
+        <translation>Datei</translation>
     </message>
     <message>
         <source>Poll</source>
-        <translation>Sondaggio</translation>
+        <translation>Umfrage</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation>Adesivo</translation>
+        <translation>Sticker</translation>
     </message>
     <message>
         <source>GIF</source>
@@ -404,54 +401,58 @@
     </message>
     <message>
         <source>Voice Note</source>
-        <translation>Nota vocale</translation>
+        <translation>Sprachnachicht</translation>
     </message>
     <message>
         <source>Press and hold record button to record voice note.</source>
-        <translation>Premi e tieni premuto per registrare una nota vocale.</translation>
+        <translation>Drücke und halte die Sprachnachicht Schaltfläche.</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation>Posizione</translation>
+        <translation>Standort</translation>
     </message>
     <message>
         <source>Also pin for %1</source>
-        <translation>Fissa anche per %1</translation>
+        <translation>Ebenfalls eine PIN für %1</translation>
     </message>
     <message>
         <source>Notify members</source>
-        <translation>Notifica membri</translation>
+        <translation>Mitglieder benachichtigen</translation>
     </message>
     <message>
         <source>Save to gallery</source>
-        <translation>Salva nella galleria</translation>
+        <translation>In der Galerie speichern</translation>
     </message>
     <message>
         <source>Saved to: %1</source>
-        <translation>Salvato in: %1</translation>
+        <translation>Gespeichert zu: %1</translation>
     </message>
     <message>
         <source>You must download it first</source>
-        <translation>Devi scaricarlo prima</translation>
+        <translation>Bitte zuerst herunterladen</translation>
+    </message>
+    <message>
+        <source>Reply</source>
+        <translation>Antworten</translation>
     </message>
 </context>
 <context>
     <name>ChatList</name>
     <message>
         <source>Settings</source>
-        <translation>Impostazioni</translation>
+        <translation>Einstellungen</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation>Cerca</translation>
+        <translation>Suche</translation>
     </message>
     <message>
         <source>Set as read</source>
-        <translation>Segna come letto</translation>
+        <translation>Als gelesen kennzeichnen</translation>
     </message>
     <message>
         <source>Delete chat</source>
-        <translation>Elimina chat</translation>
+        <translation>Nachicht löschen</translation>
     </message>
     <message>
         <source>Audio</source>
@@ -459,11 +460,11 @@
     </message>
     <message>
         <source>Photo</source>
-        <translation>Immagine</translation>
+        <translation>Bild</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation>Adesivo</translation>
+        <translation>Sticker</translation>
     </message>
     <message>
         <source>Video</source>
@@ -471,47 +472,47 @@
     </message>
     <message>
         <source>Document</source>
-        <translation>Documento</translation>
+        <translation>Dokument</translation>
     </message>
     <message>
         <source>Poll</source>
-        <translation>Sondaggio</translation>
+        <translation>Umfrage</translation>
     </message>
     <message>
         <source>Unpin from top</source>
-        <translation>Togli da messaggio fissato</translation>
+        <translation>Anheften rückgänig machen</translation>
     </message>
     <message>
         <source>Pin to top</source>
-        <translation>Fissa in alto</translation>
+        <translation>Oben Anheften</translation>
     </message>
     <message>
         <source>Saved messages</source>
-        <translation>Messaggi salvati</translation>
+        <translation>Gespeicherte Nachichten</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation>Posizione</translation>
+        <translation>Standort</translation>
     </message>
     <message>
         <source>Contact</source>
-        <translation>Contatto</translation>
+        <translation>Kontakt</translation>
     </message>
     <message>
         <source>Archive</source>
-        <translation>Archivio</translation>
+        <translation>Archiv</translation>
     </message>
     <message>
         <source>Main</source>
-        <translation>Principale</translation>
+        <translation>Hauptseite</translation>
     </message>
     <message>
         <source>VoiceNote</source>
-        <translation>Nota vocale</translation>
+        <translation>Sprachnachicht</translation>
     </message>
     <message>
         <source>VideoNote</source>
-        <translation>Videomessaggio</translation>
+        <translation>Videonachicht</translation>
     </message>
     <message>
         <source>GIF</source>
@@ -519,54 +520,54 @@
     </message>
     <message>
         <source>Contacts</source>
-        <translation>Contatti</translation>
+        <translation>Kontakte</translation>
     </message>
 </context>
 <context>
     <name>ChatNew</name>
     <message>
         <source>Open secret chat</source>
-        <translation>Apri chat segreta</translation>
+        <translation>Einen geheimen Chat öffnen</translation>
     </message>
     <message>
         <source>Close secret chat</source>
-        <translation>Chiudi chat segreta</translation>
+        <translation>Schließen des geheimen Chats</translation>
     </message>
     <message>
         <source>Set self-destruct timer</source>
-        <translation>Imposta timer autodistruzione</translation>
+        <translation>Dauer für selbstlöschende Nachichten</translation>
     </message>
     <message>
         <source>Cancel selection</source>
-        <translation>Cancella selezione</translation>
+        <translation>Kanalauswahl</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation>Inoltra</translation>
+        <translation>Weiterleiten</translation>
     </message>
     <message>
         <source>Scroll to first unread mention</source>
-        <translation>Vai al primo non letto</translation>
+        <translation>Gehe zur ersten ungelesenen Nachicht</translation>
     </message>
     <message>
         <source>Saved messages</source>
-        <translation>Messaggi salvati</translation>
+        <translation>Gespeicherte Nachichten</translation>
     </message>
     <message>
         <source>%1 members</source>
-        <translation>%1 membri</translation>
+        <translation>%1 Mitglieder</translation>
     </message>
     <message>
         <source>%L1 forwarded messages</source>
-        <translation>%L1 messaggi inoltrati</translation>
+        <translation>%L1 Weitergeleitete Nachichten</translation>
     </message>
     <message>
         <source>Type the text...</source>
-        <translation>Scrivi il testo...</translation>
+        <translation>Gib einen Text ein...</translation>
     </message>
     <message>
         <source>Image</source>
-        <translation>Immagine</translation>
+        <translation>Bild</translation>
     </message>
     <message>
         <source>Video</source>
@@ -578,95 +579,95 @@
     </message>
     <message>
         <source>Document</source>
-        <translation>Documento</translation>
+        <translation>Dokument</translation>
     </message>
     <message>
         <source>File</source>
-        <translation>File</translation>
+        <translation>Datei</translation>
     </message>
     <message>
         <source>Poll</source>
-        <translation>Sondaggio</translation>
+        <translation>Umfrage</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation>Adesivo</translation>
+        <translation>Sticker</translation>
     </message>
     <message>
         <source>Voice Note</source>
-        <translation>Nota vocale</translation>
+        <translation>Sprachnachicht</translation>
     </message>
     <message>
         <source>Press and hold record button to record voice note.</source>
-        <translation>Premi e tieni premuto per registrare una nota vocale.</translation>
+        <translation>Drücke und halte die Sprachnachicht Schaltfläche.</translation>
     </message>
 </context>
 <context>
     <name>ChatNotifications</name>
     <message>
         <source>Notification settings</source>
-        <translation>Impostazioni notifiche</translation>
+        <translation>Benachrichtigungseinstellungen</translation>
     </message>
     <message>
         <source>Show preview</source>
-        <translation>Mostra anteprima</translation>
+        <translation>Vorschau anzeigen</translation>
     </message>
     <message>
         <source>These settings will override global values in settings.</source>
-        <translation>Questi valori sovrascriveranno i valori globali nelle impostazioni.</translation>
+        <translation>Diese Einstellung überschreibt die globalen Einstellungen.</translation>
     </message>
     <message>
         <source>Mentions and replies</source>
-        <translation>Menzioni e risposte</translation>
+        <translation>Erwähnungen und Antworten</translation>
     </message>
     <message>
         <source>Pinned messages</source>
-        <translation>Messaggi fissati</translation>
+        <translation>Angeheftete Nachrichten</translation>
     </message>
     <message>
         <source>Default</source>
-        <translation>Predefinito</translation>
+        <translation>Vorgabe</translation>
     </message>
 </context>
 <context>
     <name>Contacts</name>
     <message>
         <source>Imported %1 contacts</source>
-        <translation>%1 contatti importati</translation>
+        <translation>Es wurden %1 Kontakte importiert</translation>
     </message>
     <message>
         <source>Import contacts</source>
-        <translation>Importa contatti</translation>
+        <translation>Kontakte importieren</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation>Cerca</translation>
+        <translation>Suche</translation>
     </message>
 </context>
 <context>
     <name>ContactsImport</name>
     <message>
         <source>Unselect all</source>
-        <translation>Deseleziona tutto</translation>
+        <translation>Alle abwählen</translation>
     </message>
     <message>
         <source>Select all</source>
-        <translation>Scegli tutto</translation>
+        <translation>Alle auswählen</translation>
     </message>
     <message>
         <source>Select contacts to import</source>
-        <translation>Scegli contatti da importare</translation>
+        <translation>Wähle Kontakte zum importieren aus</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation>Cerca</translation>
+        <translation>Suche</translation>
     </message>
 </context>
 <context>
     <name>CoverPage</name>
     <message>
         <source>Unread chats: %L1</source>
-        <translation>Chat non lette: %L1</translation>
+        <translation>Ungelesene Chats: %L1</translation>
     </message>
     <message>
         <source>Yottagram</source>
@@ -674,170 +675,171 @@
     </message>
     <message>
         <source>New messages: %L1</source>
-        <translation>Nuovi messaggi: %L1</translation>
+        <translation>Neue Nachichten: %L1</translation>
     </message>
 </context>
 <context>
     <name>Loading</name>
     <message>
         <source>Waiting for connection...</source>
-        <translation>Aspettando la connessione...</translation>
+        <translation>Warten auf Verbindung...</translation>
     </message>
 </context>
 <context>
     <name>LocationContent</name>
     <message>
         <source>Telegram location</source>
-        <translation>Posizione Telegram</translation>
+        <translation>Telegram Standort</translation>
     </message>
 </context>
 <context>
     <name>LocationPicker</name>
     <message>
         <source>Location Picker</source>
-        <translation>Selezionatore posizione</translation>
+        <translation>Standortauswahl</translation>
     </message>
     <message>
         <source>Latitude:</source>
-        <translation>Latitudine:</translation>
+        <translation>Breitengrad:</translation>
     </message>
     <message>
         <source>Longitude:</source>
-        <translation>Longitudine:</translation>
+        <translation>Längengrad:</translation>
     </message>
 </context>
 <context>
     <name>Message</name>
     <message>
         <source>%1 left</source>
-        <translation>%1 usciti</translation>
+        <translation>%1 verlassen</translation>
     </message>
     <message>
         <source>%1 joined</source>
-        <translation>%1 entrati</translation>
+        <translation>%1 Beigetreten</translation>
     </message>
     <message numerus="yes">
         <source>Self-destruct timer set to %n second(s)</source>
+        <translatorcomment>Not sure why I get an error message here. Please check these issue. </translatorcomment>
         <translation>
-            <numerusform>Timer autodistruzione impostato a %n secondo</numerusform>
-            <numerusform>Timer autodistruzione impostato a %n secondi</numerusform>
+            <numerusform>Selbstlöschung auf %n Sekunde(n) gesetzt</numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
     <message>
         <source>%1 pinned message</source>
-        <translation>%1 messaggio fissato</translation>
+        <translation>%1 Angeheftete Nachicht</translation>
     </message>
     <message>
         <source>Forwarded from %1</source>
-        <translation>Inoltrato da %1</translation>
+        <translation>Weitergeleitet von %1</translation>
     </message>
     <message>
         <source>Edited</source>
-        <translation>Modificato</translation>
+        <translation>Bearbeitet</translation>
     </message>
     <message>
         <source>Message was pinned</source>
-        <translation>Il messaggio è stato fissato</translation>
+        <translation>Nachicht wurde angeheftet</translation>
     </message>
     <message>
         <source>Outgoing call</source>
-        <translation>Chiamata in uscita</translation>
+        <translation>Ausgehender Anruf</translation>
     </message>
     <message>
         <source>Incoming call</source>
-        <translation>Chiamata in entrata</translation>
+        <translation>Eingehender Anruf</translation>
     </message>
     <message>
         <source>%1 joined telegram</source>
-        <translation>%1 ha iniziato ad usare telegram</translation>
+        <translation>%1 Ist Telegram beigetreten</translation>
     </message>
     <message>
         <source>Group created</source>
-        <translation>Gruppo creato</translation>
+        <translation>Gruppe erstellt</translation>
     </message>
 </context>
 <context>
     <name>MessageContextMenu</name>
     <message>
         <source>Reply</source>
-        <translation>Rispondi</translation>
+        <translation>Antworten</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation>Modifica</translation>
+        <translation>Bearbeiten</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Copia</translation>
+        <translation>Kopieren</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Elimina</translation>
+        <translation>Löschen</translation>
     </message>
 </context>
 <context>
     <name>MoveFilesDialog</name>
     <message>
         <source>Move yottagram&apos;s data</source>
-        <translation>Sposta dati di yottagram</translation>
-    </message>
-    <message>
-        <source>App will be closed upon accepting</source>
-        <translation>Applicazione verrà chiusa dopo aver accettato</translation>
+        <translation>Verschieben der Yottagram Daten</translation>
     </message>
     <message>
         <source>Old path: %1</source>
-        <translation>Vecchio percorso: %1</translation>
+        <translation>Alter Pfad: %1</translation>
     </message>
     <message>
         <source>Path already exists</source>
-        <translation>Il percorso è già esistente</translation>
+        <translation>Dieser Pfad existiert bereits</translation>
+    </message>
+    <message>
+        <source>App will be closed upon accepting</source>
+        <translation>Die App schließt sich nach erfolgreichen Abschluss</translation>
     </message>
     <message>
         <source>No permission to create directory</source>
-        <translation>Non hai i permessi per creare una cartella</translation>
+        <translation>Keine Berechtigung, um dieses Verzeichniss zu erstellen</translation>
     </message>
 </context>
 <context>
     <name>Notifications</name>
     <message>
         <source>Messages</source>
-        <translation>Messaggi</translation>
+        <translation>Nachichten</translation>
     </message>
     <message>
         <source>Mentions</source>
-        <translation>Mnezioni</translation>
+        <translation>Erwähnungen</translation>
     </message>
     <message>
         <source>Calls</source>
-        <translation>Chiamate</translation>
+        <translation>Anrufe</translation>
     </message>
     <message>
         <source>Secret chat</source>
-        <translation>Chat segrete</translation>
+        <translation>Geheimer Chat</translation>
     </message>
     <message>
         <source>New message from %1</source>
-        <translation>Nuovo messaggio da %1</translation>
+        <translation>Neue Nachrichtvon %1</translation>
     </message>
     <message>
         <source>New secret chat</source>
-        <translation>Nuova chat segreta</translation>
+        <translation>Neuer geheimer Chat</translation>
     </message>
 </context>
 <context>
     <name>Poll</name>
     <message>
         <source>Poll</source>
-        <translation>Sondaggio</translation>
+        <translation>Umfrage</translation>
     </message>
     <message>
         <source>Select answers</source>
-        <translation>Scegli risposte</translation>
+        <translation>Antworten auswählen</translation>
     </message>
     <message>
         <source>Anonymous</source>
-        <translation>Anonimo</translation>
+        <translation>Anonym</translation>
     </message>
     <message>
         <source>Quiz</source>
@@ -848,66 +850,66 @@
     <name>PollDialog</name>
     <message>
         <source>Ask a question</source>
-        <translation>Fai una domanda</translation>
+        <translation>Eine Frage stellen</translation>
     </message>
     <message>
         <source>Options</source>
-        <translation>Impostazioni</translation>
+        <translation>Optionen</translation>
     </message>
     <message>
         <source>Add an option</source>
-        <translation>Aggiungi un&apos;impostazione</translation>
+        <translation>Eine Option hinzufügen</translation>
     </message>
     <message>
         <source>Settings</source>
-        <translation>Impostazioni</translation>
+        <translation>Einstellungen</translation>
     </message>
     <message>
         <source>Question</source>
-        <translation>Domanda</translation>
+        <translation>Fragen</translation>
     </message>
     <message>
         <source>Anonymous voting</source>
-        <translation>Voto anonimo</translation>
+        <translation>Anonymes Abstimmen</translation>
     </message>
     <message>
         <source>Multiple answers</source>
-        <translation>Risposte multiple</translation>
+        <translation>Mehrere Antworten möglich</translation>
     </message>
     <message>
         <source>Quiz mode</source>
-        <translation>Modalità quiz</translation>
+        <translation>Quiz Modus</translation>
     </message>
 </context>
 <context>
     <name>ProxySettings</name>
     <message>
         <source>Add server</source>
-        <translation>Aggiungi server</translation>
+        <translation>Server hinzufügen</translation>
     </message>
     <message>
         <source>Disable proxy</source>
-        <translation>Disabilita proxy</translation>
+        <translation>Proxy deaktivieren</translation>
     </message>
     <message>
         <source>Proxy settings</source>
-        <translation>Impostazioni proxy</translation>
+        <translation>Proxy Einstellungen</translation>
     </message>
     <message>
         <source>Enable</source>
-        <translation>Abilita</translation>
+        <translation>Aktivieren</translation>
     </message>
     <message>
         <source>Test</source>
-        <translation>Prova</translation>
+        <translation>Testen</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Elimina</translation>
+        <translation>Löschen</translation>
     </message>
     <message>
         <source>Server settings</source>
-        <translation>Impostazioni server</translation>
+        <translation>Server Einstellungen</translation>
     </message>
     <message>
         <source>Server</source>
@@ -915,164 +917,164 @@
     </message>
     <message>
         <source>Port</source>
-        <translation>Porta</translation>
+        <translation>Port</translation>
     </message>
     <message>
         <source>Username</source>
-        <translation>Nome utente</translation>
+        <translation>Benutzername</translation>
     </message>
     <message>
         <source>Password</source>
-        <translation>Password</translation>
+        <translation>Passwort</translation>
     </message>
     <message>
         <source>Secret</source>
-        <translation>Segreto</translation>
+        <translation>Geheimen Schlüssel eingeben</translation>
     </message>
     <message>
         <source>Proxy Url</source>
-        <translation>Url proxy</translation>
+        <translation>Proxy Url</translation>
     </message>
 </context>
 <context>
     <name>ScopeNotificationSettings</name>
     <message>
         <source>Notification settings</source>
-        <translation>Impostzioni notifiche</translation>
+        <translation>Benachichtigungseinstellungen</translation>
     </message>
     <message>
         <source>Show preview</source>
-        <translation>Mostra anteprima</translation>
+        <translation>Vorschau anzeigen</translation>
     </message>
     <message>
         <source>Mentions and replies</source>
-        <translation>Menzioni e risposte</translation>
+        <translation>Erwähnungen und Antworten</translation>
     </message>
     <message>
         <source>Pinned messages</source>
-        <translation>Messaggi fissati</translation>
+        <translation>Angeheftete Nachichten</translation>
     </message>
 </context>
 <context>
     <name>SetTtlDialog</name>
     <message>
         <source>%L1 second(s)</source>
-        <translation>%L1 secondo(i)</translation>
+        <translation>%L1 Sekunde(n)</translation>
     </message>
     <message>
         <source>1 minute</source>
-        <translation>1 minuto</translation>
+        <translation>1 Minute</translation>
     </message>
     <message>
         <source>1 hour</source>
-        <translation>1 ora</translation>
+        <translation>1 Stunde</translation>
     </message>
     <message>
         <source>1 day</source>
-        <translation>1 giorno</translation>
+        <translation>1 Tag</translation>
     </message>
     <message>
         <source>1 week</source>
-        <translation>1 settimana</translation>
+        <translation>1 Woche</translation>
     </message>
     <message>
         <source>30 seconds</source>
-        <translation>30 secondi</translation>
+        <translation>30 Sekunden</translation>
     </message>
     <message>
         <source>Self-destruct timer</source>
-        <translation>Times autodistruzione</translation>
+        <translation>Timer für Selbstlöschung</translation>
     </message>
 </context>
 <context>
     <name>Settings</name>
     <message>
         <source>Settings</source>
-        <translation>Impostazioni</translation>
+        <translation>Einstellungen</translation>
     </message>
     <message>
         <source>Daemon</source>
-        <translation>Demone</translation>
+        <translation>Hintergrunddienst</translation>
     </message>
     <message>
         <source>Private chat notification global settings</source>
-        <translation>Impostazioni globali notifiche chat private</translation>
+        <translation>Globale Einstellungen für private Chatbenachichtigungen</translation>
     </message>
     <message>
         <source>Mute for 1 hour</source>
-        <translation>Silenzia per 1 ora</translation>
+        <translation>Stumm für 1 Stunde</translation>
     </message>
     <message>
         <source>Mute for 8 hours</source>
-        <translation>Silenzia per 2 ore</translation>
+        <translation>Stumm für 8 Stunden</translation>
     </message>
     <message>
         <source>Mute for 2 days</source>
-        <translation>Silenzia per 2 giorni</translation>
+        <translation>Stumm für 2 Tage</translation>
     </message>
     <message>
         <source>Customize</source>
-        <translation>Personalizza</translation>
+        <translation>Anpassen</translation>
     </message>
     <message>
         <source>Group notification global settings</source>
-        <translation>Impostazioni globali notifiche gruppi</translation>
+        <translation>Globale Einstellungen für Gruppenbenachichtigungen</translation>
     </message>
     <message>
         <source>Channel notification global settings</source>
-        <translation>Impostazioni globali notifiche canali</translation>
+        <translation>Globale Einstellungen für Kanalbenachichtigungen</translation>
     </message>
     <message>
         <source>Wifi auto download settings</source>
-        <translation>Impostazioni scaricamento automatico wifi</translation>
+        <translation>Einstellungen für automatisches Herunterladen im Wlan</translation>
     </message>
     <message>
         <source>Cellular auto download settings</source>
-        <translation>Impostazioni scaricamento automatico dati mobili</translation>
+        <translation>Einstellungen für automatisches Herunterladen mit mobilen Daten</translation>
     </message>
     <message>
         <source>Roaming auto download settings</source>
-        <translation>Impostazioni scaricamento automatico roaming</translation>
+        <translation>Einstellungen für automatisches Herunterladen im Roaming</translation>
     </message>
     <message>
         <source>Other auto download settings</source>
-        <translation>Altre impostazioni scaricamento autmatico</translation>
+        <translation>Andere Einstellungen für automatisches Herunterladen</translation>
     </message>
     <message>
         <source>Send button</source>
-        <translation>Mostra pulsante invio</translation>
+        <translation>Senden Schaltfläche</translation>
     </message>
     <message>
         <source>Animated stickers</source>
-        <translation>Adesivi animati</translation>
+        <translation>Animierte Sticker</translation>
     </message>
     <message>
         <source>Include muted chats in unread chats and messages counts</source>
-        <translation>Includi chat silenziate nel conteggio delle chat e dei messaggi non letti</translation>
+        <translation>Zeige stumme und ungelesene Chats zusammen an</translation>
     </message>
     <message>
         <source>Message font size</source>
-        <translation>Dimensioni caratteri messaggio</translation>
+        <translation>Schriftgröße der Nachichten</translation>
     </message>
     <message>
         <source>Proxy settings</source>
-        <translation>Impostazioni proxy</translation>
+        <translation>Proxy Einstellungen</translation>
     </message>
     <message>
         <source>About</source>
-        <translation>Info</translation>
-    </message>
-    <message>
-        <source>Animated emoji</source>
-        <translation>Emoji animate</translation>
+        <translation>Über</translation>
     </message>
     <message>
         <source>Move yottagram&apos;s data</source>
-        <translation>Sposta dati di yottagram</translation>
+        <translation>Verschieben der Yottagram Daten</translation>
+    </message>
+    <message>
+        <source>Animated emoji</source>
+        <translation>Animierte Emojis</translation>
     </message>
     <message>
         <source>Chat bubbles</source>
-        <translation>bolle nelle chat</translation>
+        <translation>Chats in Sprechblasen</translation>
     </message>
     <message>
         <source>Long press to select mute duration</source>
@@ -1087,59 +1089,59 @@
     <name>SupergroupInfo</name>
     <message>
         <source>Channel info</source>
-        <translation>Info canale</translation>
+        <translation>Kanalinfo</translation>
     </message>
     <message>
         <source>Group info</source>
-        <translation>Info gruppo</translation>
+        <translation>Gruppeninfo</translation>
     </message>
     <message>
         <source>%1 members</source>
-        <translation>%1 membri</translation>
+        <translation>%1 Mitglieder</translation>
     </message>
     <message>
         <source>Info</source>
-        <translation>Info</translation>
+        <translation>Informationen</translation>
     </message>
     <message>
         <source>Description</source>
-        <translation>Descrizione</translation>
+        <translation>Beschreibung</translation>
     </message>
     <message>
         <source>Invite link</source>
-        <translation>Link d&apos;invito</translation>
+        <translation>Einladungslink</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Copia</translation>
+        <translation>Kopieren</translation>
     </message>
     <message>
         <source>Notifications</source>
-        <translation>Notifiche</translation>
+        <translation>Benachichtigungen</translation>
     </message>
     <message>
         <source>Mute for 1 hour</source>
-        <translation>Silenzia per 1 ora</translation>
+        <translation>Stumm für 1 Stunde</translation>
     </message>
     <message>
         <source>Mute for 8 hours</source>
-        <translation>Silenzia per 8 ore</translation>
+        <translation>Stumm für 8 Stunden</translation>
     </message>
     <message>
         <source>Mute for 2 days</source>
-        <translation>Silenzia per 2 giorni</translation>
+        <translation>Stumm für 2 Tage</translation>
     </message>
     <message>
         <source>Customize</source>
-        <translation>Personalizza</translation>
+        <translation>Anpassen</translation>
     </message>
     <message>
         <source>Default</source>
-        <translation>Predefinito</translation>
+        <translation>Vorgabe</translation>
     </message>
     <message>
         <source>Clear history</source>
-        <translation>Cancella cronologia</translation>
+        <translation>Löschen des Verlaufs</translation>
     </message>
     <message>
         <source>Long press to select mute duration</source>
@@ -1150,86 +1152,86 @@
     <name>User</name>
     <message>
         <source>Last seen within month</source>
-        <translation>Ultima volta online nel mese</translation>
+        <translation>vor langer Zeit gesehen</translation>
     </message>
     <message>
         <source>Last seen within week</source>
-        <translation>Ultima volta online nella settimana</translation>
+        <translation>letzte Woche gesehen</translation>
     </message>
     <message>
         <source>Offline</source>
-        <translation>Non in linea</translation>
+        <translation>Offline</translation>
     </message>
     <message>
         <source>Online</source>
-        <translation>In linea</translation>
+        <translation>Online</translation>
     </message>
     <message>
         <source>Last seen recently</source>
-        <translation>Visto recentemente in linea</translation>
+        <translation>kürzlich gesehen</translation>
     </message>
     <message>
         <source>Never seen</source>
-        <translation>Mai visto in linea</translation>
+        <translation>Noch nie gesehen</translation>
     </message>
 </context>
 <context>
     <name>UserInfo</name>
     <message>
         <source>Bio</source>
-        <translation>Bio</translation>
+        <translation>Über mich</translation>
     </message>
     <message>
         <source>Number</source>
-        <translation>Numero</translation>
+        <translation>Nummer</translation>
     </message>
     <message>
         <source>User info</source>
-        <translation>Info utente</translation>
+        <translation>Benutzer Informationen</translation>
     </message>
     <message>
         <source>Info</source>
-        <translation>Info</translation>
+        <translation>Informationen</translation>
     </message>
     <message>
         <source>Username</source>
-        <translation>Nome utente</translation>
+        <translation>Benutzername</translation>
     </message>
     <message>
         <source>Notifications</source>
-        <translation>Notifiche</translation>
+        <translation>Benachichtigungen</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Copia</translation>
+        <translation>Kopieren</translation>
     </message>
     <message>
         <source>Mute for 1 hour</source>
-        <translation>Silenzia per 1 ora</translation>
+        <translation>Stumm für 1 Stunde</translation>
     </message>
     <message>
         <source>Mute for 8 hours</source>
-        <translation>Silenzia per 8 ore</translation>
+        <translation>Stumm für 8 Stunden</translation>
     </message>
     <message>
         <source>Mute for 2 days</source>
-        <translation>Silenzia per 2 giorni</translation>
+        <translation>Stumm für 2 Tage</translation>
     </message>
     <message>
         <source>Customize</source>
-        <translation>Personalizza</translation>
+        <translation>Anpassen</translation>
     </message>
     <message>
         <source>Default</source>
-        <translation>Predefinito</translation>
+        <translation>Vorgabe</translation>
     </message>
     <message>
         <source>Clear history</source>
-        <translation>Cancella cronologia</translation>
+        <translation>Löschen des Verlaufs</translation>
     </message>
     <message>
         <source>Open chat</source>
-        <translation>Apri chat</translation>
+        <translation>Einen Chat öffnen</translation>
     </message>
     <message>
         <source>Long press to select mute duration</source>
@@ -1240,34 +1242,34 @@
     <name>foramtDuration</name>
     <message>
         <source>%L1 s</source>
-        <translation>%L1 s</translation>
+        <translation>%L1 Sekunden</translation>
     </message>
     <message>
         <source>%L1 min</source>
-        <translation>%L1 min</translation>
+        <translation>%L1 Minuten</translation>
     </message>
     <message>
         <source>%L1 h</source>
-        <translation>%L1 h</translation>
+        <translation>%L1 Stunden</translation>
     </message>
 </context>
 <context>
     <name>muteFormat</name>
     <message>
         <source>%L1 second(s)</source>
-        <translation>%L1 secondo(i)</translation>
+        <translation>%L1 Sekunde(n)</translation>
     </message>
     <message>
         <source>%L1 minute(s)</source>
-        <translation>%L1 minuto(i)</translation>
+        <translation>%L1 Minute(n)</translation>
     </message>
     <message>
         <source>%L1 hour(s)</source>
-        <translation>%L1 ora(e)</translation>
+        <translation>%L1 Stunde(n)</translation>
     </message>
     <message>
         <source>%L1 day(s)</source>
-        <translation>%L1 giorno(i)</translation>
+        <translation>%L1 Tag(e)</translation>
     </message>
     <message>
         <source>%L1</source>
@@ -1275,15 +1277,16 @@
     </message>
     <message>
         <source>%L1m</source>
-        <translation>%L1m</translation>
+        <translatorcomment>%L1Minuten</translatorcomment>
+        <translation></translation>
     </message>
     <message>
         <source>%L1h</source>
-        <translation>%L1h</translation>
+        <translation>%L1Stunden</translation>
     </message>
     <message>
         <source>%L1w</source>
-        <translation>%L1w</translation>
+        <translation>%L1Wochen</translation>
     </message>
 </context>
 </TS>
