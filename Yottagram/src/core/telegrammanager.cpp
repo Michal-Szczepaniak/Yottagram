@@ -26,6 +26,9 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 TelegramManager::TelegramManager(): _messageId(1)
 {
+    connect(QGuiApplication::instance(), &QGuiApplication::aboutToQuit, this, [this]() {
+        receiver.manager.execute(td_api::make_object<td_api::close>());
+    });
 }
 
 void TelegramManager::init()
@@ -35,7 +38,7 @@ void TelegramManager::init()
     connect(&receiver, &TelegramReceiver::messageReceived, this, &TelegramManager::messageReceived);
     connect(this, &TelegramManager::updateOption, this, &TelegramManager::onUpdateOption);
     connect(_networkManager, &NetworkManager::defaultRouteChanged, this, &TelegramManager::defaultRouteChanged);
-    connect(&receiver, &TelegramReceiver::bootupComplete, this, &TelegramManager::bootupComplete);
+    connect(this, &TelegramManager::bootupComplete, [&](){ _bootupComplete = true; });
 
     defaultRouteChanged(_networkManager->defaultRoute());
 
@@ -47,7 +50,7 @@ void TelegramManager::sendQuery(td_api::Function* message)
     _messageId++;
     _messages[_messageId] = {0, message->get_id(), 0};
 
-    receiver.client->send({_messageId, td_api::object_ptr<td_api::Function>(message)});
+    receiver.manager.send(receiver.client, _messageId, td_api::object_ptr<td_api::Function>(message));
 }
 
 void TelegramManager::sendQuerySync(td_api::Function *message)
@@ -55,16 +58,12 @@ void TelegramManager::sendQuerySync(td_api::Function *message)
     _messageId++;
     _messages[_messageId] = {0, message->get_id(), 0};
 
-    receiver.client->execute({_messageId, td_api::object_ptr<td_api::Function>(message)});
+    receiver.manager.send(receiver.client, _messageId, td_api::object_ptr<td_api::Function>(message));
 }
 
 td_api::object_ptr<td_api::Object> TelegramManager::sendQuerySyncWithResponse(td_api::Function *message)
 {
-    _messageId++;
-    _messages[_messageId] = {0, message->get_id(), 0};
-
-    auto result = receiver.client->execute({_messageId, td_api::object_ptr<td_api::Function>(message)});
-    return move(result.object);
+    return receiver.manager.execute(td_api::object_ptr<td_api::Function>(message));
 }
 
 void TelegramManager::sendQueryWithResponse(int64_t chatId, int32_t type, int32_t subType, td_api::Function *message)
@@ -72,7 +71,7 @@ void TelegramManager::sendQueryWithResponse(int64_t chatId, int32_t type, int32_
     _messageId++;
     _messages[_messageId] = {chatId, type, subType};
 
-    receiver.client->send({_messageId, td_api::object_ptr<td_api::Function>(message)});
+    receiver.manager.send(receiver.client, _messageId, td_api::object_ptr<td_api::Function>(message));
 }
 
 void TelegramManager::sendQueryWithResponse(int64_t chatId, int32_t type, td_api::Function *message)
@@ -133,6 +132,11 @@ TelegramManager::ConnectionState TelegramManager::getConnectionState() const
     return _connectionState;
 }
 
+bool TelegramManager::isBootupComplete() const
+{
+    return _bootupComplete;
+}
+
 void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *message)
 {
     if (!_messages.contains(id)) return;
@@ -141,6 +145,7 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
 
     if (message->get_id() == td_api::error::ID) {
         td_api::error* error = static_cast<td_api::error*>(message);
+        qWarning() << "Error: response chat id: " << response.chatId << " response type: " << response.type << " response subtype: " << response.subType << " code: " << error->code_ << " message: " << QString::fromStdString(error->message_);
         emit this->error(response.chatId, response.type, response.subType, error->code_, QString::fromStdString(error->message_));
         return;
     }
@@ -206,9 +211,14 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
 void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
 {
     emit onMessageReceived(id, message);
+
     if (id > 1) {
         handleMessageWithResponse(id, message);
         return;
+    }
+
+    if (_bootupComplete) {
+        qDebug() << message->get_id();
     }
 
     downcast_call(
@@ -240,7 +250,7 @@ void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
             [this](td_api::updateChatNotificationSettings &updateChatNotificationSettings) { emit this->updateChatNotificationSettings(&updateChatNotificationSettings); },
             [this](td_api::updateScopeNotificationSettings &updateScopeNotificationSettings) { emit this->updateScopeNotificationSettings(&updateScopeNotificationSettings); },
             [this](td_api::autoDownloadSettingsPresets &autoDownloadSettingsPresets) { emit this->autoDownloadSettingsPresets(&autoDownloadSettingsPresets); },
-            [this](td_api::updateInstalledStickerSets &updateInstalledStickerSets) { emit this->updateInstalledStickerSets(&updateInstalledStickerSets); },
+            [this](td_api::updateInstalledStickerSets &updateInstalledStickerSets) { emit this->updateInstalledStickerSets(&updateInstalledStickerSets); emit bootupComplete(); },
             [this](td_api::updateChatPermissions &updateChatPermissions) { emit this->updateChatPermissions(&updateChatPermissions); },
             [this](td_api::updateUnreadChatCount &updateUnreadChatCount) { emit this->updateUnreadChatCount(&updateUnreadChatCount); },
             [this](td_api::updateUnreadMessageCount &updateUnreadMessageCount) { emit this->updateUnreadMessageCount(&updateUnreadMessageCount); },
@@ -255,7 +265,7 @@ void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
             [this](td_api::updateChatDraftMessage &updateChatDraftMessage) { emit this->updateChatDraftMessage(&updateChatDraftMessage); },
             [this](td_api::updateChatAction &updateChatAction) { emit this->updateChatAction(&updateChatAction); },
             [this](td_api::updateUserStatus &updateUserStatus) { emit this->updateUserStatus(&updateUserStatus); },
-            [](td_api::error &error) { qWarning() << QString::fromStdString(error.message_); },
+            [](td_api::error &error) { qWarning() << "Error: code: " << error.code_ << " message: " << QString::fromStdString(error.message_); },
             [this](td_api::updateConnectionState &updateConnectionState) { this->updateConnectionState(&updateConnectionState); },
             [](auto &update) { Q_UNUSED(update) }
         )
@@ -306,4 +316,12 @@ void TelegramManager::updateConnectionState(td_api::updateConnectionState *updat
     );
 
     emit connectionStateChanged();
+
+    if (_connectionState == ConnectionState::Ready && !_bootupComplete) {
+        _bootupComplete = true;
+        qDebug() << "Bootup complete";
+        emit bootupComplete();
+    }
+
+    delete updateConnectionState;
 }

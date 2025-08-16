@@ -28,6 +28,8 @@ Files::Files(QObject *parent) : QObject(parent)
 void Files::setTelegramManager(std::shared_ptr<TelegramManager> manager)
 {
     _manager = manager;
+
+    connect(_manager.get(), &TelegramManager::updateFile, this, &Files::onFileUpdated);
 }
 
 void Files::setWifiAutoDownloadSettings(AutoDownloadSettings *settings)
@@ -58,7 +60,6 @@ void Files::appendFile(td_api::object_ptr<td_api::file> file, QString fileType)
         _files[file->id_]->setFile(std::move(file));
     } else {
         auto filePointer = std::make_shared<File>(std::move(file), _manager);
-        connect(_manager.get(), SIGNAL(updateFile(td_api::updateFile*)), filePointer.get(), SLOT(fileUpdated(td_api::updateFile*)));
         _files.insert(filePointer->getId(), filePointer);
     }
 
@@ -95,4 +96,15 @@ shared_ptr<File> Files::getFile(int32_t fileId) const
     }
 
     return nullptr;
+}
+
+void Files::onFileUpdated(td_api::updateFile *updateFile)
+{
+    int32_t fileId = updateFile->file_->id_;
+
+    if (_files.contains(fileId)) {
+        _files[fileId]->updateFile(std::move(updateFile->file_));
+    }
+
+    delete updateFile;
 }

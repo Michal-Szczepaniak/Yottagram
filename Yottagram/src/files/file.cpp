@@ -47,6 +47,64 @@ void File::setFile(td_api::object_ptr<td_api::file> file)
     emit localPathChanged(localPath());
 }
 
+void File::updateFile(td_api::object_ptr<td_api::file> file)
+{
+    if (file->remote_->id_ != _file->remote_->id_) {
+        _file->remote_ = move(file->remote_);
+        emit remoteIdChanged(getRemoteId());
+        emit remoteUniqueIdChanged(getRemoteUniqueId());
+        emit uploadedSizeChanged(getUploadedSize());
+        emit isUploadedChanged(isUploaded());
+        emit isUploadingChanged(isUploading());
+    } else {
+        if (file->remote_->unique_id_ != _file->remote_->unique_id_) {
+            _file->remote_->unique_id_ = file->remote_->unique_id_;
+            emit remoteUniqueIdChanged(getRemoteUniqueId());
+        }
+
+        if (file->remote_->uploaded_size_ != _file->remote_->uploaded_size_) {
+            _file->remote_->uploaded_size_ = file->remote_->uploaded_size_;
+            emit uploadedSizeChanged(getUploadedSize());
+        }
+
+        if (file->remote_->is_uploading_completed_ != _file->remote_->is_uploading_completed_) {
+            _file->remote_->is_uploading_completed_ = file->remote_->is_uploading_completed_;
+            emit isUploadedChanged(isUploaded());
+        }
+
+        if (file->remote_->is_uploading_active_ != _file->remote_->is_uploading_active_) {
+            _file->remote_->is_uploading_active_ = file->remote_->is_uploading_active_;
+            emit isUploadingChanged(isUploading());
+        }
+    }
+
+    if (file->local_->path_ != _file->local_->path_) {
+        _file->local_->path_ = file->local_->path_;
+        emit localPathChanged(localPath());
+    }
+
+    if (file->expected_size_ != _file->expected_size_) {
+        _file->expected_size_ = file->expected_size_;
+        emit expectedSizeChanged(getExpectedSize());
+    }
+
+    if (file->local_->downloaded_size_ != _file->local_->downloaded_size_) {
+        _file->local_->downloaded_size_ = file->local_->downloaded_size_;
+        emit downloadedSizeChanged(getDownloadedSize());
+    }
+
+    if (file->local_->is_downloading_completed_ != _file->local_->is_downloading_completed_) {
+        _file->local_->is_downloading_completed_ = file->local_->is_downloading_completed_;
+        emit isDownloadedChanged(isDownloaded());
+        emit localPathChanged(localPath());
+    }
+
+    if (file->local_->is_downloading_active_ != _file->local_->is_downloading_active_) {
+        _file->local_->is_downloading_active_ = file->local_->is_downloading_active_;
+        emit isDownloadingChanged(isDownloading());
+    }
+}
+
 int32_t File::getId()
 {
     return _file->id_;
@@ -115,13 +173,4 @@ int32_t File::getDownloadedSize()
 int32_t File::getUploadedSize()
 {
     return _file->remote_->uploaded_size_;
-}
-
-void File::fileUpdated(td_api::updateFile *update_file)
-{
-    if (update_file->file_ && update_file->file_->id_ == getId()) {
-        setFile(std::move(update_file->file_));
-
-        emit fileChanged(getId());
-    }
 }

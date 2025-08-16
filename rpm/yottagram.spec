@@ -4,9 +4,10 @@ Name:       yottagram
 %{!?qtc_qmake5:%define qtc_qmake5 %qmake5}
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
+%global debug_package %{nil}
 Summary:    Yottagram
-Version:    0.6.2
-Release:    0
+Version:    0.7.0
+Release:    12
 Group:      Qt/Qt
 License:    GPLv3
 URL:        http://verdanditeam.com/
@@ -36,6 +37,7 @@ BuildRequires:  pkgconfig(alsa)
 BuildRequires:  pkgconfig(openh264)
 BuildRequires:  desktop-file-utils
 BuildRequires:  pkgconfig(audioresource-qt)
+BuildRequires:  libdwarf-devel
 Recommends:     voicecall-yottagram-plugin
 
 %description

@@ -41,7 +41,6 @@ Page {
     property string userName: ""
     property string name: ""
     property string pluginName: ""
-    property int type: 0
     property var chat: null
     property var shareConfiguration: null
     property var newReplyMessageId: 0
@@ -326,7 +325,7 @@ Page {
                 id: mentionsIcon
                 anchors.fill: parent
                 icon.fillMode: Image.PreserveAspectFit
-                icon.source: "image://theme/icon-m-health"
+                icon.source: "qrc:/icons/icon-splus-ping.png"
                 onClicked: scrollToMention()
             }
         }
@@ -472,7 +471,9 @@ Page {
                                 messages.blinkMessage = highlightMessage
                                 messages.blinkMessage = messages.blinkMessage
                             }
-                            chat.setMessageAsRead(messageItem.messageId)
+
+                            if (chatPage.status === PageStatus.Active && Qt.application.state === Qt.ApplicationActive)
+                                chat.setMessageAsRead(messageItem.messageId)
                         }
                     }
                 }
@@ -547,7 +548,9 @@ Page {
                             blinkMessage = highlightMessage
                             blinkMessage = blinkMessage
                         }
-                        chat.setMessageAsRead(messageItem.messageId)
+
+                        if (chatPage.status === PageStatus.Active && Qt.application.state === Qt.ApplicationActive)
+                            chat.setMessageAsRead(messageItem.messageId)
                     }
                     if (((contentHeight + originY) - (contentY + height)) < Theme.itemSizeHuge*3 && ((new Date()).getTime() - chatMessagesTime) > 300 && count > 0 && chatProxyModel.get(0).messageId !== chat.lastMessageId) {
                         chatMessagesTime = (new Date()).getTime();
@@ -564,7 +567,7 @@ Page {
                 ListItem {
                     id: listItem
                     width: chatPage.width
-                    contentHeight: Math.max(message.height + Theme.paddingSmall + (settings.chatBubbles ? Theme.paddingMedium*2 : 0), Theme.itemSizeExtraSmall)
+                    contentHeight: Theme.itemSizeHuge*2 //Math.max(message.height + Theme.paddingSmall + (settings.chatBubbles ? Theme.paddingMedium*2 : 0), Theme.itemSizeExtraSmall)
                     contentWidth: width
                     highlighted: selection.indexOf(messageId) !== -1
                     property var prevMessage: chatProxyModel.get(index+1)
@@ -638,6 +641,7 @@ Page {
                     }
 
                     onPressAndHold: {
+                        chat.loadContextPermissions(messageId)
                         contextMenuLoader.active = true;
                     }
 
@@ -995,9 +999,7 @@ Page {
                         }
                         Label {
                             width: parent.width - Theme.paddingLarge
-                            text: chatPage.newReplyMessageId == 0 ? "" :
-                                          (replyRow.getReplyData("messageType") === "text" ? replyRow.getReplyData("messageText")
-                                                                                               : replyRow.getReplyData("messageType"))
+                            text: chatPage.newReplyMessageId == 0 ? "" : replyRow.getReplyData("messageTypeText")
                             truncationMode: TruncationMode.Fade
                         }
                     }
@@ -1042,9 +1044,7 @@ Page {
                         }
                         Label {
                             width: parent.width - Theme.paddingLarge
-                            text: chatPage.newEditMessageId == 0 ? "" :
-                                          (editRow.getEditData("messageType") === "text" ? editRow.getEditData("messageText")
-                                                                                               : editRow.getEditData("messageType"))
+                            text: chatPage.newEditMessageId == 0 ? "" : editRow.getEditData("messageText")
                             truncationMode: TruncationMode.Fade
                         }
                     }
@@ -1268,6 +1268,7 @@ Page {
                     spacing: Theme.paddingLarge
                     padding: Theme.paddingLarge
                     visible: {
+                        var type = chat.getChatType()
                         if (attachmentLoader.active) return false
                         if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canSendMediaMessages
                         if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canSendMediaMessages
@@ -1337,6 +1338,7 @@ Page {
                             source: "image://theme/icon-m-events"
                             onClicked: pageStack.push(pollDialog)
                             visible: {
+                                var type = chat.getChatType()
                                 if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canSendPolls
                                 if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canSendPolls
                                 return chat.canSendPolls

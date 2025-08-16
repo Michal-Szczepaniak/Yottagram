@@ -55,7 +55,7 @@ YottagramVoiceCallHandler::YottagramVoiceCallHandler(const QString &handlerId, c
     Q_D(YottagramVoiceCallHandler);
     d->timer.setSingleShot(false);
     d->timer.setInterval(1000);
-    connect(&d->timer, &QTimer::timeout, [this](){ emit this->durationChanged(this->duration()); });
+    connect(&d->timer, &QTimer::timeout, [this](){ emit durationChanged(duration()); });
 }
 
 YottagramVoiceCallHandler::~YottagramVoiceCallHandler()

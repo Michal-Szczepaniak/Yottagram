@@ -67,7 +67,7 @@ void ScopeNotificationSettings::setMuteFor(int32_t muteFor)
         _scopeNotificationSettings->use_default_mute_stories_,
         _scopeNotificationSettings->mute_stories_,
         _scopeNotificationSettings->story_sound_id_,
-        _scopeNotificationSettings->show_story_sender_,
+        _scopeNotificationSettings->show_story_poster_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
     );
@@ -93,7 +93,7 @@ void ScopeNotificationSettings::setShowPreview(bool showPreview)
         _scopeNotificationSettings->use_default_mute_stories_,
         _scopeNotificationSettings->mute_stories_,
         _scopeNotificationSettings->story_sound_id_,
-        _scopeNotificationSettings->show_story_sender_,
+        _scopeNotificationSettings->show_story_poster_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
     );
@@ -119,7 +119,7 @@ void ScopeNotificationSettings::setUseDefaultMuteStories(bool useDefaultMuteStor
         _scopeNotificationSettings->use_default_mute_stories_,
         _scopeNotificationSettings->mute_stories_,
         _scopeNotificationSettings->story_sound_id_,
-        _scopeNotificationSettings->show_story_sender_,
+        _scopeNotificationSettings->show_story_poster_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
         );
@@ -145,7 +145,7 @@ void ScopeNotificationSettings::setMuteStories(bool muteStories)
         _scopeNotificationSettings->use_default_mute_stories_,
         _scopeNotificationSettings->mute_stories_,
         _scopeNotificationSettings->story_sound_id_,
-        _scopeNotificationSettings->show_story_sender_,
+        _scopeNotificationSettings->show_story_poster_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
         );
@@ -171,7 +171,7 @@ void ScopeNotificationSettings::setStorySoundId(int64_t storySoundId)
         _scopeNotificationSettings->use_default_mute_stories_,
         _scopeNotificationSettings->mute_stories_,
         _scopeNotificationSettings->story_sound_id_,
-        _scopeNotificationSettings->show_story_sender_,
+        _scopeNotificationSettings->show_story_poster_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
         );
@@ -182,7 +182,7 @@ void ScopeNotificationSettings::setStorySoundId(int64_t storySoundId)
 bool ScopeNotificationSettings::getShowStorySender() const
 {
     if (_scopeNotificationSettings) {
-        return _scopeNotificationSettings->show_story_sender_;
+        return _scopeNotificationSettings->show_story_poster_;
     } else {
         return false;
     }
@@ -197,11 +197,11 @@ void ScopeNotificationSettings::setShowStorySender(bool showStorySender)
         _scopeNotificationSettings->use_default_mute_stories_,
         _scopeNotificationSettings->mute_stories_,
         _scopeNotificationSettings->story_sound_id_,
-        _scopeNotificationSettings->show_story_sender_,
+        _scopeNotificationSettings->show_story_poster_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
         );
-    settings->show_story_sender_ = showStorySender;
+    settings->show_story_poster_ = showStorySender;
     _manager->sendQuery(new td_api::setScopeNotificationSettings(getScope(), move(settings)));
 }
 
@@ -223,7 +223,7 @@ void ScopeNotificationSettings::setDisablePinnedMessageNotifications(bool disabl
         _scopeNotificationSettings->use_default_mute_stories_,
         _scopeNotificationSettings->mute_stories_,
         _scopeNotificationSettings->story_sound_id_,
-        _scopeNotificationSettings->show_story_sender_,
+        _scopeNotificationSettings->show_story_poster_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
     );
@@ -249,7 +249,7 @@ void ScopeNotificationSettings::setDisableMentionNotifications(bool disableMenti
         _scopeNotificationSettings->use_default_mute_stories_,
         _scopeNotificationSettings->mute_stories_,
         _scopeNotificationSettings->story_sound_id_,
-        _scopeNotificationSettings->show_story_sender_,
+        _scopeNotificationSettings->show_story_poster_,
         _scopeNotificationSettings->disable_pinned_message_notifications_,
         _scopeNotificationSettings->disable_mention_notifications_
     );

@@ -159,8 +159,8 @@ bool User::isMutualContact() const
 
 bool User::isVerified() const
 {
-    if (_user == nullptr) return false;
-    return _user->is_verified_;
+    if (_user == nullptr || _user->verification_status_ == nullptr) return false;
+    return _user->verification_status_->is_verified_;
 }
 
 bool User::isSupport() const
@@ -177,8 +177,8 @@ QString User::getRestrictionReason() const
 
 bool User::isScam() const
 {
-    if (_user == nullptr) return false;
-    return _user->is_scam_;
+    if (_user == nullptr || _user->verification_status_ == nullptr) return false;
+    return _user->verification_status_->is_scam_;
 }
 
 bool User::haveAccess() const

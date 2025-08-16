@@ -435,6 +435,10 @@
         <source>Reply</source>
         <translation type="unfinished">回复</translation>
     </message>
+    <message>
+        <source>%1 is typing</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
@@ -459,44 +463,12 @@
         <translation>储存消息</translation>
     </message>
     <message>
-        <source>Audio</source>
-        <translation>音频</translation>
-    </message>
-    <message>
-        <source>Photo</source>
-        <translation>图片</translation>
-    </message>
-    <message>
-        <source>Sticker</source>
-        <translation>表情贴图</translation>
-    </message>
-    <message>
-        <source>Video</source>
-        <translation>视频</translation>
-    </message>
-    <message>
-        <source>Document</source>
-        <translation>文档</translation>
-    </message>
-    <message>
-        <source>Poll</source>
-        <translation>投票</translation>
-    </message>
-    <message>
         <source>Unpin from top</source>
         <translation>从顶部取消置顶</translation>
     </message>
     <message>
         <source>Pin to top</source>
         <translation>置顶</translation>
-    </message>
-    <message>
-        <source>Location</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Contact</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Archive</source>
@@ -507,99 +479,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>VoiceNote</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>VideoNote</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>GIF</source>
-        <translation type="unfinished">GIF</translation>
-    </message>
-    <message>
         <source>Contacts</source>
         <translation type="unfinished"></translation>
     </message>
-</context>
-<context>
-    <name>ChatNew</name>
     <message>
-        <source>Open secret chat</source>
-        <translation type="unfinished">打开私密对话</translation>
-    </message>
-    <message>
-        <source>Close secret chat</source>
-        <translation type="unfinished">关闭私密对话</translation>
-    </message>
-    <message>
-        <source>Set self-destruct timer</source>
-        <translation type="unfinished">设置自毁计时器</translation>
-    </message>
-    <message>
-        <source>Cancel selection</source>
-        <translation type="unfinished">取消选择</translation>
-    </message>
-    <message>
-        <source>Forward</source>
-        <translation type="unfinished">转发</translation>
-    </message>
-    <message>
-        <source>Scroll to first unread mention</source>
+        <source>Loading</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Saved messages</source>
-        <translation type="unfinished">储存消息</translation>
-    </message>
-    <message>
-        <source>%1 members</source>
-        <translation type="unfinished">%1 位成员</translation>
-    </message>
-    <message>
-        <source>%L1 forwarded messages</source>
-        <translation type="unfinished">%L1 条转发消息</translation>
-    </message>
-    <message>
-        <source>Type the text...</source>
-        <translation type="unfinished">输入文本…</translation>
-    </message>
-    <message>
-        <source>Image</source>
-        <translation type="unfinished">图片</translation>
-    </message>
-    <message>
-        <source>Video</source>
-        <translation type="unfinished">视频</translation>
-    </message>
-    <message>
-        <source>Audio</source>
-        <translation type="unfinished">音频</translation>
-    </message>
-    <message>
-        <source>Document</source>
-        <translation type="unfinished">文档</translation>
-    </message>
-    <message>
-        <source>File</source>
-        <translation type="unfinished">文件</translation>
-    </message>
-    <message>
-        <source>Poll</source>
-        <translation type="unfinished">投票</translation>
-    </message>
-    <message>
-        <source>Sticker</source>
-        <translation type="unfinished">表情贴图</translation>
-    </message>
-    <message>
-        <source>Voice Note</source>
-        <translation type="unfinished">语音消息</translation>
-    </message>
-    <message>
-        <source>Press and hold record button to record voice note.</source>
-        <translation type="unfinished">按下并握住录音按钮以录制语音消息。</translation>
     </message>
 </context>
 <context>
@@ -754,6 +639,58 @@
     <message>
         <source>Group created</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Photo</source>
+        <translation type="unfinished">图片</translation>
+    </message>
+    <message>
+        <source>Video</source>
+        <translation type="unfinished">视频</translation>
+    </message>
+    <message>
+        <source>Document</source>
+        <translation type="unfinished">文档</translation>
+    </message>
+    <message>
+        <source>Audio</source>
+        <translation type="unfinished">音频</translation>
+    </message>
+    <message>
+        <source>Animation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Voice note</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Contact</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sticker</source>
+        <translation type="unfinished">表情贴图</translation>
+    </message>
+    <message>
+        <source>Video note</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Message unsupported</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Users joined</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Poll</source>
+        <translation type="unfinished">投票</translation>
     </message>
 </context>
 <context>

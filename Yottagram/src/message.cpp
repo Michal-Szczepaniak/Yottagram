@@ -22,7 +22,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 #include <contents/animatedemoji.h>
 
-Message::Message(QObject *parent) : QObject(parent), _message(nullptr), _text(nullptr), _messageContent(nullptr), _webPage(nullptr)
+Message::Message(QObject *parent) : QObject(parent), _message(nullptr), _properties(nullptr), _text(nullptr), _messageContent(nullptr), _linkPreview(nullptr)
 {
 
 }
@@ -36,10 +36,13 @@ td_api::message *Message::message() const
     return _message;
 }
 
-void Message::setMessage(td_api::message *message)
+void Message::setMessage(td_api::message *message, bool handleContent)
 {
     _message = message;
-    handleMessageContent(std::move(message->content_));
+
+    if (handleContent) {
+        handleMessageContent(std::move(message->content_));
+    }
 }
 
 void Message::setTelegramManager(shared_ptr<TelegramManager> manager)
@@ -69,7 +72,7 @@ QString Message::getText(bool formatted)
     switch (_contentTypeId) {
     case td_api::messageText::ID:
         if (formatted)
-            return formatTextAsHTML(_text->text_.get());
+            return _formattedMessage;
         else
             return QString::fromStdString(_text->text_->text_);
     case td_api::messageChatDeleteMember::ID:
@@ -85,23 +88,35 @@ QString Message::getText(bool formatted)
     case td_api::messageChatJoinByLink::ID:
         return tr("%1 joined").arg(_users->getUser(getSenderUserId())->getName());
     case td_api::messagePhoto::ID:
+    {
         if (static_cast<Photo*>(_messageContent)->getCaption() == nullptr) return "";
         return QString::fromStdString(static_cast<Photo*>(_messageContent)->getCaption()->text_);
+    }
     case td_api::messageVideo::ID:
+    {
         if (static_cast<Video*>(_messageContent)->getCaption() == nullptr) return "";
         return QString::fromStdString(static_cast<Video*>(_messageContent)->getCaption()->text_);
+    }
     case td_api::messageDocument::ID:
+    {
         if (static_cast<Document*>(_messageContent)->getCaption() == nullptr) return "";
         return QString::fromStdString(static_cast<Document*>(_messageContent)->getCaption()->text_);
+    }
     case td_api::messageAudio::ID:
+    {
         if (static_cast<Audio*>(_messageContent)->getCaption() == nullptr) return "";
         return QString::fromStdString(static_cast<Audio*>(_messageContent)->getCaption()->text_);
+    }
     case td_api::messageAnimation::ID:
+    {
         if (static_cast<Animation*>(_messageContent)->getCaption() == nullptr) return "";
         return QString::fromStdString(static_cast<Animation*>(_messageContent)->getCaption()->text_);
+    }
     case td_api::messageVoiceNote::ID:
+    {
         if (static_cast<VoiceNote*>(_messageContent)->getCaption() == nullptr) return "";
         return QString::fromStdString(static_cast<VoiceNote*>(_messageContent)->getCaption()->text_);
+    }
     case td_api::messagePoll::ID:
         return static_cast<Poll*>(_messageContent)->getQuestion();
     case td_api::messageChatSetMessageAutoDeleteTime::ID:
@@ -114,7 +129,6 @@ QString Message::getText(bool formatted)
         }
     case td_api::messageCall::ID:
         return _message->is_outgoing_ ? tr("Outgoing call") : tr("Incoming call");
-        break;
     case td_api::messageBasicGroupChatCreate::ID:
         return tr("Group created");
     case td_api::messageSupergroupChatCreate::ID:
@@ -129,7 +143,7 @@ QString Message::getText(bool formatted)
     case td_api::messageContactRegistered::ID:
         return tr("%1 joined telegram").arg(_users->getUser(getSenderUserId())->getName());
     default:
-        return "Message unsupported";
+        return tr("Message unsupported");
     }
 }
 
@@ -189,6 +203,81 @@ QString Message::getType() const
     }
 }
 
+QString Message::getTypeText()
+{
+
+    switch (_contentTypeId) {
+    case td_api::messageText::ID:
+        return QString::fromStdString(_text->text_->text_);
+    case td_api::messageChatDeleteMember::ID:
+        return tr("%1 left").arg(_users->getUser(getDeleteMemberId())->getName());
+    case td_api::messageChatAddMembers::ID:
+    {
+        auto newUsers = getAddMembersIds();
+        for(auto userId: newUsers) {
+            return tr("%1 joined").arg(_users->getUser(userId)->getName());
+        }
+        return tr("Users joined");
+    }
+    case td_api::messageChatJoinByLink::ID:
+        return tr("%1 joined").arg(_users->getUser(getSenderUserId())->getName());
+    case td_api::messagePhoto::ID:
+    {
+        return tr("Photo");
+    }
+    case td_api::messageVideo::ID:
+    {
+        return tr("Video");
+    }
+    case td_api::messageDocument::ID:
+    {
+        return tr("Document");
+    }
+    case td_api::messageAudio::ID:
+    {
+        return tr("Audio");
+    }
+    case td_api::messageAnimation::ID:
+    {
+        return tr("Animation");
+    }
+    case td_api::messageVoiceNote::ID:
+    {
+        return tr("Voice note");
+    }
+    case td_api::messagePoll::ID:
+        return tr("Poll");
+    case td_api::messageChatSetMessageAutoDeleteTime::ID:
+        return tr("Self-destruct timer set to %n second(s)", "", static_cast<td_api::messageChatSetMessageAutoDeleteTime*>(_message->content_.get())->message_auto_delete_time_);
+    case td_api::messagePinMessage::ID:
+        if (_message->sender_id_->get_id() == td_api::messageSenderUser::ID) {
+            return tr("%1 pinned message").arg(_users->getUser(getSenderUserId())->getName());
+        } else if (_message->sender_id_->get_id() == td_api::messageSenderChat::ID) {
+            return tr("Message was pinned");
+        }
+    case td_api::messageCall::ID:
+        return _message->is_outgoing_ ? tr("Outgoing call") : tr("Incoming call");
+    case td_api::messageBasicGroupChatCreate::ID:
+        return tr("Group created");
+    case td_api::messageSupergroupChatCreate::ID:
+        return tr("Group created");
+    case td_api::messageLocation::ID:
+        return tr("Location");
+    case td_api::messageContact::ID:
+        return tr("Contact");
+    case td_api::messageSticker::ID:
+        return tr("Sticker");
+    case td_api::messageVideoNote::ID:
+        return tr("Video note");
+    case td_api::messageAnimatedEmoji::ID:
+        return static_cast<AnimatedEmoji*>(_messageContent)->getEmoji();
+    case td_api::messageContactRegistered::ID:
+        return tr("%1 joined telegram").arg(_users->getUser(getSenderUserId())->getName());
+    default:
+        return getType();
+    }
+}
+
 int32_t Message::getContentType()
 {
     return _contentTypeId;
@@ -211,17 +300,22 @@ bool Message::isEdited()
 
 bool Message::canBeEdited()
 {
-    return _message->can_be_edited_;
+    if (_properties == nullptr || getSenderUserId() != _manager->getMyId() || getForwardedInfo() != nullptr) return false;
+
+    return _properties->can_be_edited_;
 }
 
 bool Message::canBeForwarded()
 {
-    return _message->can_be_forwarded_;
+    if (_properties == nullptr) return false;
+    return _properties->can_be_forwarded_;
 }
 
 bool Message::canBeDeleted()
 {
-    return _message->can_be_deleted_for_all_users_;
+    if (_properties == nullptr) return false;
+    qDebug() << "Can delete: " << _properties->can_be_deleted_for_all_users_;
+    return _properties->can_be_deleted_for_all_users_;
 }
 
 bool Message::isChannelPost()
@@ -254,14 +348,14 @@ int32_t Message::getDeleteMemberId()
     return -1;
 }
 
-QVector<int32_t> Message::getAddMembersIds()
+QVector<int64_t> Message::getAddMembersIds()
 {
-    QVector<int32_t> newUsers;
+    QVector<int64_t> newUsers;
 
     if (_contentTypeId == td_api::messageChatAddMembers::ID) {
         auto userIds = static_cast<const td_api::messageChatAddMembers &>(*_message->content_).member_user_ids_;
 
-        for(int32_t userId: userIds) {
+        for(int64_t userId: userIds) {
             newUsers.append(userId);
         }
     }
@@ -271,13 +365,13 @@ QVector<int32_t> Message::getAddMembersIds()
 
 int64_t Message::replyMessageId()
 {
-    if (!_message->reply_to_) return -1;
+    if (!_message->reply_to_) return 0;
     // TODO: handle messageReplyToStory
     if (_message->reply_to_->get_id() == td_api::messageReplyToMessage::ID) {
         return static_cast<td_api::messageReplyToMessage*>(_message->reply_to_.get())->message_id_;
     }
 
-    return -1;
+    return 0;
 }
 
 td_api::messageForwardInfo* Message::getForwardedInfo()
@@ -347,14 +441,26 @@ void Message::setContainsUnreadMention(bool containsUnreadMention)
     _message->contains_unread_mention_ = containsUnreadMention;
 }
 
-bool Message::hasWebPage() const
+void Message::fetchProperties()
 {
-    return _webPage != nullptr;
+    auto response = _manager->sendQuerySyncWithResponse(new td_api::getMessageProperties(getChatId(), getId()));
+    if (response) {
+        if (_properties != nullptr) {
+            delete _properties;
+        }
+
+        _properties = (td_api::messageProperties*) response.release();
+    }
 }
 
-WebPage* Message::getWebPage() const
+bool Message::hasWebPage() const
 {
-    return _webPage;
+    return _linkPreview != nullptr;
+}
+
+LinkPreview* Message::getWebPage() const
+{
+    return _linkPreview;
 }
 
 void Message::handleMessageContent(td_api::object_ptr<td_api::MessageContent> messageContent)
@@ -362,16 +468,17 @@ void Message::handleMessageContent(td_api::object_ptr<td_api::MessageContent> me
     if (!messageContent) return;
     _contentTypeId = messageContent->get_id();
     if (_contentTypeId == td_api::messageText::ID) {
-        if (static_cast<td_api::messageText*>(messageContent.get())->web_page_) {
-            if (_webPage == nullptr) {
-                _webPage = new WebPage();
-                _webPage->setFiles(_files);
+        if (static_cast<td_api::messageText*>(messageContent.get())->link_preview_) {
+            if (_linkPreview == nullptr) {
+                _linkPreview = new LinkPreview();
+                _linkPreview->setFiles(_files);
             }
 
-            _webPage->setWebpage(std::move(static_cast<td_api::messageText*>(messageContent.get())->web_page_));
+            _linkPreview->setLinkPreview(std::move(static_cast<td_api::messageText*>(messageContent.get())->link_preview_));
         }
 
         _text = td_api::move_object_as<td_api::messageText>(messageContent);
+        _formattedMessage = formatTextAsHTML(_text->text_.get());
     } else {
         if (_messageContent == nullptr) {
             switch (_contentTypeId) {
@@ -473,7 +580,7 @@ QString Message::formatTextAsHTML(td_api::formattedText *formattedText)
             modifiedText += getHTMLEntityForIndex(i, entity.get(), originalText, true);
         }
 
-        modifiedText += originalText[i];
+        modifiedText += QString(originalText[i]).toHtmlEscaped();
 
         for (auto it = formattedText->entities_.rbegin(); it != formattedText->entities_.rend(); it++) {
             modifiedText += getHTMLEntityForIndex(i, (*it).get(), originalText, false);

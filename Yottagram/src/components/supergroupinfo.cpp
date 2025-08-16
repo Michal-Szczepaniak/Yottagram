@@ -146,7 +146,7 @@ bool SupergroupInfo::getCanAddWebPagePreviews() const
     case td_api::chatMemberStatusMember::ID:
         return true;
     case td_api::chatMemberStatusRestricted::ID:
-        return static_cast<const td_api::chatMemberStatusRestricted*>(status)->permissions_->can_add_web_page_previews_;
+        return static_cast<const td_api::chatMemberStatusRestricted*>(status)->permissions_->can_add_link_previews_;
     default:
         return true;
     }

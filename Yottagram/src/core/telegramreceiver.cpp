@@ -27,17 +27,18 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 TelegramReceiver::TelegramReceiver()
 {
     td::Log::set_verbosity_level(0);
-    client = std::make_unique<td::Client>();
+    client = manager.create_client_id();
+    manager.send(client, 0, td_api::make_object<td_api::setLogVerbosityLevel>(0));
 }
 
 void TelegramReceiver::run() {
     while(true) {
-        auto response = client->receive(WAIT_TIMEOUT);
+        auto response = manager.receive(WAIT_TIMEOUT);
 
-        if (response.object) {
-            emit messageReceived(response.id, response.object.release());
+        qDebug() << "Message: " << response.object->get_id();
+        if (!response.object) continue;
 
-            msleep(10);
-        }
+        emit messageReceived(response.request_id, response.object.release());
+        msleep(10);
     }
 }

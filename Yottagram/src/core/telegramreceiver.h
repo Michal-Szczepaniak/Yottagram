@@ -34,13 +34,13 @@ class TelegramReceiver : public QThread
 public:
     TelegramReceiver();
 
-    std::unique_ptr<Client> client;
-
     void run() override;
+
+    ClientManager manager;
+    ClientManager::ClientId client;
 
 signals:
     void messageReceived(uint64_t id, td_api::Object* object);
-    void bootupComplete();
 
 private:
     const double WAIT_TIMEOUT = 1000;

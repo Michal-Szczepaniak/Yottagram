@@ -52,7 +52,7 @@ QVariant Poll::data(const QModelIndex &index, int role) const
     auto& option = _poll->options_[index.row()];
     switch (role) {
     case PollRoles::TextRole:
-        return QString::fromStdString(option->text_);
+        return QString::fromStdString(option->text_->text_);
     case PollRoles::VoteCountRole:
         return option->voter_count_;
     case PollRoles::VotePercentageRole:
@@ -84,7 +84,7 @@ int64_t Poll::getId() const
 
 QString Poll::getQuestion() const
 {
-    return QString::fromStdString(_poll->question_);
+    return QString::fromStdString(_poll->question_->text_);
 }
 
 int32_t Poll::getTotalVoterCount() const

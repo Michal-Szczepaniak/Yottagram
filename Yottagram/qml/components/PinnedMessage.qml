@@ -73,12 +73,12 @@ Row {
         }
         Label {
             id: pinnedText
-            text: pinnedMessages.id === 0 ? "" :
-                      (pinnedMessages.type === "text" ? pinnedMessages.text.trim().replace(/\r?\n|\r/g, " ")
-                                                                           : pinnedMessages.type)
+            text: pinnedMessages.id === 0 ? "" : pinnedMessages.typeText
             width: parent.width
             truncationMode: TruncationMode.Fade
             font.pixelSize: Theme.fontSizeSmall
+            linkColor: color
+            maximumLineCount: 1
 
             MouseArea {
                 anchors.fill: parent

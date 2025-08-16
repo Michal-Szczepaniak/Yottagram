@@ -3680,5 +3680,10 @@
         <file>emoji/a9.svg</file>
         <file>emoji/ae.svg</file>
         <file>emoji/e50a.svg</file>
+        <file>icons/icon-splus-ping.png</file>
+        <file>icons/+1.5/icon-splus-ping.png</file>
+        <file>icons/+2.0/icon-splus-ping.png</file>
+        <file>icons/+2.5/icon-splus-ping.png</file>
+        <file>icons/+3.0/icon-splus-ping.png</file>
     </qresource>
 </RCC>

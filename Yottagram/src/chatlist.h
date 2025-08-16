@@ -116,8 +116,7 @@ public:
 private:
     QVector<int64_t>* getChatList(td_api::ChatList* list);
     td_api::object_ptr<td_api::ChatList> getSelectedChatList() const;
-    void setChatPosition(int64_t chatId, td_api::chatPosition* position);
-    QString getMessageText(shared_ptr<Message> message) const;
+    bool setChatPosition(int64_t chatId, td_api::chatPosition* position);
 
 signals:
     void channelNotificationSettingsChanged(td_api::scopeNotificationSettings* scopeNotificationSettings);
@@ -149,10 +148,14 @@ public slots:
     void updateMessageMentionRead(td_api::updateMessageMentionRead *updateMessageMentionRead);
     void updateChatDraftMessage(td_api::updateChatDraftMessage *updateChatDraftMessage);
     void onCreatedPrivateChat(td_api::chat *chat);
-    void updateChatList();
+    void onBootupComplete();
 
 protected:
-    void updateChat(int64_t chat, const QVector<int> &roles = {IdRole, NameRole});
+    void updateChat(int64_t chat, QVector<int> roles = {IdRole, NameRole});
+
+private:
+    QString getLastMessageAuthor(Chat* chat);
+    QString getLastMessageTimestamp(Chat* chat);
 
 private:
     int64_t openedChat = -1;
@@ -179,6 +182,14 @@ private:
     int32_t _selectedFolderChatList;
     QTimer _updateListTimer;
     QMap<int64_t, QSet<int>> _chatsToUpdate;
+
+    struct ChatCache {
+        QString lastAuthor;
+        QString lastMessage;
+        QString lastTimestamp;
+    };
+
+    QMap<int64_t, ChatCache> _chatCache;
 };
 
 #endif // CHATLIST_H

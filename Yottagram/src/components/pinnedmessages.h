@@ -35,6 +35,7 @@ class PinnedMessages : public QObject
     Q_PROPERTY(int64_t senderUserId READ senderUserId NOTIFY idChanged)
     Q_PROPERTY(QString type READ type NOTIFY idChanged)
     Q_PROPERTY(QString text READ text NOTIFY idChanged)
+    Q_PROPERTY(QString typeText READ typeText NOTIFY idChanged)
 public:
     explicit PinnedMessages(QObject *parent = nullptr);
     ~PinnedMessages();
@@ -48,6 +49,7 @@ public:
     int64_t senderUserId();
     QString type();
     QString text();
+    QString typeText();
 
     Q_INVOKABLE void cycleMessage();
     Q_INVOKABLE void cycleMessageBack();

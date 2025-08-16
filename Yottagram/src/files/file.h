@@ -31,17 +31,17 @@ using namespace td;
 class File : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int32_t id READ getId NOTIFY fileChanged)
-    Q_PROPERTY(QString remoteId READ getRemoteId NOTIFY fileChanged)
-    Q_PROPERTY(QString remoteUniqueId READ getRemoteUniqueId NOTIFY fileChanged)
+    Q_PROPERTY(int32_t id READ getId NOTIFY idChanged)
+    Q_PROPERTY(QString remoteId READ getRemoteId NOTIFY remoteIdChanged)
+    Q_PROPERTY(QString remoteUniqueId READ getRemoteUniqueId NOTIFY remoteUniqueIdChanged)
     Q_PROPERTY(QString localPath READ localPath NOTIFY localPathChanged)
-    Q_PROPERTY(int32_t expectedSize READ getExpectedSize NOTIFY fileChanged)
-    Q_PROPERTY(int32_t downloadedSize READ getDownloadedSize NOTIFY fileChanged)
-    Q_PROPERTY(int32_t uploadedSize READ getUploadedSize NOTIFY fileChanged)
-    Q_PROPERTY(bool isDownloaded READ isDownloaded NOTIFY fileChanged)
-    Q_PROPERTY(bool isDownloading READ isDownloading NOTIFY fileChanged)
-    Q_PROPERTY(bool isUploaded READ isUploaded NOTIFY fileChanged)
-    Q_PROPERTY(bool isUploading READ isUploading NOTIFY fileChanged)
+    Q_PROPERTY(int32_t expectedSize READ getExpectedSize NOTIFY expectedSizeChanged)
+    Q_PROPERTY(int32_t downloadedSize READ getDownloadedSize NOTIFY downloadedSizeChanged)
+    Q_PROPERTY(int32_t uploadedSize READ getUploadedSize NOTIFY uploadedSizeChanged)
+    Q_PROPERTY(bool isDownloaded READ isDownloaded NOTIFY isDownloadedChanged)
+    Q_PROPERTY(bool isDownloading READ isDownloading NOTIFY isDownloadingChanged)
+    Q_PROPERTY(bool isUploaded READ isUploaded NOTIFY isUploadedChanged)
+    Q_PROPERTY(bool isUploading READ isUploading NOTIFY isUploadingChanged)
 public:
     explicit File(QObject *parent = nullptr);
     File(td_api::object_ptr<td_api::file> file, std::shared_ptr<TelegramManager> manager);
@@ -49,6 +49,7 @@ public:
 
     td_api::file* getFile();
     void setFile(td_api::object_ptr<td_api::file> file);
+    void updateFile(td_api::object_ptr<td_api::file> file);
 
     int32_t getId();
     QString getRemoteId();
@@ -66,11 +67,17 @@ public:
     int32_t getUploadedSize();
 
 signals:
-    void fileChanged(int32_t fileId);
+    void idChanged(int32_t fileId);
     void localPathChanged(QString path);
-
-public slots:
-    void fileUpdated(td_api::updateFile *update_file);
+    void remoteIdChanged(QString remoteId);
+    void remoteUniqueIdChanged(QString remoteUniqueId);
+    void expectedSizeChanged(int32_t expectedSize);
+    void downloadedSizeChanged(int32_t downloadedSize);
+    void uploadedSizeChanged(int32_t uploadedSize);
+    void isDownloadedChanged(bool isDownloaded);
+    void isDownloadingChanged(bool isDownloading);
+    void isUploadedChanged(bool isUploaded);
+    void isUploadingChanged(bool isUploading);
 
 private:
     td_api::object_ptr<td_api::file> _file;

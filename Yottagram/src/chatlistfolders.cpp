@@ -53,7 +53,7 @@ void ChatListFolders::updateChatFolders(td_api::updateChatFolders *updateChatFol
     beginResetModel();
     _folderChatLists.clear();
     for (td_api::object_ptr<td_api::chatFolderInfo> &chatFolderInfo : updateChatFolders->chat_folders_) {
-        _folderChatLists.append({chatFolderInfo->id_, QString::fromStdString(chatFolderInfo->title_), QString::fromStdString(chatFolderInfo->icon_->name_)});
+        _folderChatLists.append({chatFolderInfo->id_, QString::fromStdString(chatFolderInfo->name_->text_->text_), QString::fromStdString(chatFolderInfo->icon_->name_)});
     }
     endResetModel();
 }

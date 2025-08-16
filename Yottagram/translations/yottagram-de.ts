@@ -435,6 +435,10 @@
         <source>Reply</source>
         <translation>Antworten</translation>
     </message>
+    <message>
+        <source>%1 is typing</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
@@ -455,30 +459,6 @@
         <translation>Nachicht löschen</translation>
     </message>
     <message>
-        <source>Audio</source>
-        <translation>Audio</translation>
-    </message>
-    <message>
-        <source>Photo</source>
-        <translation>Bild</translation>
-    </message>
-    <message>
-        <source>Sticker</source>
-        <translation>Sticker</translation>
-    </message>
-    <message>
-        <source>Video</source>
-        <translation>Video</translation>
-    </message>
-    <message>
-        <source>Document</source>
-        <translation>Dokument</translation>
-    </message>
-    <message>
-        <source>Poll</source>
-        <translation>Umfrage</translation>
-    </message>
-    <message>
         <source>Unpin from top</source>
         <translation>Anheften rückgänig machen</translation>
     </message>
@@ -491,14 +471,6 @@
         <translation>Gespeicherte Nachichten</translation>
     </message>
     <message>
-        <source>Location</source>
-        <translation>Standort</translation>
-    </message>
-    <message>
-        <source>Contact</source>
-        <translation>Kontakt</translation>
-    </message>
-    <message>
         <source>Archive</source>
         <translation>Archiv</translation>
     </message>
@@ -507,99 +479,12 @@
         <translation>Hauptseite</translation>
     </message>
     <message>
-        <source>VoiceNote</source>
-        <translation>Sprachnachicht</translation>
-    </message>
-    <message>
-        <source>VideoNote</source>
-        <translation>Videonachicht</translation>
-    </message>
-    <message>
-        <source>GIF</source>
-        <translation>GIF</translation>
-    </message>
-    <message>
         <source>Contacts</source>
         <translation>Kontakte</translation>
     </message>
-</context>
-<context>
-    <name>ChatNew</name>
     <message>
-        <source>Open secret chat</source>
-        <translation>Einen geheimen Chat öffnen</translation>
-    </message>
-    <message>
-        <source>Close secret chat</source>
-        <translation>Schließen des geheimen Chats</translation>
-    </message>
-    <message>
-        <source>Set self-destruct timer</source>
-        <translation>Dauer für selbstlöschende Nachichten</translation>
-    </message>
-    <message>
-        <source>Cancel selection</source>
-        <translation>Kanalauswahl</translation>
-    </message>
-    <message>
-        <source>Forward</source>
-        <translation>Weiterleiten</translation>
-    </message>
-    <message>
-        <source>Scroll to first unread mention</source>
-        <translation>Gehe zur ersten ungelesenen Nachicht</translation>
-    </message>
-    <message>
-        <source>Saved messages</source>
-        <translation>Gespeicherte Nachichten</translation>
-    </message>
-    <message>
-        <source>%1 members</source>
-        <translation>%1 Mitglieder</translation>
-    </message>
-    <message>
-        <source>%L1 forwarded messages</source>
-        <translation>%L1 Weitergeleitete Nachichten</translation>
-    </message>
-    <message>
-        <source>Type the text...</source>
-        <translation>Gib einen Text ein...</translation>
-    </message>
-    <message>
-        <source>Image</source>
-        <translation>Bild</translation>
-    </message>
-    <message>
-        <source>Video</source>
-        <translation>Video</translation>
-    </message>
-    <message>
-        <source>Audio</source>
-        <translation>Audio</translation>
-    </message>
-    <message>
-        <source>Document</source>
-        <translation>Dokument</translation>
-    </message>
-    <message>
-        <source>File</source>
-        <translation>Datei</translation>
-    </message>
-    <message>
-        <source>Poll</source>
-        <translation>Umfrage</translation>
-    </message>
-    <message>
-        <source>Sticker</source>
-        <translation>Sticker</translation>
-    </message>
-    <message>
-        <source>Voice Note</source>
-        <translation>Sprachnachicht</translation>
-    </message>
-    <message>
-        <source>Press and hold record button to record voice note.</source>
-        <translation>Drücke und halte die Sprachnachicht Schaltfläche.</translation>
+        <source>Loading</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -756,6 +641,58 @@
     <message>
         <source>Group created</source>
         <translation>Gruppe erstellt</translation>
+    </message>
+    <message>
+        <source>Photo</source>
+        <translation type="unfinished">Bild</translation>
+    </message>
+    <message>
+        <source>Video</source>
+        <translation type="unfinished">Video</translation>
+    </message>
+    <message>
+        <source>Document</source>
+        <translation type="unfinished">Dokument</translation>
+    </message>
+    <message>
+        <source>Audio</source>
+        <translation type="unfinished">Audio</translation>
+    </message>
+    <message>
+        <source>Animation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Voice note</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Location</source>
+        <translation type="unfinished">Standort</translation>
+    </message>
+    <message>
+        <source>Contact</source>
+        <translation type="unfinished">Kontakt</translation>
+    </message>
+    <message>
+        <source>Sticker</source>
+        <translation type="unfinished">Sticker</translation>
+    </message>
+    <message>
+        <source>Video note</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Message unsupported</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Users joined</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Poll</source>
+        <translation type="unfinished">Umfrage</translation>
     </message>
 </context>
 <context>

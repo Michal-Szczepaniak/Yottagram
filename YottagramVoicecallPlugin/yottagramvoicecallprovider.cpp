@@ -57,7 +57,7 @@ YottagramVoiceCallProvider::YottagramVoiceCallProvider(VoiceCallManagerInterface
     Q_D(YottagramVoiceCallProvider);
 
     connect(d->manager, &VoiceCallManagerInterface::setMuteMicrophoneRequested, this, &YottagramVoiceCallProvider::muteMicrophone);
-    connect(d->manager, &VoiceCallManagerInterface::setAudioModeRequested, [this](const QString &mode) { emit this->changeSpeakerMode(mode != "earpiece"); });
+    connect(d->manager, &VoiceCallManagerInterface::setAudioModeRequested, [this](const QString &mode) { emit changeSpeakerMode(mode != "earpiece"); });
 
     new CallsAdaptor(this);
     QDBusConnection::sessionBus().registerService("com.verdanditeam.yottagram.calls");

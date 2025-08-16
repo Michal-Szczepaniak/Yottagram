@@ -91,6 +91,7 @@ public:
         MessageRole,
         UnformattedMessageRole,
         MessageTypeRole,
+        MessageTypeTextRole,
         ReceivedRole,
         ReplyMessageIdRole,
         DisplayAvatarRole,
@@ -264,6 +265,7 @@ public:
     Q_INVOKABLE void clearCachedHistory();
     Q_INVOKABLE void sendAction(ChatAction action);
     Q_INVOKABLE void searchChatMembers(QString query);
+    Q_INVOKABLE void loadContextPermissions(int64_t messageId);
     void setAutoDeleteTime(int32_t autoDeleteTime);
 
     bool hasPhoto();
@@ -351,6 +353,7 @@ private:
     shared_ptr<Message> _lastMessage{};
     int64_t _firstUnreadMention;
     QList<int64_t> _recentBots{};
+    QString _title;
 };
 Q_DECLARE_METATYPE(Chat*)
 

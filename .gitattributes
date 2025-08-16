@@ -1,0 +1,2 @@
+Yottagram/vendor/tg_owt/prebuilds/** filter=lfs diff=lfs merge=lfs -text
+Yottagram/vendor/tdlib/prebuilds/** filter=lfs diff=lfs merge=lfs -text

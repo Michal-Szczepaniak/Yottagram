@@ -19,6 +19,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "chatlist.h"
+#include <QDateTime>
 #include <QDebug>
 #include <QQmlEngine>
 #include "overloaded.h"
@@ -36,10 +37,12 @@ ChatList::ChatList() :
     _basicGroupsInfo = std::make_shared<BasicGroupsInfo>();
     _supergroupsInfo = std::make_shared<SupergroupsInfo>();
 
-    _updateListTimer.setInterval(100);
-    _updateListTimer.setSingleShot(false);
-    connect(&_updateListTimer, &QTimer::timeout, this, &ChatList::updateChatList);
-    _updateListTimer.start();
+    _updateListTimer.setInterval(500);
+    _updateListTimer.setSingleShot(true);
+    connect(&_updateListTimer, &QTimer::timeout, [&](){
+        qDebug() << "Timeout";
+        emit dataChanged(createIndex(0, 0), createIndex(rowCount(), 0), {OrderRole});
+    });
 }
 
 ChatList::~ChatList()
@@ -73,6 +76,7 @@ void ChatList::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), &TelegramManager::gotChats, this, &ChatList::onGotChats);
     connect(_manager.get(), &TelegramManager::gotScopeNotificationSettings, this, &ChatList::onGotScopeNotificationSettings);
     connect(_manager.get(), &TelegramManager::createdPrivateChat, this, &ChatList::onCreatedPrivateChat);
+    connect(_manager.get(), &TelegramManager::bootupComplete, this, &ChatList::onBootupComplete);
 }
 
 void ChatList::setUsers(shared_ptr<Users> users)
@@ -191,6 +195,7 @@ QVariant ChatList::data(const QModelIndex &index, int role) const
     if (rowCount() <= 0 || index.row() >= rowCount() || index.row() < 0 || !_chats.contains((*_chats_ids)[index.row()])) return QVariant();
 
     auto chatNode = _chats[(*_chats_ids)[index.row()]];
+    auto chatCache = _chatCache[(*_chats_ids)[index.row()]];
     switch (role) {
     case ChatElementRoles::TypeRole:
         return chatNode->getChatType();
@@ -216,32 +221,9 @@ QVariant ChatList::data(const QModelIndex &index, int role) const
     case ChatElementRoles::UnreadMentionCountRole:
         return chatNode->getUnreadMentionCount();
     case ChatElementRoles::LastMessageRole:
-        return getMessageText(chatNode->lastMessage());
+        return chatCache.lastMessage;
     case ChatElementRoles::LastMessageAuthorRole:
-    {
-        td_api::message* message = chatNode->getLastMessage();
-        if (message == nullptr) return "";
-
-        QString lastMessageInfo = "";
-
-        if (message->is_outgoing_) {
-            lastMessageInfo += "You: ";
-        } else if (chatNode->getChatType() == "group" || chatNode->getChatType() == "supergroup") {
-            QString name;
-            if (message->sender_id_->get_id() == td_api::messageSenderUser::ID) {
-                shared_ptr<User> user = _users->getUser(static_cast<td_api::messageSenderUser*>(message->sender_id_.get())->user_id_);
-                if(user != nullptr) name = user->getName();
-            } else if (message->sender_id_->get_id() == td_api::messageSenderChat::ID){
-                Chat* chat = getChat(static_cast<td_api::messageSenderChat*>(message->sender_id_.get())->chat_id_);
-                if (chat != nullptr) name = chat->getTitle();
-            }
-            if(name != "") {
-                lastMessageInfo += name + ": ";
-            }
-        }
-
-        return lastMessageInfo;
-    }
+        return chatCache.lastAuthor;
     case ChatElementRoles::IsSelfRole:
         return chatNode->isSelf();
     case ChatElementRoles::SecretChatStateRole:
@@ -265,10 +247,7 @@ QVariant ChatList::data(const QModelIndex &index, int role) const
     }
     case ChatElementRoles::LastMessageTimestampRole:
     {
-        td_api::message* message = chatNode->getLastMessage();
-        if (message == nullptr) return "";
-
-        return message->date_;
+        return chatCache.lastTimestamp;
     }
     default:
         return QVariant();
@@ -296,12 +275,65 @@ QHash<int, QByteArray> ChatList::roleNames() const
     return roles;
 }
 
-void ChatList::updateChat(int64_t chat, const QVector<int> &roles) {
+void ChatList::updateChat(int64_t chat, QVector<int> roles) {
     if(rowCount() <= 0) return;
 
-    for (int role : roles) {
-        _chatsToUpdate[chat].insert(role);
+    if (!_manager->isBootupComplete()) return;
+
+    if (roles.isEmpty() || roles.contains(OrderRole)) {
+        _updateListTimer.start();
+        if (roles.contains(OrderRole)) {
+            roles.removeAll(OrderRole);
+        } else if (roles.isEmpty()) {
+            roles = { TypeRole, IdRole, NameRole, HasPhotoRole, PhotoRole, UnreadCountRole, UnreadMentionCountRole, LastMessageRole, LastMessageAuthorRole, IsSelfRole, SecretChatStateRole, IsPinnedRole, IsReadRole, LastMessageTimestampRole };
+        }
     }
+
+    auto it = std::find(_chats_ids->begin(), _chats_ids->end(), chat);
+    if (it != _chats_ids->end()) {
+        auto index = std::distance(_chats_ids->begin(), it);
+        emit dataChanged(createIndex(index, 0), createIndex(index, 0), roles);
+    }
+}
+
+QString ChatList::getLastMessageAuthor(Chat *chat)
+{
+    td_api::message* message = chat->getLastMessage();
+    if (message == nullptr) return "";
+
+    QString lastMessageInfo = "";
+
+    if (message->is_outgoing_) {
+        lastMessageInfo += "You: ";
+    } else if (chat->getChatType() == "group" || chat->getChatType() == "supergroup") {
+        QString name;
+        if (message->sender_id_->get_id() == td_api::messageSenderUser::ID) {
+            shared_ptr<User> user = _users->getUser(static_cast<td_api::messageSenderUser*>(message->sender_id_.get())->user_id_);
+            if(user != nullptr) name = user->getName();
+        } else if (message->sender_id_->get_id() == td_api::messageSenderChat::ID){
+            Chat* chat = getChat(static_cast<td_api::messageSenderChat*>(message->sender_id_.get())->chat_id_);
+            if (chat != nullptr) name = chat->getTitle();
+        }
+        if(name != "") {
+            lastMessageInfo += name.trimmed() + ": ";
+        }
+    }
+
+    return lastMessageInfo;
+}
+
+QString ChatList::getLastMessageTimestamp(Chat *chat)
+{
+    td_api::message* message = chat->getLastMessage();
+    if (message == nullptr) return "";
+
+    qint64 timestamp = message->date_;
+    qint64 current = QDateTime::currentMSecsSinceEpoch()/1000;
+
+    auto diff = current - timestamp;
+    if (diff >= 604800) return QDateTime::fromMSecsSinceEpoch(timestamp*1000).toString("yyyy.MM.dd");
+    else if (diff >= 86400) return QDateTime::fromMSecsSinceEpoch(timestamp*1000).toString("ddd");
+    return QDateTime::fromMSecsSinceEpoch(timestamp*1000).toString("hh:mm");
 }
 
 QVector<int64_t> *ChatList::getChatList(td_api::ChatList *list)
@@ -334,7 +366,7 @@ td_api::object_ptr<td_api::ChatList> ChatList::getSelectedChatList() const
     }
 }
 
-void ChatList::setChatPosition(int64_t chatId, td_api::chatPosition *position)
+bool ChatList::setChatPosition(int64_t chatId, td_api::chatPosition *position)
 {
     QVector<int64_t> *list = getChatList(position->list_.get());
     int64_t order = position->order_;
@@ -352,39 +384,16 @@ void ChatList::setChatPosition(int64_t chatId, td_api::chatPosition *position)
             if (list == _chats_ids) endInsertRows();
         }
     }
-    getChat(chatId)->updatePosition(position);
-}
 
-QString ChatList::getMessageText(shared_ptr<Message> message) const
-{
-    if (message == nullptr) return "";
-
-    switch (message->getContentType()) {
-    case td_api::messagePhoto::ID:
-        return tr("Photo");
-    case td_api::messageVideo::ID:
-        return tr("Video");
-    case td_api::messageDocument::ID:
-        return tr("Document");
-    case td_api::messageAudio::ID:
-        return tr("Audio");
-    case td_api::messageAnimation::ID:
-        return tr("GIF");
-    case td_api::messageVoiceNote::ID:
-        return tr("VoiceNote");
-    case td_api::messagePoll::ID:
-        return tr("Poll");
-    case td_api::messageLocation::ID:
-        return tr("Location");
-    case td_api::messageContact::ID:
-        return tr("Contact");
-    case td_api::messageSticker::ID:
-        return tr("Sticker");
-    case td_api::messageVideoNote::ID:
-        return tr("VideoNote");
+    auto chat = getChat(chatId);
+    if (chat != nullptr) {
+        if (chat->getOrder(position->list_.get()) != order) {
+            chat->updatePosition(position);
+            return true;
+        }
     }
 
-    return message->getText(false);
+    return false;
 }
 
 void ChatList::fetchChatList()
@@ -529,13 +538,13 @@ void ChatList::onIsAuthorizedChanged(bool isAuthorized)
 
 void ChatList::onChatPhotoChanged(int64_t chatId)
 {
-    this->updateChat(chatId, {PhotoRole, HasPhotoRole});
+    updateChat(chatId, {PhotoRole, HasPhotoRole});
 }
 
 void ChatList::onUnreadCountChanged(int64_t chatId, int32_t unreadCount)
 {
     Q_UNUSED(unreadCount)
-    this->updateChat(chatId, {UnreadCountRole});
+    updateChat(chatId, {UnreadCountRole});
 }
 
 void ChatList::onGotChats(td_api::chats *chats)
@@ -579,18 +588,34 @@ void ChatList::updateChatLastMessage(td_api::updateChatLastMessage *updateChatLa
 {
     QVector<int> rolesToUpdate;
 
-    if (!updateChatLastMessage->positions_.empty()) {
-        rolesToUpdate.append(OrderRole);
-    }
-
     for (td_api::object_ptr<td_api::chatPosition> &position: updateChatLastMessage->positions_) {
-        setChatPosition(updateChatLastMessage->chat_id_, position.release());
+        if (setChatPosition(updateChatLastMessage->chat_id_, position.release()) && !rolesToUpdate.contains(OrderRole)) {
+            qDebug() << "Position";
+            rolesToUpdate.append(OrderRole);
+        }
     }
 
     if (updateChatLastMessage->last_message_) {
-        _chats[updateChatLastMessage->chat_id_]->setLastMessage(move(updateChatLastMessage->last_message_));
-        rolesToUpdate.append(LastMessageRole);
-        rolesToUpdate.append(LastMessageAuthorRole);
+        auto lastMessage = _chats[updateChatLastMessage->chat_id_]->getLastMessage();
+        if (lastMessage == nullptr || lastMessage->id_ != updateChatLastMessage->last_message_->id_) {
+            qDebug() << "Last message";
+            rolesToUpdate.append(LastMessageRole);
+            rolesToUpdate.append(LastMessageAuthorRole);
+            auto chat = _chats[updateChatLastMessage->chat_id_];
+            chat->setLastMessage(move(updateChatLastMessage->last_message_));
+
+            if (!_chatCache.contains(updateChatLastMessage->chat_id_)) {
+                _chatCache[updateChatLastMessage->chat_id_] = {};
+            }
+
+            auto &cache = _chatCache[updateChatLastMessage->chat_id_];
+            cache.lastMessage = chat->lastMessage()->getTypeText();
+            cache.lastAuthor = getLastMessageAuthor(chat);
+            if (cache.lastAuthor.length() > 12) {
+                cache.lastAuthor = cache.lastAuthor.left(12) + "...";
+            }
+            cache.lastTimestamp = getLastMessageTimestamp(chat);
+        }
     }
 
     updateChat(updateChatLastMessage->chat_id_, rolesToUpdate);
@@ -684,16 +709,8 @@ void ChatList::onCreatedPrivateChat(td_api::chat *chat)
     }
 }
 
-void ChatList::updateChatList()
+void ChatList::onBootupComplete()
 {
-    for (auto chatIt = _chatsToUpdate.begin(); chatIt != _chatsToUpdate.end(); ++chatIt) {
-        auto it = std::find(_chats_ids->begin(), _chats_ids->end(), chatIt.key());
-
-        if (it != _chats_ids->end()) {
-            auto index = std::distance(_chats_ids->begin(), it);
-            emit dataChanged(createIndex(index, 0), createIndex(index, 0), chatIt.value().toList().toVector());
-        }
-    }
-
-    _chatsToUpdate.clear();
+    beginResetModel();
+    endResetModel();
 }

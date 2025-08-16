@@ -29,13 +29,27 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 Q_IMPORT_PLUGIN(TgsIOPlugin)
 
 void handler(int sig) {
-    void *array[10];
+    void *array[20] = {0};
     size_t size;
 
-    size = backtrace(array, 10);
+    size = backtrace(array, 20);
 
     fprintf(stderr, "Error: signal %d:\n", sig);
-    backtrace_symbols_fd(array, size, STDERR_FILENO);
+    char **symbols = backtrace_symbols(array, size);
+    QRegularExpression re("\\(([+x0-9a-f]*)\\)");
+    QStringList addresses;
+    for (unsigned int i = 0; i < size; i++) {
+        qDebug() << symbols[i];
+        auto address = re.match(QString::fromLatin1(symbols[i])).captured(1);
+        if (address.isEmpty()) {
+            continue;
+        }
+
+        addresses << address;
+    }
+
+    qDebug() << addresses;
+
     exit(1);
 }
 

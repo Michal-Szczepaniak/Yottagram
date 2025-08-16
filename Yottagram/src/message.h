@@ -37,7 +37,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "contents/voicenote.h"
 #include "contents/videonote.h"
 #include "users.h"
-#include "webpage.h"
+#include "linkpreview.h"
 #include "contents/poll.h"
 #include "contents/call.h"
 #include "contents/location.h"
@@ -49,6 +49,7 @@ class Message : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString text READ getText NOTIFY messageChanged)
+    Q_PROPERTY(QString typeText READ getTypeText NOTIFY messageChanged)
     Q_PROPERTY(QString unformattedText READ getTextUnformatted NOTIFY messageChanged)
     Q_PROPERTY(QString type READ getType NOTIFY messageChanged)
     Q_PROPERTY(QString sender READ getSender NOTIFY messageChanged)
@@ -59,7 +60,7 @@ public:
     ~Message();
 
     td_api::message *message() const;
-    void setMessage(td_api::message *message);
+    void setMessage(td_api::message *message, bool handleContent = true);
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setUsers(shared_ptr<Users> users);
     void setFiles(shared_ptr<Files> files);
@@ -68,6 +69,7 @@ public:
     QString getText(bool formatted = true);
     QString getTextUnformatted() { return getText(false); }
     QString getType() const;
+    QString getTypeText();
     int32_t getContentType();
     bool isService() const;
     bool isEdited();
@@ -79,7 +81,7 @@ public:
     int getViews();
     bool received();
     int32_t getDeleteMemberId();
-    QVector<int32_t> getAddMembersIds();
+    QVector<int64_t> getAddMembersIds();
     int64_t replyMessageId();
     td_api::messageForwardInfo* getForwardedInfo();
     int64_t getSenderUserId();
@@ -89,9 +91,10 @@ public:
     QString getFormattedForwardTimestamp();
     bool containsUnreadMention() const;
     void setContainsUnreadMention(bool containsUnreadMention);
+    void fetchProperties();
 
     bool hasWebPage() const;
-    WebPage* getWebPage() const;
+    LinkPreview* getWebPage() const;
     template<class T>
     T* getContent() {
         if (dynamic_cast<T*>(_messageContent))
@@ -121,6 +124,7 @@ public slots:
 private:
     int64_t _chatId;
     td_api::message* _message;
+    td_api::messageProperties* _properties;
     int32_t _contentTypeId;
     QVector<int32_t> _file_ids;
     shared_ptr<TelegramManager> _manager;
@@ -128,7 +132,8 @@ private:
     shared_ptr<Files> _files;
     td_api::object_ptr<td_api::messageText> _text;
     ContentInterface* _messageContent;
-    WebPage* _webPage;
+    LinkPreview* _linkPreview;
+    QString _formattedMessage;
 };
 
 #endif // MESSAGE_H

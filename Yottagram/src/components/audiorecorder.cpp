@@ -109,7 +109,7 @@ void AudioRecorder::setCodec(AudioRecorder::AudioCodec codec)
 
 void AudioRecorder::startRecording()
 {
-    if(this->state() != QMediaRecorder::StoppedState)
+    if(state() != QMediaRecorder::StoppedState)
     {
         return;
     }
@@ -141,7 +141,7 @@ void AudioRecorder::startRecording()
 
 void AudioRecorder::stopRecording()
 {
-    this->stop();
+    stop();
     _recording = false;
     emit recordingChanged(_recording);
 

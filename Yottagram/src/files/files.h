@@ -43,7 +43,9 @@ public:
     void considerAutoDownloading(int32_t fileId, QString fileType);
     AutoDownloadSettings* getActiveAutoDownloadSetting();
     shared_ptr<File> getFile(int32_t fileId) const;
-signals:
+
+public slots:
+    void onFileUpdated(td_api::updateFile *updateFile);
 
 private:
     shared_ptr<TelegramManager> _manager;

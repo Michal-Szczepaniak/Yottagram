@@ -52,21 +52,6 @@ Item {
         }
     }
 
-    ShaderEffect {
-        anchors.fill: parent
-        visible: maskEnabled && typeof root.avatarPhoto !== "undefined"
-        property variant src: chatPhoto
-        fragmentShader: "
-            varying highp vec2 qt_TexCoord0;
-            uniform sampler2D src;
-            uniform lowp float qt_Opacity;
-            void main() {
-                lowp vec4 tex = texture2D(src, qt_TexCoord0);
-                lowp float is_outside_circle = step(distance(qt_TexCoord0, vec2(0.5)), 0.5);
-                gl_FragColor = mix(vec4(0.0),tex, is_outside_circle);
-                }"
-    }
-
     Image {
         id: chatPhoto
         anchors.centerIn: parent
@@ -74,10 +59,16 @@ Item {
         height: width
         fillMode: Image.PreserveAspectFit
         source: root.avatarPhoto ? root.avatarPhoto : ""
-        sourceSize.width: width
-        sourceSize.height: height
+        sourceSize.width: Math.min(root.width, 160)
+        sourceSize.height: Math.min(root.width, 160)
         visible: !maskEnabled && !altChatPhoto.visible
         asynchronous: true
         cache: true
+    }
+
+    OpacityMask {
+        source: chatPhoto
+        maskSource: altChatPhoto
+        anchors.fill: chatPhoto
     }
 }

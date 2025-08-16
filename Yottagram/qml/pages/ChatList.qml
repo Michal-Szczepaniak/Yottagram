@@ -89,6 +89,18 @@ Page {
         }
     }
 
+    PageBusyIndicator {
+        id: loadingIndicator
+        running: !telegramStatus.bootupComplete
+
+        Label {
+            anchors.top: parent.bottom
+            anchors.topMargin: Theme.paddingLarge
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: qsTr("Loading")
+        }
+    }
+
     SilicaFlickable {
         anchors.fill: parent
         contentHeight: parent.height
@@ -194,7 +206,6 @@ Page {
             spacing: 0
             model: page.status === PageStatus.Inactive ? null : chatListProxyModel
             contentHeight: Theme.itemSizeLarge * count
-            cacheBuffer: Theme.itemSizeLarge*100
             delegate: ListItem {
                 id: listItem
                 contentHeight: Theme.itemSizeLarge
@@ -248,144 +259,138 @@ Page {
                     }
                 }
 
-                Avatar {
-                    id: avatar
-                    userName: name
-                    avatarPhoto: (hasPhoto && !isSelf) ? photo.localPath : (isSelf ? Qt.resolvedUrl("qrc:/icons/icon-s-bookmark.png") : undefined)
-                    forceBackground: isSelf
-                    maskEnabled: true
-                    height: Theme.itemSizeLarge - Theme.paddingMedium*2
-                    width: height
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.leftMargin: Theme.paddingLarge
-                    anchors.topMargin: Theme.paddingMedium
-                }
+                ShaderEffectSource {
+                    id: chatCache
+                    width: page.width
+                    height: Theme.itemSizeLarge
 
-                Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: avatar.right
-                    anchors.leftMargin: Theme.paddingLarge
-                    anchors.right: unread.left
-                    anchors.rightMargin: Theme.paddingMedium
+                    sourceItem: Item {
+                        width: chatCache.width
+                        height: chatCache.height
 
-                    Row {
-                        spacing: Theme.paddingSmall
-                        width: parent.width
+                        Avatar {
+                            id: avatar
+                            userName: name
+                            avatarPhoto: (hasPhoto && !isSelf) ? photo.localPath : (isSelf ? Qt.resolvedUrl("qrc:/icons/icon-s-bookmark.png") : undefined)
+                            forceBackground: isSelf
+                            maskEnabled: true
+                            height: Theme.itemSizeLarge - Theme.paddingMedium*2
+                            width: height
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.leftMargin: Theme.paddingLarge
+                            anchors.topMargin: Theme.paddingMedium
+                        }
 
-                        Icon {
-                            id: secretChatIndicator
+                        Column {
                             anchors.verticalCenter: parent.verticalCenter
-                            source: "image://theme/icon-s-secure"
-                            asynchronous: true
-                            cache: true
-                            color: secretChatState === "pending" ? "yellow" : (secretChatState === "ready" ? "green" : "red")
-                            visible: secretChatState !== ""
-                        }
+                            anchors.left: avatar.right
+                            anchors.leftMargin: Theme.paddingLarge
+                            anchors.right: unread.left
+                            anchors.rightMargin: Theme.paddingMedium
 
-                        Label {
-                            textFormat: Text.PlainText
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: name
-                            truncationMode: TruncationMode.Fade
-                            width: parent.width - (secretChatIndicator.visible ? (Theme.paddingSmall + secretChatIndicator.width) : 0)
-                        }
-                    }
+                            Row {
+                                spacing: Theme.paddingSmall
+                                width: parent.width
 
-                    Row {
-                        height: lastMessageAuthorLabel.height
-                        width: parent.width
-                        Label {
-                            id: lastMessageAuthorLabel
-                            text: lastMessageAuthor
-                            font.pixelSize: Theme.fontSizeSmall
-                            color: Theme.highlightColor
-                            truncationMode: TruncationMode.Fade
-                            width: Math.min(implicitWidth, Theme.itemSizeHuge)
-                        }
+                                Icon {
+                                    id: secretChatIndicator
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    source: "image://theme/icon-s-secure"
+                                    asynchronous: true
+                                    cache: true
+                                    color: secretChatState === "pending" ? "yellow" : (secretChatState === "ready" ? "green" : "red")
+                                    visible: secretChatState !== ""
+                                }
 
-                        Label {
-                            text: lastMessage
-                            maximumLineCount: 1
-                            truncationMode: TruncationMode.Fade
-                            clip: true
-                            width: parent.width - lastMessageAuthorLabel.width
-                            font.pixelSize: Theme.fontSizeSmall
-                            color: Theme.secondaryColor
-                        }
-                    }
-                }
-
-                Column {
-                    id: unread
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.right: parent.right
-                    anchors.rightMargin: Theme.paddingMedium
-                    spacing: Theme.paddingMedium
-
-                    Row {
-                        spacing: Theme.paddingSmall
-
-                        Icon {
-                            id: readIcon
-                            width: Theme.iconSizeExtraSmall
-                            height: Theme.iconSizeExtraSmall
-                            anchors.verticalCenter: parent.verticalCenter
-                            fillMode: Image.PreserveAspectFit
-                            source: Qt.resolvedUrl(isRead ? "qrc:/icons/icon-s-read.png" : "qrc:/icons/icon-s-sent.png")
-                        }
-
-                        Label {
-                            id: time
-                            text: {
-                                var current = new Date()
-                                var timestamp = lastMessageTimestamp
-                                var diff = (current.getTime()/1000) - timestamp
-                                if (diff >= 604800) return (new Date(timestamp*1000)).toLocaleString(Qt.locale("en_GB"), "yyyy.MM.dd")
-                                else if (diff >= 86400) return (new Date(timestamp*1000)).toLocaleString(Qt.locale("en_GB"), "ddd")
-                                return (new Date(timestamp*1000)).toLocaleString(Qt.locale("en_GB"), "hh:mm")
+                                Label {
+                                    textFormat: Text.PlainText
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: name
+                                    truncationMode: TruncationMode.Fade
+                                    width: parent.width - (secretChatIndicator.visible ? (Theme.paddingSmall + secretChatIndicator.width) : 0)
+                                }
                             }
-                            anchors.verticalCenter: parent.verticalCenter
-                            color: Theme.secondaryColor
-                            font.pixelSize: Theme.fontSizeExtraSmall
-                        }
-                    }
 
-                    Row {
-                        anchors.right: parent.right
-                        spacing: Theme.paddingSmall
-
-                        Icon {
-                            id: pinnedIcon
-                            width: Theme.iconSizeExtraSmall
-                            height: Theme.iconSizeExtraSmall
-                            anchors.verticalCenter: parent.verticalCenter
-                            fillMode: Image.PreserveAspectFit
-                            source: Qt.resolvedUrl("qrc:/icons/icon-s-pinned.png")
-                            opacity: 0.3
-                            visible: unreadCount == 0 && isPinned
+                            Label {
+                                id: lastMessageAuthorLabel
+                                text: lastMessageAuthor + "<font color='" + Theme.secondaryColor + "'>" + lastMessage
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.highlightColor
+                                truncationMode: TruncationMode.Fade
+                                width: parent.width
+                            }
                         }
 
-                        Label {
-                            text: unreadCount > 0 ? unreadCount : " "
-                            font.pixelSize: Theme.fontSizeSmall
-                            height: implicitHeight
-                            visible: unreadCount > 0 || !isPinned
-                        }
-
-                        Rectangle {
-                            color: Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity)
-                            width: Theme.iconSizeSmall
-                            height: Theme.iconSizeSmall
+                        Column {
+                            id: unread
                             anchors.verticalCenter: parent.verticalCenter
-                            visible: unreadMentionCount > 0
-                            radius: width*0.5
+                            anchors.right: parent.right
+                            anchors.rightMargin: Theme.paddingMedium
+                            spacing: Theme.paddingMedium
 
-                            Icon {
-                                id: mentionsIcon
-                                anchors.fill: parent
-                                fillMode: Image.PreserveAspectFit
-                                source: "image://theme/icon-m-health"
+                            Row {
+                                spacing: Theme.paddingSmall
+
+                                Icon {
+                                    id: readIcon
+                                    width: Theme.iconSizeExtraSmall
+                                    height: Theme.iconSizeExtraSmall
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    fillMode: Image.PreserveAspectFit
+                                    cache: true
+                                    asynchronous: true
+                                    sourceSize.width: Theme.iconSizeExtraSmall
+                                    sourceSize.height: Theme.iconSizeExtraSmall
+                                    source: Qt.resolvedUrl(isRead ? "qrc:/icons/icon-s-read.png" : "qrc:/icons/icon-s-sent.png")
+                                }
+
+                                Label {
+                                    id: time
+                                    text: lastMessageTimestamp
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    color: Theme.secondaryColor
+                                    font.pixelSize: Theme.fontSizeExtraSmall
+                                }
+                            }
+
+                            Row {
+                                anchors.right: parent.right
+                                spacing: Theme.paddingSmall
+
+                                Icon {
+                                    id: pinnedIcon
+                                    width: Theme.iconSizeExtraSmall
+                                    height: Theme.iconSizeExtraSmall
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    fillMode: Image.PreserveAspectFit
+                                    source: Qt.resolvedUrl("qrc:/icons/icon-s-pinned.png")
+                                    opacity: 0.3
+                                    visible: unreadCount == 0 && isPinned
+                                }
+
+                                Label {
+                                    text: unreadCount > 0 ? unreadCount : " "
+                                    font.pixelSize: Theme.fontSizeSmall
+                                    height: implicitHeight
+                                    visible: unreadCount > 0 || !isPinned
+                                }
+
+                                Rectangle {
+                                    color: Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity)
+                                    width: Theme.iconSizeSmall
+                                    height: Theme.iconSizeSmall
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    visible: unreadMentionCount > 0
+                                    radius: width*0.5
+
+                                    Icon {
+                                        id: mentionsIcon
+                                        anchors.fill: parent
+                                        fillMode: Image.PreserveAspectFit
+                                        source: "qrc:/icons/icon-splus-ping.png"
+                                    }
+                                }
                             }
                         }
                     }

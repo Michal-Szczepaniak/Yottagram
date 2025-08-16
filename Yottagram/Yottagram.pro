@@ -6,7 +6,9 @@ QT += dbus multimedia location contacts
 
 CONFIG += c++2a link_pkgconfig sailfishapp iostream
 
-QMAKE_CXXFLAGS += -std=c++2a
+QMAKE_CXXFLAGS += -std=c++2a -O3
+QMAKE_CXXFLAGS -= -g
+QMAKE_CXXFLAGS_DEBUG -= -g
 QMAKE_CXXFLAGS_DEBUG -= -O1
 QMAKE_CXXFLAGS_DEBUG -= -O2
 QMAKE_CXXFLAGS_DEBUG *= -O0 -Wno-unused-parameter
@@ -61,6 +63,7 @@ SOURCES += src/core.cpp \
     src/files/contentfile.cpp \
     src/files/file.cpp \
     src/files/files.cpp \
+    src/linkpreview.cpp \
     src/message.cpp \
     src/notifications.cpp \
     src/pimcontactsmodel.cpp \
@@ -73,7 +76,6 @@ SOURCES += src/core.cpp \
     src/tgsioplugin/tgsiohandler.cpp \
     src/user.cpp \
     src/users.cpp \
-    src/webpage.cpp \
     src/yottagram.cpp \
     src/authorization.cpp \
     src/core/telegramreceiver.cpp \
@@ -203,6 +205,7 @@ HEADERS += \
     src/files/contentfile.h \
     src/files/file.h \
     src/files/files.h \
+    src/linkpreview.h \
     src/message.h \
     src/notifications.h \
     src/overloaded.h \
@@ -222,7 +225,6 @@ HEADERS += \
     src/user.h \
     src/contacts.h \
     src/users.h \
-    src/webpage.h \
     src/telegramstatus.h
 
 RESOURCES += \

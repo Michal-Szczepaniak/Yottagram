@@ -71,6 +71,13 @@ QString PinnedMessages::text()
     return _messages[_currentMessage]->getText();
 }
 
+QString PinnedMessages::typeText()
+{
+    if (_currentMessage >= _messages.size()) return "";
+
+    return _messages[_currentMessage]->getTypeText();
+}
+
 void PinnedMessages::cycleMessage()
 {
     if (_currentMessage+1 >= _messages.size()) _currentMessage = 0;

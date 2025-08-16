@@ -23,6 +23,8 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <systemsettings/aboutsettings.h>
 #include <systemsettings/deviceinfo.h>
 #include <QDebug>
+#include <QDir>
+#include <QSettings>
 
 #define STR(x) #x
 #define STRINGIFY(x) STR(x)
@@ -45,6 +47,9 @@ void Authorization::updateAuthorizationState(td_api::updateAuthorizationState &u
     td_api::downcast_call(
         *_authorizationState,
         overloaded(
+            [this](td_api::authorizationStateWaitPremiumPurchase &) {
+
+            },
             [this](td_api::authorizationStateReady &) {
                 authorizationStateReady();
             },
@@ -120,7 +125,7 @@ void Authorization::messageReceived(uint64_t id, td_api::Object *object)
     downcast_call(
         *object, overloaded(
             [this](td_api::updateAuthorizationState &update_authorization_state) {
-                this->updateAuthorizationState(update_authorization_state);
+                updateAuthorizationState(update_authorization_state);
             },
             [](auto &update) { Q_UNUSED(update) }
         )
@@ -191,6 +196,5 @@ void Authorization::authorizationStateWaitTdlibParameters()
     parameters->device_model_ = (deviceInfo.manufacturer() + " " + deviceInfo.prettyName()).toStdString();
     parameters->system_version_ = (aboutSettings.localizedOperatingSystemName() + " " + aboutSettings.localizedSoftwareVersion()).toStdString();
     parameters->application_version_ = STRINGIFY(APP_VERSION);
-    parameters->enable_storage_optimizer_ = true;
     _manager->sendQuery(parameters);
 }

@@ -63,6 +63,7 @@ public:
     void setNetworkType(QString networkType);
     QString getNetworkType() const;
     ConnectionState getConnectionState() const;
+    bool isBootupComplete() const;
 
 private:
     void handleMessageWithResponse(uint64_t id, td_api::Object* message);
@@ -154,6 +155,7 @@ private:
     QHash<uint64_t, MessageWithResponse> _messages;
     uint64_t _messageId;
     ConnectionState _connectionState;
+    bool _bootupComplete = false;
 };
 
 #endif // TELEGRAMSENDER_H

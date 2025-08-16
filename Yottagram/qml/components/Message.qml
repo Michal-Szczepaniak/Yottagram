@@ -133,11 +133,11 @@ Column {
                     id: replyText
                     width: replyMessage.width - Theme.paddingLarge
                     font.pixelSize: Theme.fontSizeSmall
-                    text: chat.getMessage(replyMessageId).type === "text" ? chat.getMessage(replyMessageId).unformattedText.trim().replace(/\r?\n|\r/g, " ")
-                                                                                   : chat.getMessage(replyMessageId).type
+                    text: chat.getMessage(replyMessageId).typeText
                     truncationMode: TruncationMode.Fade
                     color: Theme.primaryColor
                     linkColor: Theme.highlightColor
+                    maximumLineCount: 1
 
                     MouseArea {
                         anchors.fill: parent
@@ -356,7 +356,7 @@ Column {
 
     Label {
         id: textField
-        textFormat: Text.AutoText
+        textFormat: Text.StyledText
         text: Twemoji.emojify(messageText.replace(/\n/g, '<br>'), Theme.fontSizeSmall)
         font.pixelSize: settings.fontSize
         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
@@ -435,6 +435,7 @@ Column {
             width: Theme.iconSizeExtraSmall
             height: Theme.iconSizeExtraSmall
             anchors.verticalCenter: parent.verticalCenter
+            visible: !received
             source: isRead ? "qrc:///icons/icon-s-read.svg" : "qrc:///icons/icon-s-sent.svg"
         }
     }

@@ -18,15 +18,15 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#ifndef WEBPAGE_H
-#define WEBPAGE_H
+#ifndef LINKPREVIEW_H
+#define LINKPREVIEW_H
 
 #include <QObject>
 #include <QDebug>
 #include "core/telegrammanager.h"
 #include "files/files.h"
 
-class WebPage : public QObject
+class LinkPreview : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString url READ getUrl NOTIFY webPageChanged)
@@ -47,8 +47,8 @@ class WebPage : public QObject
     Q_PROPERTY(File* document READ getDocument NOTIFY webPageChanged)
     Q_PROPERTY(File* animation READ getAnimation NOTIFY webPageChanged)
 public:
-    explicit WebPage(QObject *parent = nullptr);
-    void setWebpage(td_api::object_ptr<td_api::webPage> webPage);
+    explicit LinkPreview(QObject *parent = nullptr);
+    void setLinkPreview(td_api::object_ptr<td_api::linkPreview> linkPreview);
     void setFiles(shared_ptr<Files> files);
 
     QString getUrl();
@@ -84,9 +84,9 @@ private:
     QString _mediaAuthor;
     QString _mediaTitle;
     int _mediaDuration;
-    td_api::object_ptr<td_api::webPage> _webPage;
+    td_api::object_ptr<td_api::linkPreview> _linkPreview;
     std::shared_ptr<Files> _files;
 };
-Q_DECLARE_METATYPE(WebPage*)
+Q_DECLARE_METATYPE(LinkPreview*)
 
-#endif // WEBPAGE_H
+#endif // LINKPREVIEW_H
