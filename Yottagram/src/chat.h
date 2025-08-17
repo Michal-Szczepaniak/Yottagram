@@ -121,7 +121,8 @@ public:
         ContainsUnreadReplyRole,
         CallRole,
         LocationRole,
-        ContactRole
+        ContactRole,
+        TopicRole,
     };
 
     enum ChatAction {
@@ -166,9 +167,9 @@ public:
     void setUnreadMentionCount(int32_t unreadMentionCount);
     int64_t firstUnreadMention() const;
     void updateMessageMentionRead(int32_t unreadMentionCount, int64_t messageId);
-    int64_t lastReadInboxMessageId() const { return _lastReadInboxMessageId; }
+    int64_t lastReadInboxMessageId() const;
     void setLastReadInboxMessageId(int64_t messageId);
-    int64_t lastReadOutboxMessageId() const { return _lastReadOutboxMessageId; }
+    int64_t lastReadOutboxMessageId() const;
     void setLastReadOutboxMessageId(int64_t messageId);
     void setChatPhoto(td_api::object_ptr<td_api::chatPhotoInfo> chatPhoto);
     bool isSelf() const;
@@ -206,6 +207,8 @@ public:
     Q_INVOKABLE void setDraftMessage(QString message, int64_t replyMessageId);
     void setDraftMessage(td_api::object_ptr<td_api::draftMessage> draftMessage);
     QString actionText();
+    bool getIsForum() const;
+    void fetchTopics();
 
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setUsers(shared_ptr<Users> users);
@@ -266,6 +269,9 @@ public:
     Q_INVOKABLE void sendAction(ChatAction action);
     Q_INVOKABLE void searchChatMembers(QString query);
     Q_INVOKABLE void loadContextPermissions(int64_t messageId);
+    Q_INVOKABLE QStringList getTopicNames() const;
+    Q_INVOKABLE void setTopic(int index);
+    Q_INVOKABLE int64_t getTopic();
     void setAutoDeleteTime(int32_t autoDeleteTime);
 
     bool hasPhoto();
@@ -317,10 +323,12 @@ public slots:
     void updateChatMessageAutoDeleteTime(td_api::updateChatMessageAutoDeleteTime *updateChatMessageAutoDeleteTime);
     void updateChatAction(td_api::updateChatAction *updateChatAction);
     void onGotSearchChatMessagesFilterUnreadMention(int64_t chatId, td_api::messages *messages);
+    void updateMessageInteractionInfo(td_api::updateMessageInteractionInfo *updateMessageInteractionInfo);
 
     void onGotChatHistory(int64_t chatId, td_api::messages *messages);
     void onGotSearchChatMembers(int64_t chatId, td_api::chatMembers *chatMembers);
     void onGotRecentInlineBots(int64_t chatId, td_api::users *users);
+    void onGotForumTopics(int64_t chatId, td_api::forumTopics *forumTopics);
 
 private:
     int32_t _smallPhotoId;
@@ -354,6 +362,9 @@ private:
     int64_t _firstUnreadMention;
     QList<int64_t> _recentBots{};
     QString _title;
+    QHash<int64_t, td_api::forumTopic*> _topics;
+    QMap<QString, int64_t> _topicsOrder;
+    int64_t _currentTopicId = 0;
 };
 Q_DECLARE_METATYPE(Chat*)
 

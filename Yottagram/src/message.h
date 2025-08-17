@@ -92,6 +92,8 @@ public:
     bool containsUnreadMention() const;
     void setContainsUnreadMention(bool containsUnreadMention);
     void fetchProperties();
+    td_api::MessageTopic* getTopicId();
+    void updateInteractionInfo(td_api::object_ptr<td_api::messageInteractionInfo> interactionInfo);
 
     bool hasWebPage() const;
     LinkPreview* getWebPage() const;

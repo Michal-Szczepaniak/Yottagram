@@ -58,7 +58,8 @@ public:
         SecretChatStateRole,
         IsPinnedRole,
         IsReadRole,
-        LastMessageTimestampRole
+        LastMessageTimestampRole,
+        IsTopicBasedRole
     };
 
     struct UnreadChatCount {

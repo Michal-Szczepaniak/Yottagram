@@ -114,6 +114,8 @@ signals:
     void updateChatDraftMessage(td_api::updateChatDraftMessage *updateChatDraftMessage);
     void updateChatAction(td_api::updateChatAction *updateChatAction);
     void updateUserStatus(td_api::updateUserStatus *updateUserStatus);
+    void updateChatViewAsTopics(td_api::updateChatViewAsTopics *updateChatViewAsTopics);
+    void updateMessageInteractionInfo(td_api::updateMessageInteractionInfo *updateMessageInteractionInfo);
 
 // Responses
     void gotChatHistory(int64_t chatId, td_api::messages *messages);
@@ -133,6 +135,7 @@ signals:
     void gotContacts(td_api::users *contacts);
     void createdPrivateChat(td_api::chat *chat);
     void importedContacts(td_api::importedContacts *importedContacts);
+    void gotForumTopics(int64_t chatId, td_api::forumTopics *forumTopics);
 
     void myIdChanged(int32_t myId);
     void error(int64_t chatId, int32_t type, int32_t subType, int32_t code, QString message);

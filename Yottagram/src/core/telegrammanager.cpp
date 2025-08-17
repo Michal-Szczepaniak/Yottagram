@@ -205,6 +205,9 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
     case td_api::importContacts::ID:
         emit importedContacts(static_cast<td_api::importedContacts*>(message));
         break;
+    case td_api::getForumTopics::ID:
+        emit gotForumTopics(response.chatId, static_cast<td_api::forumTopics*>(message));
+        break;
     }
 }
 
@@ -265,8 +268,14 @@ void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
             [this](td_api::updateChatDraftMessage &updateChatDraftMessage) { emit this->updateChatDraftMessage(&updateChatDraftMessage); },
             [this](td_api::updateChatAction &updateChatAction) { emit this->updateChatAction(&updateChatAction); },
             [this](td_api::updateUserStatus &updateUserStatus) { emit this->updateUserStatus(&updateUserStatus); },
+            [this](td_api::updateChatViewAsTopics &updateChatViewAsTopics) { emit this->updateChatViewAsTopics(&updateChatViewAsTopics); },
+            [this](td_api::updateForumTopic &updateForumTopic) { qDebug() << "updateForumTopic: " << updateForumTopic.chat_id_; },
+            [this](td_api::updateForumTopicInfo &updateForumTopicInfo) { qDebug() << "updateForumTopicInfo: " << updateForumTopicInfo.info_->chat_id_; },
             [](td_api::error &error) { qWarning() << "Error: code: " << error.code_ << " message: " << QString::fromStdString(error.message_); },
             [this](td_api::updateConnectionState &updateConnectionState) { this->updateConnectionState(&updateConnectionState); },
+            [this](td_api::updateMessageReactions &updateMessageReactions) { qDebug() << "updateMessageReactions"; },
+            [this](td_api::updateMessageReaction &updateMessageReaction) { qDebug() << "updateMessageReaction"; },
+            [this](td_api::updateMessageInteractionInfo &updateMessageInteractionInfo) { this->updateMessageInteractionInfo(&updateMessageInteractionInfo); },
             [](auto &update) { Q_UNUSED(update) }
         )
     );

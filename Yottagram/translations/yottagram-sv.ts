@@ -614,14 +614,6 @@
         <translation>%1 fäst meddelande</translation>
     </message>
     <message>
-        <source>Forwarded from %1</source>
-        <translation>Vidarebefordrat från %1</translation>
-    </message>
-    <message>
-        <source>Edited</source>
-        <translation>Redigerat</translation>
-    </message>
-    <message>
         <source>Message was pinned</source>
         <translation>Meddelandet fäst</translation>
     </message>
@@ -692,6 +684,14 @@
     <message>
         <source>Poll</source>
         <translation type="unfinished">Omröstning</translation>
+    </message>
+    <message>
+        <source>Edited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Forwarded from %1</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1081,6 +1081,13 @@
     </message>
     <message>
         <source>Long press to select mute duration</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TopicPickerDialog</name>
+    <message>
+        <source>Pick topic</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

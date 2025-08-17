@@ -28,6 +28,7 @@ import "functions/twemoji.js" as Twemoji
 Column {
     id: column
     spacing: 0
+    height: (name.visible ? name.height : 0) + replyLoader.height + contentLoader.height + serviceMessage.height + textField.height + pollLoader.height + webPageLoader.height + stamp.height
     width: parent.width
 
     Label {
@@ -43,7 +44,7 @@ Column {
                      chat.getChatType() === "channel"
                  )
         width: Math.min(implicitWidth, column.width)
-        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+        maximumLineCount: 1
 
         MouseArea {
             anchors.fill: parent
@@ -175,6 +176,8 @@ Column {
                 return parseInt(chatPage.width/2.2)
             case "contact":
                 return chatPage.width/2.5
+            default:
+                return 0
             }
         }
         height: {
@@ -202,6 +205,8 @@ Column {
                 return chatPage.width/3
             case "contact":
                 return Theme.itemSizeSmall
+            default:
+                return 0
             }
         }
 
@@ -346,7 +351,7 @@ Column {
     Label {
         id: serviceMessage
         width: chatPage.width
-        height: Theme.itemSizeMedium
+        height: isService ? Theme.itemSizeMedium : 0
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         text: messageText.trim()

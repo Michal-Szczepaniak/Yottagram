@@ -230,3 +230,8 @@ bool SupergroupInfo::getEditMessages() const
         return false;
     }
 }
+
+bool SupergroupInfo::isForum() const
+{
+    return _supergroup->is_forum_;
+}

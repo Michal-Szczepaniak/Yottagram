@@ -194,6 +194,8 @@ QString Chat::getChatType() const
 
 int32_t Chat::getUnreadCount() const
 {
+    if (_currentTopicId != 0) return _topics[_currentTopicId]->unread_count_;
+
     return _unreadCount;
 }
 
@@ -206,6 +208,8 @@ void Chat::setUnreadCount(int32_t unreadCount)
 
 int32_t Chat::getUnreadMentionCount() const
 {
+    if (_currentTopicId != 0) return _topics[_currentTopicId]->unread_mention_count_;
+
     return _unreadMentionCount;
 }
 
@@ -219,7 +223,7 @@ void Chat::setUnreadMentionCount(int32_t unreadMentionCount)
                 getId(),
                 td_api::searchChatMessages::ID,
                 td_api::searchMessagesFilterUnreadMention::ID,
-                new td_api::searchChatMessages(getId(), nullptr, "", nullptr, 0, 0, 1, td_api::make_object<td_api::searchMessagesFilterUnreadMention>())
+                new td_api::searchChatMessages(getId(), _currentTopicId == 0 ? nullptr : td_api::make_object<td_api::messageTopicForum>(_currentTopicId), "", nullptr, 0, 0, 1, td_api::make_object<td_api::searchMessagesFilterUnreadMention>())
             );
         }
     } else {
@@ -242,10 +246,28 @@ void Chat::updateMessageMentionRead(int32_t unreadMentionCount, int64_t messageI
     setUnreadMentionCount(unreadMentionCount);
 }
 
+int64_t Chat::lastReadInboxMessageId() const
+{
+    if (_currentTopicId != 0) {
+        return _topics[_currentTopicId]->last_read_inbox_message_id_;
+    }
+
+    return _lastReadInboxMessageId;
+}
+
 void Chat::setLastReadInboxMessageId(int64_t messageId)
 {
     _lastReadInboxMessageId = messageId;
     emit lastReadInboxMessageIdChanged(getId(), messageId);
+}
+
+int64_t Chat::lastReadOutboxMessageId() const
+{
+    if (_currentTopicId != 0) {
+        return _topics[_currentTopicId]->last_read_outbox_message_id_;
+    }
+
+    return _lastReadOutboxMessageId;
 }
 
 void Chat::setLastReadOutboxMessageId(int64_t messageId)
@@ -623,7 +645,7 @@ void Chat::setDraftMessage(QString message, int64_t replyMessageId)
     messageContent->text_ = td_api::make_object<td_api::formattedText>();
     messageContent->text_->text_ = message.toStdString();
     newMessage->input_message_text_ = move(messageContent);
-    newMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyMessageId, nullptr);
+    newMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyMessageId, nullptr, 0);
 
     _manager->sendQuery(new td_api::setChatDraftMessage(getId(), 0, move(newMessage)));
 }
@@ -691,6 +713,20 @@ QString Chat::actionText()
     }
 }
 
+bool Chat::getIsForum() const
+{
+    SupergroupInfo *info = getSupergroupInfo();
+
+    if (info == nullptr) return false;
+
+    return info->getSupergroup()->is_forum_;
+}
+
+void Chat::fetchTopics()
+{
+    _manager->sendQueryWithResponse(getId(), td_api::getForumTopics::ID, 0, new td_api::getForumTopics(getId(), "", 0, 0, 0, 100));
+}
+
 void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
 {
     _manager = manager;
@@ -712,6 +748,8 @@ void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), &TelegramManager::gotSearchChatMessagesFilterUnreadMention, this, &Chat::onGotSearchChatMessagesFilterUnreadMention);
     connect(_manager.get(), &TelegramManager::gotSearchChatMembers, this, &Chat::onGotSearchChatMembers);
     connect(_manager.get(), &TelegramManager::gotRecentInlineBots, this, &Chat::onGotRecentInlineBots);
+    connect(_manager.get(), &TelegramManager::gotForumTopics, this, &Chat::onGotForumTopics);
+    connect(_manager.get(), &TelegramManager::updateMessageInteractionInfo, this, &Chat::updateMessageInteractionInfo);
 
     if (_unreadMentionCount > 0) {
         _manager->sendQueryWithResponse(
@@ -752,6 +790,10 @@ void Chat::setSupergroupsInfo(shared_ptr<SupergroupsInfo> supergroupsInfo)
     _supergroupsInfo = supergroupsInfo;
 
     connect(_supergroupsInfo.get(), &SupergroupsInfo::supergroupInfoChanged, [this](int32_t chatId){ if (chatId == getIdFromType()) emit supergroupChanged(getId()); });
+
+    if (getIsForum()) {
+        fetchTopics();
+    }
 }
 
 void Chat::injectDependencies(PinnedMessages *component)
@@ -966,6 +1008,14 @@ QVariant Chat::data(const QModelIndex &index, int role) const
         QQmlEngine::setObjectOwnership(contact, QQmlEngine::CppOwnership);
         return QVariant::fromValue(contact);
     }
+    case MessageRoles::TopicRole:
+    {
+        td_api::MessageTopic* topicId = message->getTopicId();
+        if (topicId != nullptr && topicId->get_id() == td_api::messageTopicForum::ID) {
+            return QVariant::fromValue(static_cast<td_api::messageTopicForum*>(topicId)->forum_topic_id_);
+        }
+        return 0;
+    }
     }
 
     return QVariant();
@@ -1010,6 +1060,7 @@ QHash<int, QByteArray> Chat::roleNames() const
     roles[CallRole] = "call";
     roles[LocationRole] = "location";
     roles[ContactRole] = "contact";
+    roles[TopicRole] = "topic";
     return roles;
 }
 
@@ -1054,7 +1105,13 @@ shared_ptr<Message> Chat::lastMessage()
 
 int64_t Chat::getLastMessageId() const
 {
-    if (_chat->last_message_ == nullptr) return 0;
+    if (_currentTopicId != 0) {
+        if (!_topics[_currentTopicId]->last_message_) return 0;
+
+        return _topics[_currentTopicId]->last_message_->id_;
+    }
+
+    if (!_chat->last_message_) return 0;
 
     return _chat->last_message_->id_;
 }
@@ -1128,9 +1185,10 @@ void Chat::sendMessage(QString message, int64_t replyToMessageId)
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
+    sendMessage->message_thread_id_ = _currentTopicId;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr);
+        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageText>();
@@ -1178,7 +1236,7 @@ void Chat::sendPhoto(QString path, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr);
+        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessagePhoto>();
@@ -1199,7 +1257,7 @@ void Chat::sendPhotos(QStringList paths, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr);
+        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
     }
 
     std::vector<td_api::object_ptr<td_api::InputMessageContent>> contents;
@@ -1222,7 +1280,7 @@ void Chat::sendFile(QString path, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr);
+        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageDocument>();
@@ -1241,7 +1299,7 @@ void Chat::sendMusic(QString path, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr);
+        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageAudio>();
@@ -1262,7 +1320,7 @@ void Chat::sendMusics(QStringList paths, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr);
+        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
     }
 
     std::vector<td_api::object_ptr<td_api::InputMessageContent>> contents;
@@ -1285,7 +1343,7 @@ void Chat::sendVideo(QString path, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr);
+        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageVideo>();
@@ -1306,7 +1364,7 @@ void Chat::sendVideos(QStringList paths, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr);
+        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
     }
 
     std::vector<td_api::object_ptr<td_api::InputMessageContent>> contents;
@@ -1352,7 +1410,7 @@ void Chat::sendVoiceNote(QString path, QString waveform, int64_t duration, int64
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr);
+        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageVoiceNote>();
@@ -1373,7 +1431,7 @@ void Chat::sendSticker(int32_t fileId, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr);
+        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageSticker>();
@@ -1393,7 +1451,7 @@ void Chat::sendLocation(float latitude, float longitude, float horizontalAccurac
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr);
+        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageLocation>();
@@ -1410,7 +1468,7 @@ void Chat::sendAnimation(int32_t fileId, int32_t width, int32_t height, int64_t 
     sendMessage->chat_id_ = _chat->id_;
 
     if (replyToMessageId != 0) {
-        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr);
+        sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageAnimation>();
@@ -1579,6 +1637,35 @@ void Chat::loadContextPermissions(int64_t messageId)
 
     auto message = _messages[messageId];
     message->fetchProperties();
+}
+
+QStringList Chat::getTopicNames() const
+{
+    QStringList names;
+
+    for (int64_t key : _topicsOrder) {
+        names.push_front(QString::fromStdString(_topics[key]->info_->name_));
+    }
+
+    return names;
+}
+
+void Chat::setTopic(int index)
+{
+    auto values = _topicsOrder.values();
+
+    _currentTopicId = values[values.size() - index - 1];
+
+    emit lastReadInboxMessageIdChanged(getId(), lastReadInboxMessageId());
+    emit lastReadOutboxMessageIdChanged(getId(), lastReadOutboxMessageId());
+    emit latestMessageIdChanged(getLatestMessageId());
+    emit unreadCountChanged(getId(), getUnreadCount());
+    emit unreadMentionCountChanged(getUnreadMentionCount());
+}
+
+int64_t Chat::getTopic()
+{
+    return _currentTopicId;
 }
 
 void Chat::setAutoDeleteTime(int32_t autoDeleteTime)
@@ -1827,11 +1914,25 @@ void Chat::onGotSearchChatMessagesFilterUnreadMention(int64_t chatId, td_api::me
     }
 }
 
+void Chat::updateMessageInteractionInfo(td_api::updateMessageInteractionInfo *updateMessageInteractionInfo)
+{
+    if (getId() != updateMessageInteractionInfo->chat_id_) return;
+
+    int64_t messageId = updateMessageInteractionInfo->message_id_;
+
+    if (_messages.contains(messageId)) _messages[messageId]->updateInteractionInfo(move(updateMessageInteractionInfo->interaction_info_));
+
+}
+
 void Chat::onGotChatHistory(int64_t chatId, td_api::messages *messages)
 {
     if (chatId != getId()) return;
 
-    if (messages->total_count_ == 0 || messages->messages_.size() <= 0 || !messages->messages_[0]) return;
+    if (messages->total_count_ == 0 || messages->messages_.size() <= 0 || !messages->messages_[0]) {
+        qDebug() << "nada";
+        emit gotChatHistory();
+        return;
+    };
 
     int addedMessages = 0;
     for (int i = 0; i < messages->total_count_; i++) {
@@ -1899,4 +2000,19 @@ void Chat::onGotRecentInlineBots(int64_t chatId, td_api::users *users)
     std::copy(users->user_ids_.begin(), users->user_ids_.end(), std::back_inserter(_recentBots));
 
     emit recentInlineBotsChanged();
+}
+
+void Chat::onGotForumTopics(int64_t chatId, td_api::forumTopics *forumTopics)
+{
+    if (chatId != getId()) return;
+
+    _topics.clear();
+    _topicsOrder.clear();
+
+    for (td_api::object_ptr<td_api::forumTopic> &topic: forumTopics->topics_) {
+        int64_t topicId = topic->info_->forum_topic_id_;
+        QString order = (topic->is_pinned_ ? "1" : "0") + QString::number(topic->order_);
+        _topics[topicId] = topic.release();
+        _topicsOrder[order] = topicId;
+    }
 }

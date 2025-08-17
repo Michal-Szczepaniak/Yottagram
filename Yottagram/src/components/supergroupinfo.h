@@ -19,6 +19,7 @@ class SupergroupInfo : public QObject
     Q_PROPERTY(bool canInviteUsers READ getCanInviteUsers NOTIFY supergroupInfoChanged)
     Q_PROPERTY(bool canPinMessages READ getCanPinMessages NOTIFY supergroupInfoChanged)
     Q_PROPERTY(bool canEditMessages READ getEditMessages NOTIFY supergroupInfoChanged)
+    Q_PROPERTY(bool isForum READ isForum NOTIFY supergroupInfoChanged)
 public:
     explicit SupergroupInfo(QObject *parent = nullptr);
 
@@ -35,6 +36,7 @@ public:
     bool getCanInviteUsers() const;
     bool getCanPinMessages() const;
     bool getEditMessages() const;
+    bool isForum() const;
 
 signals:
     void supergroupInfoChanged();

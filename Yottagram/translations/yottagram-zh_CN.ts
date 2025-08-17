@@ -613,14 +613,6 @@
         <translation>%1 条置顶消息</translation>
     </message>
     <message>
-        <source>Forwarded from %1</source>
-        <translation type="unfinished">转发自 %1</translation>
-    </message>
-    <message>
-        <source>Edited</source>
-        <translation type="unfinished">已编辑</translation>
-    </message>
-    <message>
         <source>Message was pinned</source>
         <translation type="unfinished"></translation>
     </message>
@@ -691,6 +683,14 @@
     <message>
         <source>Poll</source>
         <translation type="unfinished">投票</translation>
+    </message>
+    <message>
+        <source>Edited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Forwarded from %1</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1080,6 +1080,13 @@
     </message>
     <message>
         <source>Long press to select mute duration</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TopicPickerDialog</name>
+    <message>
+        <source>Pick topic</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

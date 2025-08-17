@@ -453,6 +453,16 @@ void Message::fetchProperties()
     }
 }
 
+td_api::MessageTopic* Message::getTopicId()
+{
+    return _message->topic_id_.get();
+}
+
+void Message::updateInteractionInfo(td_api::object_ptr<td_api::messageInteractionInfo> interactionInfo)
+{
+    _message->interaction_info_ = move(interactionInfo);
+}
+
 bool Message::hasWebPage() const
 {
     return _linkPreview != nullptr;

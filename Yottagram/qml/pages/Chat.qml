@@ -47,11 +47,14 @@ Page {
     property var newEditMessageId: 0
     property variant selection: []
     property bool selectionActive: false
-    property var startMessage: (chat.firstUnreadMention > 0 ? chat.firstUnreadMention : (chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId))
     readonly property double messageWidth: 1.5
     onSelectionActiveChanged: if (selectionActive === false) selection = [];
 
     allowedOrientations: Orientation.All
+
+    function getStartMessage() {
+        return (chat.firstUnreadMention > 0 ? chat.firstUnreadMention : (chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.lastMessageId))
+    }
 
     onShareConfigurationChanged: {
         if (!shareConfiguration || shareConfiguration === null) return;
@@ -121,7 +124,7 @@ Page {
             }
 
             if (messages.count < 20) {
-                chat.getChatHistory(startMessage, 40, -20)
+                chat.getChatHistory(getStartMessage(), 40, -20)
             }
             if (chat.draftMessage !== "") {
                 textInput.text = chat.draftMessage
@@ -194,6 +197,13 @@ Page {
         sourceModel: chat
         sorters: [
             RoleSorter { roleName: "messageId"; sortOrder: Qt.DescendingOrder}
+        ]
+        filters: [
+            ValueFilter {
+                roleName: "topic"
+                value: chat.getTopic()
+                enabled: chat.getTopic() !== 0
+            }
         ]
     }
 
@@ -460,7 +470,7 @@ Page {
                 Connections {
                     target: chat
                     onGotChatHistory: {
-                        messages.countChanged(chat.rowCount())
+                        messages.countChanged(chatProxyModel.rowCount())
                     }
 
                     onLastMessageIdChanged: {
@@ -481,18 +491,15 @@ Page {
                 function countChanged(chagedCount) {
                     if (initDone || !creationDone) return;
                     if (chagedCount <= 1) {
-                        chat.getChatHistory(chatPage.startMessage, 40, -20)
+                        if (chagedCount === 0) {
+                            chat.getChatHistory(chatPage.getStartMessage(), 40, -20)
+                        } else {
+                            chat.getMoreChatHistory();
+                        }
                     } else {
-                        messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.startMessage)), ListView.SnapPosition)
+                        messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.getStartMessage())), ListView.SnapPosition)
                         initDone = true
                     }
-                }
-
-                Timer {
-                    id: getHistoryTimer
-                    interval: 1000
-                    repeat: false
-                    onTriggered: chat.getChatHistory(chat.getMessageIndex(chat.unreadCount > 0 ? chat.lastReadInboxMessageId : chat.latestMessageId), 40, -20)
                 }
 
                 onBeforeScrollingToBottom: {
@@ -567,7 +574,7 @@ Page {
                 ListItem {
                     id: listItem
                     width: chatPage.width
-                    contentHeight: Theme.itemSizeHuge*2 //Math.max(message.height + Theme.paddingSmall + (settings.chatBubbles ? Theme.paddingMedium*2 : 0), Theme.itemSizeExtraSmall)
+                    contentHeight: Math.max(message.height + Theme.paddingSmall + (settings.chatBubbles ? Theme.paddingMedium*2 : 0), Theme.itemSizeExtraSmall)
                     contentWidth: width
                     highlighted: selection.indexOf(messageId) !== -1
                     property var prevMessage: chatProxyModel.get(index+1)
@@ -1192,7 +1199,7 @@ Page {
 
                         onFocusChanged: {
                             if (!focus) chat.setDraftMessage(textInput.text, chatPage.newReplyMessageId)
-                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.startMessage)), ListView.SnapPosition)
+                            messages.positionViewAtIndex(chatProxyModel.mapFromSource(chat.getMessageIndex(chatPage.getStartMessage())), ListView.SnapPosition)
                         }
 
                         EnterKey.onClicked: {

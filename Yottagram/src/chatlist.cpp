@@ -249,6 +249,8 @@ QVariant ChatList::data(const QModelIndex &index, int role) const
     {
         return chatCache.lastTimestamp;
     }
+    case ChatElementRoles::IsTopicBasedRole:
+        return chatNode->getIsForum();
     default:
         return QVariant();
     }
@@ -272,6 +274,7 @@ QHash<int, QByteArray> ChatList::roleNames() const
     roles[IsPinnedRole] = "isPinned";
     roles[IsReadRole] = "isRead";
     roles[LastMessageTimestampRole] = "lastMessageTimestamp";
+    roles[IsTopicBasedRole] = "isTopicBased";
     return roles;
 }
 
@@ -590,7 +593,6 @@ void ChatList::updateChatLastMessage(td_api::updateChatLastMessage *updateChatLa
 
     for (td_api::object_ptr<td_api::chatPosition> &position: updateChatLastMessage->positions_) {
         if (setChatPosition(updateChatLastMessage->chat_id_, position.release()) && !rolesToUpdate.contains(OrderRole)) {
-            qDebug() << "Position";
             rolesToUpdate.append(OrderRole);
         }
     }
@@ -598,7 +600,6 @@ void ChatList::updateChatLastMessage(td_api::updateChatLastMessage *updateChatLa
     if (updateChatLastMessage->last_message_) {
         auto lastMessage = _chats[updateChatLastMessage->chat_id_]->getLastMessage();
         if (lastMessage == nullptr || lastMessage->id_ != updateChatLastMessage->last_message_->id_) {
-            qDebug() << "Last message";
             rolesToUpdate.append(LastMessageRole);
             rolesToUpdate.append(LastMessageAuthorRole);
             auto chat = _chats[updateChatLastMessage->chat_id_];
