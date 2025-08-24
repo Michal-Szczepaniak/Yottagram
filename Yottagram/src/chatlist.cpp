@@ -480,6 +480,11 @@ void ChatList::markChatAsRead(int64_t chatId)
     _manager->sendQuery(new td_api::toggleChatIsMarkedAsUnread(chatId, false));
 }
 
+void ChatList::markTopicAsRead(int64_t chatId)
+{
+    _manager->sendQuery(new td_api::viewMessages(getChat(chatId)->getId(), {getChat(chatId)->getLastMessage()->id_}, td_api::make_object<td_api::messageSourceForumTopicHistory>(),true));
+}
+
 QVariant ChatList::getChannelNotificationSettings()
 {
     auto* settings = &_channelNotificationSettings;

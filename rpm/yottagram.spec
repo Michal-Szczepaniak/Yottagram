@@ -7,7 +7,7 @@ Name:       yottagram
 #global debug_package %{nil}
 Summary:    Yottagram
 Version:    0.7.0
-Release:    15
+Release:    18
 Group:      Qt/Qt
 License:    GPLv3
 URL:        http://verdanditeam.com/

@@ -35,7 +35,9 @@ Chat::Chat() :
     _notificationSettings(nullptr),
     _scopeNotificationSettings(nullptr),
     _mainPosition(nullptr),
-    _archivePosition(nullptr)
+    _archivePosition(nullptr),
+    _firstUnreadMention(0),
+    _topicModel(nullptr)
 {
 }
 
@@ -48,7 +50,8 @@ Chat::Chat(td_api::chat* chat, shared_ptr<Files> files) :
     _scopeNotificationSettings(nullptr),
     _mainPosition(nullptr),
     _archivePosition(nullptr),
-    _firstUnreadMention(0)
+    _firstUnreadMention(0),
+    _topicModel(nullptr)
 {
     _basicGroupFullInfo = new BasicGroupFullInfo();
     _supergroupFullInfo = new SupergroupFullInfo();
@@ -194,7 +197,7 @@ QString Chat::getChatType() const
 
 int32_t Chat::getUnreadCount() const
 {
-    if (_currentTopicId != 0) return _topics[_currentTopicId]->unread_count_;
+    if (_currentTopicId != 0) return _topicModel->getTopic(_currentTopicId)->unread_count_;
 
     return _unreadCount;
 }
@@ -208,7 +211,7 @@ void Chat::setUnreadCount(int32_t unreadCount)
 
 int32_t Chat::getUnreadMentionCount() const
 {
-    if (_currentTopicId != 0) return _topics[_currentTopicId]->unread_mention_count_;
+    if (_currentTopicId != 0) return _topicModel->getTopic(_currentTopicId)->unread_mention_count_;
 
     return _unreadMentionCount;
 }
@@ -249,7 +252,7 @@ void Chat::updateMessageMentionRead(int32_t unreadMentionCount, int64_t messageI
 int64_t Chat::lastReadInboxMessageId() const
 {
     if (_currentTopicId != 0) {
-        return _topics[_currentTopicId]->last_read_inbox_message_id_;
+        return _topicModel->getTopic(_currentTopicId)->last_read_inbox_message_id_;
     }
 
     return _lastReadInboxMessageId;
@@ -264,7 +267,7 @@ void Chat::setLastReadInboxMessageId(int64_t messageId)
 int64_t Chat::lastReadOutboxMessageId() const
 {
     if (_currentTopicId != 0) {
-        return _topics[_currentTopicId]->last_read_outbox_message_id_;
+        return _topicModel->getTopic(_currentTopicId)->last_read_outbox_message_id_;
     }
 
     return _lastReadOutboxMessageId;
@@ -1012,7 +1015,7 @@ QVariant Chat::data(const QModelIndex &index, int role) const
     {
         td_api::MessageTopic* topicId = message->getTopicId();
         if (topicId != nullptr && topicId->get_id() == td_api::messageTopicForum::ID) {
-            return QVariant::fromValue(static_cast<td_api::messageTopicForum*>(topicId)->forum_topic_id_);
+            return (qint64)static_cast<td_api::messageTopicForum*>(topicId)->forum_topic_id_;
         }
         return 0;
     }
@@ -1106,9 +1109,9 @@ shared_ptr<Message> Chat::lastMessage()
 int64_t Chat::getLastMessageId() const
 {
     if (_currentTopicId != 0) {
-        if (!_topics[_currentTopicId]->last_message_) return 0;
+        if (!_topicModel->getTopic(_currentTopicId)->last_message_) return 0;
 
-        return _topics[_currentTopicId]->last_message_->id_;
+        return _topicModel->getTopic(_currentTopicId)->last_message_->id_;
     }
 
     if (!_chat->last_message_) return 0;
@@ -1188,6 +1191,7 @@ void Chat::sendMessage(QString message, int64_t replyToMessageId)
     sendMessage->message_thread_id_ = _currentTopicId;
 
     if (replyToMessageId != 0) {
+        qDebug() << replyToMessageId;
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
     }
 
@@ -1234,6 +1238,7 @@ void Chat::sendPhoto(QString path, int64_t replyToMessageId)
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
+    sendMessage->message_thread_id_ = _currentTopicId;
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
@@ -1255,6 +1260,7 @@ void Chat::sendPhotos(QStringList paths, int64_t replyToMessageId)
 
     auto sendMessage = new td_api::sendMessageAlbum();
     sendMessage->chat_id_ = _chat->id_;
+    sendMessage->message_thread_id_ = _currentTopicId;
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
@@ -1278,6 +1284,7 @@ void Chat::sendFile(QString path, int64_t replyToMessageId)
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
+    sendMessage->message_thread_id_ = _currentTopicId;
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
@@ -1297,6 +1304,7 @@ void Chat::sendMusic(QString path, int64_t replyToMessageId)
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
+    sendMessage->message_thread_id_ = _currentTopicId;
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
@@ -1318,6 +1326,7 @@ void Chat::sendMusics(QStringList paths, int64_t replyToMessageId)
 
     auto sendMessage = new td_api::sendMessageAlbum();
     sendMessage->chat_id_ = _chat->id_;
+    sendMessage->message_thread_id_ = _currentTopicId;
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
@@ -1341,6 +1350,7 @@ void Chat::sendVideo(QString path, int64_t replyToMessageId)
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
+    sendMessage->message_thread_id_ = _currentTopicId;
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
@@ -1362,6 +1372,7 @@ void Chat::sendVideos(QStringList paths, int64_t replyToMessageId)
 
     auto sendMessage = new td_api::sendMessageAlbum();
     sendMessage->chat_id_ = _chat->id_;
+    sendMessage->message_thread_id_ = _currentTopicId;
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
@@ -1385,6 +1396,7 @@ void Chat::sendPoll(QString question, QStringList options, bool anonymous, bool 
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
+    sendMessage->message_thread_id_ = _currentTopicId;
 
     auto poll = td_api::make_object<td_api::inputMessagePoll>();
     poll->question_ = td_api::make_object<td_api::formattedText>(question.toStdString(), std::vector<td_api::object_ptr<td_api::textEntity>>());
@@ -1408,6 +1420,7 @@ void Chat::sendVoiceNote(QString path, QString waveform, int64_t duration, int64
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
+    sendMessage->message_thread_id_ = _currentTopicId;
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
@@ -1429,6 +1442,7 @@ void Chat::sendSticker(int32_t fileId, int64_t replyToMessageId)
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
+    sendMessage->message_thread_id_ = _currentTopicId;
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
@@ -1449,6 +1463,7 @@ void Chat::sendLocation(float latitude, float longitude, float horizontalAccurac
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
+    sendMessage->message_thread_id_ = _currentTopicId;
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
@@ -1466,6 +1481,7 @@ void Chat::sendAnimation(int32_t fileId, int32_t width, int32_t height, int64_t 
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
+    sendMessage->message_thread_id_ = _currentTopicId;
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
@@ -1489,6 +1505,7 @@ void Chat::sendForwardedMessages(QStringList forwardedMessages, int64_t forwarde
     for (QString message : forwardedMessages) {
         auto sendMessage = new td_api::sendMessage();
         sendMessage->chat_id_ = _chat->id_;
+        sendMessage->message_thread_id_ = _currentTopicId;
 
         auto messageContent = td_api::make_object<td_api::inputMessageForwarded>();
         messageContent->from_chat_id_ = forwardedFrom;
@@ -1639,22 +1656,15 @@ void Chat::loadContextPermissions(int64_t messageId)
     message->fetchProperties();
 }
 
-QStringList Chat::getTopicNames() const
+ChatListTopics* Chat::getTopicModel() const
 {
-    QStringList names;
-
-    for (int64_t key : _topicsOrder) {
-        names.push_front(QString::fromStdString(_topics[key]->info_->name_));
-    }
-
-    return names;
+    QQmlEngine::setObjectOwnership(_topicModel, QQmlEngine::CppOwnership);
+    return _topicModel;
 }
 
-void Chat::setTopic(int index)
+void Chat::setTopic(int64_t topicId)
 {
-    auto values = _topicsOrder.values();
-
-    _currentTopicId = values[values.size() - index - 1];
+    _currentTopicId = topicId;
 
     emit lastReadInboxMessageIdChanged(getId(), lastReadInboxMessageId());
     emit lastReadOutboxMessageIdChanged(getId(), lastReadOutboxMessageId());
@@ -2006,13 +2016,12 @@ void Chat::onGotForumTopics(int64_t chatId, td_api::forumTopics *forumTopics)
 {
     if (chatId != getId()) return;
 
-    _topics.clear();
-    _topicsOrder.clear();
-
-    for (td_api::object_ptr<td_api::forumTopic> &topic: forumTopics->topics_) {
-        int64_t topicId = topic->info_->forum_topic_id_;
-        QString order = (topic->is_pinned_ ? "1" : "0") + QString::number(topic->order_);
-        _topics[topicId] = topic.release();
-        _topicsOrder[order] = topicId;
+    if (_topicModel == nullptr) {
+        _topicModel = new ChatListTopics;
+        _topicModel->setTelegramManager(_manager);
+        _topicModel->setUsers(_users);
+        _topicModel->setFiles(_files);
     }
+
+    _topicModel->setTopics(forumTopics);
 }

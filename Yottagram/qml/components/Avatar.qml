@@ -29,6 +29,7 @@ Item {
     property string userName
     property bool maskEnabled: true
     property bool forceBackground: false
+    property alias color: altChatPhoto.color
 
     Rectangle {
         id: altChatPhoto

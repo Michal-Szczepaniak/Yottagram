@@ -202,7 +202,7 @@ Page {
             ValueFilter {
                 roleName: "topic"
                 value: chat.getTopic()
-                enabled: chat.getTopic() !== 0
+                enabled: chat.getTopic() != 0
             }
         ]
     }

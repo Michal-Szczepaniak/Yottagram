@@ -116,6 +116,8 @@ signals:
     void updateUserStatus(td_api::updateUserStatus *updateUserStatus);
     void updateChatViewAsTopics(td_api::updateChatViewAsTopics *updateChatViewAsTopics);
     void updateMessageInteractionInfo(td_api::updateMessageInteractionInfo *updateMessageInteractionInfo);
+    void updateForumTopic(td_api::updateForumTopic *updateForumTopic);
+    void updateForumTopicInfo(td_api::updateForumTopicInfo *updateForumTopicInfo);
 
 // Responses
     void gotChatHistory(int64_t chatId, td_api::messages *messages);

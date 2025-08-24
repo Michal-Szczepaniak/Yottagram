@@ -142,6 +142,22 @@ QString Message::getText(bool formatted)
         return static_cast<AnimatedEmoji*>(_messageContent)->getEmoji();
     case td_api::messageContactRegistered::ID:
         return tr("%1 joined telegram").arg(_users->getUser(getSenderUserId())->getName());
+    case td_api::messageForumTopicCreated::ID:
+        return tr("Topic %1 created").arg(QString::fromStdString(static_cast<td_api::messageForumTopicCreated*>(_message->content_.get())->name_));
+    case td_api::messageForumTopicEdited::ID:
+        return tr("Topic %1 edited").arg(QString::fromStdString(static_cast<td_api::messageForumTopicEdited*>(_message->content_.get())->name_));
+    case td_api::messageForumTopicIsClosedToggled::ID:
+        if (static_cast<td_api::messageForumTopicIsClosedToggled*>(_message->content_.get())->is_closed_) {
+            return tr("Topic closed");
+        } else {
+            return tr("Topic opened");
+        }
+    case td_api::messageForumTopicIsHiddenToggled::ID:
+        if (static_cast<td_api::messageForumTopicIsHiddenToggled*>(_message->content_.get())->is_hidden_) {
+            return tr("Topic hidden");
+        } else {
+            return tr("Topic unhidden");
+        }
     default:
         return tr("Message unsupported");
     }
@@ -199,13 +215,13 @@ QString Message::getType() const
     case td_api::messageSupergroupChatCreate::ID:
         return "messageSupergroupChatCreate";
     default:
+        qDebug() << _contentTypeId;
         return "Message unsupported";
     }
 }
 
 QString Message::getTypeText()
 {
-
     switch (_contentTypeId) {
     case td_api::messageText::ID:
         return QString::fromStdString(_text->text_->text_);
@@ -273,6 +289,22 @@ QString Message::getTypeText()
         return static_cast<AnimatedEmoji*>(_messageContent)->getEmoji();
     case td_api::messageContactRegistered::ID:
         return tr("%1 joined telegram").arg(_users->getUser(getSenderUserId())->getName());
+    case td_api::messageForumTopicCreated::ID:
+        return tr("Topic %1 created").arg(QString::fromStdString(static_cast<td_api::messageForumTopicCreated*>(_message->content_.get())->name_));
+    case td_api::messageForumTopicEdited::ID:
+        return tr("Topic %1 edited").arg(QString::fromStdString(static_cast<td_api::messageForumTopicEdited*>(_message->content_.get())->name_));
+    case td_api::messageForumTopicIsClosedToggled::ID:
+        if (static_cast<td_api::messageForumTopicIsClosedToggled*>(_message->content_.get())->is_closed_) {
+            return tr("Topic closed");
+        } else {
+            return tr("Topic opened");
+        }
+    case td_api::messageForumTopicIsHiddenToggled::ID:
+        if (static_cast<td_api::messageForumTopicIsHiddenToggled*>(_message->content_.get())->is_hidden_) {
+            return tr("Topic hidden");
+        } else {
+            return tr("Topic unhidden");
+        }
     default:
         return getType();
     }

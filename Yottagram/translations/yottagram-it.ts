@@ -692,6 +692,30 @@
         <source>Forwarded from %1</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Topic %1 created</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Topic %1 edited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Topic closed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Topic opened</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Topic hidden</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Topic unhidden</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MessageContextMenu</name>
@@ -1088,6 +1112,22 @@
     <message>
         <source>Pick topic</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unpin from top</source>
+        <translation type="unfinished">Togli da messaggio fissato</translation>
+    </message>
+    <message>
+        <source>Pin to top</source>
+        <translation type="unfinished">Fissa in alto</translation>
+    </message>
+    <message>
+        <source>Set as read</source>
+        <translation type="unfinished">Segna come letto</translation>
+    </message>
+    <message>
+        <source>Delete chat</source>
+        <translation type="unfinished">Elimina chat</translation>
     </message>
 </context>
 <context>

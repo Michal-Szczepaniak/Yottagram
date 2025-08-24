@@ -392,6 +392,7 @@ Page {
                     page.shareConfiguration = null
 
                     if (type === "supergroup" && chat.supergroupInfo.isForum) {
+                        chat.fetchTopics()
                         pageStack.push(Qt.resolvedUrl("../dialogs/TopicPickerDialog.qml"), { chat: chat, shareConfiguration: configuration })
                     } else {
                         pageStack.push(Qt.resolvedUrl("Chat.qml"), { chat: chat, shareConfiguration: configuration })

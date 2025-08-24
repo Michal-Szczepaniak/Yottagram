@@ -31,6 +31,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QUrl>
 #include <QVector>
 #include <QQmlComponent>
+#include <chatlisttopics.h>
 #include "components/userfullinfo.h"
 #include "components/basicgroupfullinfo.h"
 #include "components/supergroupfullinfo.h"
@@ -208,7 +209,6 @@ public:
     void setDraftMessage(td_api::object_ptr<td_api::draftMessage> draftMessage);
     QString actionText();
     bool getIsForum() const;
-    void fetchTopics();
 
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setUsers(shared_ptr<Users> users);
@@ -269,9 +269,10 @@ public:
     Q_INVOKABLE void sendAction(ChatAction action);
     Q_INVOKABLE void searchChatMembers(QString query);
     Q_INVOKABLE void loadContextPermissions(int64_t messageId);
-    Q_INVOKABLE QStringList getTopicNames() const;
-    Q_INVOKABLE void setTopic(int index);
+    Q_INVOKABLE ChatListTopics* getTopicModel() const;
+    Q_INVOKABLE void setTopic(int64_t topicId);
     Q_INVOKABLE int64_t getTopic();
+    Q_INVOKABLE void fetchTopics();
     void setAutoDeleteTime(int32_t autoDeleteTime);
 
     bool hasPhoto();
@@ -362,9 +363,8 @@ private:
     int64_t _firstUnreadMention;
     QList<int64_t> _recentBots{};
     QString _title;
-    QHash<int64_t, td_api::forumTopic*> _topics;
-    QMap<QString, int64_t> _topicsOrder;
     int64_t _currentTopicId = 0;
+    ChatListTopics *_topicModel;
 };
 Q_DECLARE_METATYPE(Chat*)
 

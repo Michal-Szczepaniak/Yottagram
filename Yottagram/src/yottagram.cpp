@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
     qRegisterMetaType<int64_t>("int64_t");
     qRegisterMetaType<uint64_t>("uint64_t");
     qRegisterMetaType<QList<int64_t>>("QList<int64_t>");
+    qmlRegisterType<ChatListTopics>("com.verdanditeam", 1, 0, "ChatListTopics");
 
     Core core;
     core.init();
