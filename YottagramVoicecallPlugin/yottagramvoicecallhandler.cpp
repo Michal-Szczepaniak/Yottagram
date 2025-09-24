@@ -86,6 +86,13 @@ QString YottagramVoiceCallHandler::lineId() const
     return d->callerName;
 }
 
+QString YottagramVoiceCallHandler::subscriberId() const
+{
+    TRACE
+    Q_D(const YottagramVoiceCallHandler);
+    return d->callerName;
+}
+
 QDateTime YottagramVoiceCallHandler::startedAt() const
 {
     TRACE
@@ -178,6 +185,11 @@ void YottagramVoiceCallHandler::deflect(const QString &)
 }
 
 void YottagramVoiceCallHandler::sendDtmf(const QString &)
+{
+    TRACE
+}
+
+void YottagramVoiceCallHandler::filter(VoiceCallFilterAction action)
 {
     TRACE
 }

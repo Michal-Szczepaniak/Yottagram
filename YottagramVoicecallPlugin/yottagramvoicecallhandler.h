@@ -37,6 +37,7 @@ public:
 
     QString handlerId() const;
     QString lineId() const;
+    QString subscriberId() const;
     QDateTime startedAt() const;
     int duration() const;
     bool isIncoming() const;
@@ -61,6 +62,7 @@ public Q_SLOTS:
 
     void merge(const QString &) {}
     void split() {}
+    void filter(VoiceCallFilterAction action);
 
 private:
     class YottagramVoiceCallHandlerPrivate *d_ptr;
