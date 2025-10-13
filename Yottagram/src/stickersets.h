@@ -43,6 +43,7 @@ public:
     };
 
     explicit StickerSets(QObject *parent = nullptr);
+    ~StickerSets();
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setFiles(shared_ptr<Files> files);
 

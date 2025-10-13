@@ -43,6 +43,7 @@ public:
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setFiles(shared_ptr<Files> files);
     void setUsers(shared_ptr<Users> users);
+    void setCustomEmojis(shared_ptr<CustomEmojis> customEmojis);
     int64_t chatId() const;
     void setChatId(int64_t chatId);
     int64_t id();
@@ -72,6 +73,7 @@ private:
     shared_ptr<TelegramManager> _manager;
     shared_ptr<Files> _files;
     shared_ptr<Users> _users;
+    shared_ptr<CustomEmojis> _customEmojis;
     std::vector<Message*> _messages;
 };
 

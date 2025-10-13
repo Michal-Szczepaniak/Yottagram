@@ -27,6 +27,8 @@ import "../components"
 Dialog {
     id: dialog
 
+    allowedOrientations: Orientation.All
+
     property var chat: null
     property var shareConfiguration: null
 

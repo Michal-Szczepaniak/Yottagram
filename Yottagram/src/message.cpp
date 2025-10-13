@@ -21,10 +21,23 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "message.h"
 
 #include <contents/animatedemoji.h>
+#include <libsailfishsilica/silicatheme.h>
 
 Message::Message(QObject *parent) : QObject(parent), _message(nullptr), _properties(nullptr), _text(nullptr), _messageContent(nullptr), _linkPreview(nullptr)
 {
+    _reformatTimer.setInterval(500);
+    _reformatTimer.setSingleShot(true);
+    connect(&_reformatTimer, &QTimer::timeout, [this](){
+        _formattedMessage = formatTextAsHTML(_text->text_.get());
 
+        emit messageFormatedChanged(getId());
+    });
+
+    _reactionsUpdateTimer.setInterval(500);
+    _reactionsUpdateTimer.setSingleShot(true);
+    connect(&_reactionsUpdateTimer, &QTimer::timeout, [this](){
+        emit reactionsChanged(getId());
+    });
 }
 
 Message::~Message()
@@ -60,6 +73,11 @@ void Message::setUsers(shared_ptr<Users> users)
 void Message::setFiles(shared_ptr<Files> files)
 {
     _files = files;
+}
+
+void Message::setCustomEmojis(shared_ptr<CustomEmojis> customEmojis)
+{
+    _customEmojis = customEmojis;
 }
 
 int64_t Message::getId()
@@ -126,6 +144,8 @@ QString Message::getText(bool formatted)
             return tr("%1 pinned message").arg(_users->getUser(getSenderUserId())->getName());
         } else if (_message->sender_id_->get_id() == td_api::messageSenderChat::ID) {
             return tr("Message was pinned");
+        } else {
+            return "";
         }
     case td_api::messageCall::ID:
         return _message->is_outgoing_ ? tr("Outgoing call") : tr("Incoming call");
@@ -139,7 +159,20 @@ QString Message::getText(bool formatted)
     case td_api::messageVideoNote::ID:
         return "";
     case td_api::messageAnimatedEmoji::ID:
-        return static_cast<AnimatedEmoji*>(_messageContent)->getEmoji();
+    {
+        AnimatedEmoji* emoji = static_cast<AnimatedEmoji*>(_messageContent);
+        if (emoji->getSticker() == nullptr) {
+            return "";
+        }
+
+        QString localPath = emoji->getSticker()->localPath();
+        if (localPath == "") {
+            return emoji->getEmoji();
+        }
+
+        auto theme = Silica::Theme::instance();
+        return "<img width=\"" + QString::number(theme->fontSizeSmall()) + "\" height=\"" + QString::number(theme->fontSizeSmall()) + "\" align=\"middle\" src=\"" + localPath + "\"/>";
+    }
     case td_api::messageContactRegistered::ID:
         return tr("%1 joined telegram").arg(_users->getUser(getSenderUserId())->getName());
     case td_api::messageForumTopicCreated::ID:
@@ -270,6 +303,8 @@ QString Message::getTypeText()
             return tr("%1 pinned message").arg(_users->getUser(getSenderUserId())->getName());
         } else if (_message->sender_id_->get_id() == td_api::messageSenderChat::ID) {
             return tr("Message was pinned");
+        } else {
+            return "";
         }
     case td_api::messageCall::ID:
         return _message->is_outgoing_ ? tr("Outgoing call") : tr("Incoming call");
@@ -332,8 +367,7 @@ bool Message::isEdited()
 
 bool Message::canBeEdited()
 {
-    if (_properties == nullptr || getSenderUserId() != _manager->getMyId() || getForwardedInfo() != nullptr) return false;
-
+    if (_properties == nullptr) return false;
     return _properties->can_be_edited_;
 }
 
@@ -346,7 +380,6 @@ bool Message::canBeForwarded()
 bool Message::canBeDeleted()
 {
     if (_properties == nullptr) return false;
-    qDebug() << "Can delete: " << _properties->can_be_deleted_for_all_users_;
     return _properties->can_be_deleted_for_all_users_;
 }
 
@@ -475,14 +508,7 @@ void Message::setContainsUnreadMention(bool containsUnreadMention)
 
 void Message::fetchProperties()
 {
-    auto response = _manager->sendQuerySyncWithResponse(new td_api::getMessageProperties(getChatId(), getId()));
-    if (response) {
-        if (_properties != nullptr) {
-            delete _properties;
-        }
-
-        _properties = (td_api::messageProperties*) response.release();
-    }
+    _manager->sendQueryWithResponse(getChatId(), td_api::getMessageProperties::ID, getId(), new td_api::getMessageProperties(getChatId(), getId()));
 }
 
 td_api::MessageTopic* Message::getTopicId()
@@ -493,6 +519,29 @@ td_api::MessageTopic* Message::getTopicId()
 void Message::updateInteractionInfo(td_api::object_ptr<td_api::messageInteractionInfo> interactionInfo)
 {
     _message->interaction_info_ = move(interactionInfo);
+}
+
+void Message::setMessageProperties(td_api::messageProperties *messageProperties)
+{
+    if (_properties != nullptr) {
+        delete _properties;
+    }
+
+    _properties = messageProperties;
+}
+
+td_api::messageReactions* Message::getReactions()
+{
+    if (!_message->interaction_info_ || !_message->interaction_info_->reactions_) {
+        return nullptr;
+    }
+
+    return _message->interaction_info_->reactions_.get();
+}
+
+void Message::reformatMessage()
+{
+    _reformatTimer.start();
 }
 
 bool Message::hasWebPage() const
@@ -602,6 +651,22 @@ void Message::updateMessageContent(td_api::updateMessageContent *updateMessageCo
     }
 }
 
+void Message::onEntityLocalPathChanged(QString localPath, int32_t fileId)
+{
+    Q_UNUSED(localPath)
+    Q_UNUSED(fileId)
+
+    reformatMessage();
+}
+
+void Message::onReactionLocalPathChanged(QString localPath, int32_t fileId)
+{
+    Q_UNUSED(localPath)
+    Q_UNUSED(fileId)
+
+    _reactionsUpdateTimer.start();
+}
+
 int64_t Message::getChatId() const
 {
     return _chatId;
@@ -612,27 +677,105 @@ void Message::setChatId(const int64_t &chatId)
     _chatId = chatId;
 }
 
+void Message::updateCustomEmojis(QVector<int32_t> fileIds)
+{
+    QVector<int32_t> entityIds;
+    QVector<int32_t> reactionIds;
+
+    for (td_api::object_ptr<td_api::textEntity> &entity : _text->text_->entities_) {
+        if (entity->type_->get_id() == td_api::textEntityTypeCustomEmoji::ID) {
+            auto emojiId = static_cast<td_api::textEntityTypeCustomEmoji*>(entity->type_.get())->custom_emoji_id_;
+
+            entityIds.append(_customEmojis->getCustomEmojiSticker(emojiId));
+        }
+    }
+
+    if (getReactions() != nullptr) {
+        for (td_api::object_ptr<td_api::messageReaction> &reaction : getReactions()->reactions_) {
+            if (reaction->type_->get_id() == td_api::reactionTypeCustomEmoji::ID) {
+                auto emojiId = static_cast<td_api::reactionTypeCustomEmoji*>(reaction->type_.get())->custom_emoji_id_;
+
+                reactionIds.append(_customEmojis->getCustomEmojiSticker(emojiId));
+            }
+        }
+    }
+
+    bool updateReactions = false;
+    bool updateText = false;
+    for (int32_t fileId : fileIds) {
+        if (entityIds.contains(fileId)) {
+            shared_ptr<File> file = _files->getFile(fileId);
+            connect(file.get(), &File::localPathChanged, this, &Message::onEntityLocalPathChanged, Qt::UniqueConnection);
+
+            if (!file->localPath().isEmpty()) {
+                updateText = true;
+            }
+        }
+
+        if (reactionIds.contains(fileId)) {
+            updateReactions = true;
+
+            connect(_files->getFile(fileId).get(), &File::localPathChanged, this, &Message::onReactionLocalPathChanged, Qt::UniqueConnection);
+        }
+    }
+
+    if (updateReactions) {
+        emit reactionsChanged(getId());
+    }
+
+    if (updateText) {
+        reformatMessage();
+
+        emit messageFormatedChanged(getId());
+    }
+}
+
 QString Message::formatTextAsHTML(td_api::formattedText *formattedText)
 {
     QString originalText = QString::fromStdString(formattedText->text_);
     QString modifiedText = "";
 
+    std::vector<int64_t> customStickerIds;
+    for (td_api::object_ptr<td_api::textEntity> &entity : formattedText->entities_) {
+        if (entity->type_->get_id() == td_api::textEntityTypeCustomEmoji::ID) {
+            auto emojiId = static_cast<td_api::textEntityTypeCustomEmoji*>(entity->type_.get())->custom_emoji_id_;
+            if (_customEmojis->getCustomEmojiSticker(emojiId) == 0) {
+                customStickerIds.emplace_back(emojiId);
+            } else {
+                shared_ptr<File> file = _files->getFile(_customEmojis->getCustomEmojiSticker(emojiId));
+                if (file && file->localPath().isEmpty()) {
+                    connect(file.get(), &File::localPathChanged, this, &Message::onEntityLocalPathChanged, Qt::UniqueConnection);
+                }
+            }
+        }
+    }
+
+    if (!customStickerIds.empty()) {
+        _manager->sendQueryWithResponse(getChatId(), td_api::getCustomEmojiStickers::ID, getId(), new td_api::getCustomEmojiStickers(move(customStickerIds)));
+    }
+
     for (int i = 0; i < originalText.length(); i++) {
+        int skip = 0;
+
         for (td_api::object_ptr<td_api::textEntity> &entity : formattedText->entities_) {
-            modifiedText += getHTMLEntityForIndex(i, entity.get(), originalText, true);
+            modifiedText += getHTMLEntityForIndex(i, entity.get(), originalText, true, skip);
         }
 
-        modifiedText += QString(originalText[i]).toHtmlEscaped();
+        if (skip == 0) {
+            modifiedText += QString(originalText[i]).toHtmlEscaped();
+        }
 
         for (auto it = formattedText->entities_.rbegin(); it != formattedText->entities_.rend(); it++) {
-            modifiedText += getHTMLEntityForIndex(i, (*it).get(), originalText, false);
+            modifiedText += getHTMLEntityForIndex(i, (*it).get(), originalText, false, skip);
         }
+
+        i += skip;
     }
 
     return modifiedText;
 }
 
-QString Message::getHTMLEntityForIndex(int index, td_api::textEntity *entity, QString originalText, bool startTag)
+QString Message::getHTMLEntityForIndex(int index, td_api::textEntity *entity, QString originalText, bool startTag, int &skip)
 {
     if (startTag && index != entity->offset_) return "";
     else if (!startTag && index != (entity->offset_ + entity->length_ - 1)) return "";
@@ -653,7 +796,23 @@ QString Message::getHTMLEntityForIndex(int index, td_api::textEntity *entity, QS
     case td_api::textEntityTypeCode::ID:
         return startTag ? "<code>" : "</code>";
     case td_api::textEntityTypeCustomEmoji::ID:
+    {
+        if (!startTag) return "";
+
+        int32_t stickerId = _customEmojis->getCustomEmojiSticker(static_cast<td_api::textEntityTypeCustomEmoji*>(entity->type_.get())->custom_emoji_id_);
+        shared_ptr<File> file = _files->getFile(stickerId);
+        if (stickerId != 0 && file) {
+            QString localPath = file->localPath();
+            if (localPath == "") {
+                return "";
+            }
+
+            skip = entity->length_ - 1;
+            auto theme = Silica::Theme::instance();
+            return "<img width=\"" + QString::number(theme->fontSizeSmall()) + "\" height=\"" + QString::number(theme->fontSizeSmall()) + "\" align=\"middle\" src=\"" + localPath + "\"/>";
+        }
         return "";
+    }
     case td_api::textEntityTypeEmailAddress::ID:
         if (startTag) {
             return "<a href=\"mailto:" + originalText.mid(entity->offset_, entity->length_) + "\">";

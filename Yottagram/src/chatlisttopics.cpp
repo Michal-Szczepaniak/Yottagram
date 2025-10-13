@@ -26,6 +26,11 @@ void ChatListTopics::setFiles(shared_ptr<Files> files)
     _files = files;
 }
 
+void ChatListTopics::setCustomEmojis(shared_ptr<CustomEmojis> customEmojis)
+{
+    _customEmojis = customEmojis;
+}
+
 int ChatListTopics::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
@@ -58,7 +63,7 @@ QVariant ChatListTopics::data(const QModelIndex &index, int role) const
     case ChatTopicsRoles::UnreadMentionCountRole:
         return topic->unread_mention_count_;
     case ChatTopicsRoles::LastMessageRole:
-        return getLastMessage(topic);
+        return getLastMessage(topic).toHtmlEscaped();
     case ChatTopicsRoles::LastMessageAuthorRole:
         return getLastMessageAuthor(topic);
     case ChatTopicsRoles::IsPinnedRole:
@@ -129,6 +134,7 @@ void ChatListTopics::setTopics(td_api::forumTopics *topics)
         message->setTelegramManager(_manager);
         message->setUsers(_users);
         message->setFiles(_files);
+        message->setCustomEmojis(_customEmojis);
         message->setChatId(_topics[topicId]->info_->chat_id_);
         message->setMessage(_topics[topicId]->last_message_.get());
 

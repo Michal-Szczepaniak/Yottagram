@@ -57,10 +57,11 @@ void Files::appendFile(td_api::object_ptr<td_api::file> file, QString fileType)
     int32_t fileId = file->id_;
 
     if (_files.contains(file->id_)) {
-        _files[file->id_]->setFile(std::move(file));
+        _files[file->id_]->updateFile(std::move(file));
     } else {
-        auto filePointer = std::make_shared<File>(std::move(file), _manager);
+        auto filePointer = std::make_shared<File>(std::move(file), _manager, fileType);
         _files.insert(filePointer->getId(), filePointer);
+        connect(filePointer.get(), &File::isDownloadedChanged, this, &Files::onFileDownloadedChanged);
     }
 
     if (fileType == "avatar" || fileType == "sticker" || fileType == "animation" || fileType == "thumbnail") considerAutoDownloading(fileId, fileType);
@@ -105,6 +106,11 @@ void Files::onFileUpdated(td_api::updateFile *updateFile)
     if (_files.contains(fileId)) {
         _files[fileId]->updateFile(std::move(updateFile->file_));
     }
+}
 
-    delete updateFile;
+void Files::onFileDownloadedChanged(bool downloaded, int32_t fileId)
+{
+    if (!downloaded) {
+        considerAutoDownloading(fileId, _files[fileId]->getType());
+    }
 }

@@ -29,7 +29,7 @@ QVariant ChatListFolders::data(const QModelIndex &index, int role) const
         return list.id;
         break;
     case ChatListRoles::NameRole:
-        return list.name;
+        return list.name.toHtmlEscaped();
         break;
     case ChatListRoles::IconNameRole:
         return list.iconName;

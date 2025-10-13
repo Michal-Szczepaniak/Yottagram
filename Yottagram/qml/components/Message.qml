@@ -152,10 +152,13 @@ Column {
     Loader {
         id: contentLoader
         width: {
+            console.log(messageType)
             switch(messageType) {
             case "photo":
                 if (file.biggestPhotoSize.width == 0) return Theme.itemSizeHuge*2
                 return Math.min(Theme.itemSizeHuge*2, file.biggestPhotoSize.width)
+            case "animatedEmoji":
+                return settings.animatedEmoji ? Theme.itemSizeHuge*1.5 : 0
             case "sticker":
                 return Theme.itemSizeHuge*1.5
             case "video":
@@ -185,6 +188,8 @@ Column {
             case "photo":
                 if (file.biggestPhotoSize.height == 0) return Theme.itemSizeHuge*2
                 return width * file.biggestPhotoSize.height/file.biggestPhotoSize.width;
+            case "animatedEmoji":
+                return settings.animatedEmoji ? Theme.itemSizeHuge*1.5 : 0
             case "sticker":
                 return Theme.itemSizeHuge*1.5
             case "video":
@@ -421,9 +426,62 @@ Column {
         spacing: Theme.paddingSmall
         visible: !serviceMessage.visible
 
+        Row {
+            id: reactionsRow
+
+            Repeater {
+                model: reactions
+
+                Rectangle {
+                    height: Theme.iconSizeSmall
+                    width: reactionRow.width + Theme.paddingLarge
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: Theme.rgba(selectedReaction === index ? Theme.highlightColor : Theme.secondaryHighlightColor, selectedReaction === index ? 1 : Theme.highlightBackgroundOpacity)
+                    radius: height
+
+                    Row {
+                        id: reactionRow
+                        anchors.centerIn: parent
+                        spacing: Theme.paddingSmall
+
+                        Image {
+                            id: reactionImage
+                            width: reaction.height
+                            height: width
+                            visible: Twemoji.test(modelData)
+                            source: 'qrc:///emoji/' + Twemoji.emojifyRaw(modelData) + '.svg'
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        AnimatedImage {
+                            width: reaction.height
+                            height: width
+                            visible: !reactionImage.visible
+                            source: if (!reactionImage.visible) modelData
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Label {
+                            id: reaction
+                            text: reactionsCount[index]
+                            font.pixelSize: Theme.fontSizeTiny
+                            verticalAlignment: Text.AlignVCenter
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+
+                        onClicked: console.log("react")
+                    }
+                }
+            }
+        }
+
         Item {
             height: 1
-            width: column.width - time.width - readIcon.width - Theme.paddingSmall*2
+            width: column.width - time.width - readIcon.width - Theme.paddingSmall*2 - reactionsRow.width
             visible: !received
         }
 

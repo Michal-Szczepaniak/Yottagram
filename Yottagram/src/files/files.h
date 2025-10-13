@@ -46,6 +46,7 @@ public:
 
 public slots:
     void onFileUpdated(td_api::updateFile *updateFile);
+    void onFileDownloadedChanged(bool downloaded, int32_t fileId);
 
 private:
     shared_ptr<TelegramManager> _manager;

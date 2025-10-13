@@ -38,6 +38,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "proxymodel.h"
 #include "contacts.h"
 #include "telegramstatus.h"
+#include "customemojis.h"
 
 using namespace std;
 
@@ -66,6 +67,7 @@ public:
     shared_ptr<Users> _users;
     shared_ptr<Files> _files;
     shared_ptr<DBusHelper> _dbusHelper;
+    shared_ptr<CustomEmojis> _customEmojis;
     AutoDownloadSettings _wifiAutoDownloadSettings;
     AutoDownloadSettings _mobileAutoDownloadSettings;
     AutoDownloadSettings _roamingAutoDownloadSettings;

@@ -120,10 +120,7 @@ bool TgsIOHandler::read(QImage* out)
         if (currentFrame && currentRender.valid()) {
             std::future_status status = currentRender.wait_for(std::chrono::milliseconds(0));
             if (status != std::future_status::ready) {
-                LOG("Skipping frame" << currentFrame);
-                currentFrame = (currentFrame + 1) % frameCount;
-                *out = prevImage;
-                return true;
+                return false;
             }
         }
         finishRendering();

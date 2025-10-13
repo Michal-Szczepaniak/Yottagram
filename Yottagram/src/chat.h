@@ -27,6 +27,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "files/file.h"
 #include "users.h"
 #include "message.h"
+#include "customemojis.h"
 #include <memory>
 #include <QUrl>
 #include <QVector>
@@ -124,6 +125,9 @@ public:
         LocationRole,
         ContactRole,
         TopicRole,
+        ReactionsRole,
+        ReactionsCountRole,
+        SelectedReactionRole,
     };
 
     enum ChatAction {
@@ -213,6 +217,7 @@ public:
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setUsers(shared_ptr<Users> users);
     void setFiles(shared_ptr<Files> files);
+    void setCustomEmojis(shared_ptr<CustomEmojis> customEmojis);
     void setSecretChatsInfo(shared_ptr<SecretChatsInfo> secretChatsInfo);
     void setBasicGroupsInfo(shared_ptr<BasicGroupsInfo> basicGroupsInfo);
     void setSupergroupsInfo(shared_ptr<SupergroupsInfo> supergroupsInfo);
@@ -279,6 +284,10 @@ public:
     File* getSmallPhoto();
     File* getBigPhoto();
 
+private:
+    QStringList getReactions(Message *message) const;
+    QString getCustomEmojiReaction(int64_t messageId, td_api::reactionTypeCustomEmoji* emojiReaction) const;
+
 signals:
     void idChanged();
     void titleChanged();
@@ -330,6 +339,10 @@ public slots:
     void onGotSearchChatMembers(int64_t chatId, td_api::chatMembers *chatMembers);
     void onGotRecentInlineBots(int64_t chatId, td_api::users *users);
     void onGotForumTopics(int64_t chatId, td_api::forumTopics *forumTopics);
+    void onGotMessageProperties(int64_t chatId, int64_t messageId, td_api::messageProperties *messageProperties);
+    void onCustomEmojiUpdated(int64_t chatId, int64_t messageId, QVector<int32_t> fileIds);
+    void onMessageFormattedChanged(int64_t messageId);
+    void onMessageReactionsChanged(int64_t messageId);
 
 private:
     int32_t _smallPhotoId;
@@ -346,6 +359,7 @@ private:
     shared_ptr<TelegramManager> _manager{};
     shared_ptr<Users> _users{};
     shared_ptr<Files> _files{};
+    shared_ptr<CustomEmojis> _customEmojis{};
     shared_ptr<SecretChatsInfo> _secretChatsInfo{};
     shared_ptr<BasicGroupsInfo> _basicGroupsInfo{};
     shared_ptr<SupergroupsInfo> _supergroupsInfo{};

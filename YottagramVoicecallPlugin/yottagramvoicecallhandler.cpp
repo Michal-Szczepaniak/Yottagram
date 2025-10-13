@@ -31,7 +31,7 @@ class YottagramVoiceCallHandlerPrivate
 
 public:
     YottagramVoiceCallHandlerPrivate(YottagramVoiceCallHandler *q, const QString &pHandlerId, const QString &callerName, const bool &incoming, YottagramVoiceCallProvider *pProvider, VoiceCallManagerInterface *manager)
-        : q_ptr(q), handlerId(pHandlerId), provider(pProvider), manager(manager), callerName(callerName), isIncoming(incoming), status(incoming ? AbstractVoiceCallHandler::STATUS_INCOMING : AbstractVoiceCallHandler::STATUS_DIALING)
+        : q_ptr(q), handlerId(pHandlerId), callerName(callerName), manager(manager), provider(pProvider), isIncoming(incoming), status(incoming ? AbstractVoiceCallHandler::STATUS_INCOMING : AbstractVoiceCallHandler::STATUS_DIALING)
     { /* ... */ }
 
     YottagramVoiceCallHandler *q_ptr;
@@ -189,7 +189,7 @@ void YottagramVoiceCallHandler::sendDtmf(const QString &)
     TRACE
 }
 
-void YottagramVoiceCallHandler::filter(VoiceCallFilterAction action)
+void YottagramVoiceCallHandler::filter(VoiceCallFilterAction)
 {
     TRACE
 }

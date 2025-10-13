@@ -18,26 +18,15 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-#include "telegramreceiver.h"
-#include <td/telegram/Log.h>
-#include <td/telegram/Client.h>
-#include <QDebug>
-#include <QDateTime>
+#include "ffmpegioplugin.h"
+#include "rlottie.h"
 
-TelegramReceiver::TelegramReceiver()
+QImageIOPlugin::Capabilities ffmpegIOPlugin::capabilities(QIODevice*, const QByteArray& format) const
 {
-    td::Log::set_verbosity_level(0);
-    client = manager.create_client_id();
-    manager.send(client, 0, td_api::make_object<td_api::setLogVerbosityLevel>(0));
+    return Capabilities((format == ffmpegIOHandler::NAME) ? CanRead : 0);
 }
 
-void TelegramReceiver::run() {
-    while(true) {
-        auto response = manager.receive(WAIT_TIMEOUT);
-
-        if (!response.object) continue;
-
-        emit messageReceived(response.request_id, response.object.release());
-        msleep(10);
-    }
+QImageIOHandler* ffmpegIOPlugin::create(QIODevice* device, const QByteArray& format) const
+{
+    return new ffmpegIOHandler(device, format);
 }

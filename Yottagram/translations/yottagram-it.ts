@@ -331,34 +331,6 @@
         <translation>%1 in linea</translation>
     </message>
     <message>
-        <source>Reply</source>
-        <translation>Rispondi</translation>
-    </message>
-    <message>
-        <source>Pin message</source>
-        <translation>Fissa messaggio</translation>
-    </message>
-    <message>
-        <source>Unpin message</source>
-        <translation>Rimuovi messaggio fissato</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>Modifica</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Copia</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Elimina</translation>
-    </message>
-    <message>
-        <source>Deselect</source>
-        <translation>Deselezione</translation>
-    </message>
-    <message>
         <source>Select</source>
         <translation>Scegli</translation>
     </message>
@@ -421,18 +393,6 @@
     <message>
         <source>Notify members</source>
         <translation>Notifica membri</translation>
-    </message>
-    <message>
-        <source>Save to gallery</source>
-        <translation>Salva nella galleria</translation>
-    </message>
-    <message>
-        <source>Saved to: %1</source>
-        <translation>Salvato in: %1</translation>
-    </message>
-    <message>
-        <source>You must download it first</source>
-        <translation>Devi scaricarlo prima</translation>
     </message>
     <message>
         <source>%1 is typing</source>
@@ -720,20 +680,44 @@
 <context>
     <name>MessageContextMenu</name>
     <message>
+        <source>Pin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Reply</source>
-        <translation>Rispondi</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished">Inoltra</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation>Modifica</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>React</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Copia</translation>
+        <translation type="unfinished">Copia</translation>
+    </message>
+    <message>
+        <source>Saved to: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You must download it first</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Elimina</translation>
+        <translation type="unfinished">Elimina</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

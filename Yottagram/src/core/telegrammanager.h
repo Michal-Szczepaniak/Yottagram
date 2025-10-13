@@ -38,6 +38,7 @@ public:
         int64_t chatId;
         int32_t type;
         int32_t subType;
+        int64_t messageId;
     };
 
     enum ConnectionState {
@@ -54,6 +55,7 @@ public:
     void sendQuerySync(td_api::Function* message);
     td_api::object_ptr<td_api::Object> sendQuerySyncWithResponse(td_api::Function* message);
     void sendQueryWithResponse(int64_t chatId, int32_t type, int32_t subType, td_api::Function* message);
+    void sendQueryWithResponse(int64_t chatId, int32_t type, int64_t messageId, td_api::Function* message);
     void sendQueryWithResponse(int64_t chatId, int32_t type, td_api::Function* message);
     void sendQueryWithResponse(int32_t type, int32_t subType, td_api::Function* message);
     void sendQueryWithResponse(int32_t type, td_api::Function* message);
@@ -138,6 +140,9 @@ signals:
     void createdPrivateChat(td_api::chat *chat);
     void importedContacts(td_api::importedContacts *importedContacts);
     void gotForumTopics(int64_t chatId, td_api::forumTopics *forumTopics);
+    void gotMessageProperties(int64_t chatId, int64_t messageId, td_api::messageProperties *messageProperties);
+    void gotCustomEmojiStickers(int64_t chatId, int64_t messageId, td_api::stickers *stickers);
+    void gotCustomEmojiReactionAnimations(td_api::stickers *stickers);
 
     void myIdChanged(int32_t myId);
     void error(int64_t chatId, int32_t type, int32_t subType, int32_t code, QString message);
@@ -155,7 +160,7 @@ private:
     QThread receiverThread;
     QTimer incomingMessageCheckTimer;
     int32_t _myId;
-    NetworkManager* _networkManager;
+    QSharedPointer<NetworkManager> _networkManager;
     QString _networkType;
     QHash<uint64_t, MessageWithResponse> _messages;
     uint64_t _messageId;

@@ -332,30 +332,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Pin message</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unpin message</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation type="unfinished">编辑</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation type="unfinished">复制</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation type="unfinished">删除</translation>
-    </message>
-    <message>
-        <source>Deselect</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Select</source>
         <translation type="unfinished"></translation>
     </message>
@@ -418,22 +394,6 @@
     <message>
         <source>Notify members</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Save to gallery</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Saved to: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You must download it first</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation type="unfinished">回复</translation>
     </message>
     <message>
         <source>%1 is typing</source>
@@ -720,20 +680,44 @@
 <context>
     <name>MessageContextMenu</name>
     <message>
+        <source>Pin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Reply</source>
-        <translation>回复</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished">转发</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation>编辑</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>React</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>复制</translation>
+        <translation type="unfinished">复制</translation>
+    </message>
+    <message>
+        <source>Saved to: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You must download it first</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>删除</translation>
+        <translation type="unfinished">删除</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -332,30 +332,6 @@
         <translation>%1 en línea</translation>
     </message>
     <message>
-        <source>Pin message</source>
-        <translation>Fijar mensaje</translation>
-    </message>
-    <message>
-        <source>Unpin message</source>
-        <translation>Desfijar mensaje</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>Editar</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Copiar</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Borrar</translation>
-    </message>
-    <message>
-        <source>Deselect</source>
-        <translation>Quitar selección</translation>
-    </message>
-    <message>
         <source>Select</source>
         <translation>Seleccionar</translation>
     </message>
@@ -418,22 +394,6 @@
     <message>
         <source>Notify members</source>
         <translation>Notificar a los miembros</translation>
-    </message>
-    <message>
-        <source>Save to gallery</source>
-        <translation>Guardar en la galería</translation>
-    </message>
-    <message>
-        <source>Saved to: %1</source>
-        <translation>Guardado en: %1</translation>
-    </message>
-    <message>
-        <source>You must download it first</source>
-        <translation>Primero debes descargarlo</translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation>Responder</translation>
     </message>
     <message>
         <source>%1 is typing</source>
@@ -721,20 +681,44 @@
 <context>
     <name>MessageContextMenu</name>
     <message>
+        <source>Pin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Reply</source>
-        <translation>Responder</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished">Reenviar</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation>Editar</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>React</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Copiar</translation>
+        <translation type="unfinished">Copiar</translation>
+    </message>
+    <message>
+        <source>Saved to: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You must download it first</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Borrar</translation>
+        <translation type="unfinished">Borrar</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

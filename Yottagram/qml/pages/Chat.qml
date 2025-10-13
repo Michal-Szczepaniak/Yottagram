@@ -252,9 +252,8 @@ Page {
             }
 
             MenuItem {
-                text: qsTr("Cancel selection")
-                visible: chatPage.selectionActive
-                onClicked: chatPage.selectionActive = false
+                text: chatPage.selectionActive ? qsTr("Cancel selection") : qsTr("Select")
+                onClicked: chatPage.selectionActive = !chatPage.selectionActive
             }
 
             MenuItem {
@@ -663,147 +662,7 @@ Page {
                             }
                         }
                         sourceComponent: Component {
-                            ContextMenu {
-                                id: contextMenu
-
-                                MenuItem {
-                                    text: qsTr("Pin message")
-                                    visible: {
-                                        if (pinnedMessages.contains(messageId)) return false
-
-                                        var type = chat.getChatType()
-                                        if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canPinMessages
-                                        if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canPinMessages
-                                        return chat.canPinMessages
-                                    }
-                                    onClicked: pageStack.push(pinMessageDialog, {messageId: messageId, priv: (type === "private" || type === "secret")})
-                                }
-
-                                MenuItem {
-                                    text: qsTr("Unpin message")
-                                    visible: {
-                                        if (!pinnedMessages.contains(messageId)) return false
-
-                                        var type = chat.getChatType()
-                                        if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canPinMessages
-                                        if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canPinMessages
-                                        return chat.canPinMessages
-                                    }
-                                    onClicked: {
-                                        chat.unpinMessage(messageId)
-                                    }
-                                }
-
-                                MenuItem {
-                                    text: qsTr("Reply")
-                                    visible: chatList.selection.length == 0
-                                    onClicked: {
-                                        chatPage.newEditMessageId = 0
-                                        chatPage.newReplyMessageId = messageId
-                                        textInput.focus = true
-                                    }
-                                }
-
-                                MenuItem {
-                                    text: qsTr("Edit")
-                                    visible: canBeEdited && chatList.selection.length == 0
-                                    onClicked: {
-                                        textInput.text = messageTextUnformatted.trim()
-                                        textInput.cursorPosition = messageText.length
-                                        chatPage.newEditMessageId = messageId
-                                        chatPage.newReplyMessageId = 0
-                                        textInput.focus = true
-                                    }
-                                }
-
-                                MenuItem {
-                                    text: qsTr("Copy")
-                                    onClicked: Clipboard.text = messageTextUnformatted.trim()
-                                }
-
-                                MenuItem {
-                                    text: qsTr("Forward")
-                                    onClicked: {
-                                        selection.push(messageId)
-                                        chatList.selection = []
-                                        chatPage.selection.forEach(function (element) {
-                                            var tmp = chatList.selection
-                                            tmp.push(element)
-                                            chatList.selection = tmp
-                                        })
-                                        chatList.forwardedFrom = chat.id
-                                        pageStack.navigateBack()
-                                    }
-                                }
-
-                                MenuItem {
-                                    text: qsTr("Save to gallery")
-                                    visible: messageType === "photo" || messageType === "video" || messageType === "animation" || messageType === "audio" || messageType === "voiceNote" || messageType === "videoNote" || messageType === "document"
-                                    onClicked: {
-                                        var savedPath = "";
-
-                                        switch(messageType) {
-                                        case "photo":
-                                            if (file.biggestPhoto.localPath) savedPath = dataManager.savePhoto(file.biggestPhoto.localPath)
-                                            break;
-                                        case "video":
-                                            if (file.video.localPath) savedPath = dataManager.saveVideo(file.video.localPath)
-                                            break;
-                                        case "animation":
-                                            if (file.animation.localPath) savedPath = dataManager.saveVideo(file.animation.localPath)
-                                            break;
-                                        case "audio":
-                                            if (file.audio.localPath) savedPath = dataManager.saveAudio(file.audio.localPath)
-                                            break;
-                                        case "voiceNote":
-                                            if (file.voicenote.localPath) savedPath = dataManager.saveAudio(file.voicenote.localPath)
-                                            break;
-                                        case "videoNote":
-                                            if (file.videonote.localPath) savedPath = dataManager.saveVideo(file.videonote.localPath)
-                                            break;
-                                        case "document":
-                                            if (file.document.localPath) savedPath = dataManager.saveDocument(file.document.localPath)
-                                            break;
-                                        }
-
-                                        if (savedPath !== "") {
-                                            saveNotification.summary = qsTr("Saved to: %1").arg(savedPath)
-                                            saveNotification.previewSummary = saveNotification.summary
-                                        } else {
-                                            saveNotification.summary = qsTr("You must download it first")
-                                            saveNotification.previewSummary = saveNotification.summary
-                                        }
-
-                                        saveNotification.publish()
-                                    }
-
-                                    Notification {
-                                        id: saveNotification
-                                    }
-                                }
-
-                                MenuItem {
-                                    text: qsTr("Delete")
-                                    visible: canBeDeleted
-                                    onClicked: remove()
-                                }
-
-                                MenuItem {
-                                    text: listItem.highlighted ? qsTr("Deselect") : qsTr("Select")
-                                    visible: chatList.selection.length == 0
-                                    onClicked: {
-                                        if (selection.indexOf(messageId) === -1) {
-                                            selection.push(messageId)
-                                            if (chatPage.selectionActive === false) chatPage.selectionActive = true
-                                        } else {
-                                            selection.splice(selection.indexOf(messageId), 1)
-                                            if (chatPage.selectionActive === true && chatPage.selection.length == 0) chatPage.selectionActive = false
-                                        }
-                                        listItem.highlighted = selection.indexOf(messageId) !== -1
-                                        listItem.selectionChanged()
-                                    }
-                                }
-                            }
+                            MessageContextMenu {}
                         }
                     }
 

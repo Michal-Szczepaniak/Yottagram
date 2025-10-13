@@ -211,7 +211,10 @@ var twemoji = (function (
        *    console.log("emoji All The Things!");
        *  }
        */
-      test: test
+      test: test,
+
+
+      grabTheRightIcon: grabTheRightIcon,
     },
 
     // used to escape HTML special chars in attributes
@@ -567,7 +570,14 @@ var twemoji = (function (
 
 }());
 
-
 function emojify(rawText, size) {
     return twemoji.parse(rawText, { callback: function(icon, options, variant) { return 'qrc:///emoji/' + icon + '.svg'; }, size: size });
+}
+
+function emojifyRaw(rawText) {
+    return twemoji.grabTheRightIcon(rawText);
+}
+
+function test(rawText) {
+    return twemoji.test(rawText);
 }

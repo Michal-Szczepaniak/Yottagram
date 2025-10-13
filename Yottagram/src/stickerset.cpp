@@ -40,8 +40,8 @@ void StickerSet::setStickerSet(td_api::stickerSet *stickerSet)
     }
 
     for (auto& sticker : _stickerSet->stickers_) {
-        _stickerIds.append(sticker->sticker_->id_);
-        _files->appendFile(move(sticker->sticker_), "sticker");
+        _stickerIds.append(sticker->thumbnail_->file_->id_);
+        _files->appendFile(move(sticker->thumbnail_->file_), "sticker");
     }
 }
 
@@ -82,7 +82,7 @@ int StickerSet::rowCount(const QModelIndex &parent) const
 
 QVariant StickerSet::data(const QModelIndex &index, int role) const
 {
-    if (rowCount() <= 0) return QVariant();
+    if (rowCount() <= 0 || index.row() < 0 || index.row() >= rowCount()) return QVariant();
 
     auto sticker = _stickerSet->stickers_[index.row()].get();
     switch (role) {

@@ -23,10 +23,12 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QDebug>
 #include "core.h"
 #include "tgsioplugin/tgsioplugin.h"
+#include "ffmpegioplugin/ffmpegioplugin.h"
 #include <execinfo.h>
 #include <signal.h>
 
-Q_IMPORT_PLUGIN(TgsIOPlugin)
+//Q_IMPORT_PLUGIN(TgsIOPlugin)
+Q_IMPORT_PLUGIN(ffmpegIOPlugin)
 
 void handler(int sig) {
     void *array[20] = {0};

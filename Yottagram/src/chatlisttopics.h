@@ -35,6 +35,7 @@ public:
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setUsers(shared_ptr<Users> users);
     void setFiles(shared_ptr<Files> files);
+    void setCustomEmojis(shared_ptr<CustomEmojis> customEmojis);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = IdRole) const;
@@ -59,6 +60,7 @@ private:
     shared_ptr<TelegramManager> _manager{};
     shared_ptr<Users> _users{};
     shared_ptr<Files> _files{};
+    shared_ptr<CustomEmojis> _customEmojis{};
     QHash<int64_t, td_api::forumTopic*> _topics;
     QVector<int64_t> _topicIds;
     QHash<int64_t, Message*> _messages;

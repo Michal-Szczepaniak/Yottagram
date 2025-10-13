@@ -20,7 +20,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 #include "animation.h"
 
-Animation::Animation(QObject *parent) : ContentFile(parent)
+Animation::Animation(QObject *parent) : ContentFile(parent), _thumbnailFileId(0)
 {
 
 }
@@ -78,7 +78,7 @@ QString Animation::getMimeType() const
 
 File* Animation::getThumbnail() const
 {
-    if (_animation->animation_->thumbnail_) {
+    if (_thumbnailFileId != 0) {
         return _files->getFile(_thumbnailFileId).get();
     } else {
         return nullptr;

@@ -26,6 +26,13 @@ StickerSets::StickerSets(QObject *parent) : QAbstractListModel(parent)
 
 }
 
+StickerSets::~StickerSets()
+{
+    for (StickerSet* set : _stickerSets) {
+        delete set;
+    }
+}
+
 void StickerSets::setTelegramManager(shared_ptr<TelegramManager> manager)
 {
     _manager = manager;
@@ -47,7 +54,7 @@ int StickerSets::rowCount(const QModelIndex &parent) const
 
 QVariant StickerSets::data(const QModelIndex &index, int role) const
 {
-    if (rowCount() <= 0) return QVariant();
+    if (rowCount() <= 0 || index.row() < 0 || index.row() >= rowCount()) return QVariant();
 
     if (!_stickerSets.contains(_installedStickerSetIds[index.row()])) {
         _manager->sendQueryWithResponse(0, td_api::getStickerSet::ID, 0, new td_api::getStickerSet(_installedStickerSetIds[index.row()]));

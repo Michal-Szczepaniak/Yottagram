@@ -30,9 +30,12 @@ class AnimatedEmoji : public ContentFile, public ContentInterface
 {
     Q_OBJECT
     Q_PROPERTY(File* sticker READ getSticker NOTIFY stickerChanged)
+    Q_PROPERTY(File* animation READ getSticker NOTIFY stickerChanged)
+    Q_PROPERTY(File* thumbnail READ getThumbnail NOTIFY stickerChanged)
     Q_PROPERTY(QSize size READ getSize NOTIFY stickerChanged)
     Q_PROPERTY(int64_t setId READ getSetId NOTIFY stickerChanged)
     Q_PROPERTY(QString emoji READ getEmoji NOTIFY stickerChanged)
+    Q_PROPERTY(QString type READ getType NOTIFY stickerChanged)
 public:
     explicit AnimatedEmoji(QObject *parent = nullptr);
 
@@ -42,6 +45,8 @@ public:
     QSize getSize() const;
     int64_t getSetId() const;
     QString getEmoji() const;
+    QString getType() const;
+    File* getThumbnail() const;
 
 signals:
     void stickerChanged();
@@ -51,6 +56,7 @@ public slots:
 private:
     td_api::object_ptr<td_api::animatedEmoji> _animatedEmoji;
     int32_t _stickerFileId;
+    int32_t _thumbnailFileId;
     QString _emoji = "";
 };
 

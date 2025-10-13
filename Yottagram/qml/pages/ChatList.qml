@@ -228,6 +228,7 @@ Page {
                     sourceComponent: Component {
                         ContextMenu {
                             id: contextMenu
+
                             MenuItem {
                                 text: isPinned ? qsTr("Unpin from top") : qsTr("Pin to top")
                                 onClicked: {

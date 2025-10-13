@@ -23,6 +23,8 @@ import Sailfish.Silica 1.0
 import com.verdanditeam.data 1.0
 
 Dialog {
+    allowedOrientations: Orientation.All
+
     canAccept: !dataManager.newPathExists
 
     onDone: {

@@ -27,6 +27,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "core/telegrammanager.h"
 #include "files/files.h"
 #include "chat.h"
+#include "customemojis.h"
 #include "users.h"
 #include "components/scopenotificationsettings.h"
 #include "components/basicgroupsinfo.h"
@@ -80,6 +81,7 @@ public:
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setUsers(shared_ptr<Users> users);
     void setFiles(shared_ptr<Files> files);
+    void setCustomEmojis(shared_ptr<CustomEmojis> customEmojis);
     bool getDaemonEnabled() const;
     void setDaemonEnabled(bool daemonEnabled);
     QStringList getSelection() const;
@@ -170,6 +172,7 @@ private:
     std::shared_ptr<TelegramManager> _manager;
     std::shared_ptr<Users> _users;
     std::shared_ptr<Files> _files;
+    std::shared_ptr<CustomEmojis> _customEmojis;
     std::shared_ptr<SecretChatsInfo> _secretChatsInfo;
     std::shared_ptr<BasicGroupsInfo> _basicGroupsInfo;
     std::shared_ptr<SupergroupsInfo> _supergroupsInfo;

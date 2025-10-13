@@ -26,6 +26,8 @@ import com.verdanditeam.contacts 1.0
 Dialog {
     id: dialog
 
+    allowedOrientations: Orientation.All
+
     signal selectAll()
     signal unselectAll()
 

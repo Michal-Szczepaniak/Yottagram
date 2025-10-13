@@ -37,7 +37,7 @@ ChatList::ChatList() :
     _basicGroupsInfo = std::make_shared<BasicGroupsInfo>();
     _supergroupsInfo = std::make_shared<SupergroupsInfo>();
 
-    _updateListTimer.setInterval(500);
+    _updateListTimer.setInterval(1000);
     _updateListTimer.setSingleShot(true);
     connect(&_updateListTimer, &QTimer::timeout, [&](){
         qDebug() << "Timeout";
@@ -87,6 +87,11 @@ void ChatList::setUsers(shared_ptr<Users> users)
 void ChatList::setFiles(shared_ptr<Files> files)
 {
     _files = files;
+}
+
+void ChatList::setCustomEmojis(shared_ptr<CustomEmojis> customEmojis)
+{
+    _customEmojis = customEmojis;
 }
 
 bool ChatList::getDaemonEnabled() const
@@ -154,6 +159,7 @@ void ChatList::createChat(td_api::chat *chat)
         auto newChat = new Chat(chat, _files);
         newChat->setTelegramManager(_manager);
         newChat->setUsers(_users);
+        newChat->setCustomEmojis(_customEmojis);
         newChat->setSecretChatsInfo(_secretChatsInfo);
         newChat->setBasicGroupsInfo(_basicGroupsInfo);
         newChat->setSupergroupsInfo(_supergroupsInfo);
@@ -351,6 +357,8 @@ QVector<int64_t> *ChatList::getChatList(td_api::ChatList *list)
     case td_api::chatListFolder::ID:
         return &_filter_chats_ids[static_cast<const td_api::chatListFolder *>(list)->chat_folder_id_];
         break;
+    default:
+        return {};
     }
 }
 
@@ -615,7 +623,7 @@ void ChatList::updateChatLastMessage(td_api::updateChatLastMessage *updateChatLa
             }
 
             auto &cache = _chatCache[updateChatLastMessage->chat_id_];
-            cache.lastMessage = chat->lastMessage()->getTypeText();
+            cache.lastMessage = chat->lastMessage()->getTypeText().toHtmlEscaped();
             cache.lastAuthor = getLastMessageAuthor(chat);
             if (cache.lastAuthor.length() > 12) {
                 cache.lastAuthor = cache.lastAuthor.left(12) + "...";

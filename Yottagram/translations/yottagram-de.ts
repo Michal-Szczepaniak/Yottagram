@@ -332,30 +332,6 @@
         <translation>%1 Online</translation>
     </message>
     <message>
-        <source>Pin message</source>
-        <translation>PIN Nachicht</translation>
-    </message>
-    <message>
-        <source>Unpin message</source>
-        <translation>Nachicht nicht mehr anheften</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>Bearbeiten</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Kopieren</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Löschen</translation>
-    </message>
-    <message>
-        <source>Deselect</source>
-        <translation>Abwählen</translation>
-    </message>
-    <message>
         <source>Select</source>
         <translation>Auswählen</translation>
     </message>
@@ -418,22 +394,6 @@
     <message>
         <source>Notify members</source>
         <translation>Mitglieder benachichtigen</translation>
-    </message>
-    <message>
-        <source>Save to gallery</source>
-        <translation>In der Galerie speichern</translation>
-    </message>
-    <message>
-        <source>Saved to: %1</source>
-        <translation>Gespeichert zu: %1</translation>
-    </message>
-    <message>
-        <source>You must download it first</source>
-        <translation>Bitte zuerst herunterladen</translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation>Antworten</translation>
     </message>
     <message>
         <source>%1 is typing</source>
@@ -722,20 +682,44 @@
 <context>
     <name>MessageContextMenu</name>
     <message>
+        <source>Pin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Reply</source>
-        <translation>Antworten</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished">Weiterleiten</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation>Bearbeiten</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>React</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Kopieren</translation>
+        <translation type="unfinished">Kopieren</translation>
+    </message>
+    <message>
+        <source>Saved to: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You must download it first</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Löschen</translation>
+        <translation type="unfinished">Löschen</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

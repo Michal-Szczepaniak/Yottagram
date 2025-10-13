@@ -38,6 +38,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "contents/videonote.h"
 #include "users.h"
 #include "linkpreview.h"
+#include "customemojis.h"
 #include "contents/poll.h"
 #include "contents/call.h"
 #include "contents/location.h"
@@ -64,6 +65,7 @@ public:
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setUsers(shared_ptr<Users> users);
     void setFiles(shared_ptr<Files> files);
+    void setCustomEmojis(shared_ptr<CustomEmojis> customEmojis);
 
     int64_t getId();
     QString getText(bool formatted = true);
@@ -94,6 +96,9 @@ public:
     void fetchProperties();
     td_api::MessageTopic* getTopicId();
     void updateInteractionInfo(td_api::object_ptr<td_api::messageInteractionInfo> interactionInfo);
+    void setMessageProperties(td_api::messageProperties *messageProperties);
+    td_api::messageReactions* getReactions();
+    void reformatMessage();
 
     bool hasWebPage() const;
     LinkPreview* getWebPage() const;
@@ -110,32 +115,40 @@ public:
     int64_t getChatId() const;
     void setChatId(const int64_t &chatId);
 
+    void updateCustomEmojis(QVector<int32_t> fileIds);
+
 private:
     QString formatTextAsHTML(td_api::formattedText* formattedText);
-    QString getHTMLEntityForIndex(int index, td_api::textEntity *entity, QString originalText, bool startTag);
+    QString getHTMLEntityForIndex(int index, td_api::textEntity *entity, QString originalText, bool startTag, int &skip);
 
 signals:
     void contentChanged(int64_t messageId);
     void messageIdChanged(int64_t oldMessageId, int64_t newMessageId);
     void messageChanged();
+    void messageFormatedChanged(int64_t messageId);
+    void reactionsChanged(int64_t messageId);
 
 public slots:
     void updateMessageSendSucceeded(td_api::updateMessageSendSucceeded *updateMessageSendSucceeded);
     void updateMessageContent(td_api::updateMessageContent *updateMessageContent);
+    void onEntityLocalPathChanged(QString localPath, int32_t fileId);
+    void onReactionLocalPathChanged(QString localPath, int32_t fileId);
 
 private:
     int64_t _chatId;
     td_api::message* _message;
     td_api::messageProperties* _properties;
     int32_t _contentTypeId;
-    QVector<int32_t> _file_ids;
     shared_ptr<TelegramManager> _manager;
     shared_ptr<Users> _users;
     shared_ptr<Files> _files;
+    shared_ptr<CustomEmojis> _customEmojis;
     td_api::object_ptr<td_api::messageText> _text;
     ContentInterface* _messageContent;
     LinkPreview* _linkPreview;
     QString _formattedMessage;
+    QTimer _reformatTimer;
+    QTimer _reactionsUpdateTimer;
 };
 
 #endif // MESSAGE_H

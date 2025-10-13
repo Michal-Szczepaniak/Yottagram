@@ -15,7 +15,7 @@ QMAKE_CXXFLAGS_DEBUG *= -O0 -Wno-unused-parameter
 
 INCLUDEPATH += /usr/include/glib-2.0 $$PWD/src
 
-PKGCONFIG += zlib openssl nemonotifications-qt5 connman-qt5 vorbisfile systemsettings libavcodec libavformat libavutil opus libjpeg libpng libswresample libswscale protobuf gio-2.0 alsa glib-2.0 libpulse libpulse-mainloop-glib vpx openh264 audioresource-qt
+PKGCONFIG += zlib openssl nemonotifications-qt5 connman-qt5 vorbisfile systemsettings libavcodec libavformat libavutil opus libjpeg libpng libswresample libswscale protobuf gio-2.0 alsa glib-2.0 libpulse libpulse-mainloop-glib vpx openh264 audioresource-qt sailfishsilica
 
 DEFINES += QT_STATICPLUGIN APP_VERSION=$$(APP_VERSION)
 
@@ -59,8 +59,11 @@ SOURCES += src/core.cpp \
     src/contents/videonote.cpp \
     src/contents/voicenote.cpp \
     src/contents/animatedemoji.cpp \
+    src/customemojis.cpp \
     src/datamanager.cpp \
     src/dbushelper.cpp \
+    src/ffmpegioplugin/ffmpegiohandler.cpp \
+    src/ffmpegioplugin/ffmpegioplugin.cpp \
     src/files/contentfile.cpp \
     src/files/file.cpp \
     src/files/files.cpp \
@@ -153,6 +156,8 @@ DISTFILES += qml/yottagram.qml \
     qml/pages/Contacts.qml \
     qml/pages/Loading.qml \
     qml/pages/Settings.qml \
+    src/tgsioplugin/tgsioplugin.json \
+    src/ffmpegioplugin/ffmpegioplugin.json \
     sailjail/yottagram.desktop \
     translations/*.ts \
     yottagram.desktop
@@ -202,8 +207,11 @@ HEADERS += \
     src/contents/voicenote.h \
     src/contents/animatedemoji.h \
     src/core.h \
+    src/customemojis.h \
     src/datamanager.h \
     src/dbushelper.h \
+    src/ffmpegioplugin/ffmpegiohandler.h \
+    src/ffmpegioplugin/ffmpegioplugin.h \
     src/files/contentfile.h \
     src/files/file.h \
     src/files/files.h \

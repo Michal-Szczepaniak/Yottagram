@@ -4,10 +4,10 @@ Name:       yottagram
 %{!?qtc_qmake5:%define qtc_qmake5 %qmake5}
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
-#global debug_package %{nil}
+%global debug_package %{nil}
 Summary:    Yottagram
 Version:    0.7.0
-Release:    18
+Release:    27
 Group:      Qt/Qt
 License:    GPLv3
 URL:        http://verdanditeam.com/
@@ -35,6 +35,7 @@ BuildRequires:  pkgconfig(protobuf)
 BuildRequires:  pkgconfig(gio-2.0)
 BuildRequires:  pkgconfig(alsa)
 BuildRequires:  pkgconfig(openh264)
+BuildRequires:  pkgconfig(sailfishsilica)
 BuildRequires:  desktop-file-utils
 BuildRequires:  pkgconfig(audioresource-qt)
 BuildRequires:  libdwarf-devel

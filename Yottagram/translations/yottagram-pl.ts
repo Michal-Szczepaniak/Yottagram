@@ -240,22 +240,6 @@
         <translation>%1 miembros</translation>
     </message>
     <message>
-        <source>Edit</source>
-        <translation>Zmień</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Kopiuj</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation>Usuń</translation>
-    </message>
-    <message>
-        <source>Deselect</source>
-        <translation>Odznacz</translation>
-    </message>
-    <message>
         <source>Select</source>
         <translation>Zaznacz</translation>
     </message>
@@ -308,10 +292,6 @@
         <translation>Notatka głosowa</translation>
     </message>
     <message>
-        <source>Pin message</source>
-        <translation>Podpięta wiadomość</translation>
-    </message>
-    <message>
         <source>Notify members</source>
         <translation>Powiadom członków</translation>
     </message>
@@ -326,10 +306,6 @@
     <message>
         <source>Also pin for %1</source>
         <translation>Podpięta do %1</translation>
-    </message>
-    <message>
-        <source>Unpin message</source>
-        <translation>Odepnij wiadomość</translation>
     </message>
     <message>
         <source>GIF</source>
@@ -418,22 +394,6 @@
     <message>
         <source>Channel created</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Save to gallery</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Saved to: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You must download it first</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation type="unfinished">Odpowiedz</translation>
     </message>
     <message>
         <source>%1 is typing</source>
@@ -721,20 +681,44 @@
 <context>
     <name>MessageContextMenu</name>
     <message>
+        <source>Pin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Reply</source>
-        <translation>Odpowiedz</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished">Wróć</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation>Zmień</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>React</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Kopiuj</translation>
+        <translation type="unfinished">Kopiuj</translation>
+    </message>
+    <message>
+        <source>Saved to: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You must download it first</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Usuń</translation>
+        <translation type="unfinished">Borrar</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -104,17 +104,17 @@ Item {
             cellWidth: Math.floor(page.isLandscape ? root.width/(Math.floor(root.width/(root.height/5))) : root.width/5)
             cellHeight: cellWidth
             clip: true
-            cacheBuffer: cellWidth*4
+            cacheBuffer: 0
 
             delegate: GridItem {
                 width: stickerSetGridView.cellWidth
                 height: width
                 onClicked: root.stickerFileId = sticker.id
 
-                Image {
+                AnimatedImage {
                     anchors.centerIn: parent
-                    sourceSize.width: parent.width - Theme.paddingSmall*2
-                    sourceSize.height: parent.width - Theme.paddingSmall*2
+                    width: parent.width - Theme.paddingSmall*2
+                    height: parent.width - Theme.paddingSmall*2
                     cache: true
                     fillMode: Image.PreserveAspectFit
                     asynchronous: true

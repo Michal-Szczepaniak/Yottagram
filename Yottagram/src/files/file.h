@@ -44,7 +44,7 @@ class File : public QObject
     Q_PROPERTY(bool isUploading READ isUploading NOTIFY isUploadingChanged)
 public:
     explicit File(QObject *parent = nullptr);
-    File(td_api::object_ptr<td_api::file> file, std::shared_ptr<TelegramManager> manager);
+    File(td_api::object_ptr<td_api::file> file, std::shared_ptr<TelegramManager> manager, QString type);
     ~File();
 
     td_api::file* getFile();
@@ -65,23 +65,25 @@ public:
     int32_t getExpectedSize();
     int32_t getDownloadedSize();
     int32_t getUploadedSize();
+    QString getType();
 
 signals:
     void idChanged(int32_t fileId);
-    void localPathChanged(QString path);
-    void remoteIdChanged(QString remoteId);
-    void remoteUniqueIdChanged(QString remoteUniqueId);
-    void expectedSizeChanged(int32_t expectedSize);
-    void downloadedSizeChanged(int32_t downloadedSize);
-    void uploadedSizeChanged(int32_t uploadedSize);
-    void isDownloadedChanged(bool isDownloaded);
-    void isDownloadingChanged(bool isDownloading);
-    void isUploadedChanged(bool isUploaded);
-    void isUploadingChanged(bool isUploading);
+    void localPathChanged(QString path, int32_t fileId);
+    void remoteIdChanged(QString remoteId, int32_t fileId);
+    void remoteUniqueIdChanged(QString remoteUniqueId, int32_t fileId);
+    void expectedSizeChanged(int32_t expectedSize, int32_t fileId);
+    void downloadedSizeChanged(int32_t downloadedSize, int32_t fileId);
+    void uploadedSizeChanged(int32_t uploadedSize, int32_t fileId);
+    void isDownloadedChanged(bool isDownloaded, int32_t fileId);
+    void isDownloadingChanged(bool isDownloading, int32_t fileId);
+    void isUploadedChanged(bool isUploaded, int32_t fileId);
+    void isUploadingChanged(bool isUploading, int32_t fileId);
 
 private:
     td_api::object_ptr<td_api::file> _file;
     shared_ptr<TelegramManager> _manager;
+    QString _type;
 };
 Q_DECLARE_METATYPE(File*)
 

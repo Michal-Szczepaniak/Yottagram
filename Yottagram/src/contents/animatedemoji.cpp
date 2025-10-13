@@ -23,7 +23,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QDataStream>
 #include <zlib.h>
 
-AnimatedEmoji::AnimatedEmoji(QObject *parent) : ContentFile(parent)
+AnimatedEmoji::AnimatedEmoji(QObject *parent) : ContentFile(parent), _thumbnailFileId(0)
 {
 
 }
@@ -50,6 +50,10 @@ void AnimatedEmoji::addUpdateFiles()
     if (!_animatedEmoji || !_animatedEmoji->sticker_ || !_animatedEmoji->sticker_->sticker_) return;
     _stickerFileId = _animatedEmoji->sticker_->sticker_->id_;
     _files->appendFile(std::move(_animatedEmoji->sticker_->sticker_), "sticker");
+    if (_animatedEmoji->sticker_->thumbnail_) {
+        _thumbnailFileId = _animatedEmoji->sticker_->thumbnail_->file_->id_;
+        _files->appendFile(std::move(_animatedEmoji->sticker_->thumbnail_->file_), "thumbnail");
+    }
 }
 
 QSize AnimatedEmoji::getSize() const
@@ -68,4 +72,27 @@ QString AnimatedEmoji::getEmoji() const
 {
     if (!_animatedEmoji) return "";
     return _emoji;
+}
+
+QString AnimatedEmoji::getType() const
+{
+    if (!_animatedEmoji) return "";
+
+    switch (_animatedEmoji->sticker_->format_->get_id()) {
+    case td_api::stickerFormatWebp::ID:
+        return "webp";
+    case td_api::stickerFormatTgs::ID:
+        return "tgs";
+    case td_api::stickerFormatWebm::ID:
+        return "webm";
+    }
+}
+
+File *AnimatedEmoji::getThumbnail() const
+{
+    if (_thumbnailFileId != 0) {
+        return _files->getFile(_thumbnailFileId).get();
+    } else {
+        return nullptr;
+    }
 }

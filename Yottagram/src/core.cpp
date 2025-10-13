@@ -39,6 +39,7 @@ Core::Core(QObject *parent) : QObject(parent)
     _users = make_shared<Users>();
     _files = make_shared<Files>();
     _dbusHelper = make_shared<DBusHelper>();
+    _customEmojis = make_shared<CustomEmojis>();
     qRegisterMetaType<shared_ptr<td_api::Object>>();
     qmlRegisterType<User>("com.verdanditeam.user", 1, 0, "User");
     qmlRegisterType<Thumbnail>("com.verdanditeam.thumbnail", 1, 0, "Thumbnail");
@@ -62,12 +63,15 @@ Core::Core(QObject *parent) : QObject(parent)
     _chatList->setTelegramManager(_manager);
     _chatList->setUsers(_users);
     _chatList->setFiles(_files);
+    _chatList->setCustomEmojis(_customEmojis);
     _users->setTelegramManager(_manager);
     _users->setFiles(_files);
     _notifications.setTelegramManager(_manager);
     _notifications.setChatList(_chatList);
     _notifications.setUsers(_users);
     _notifications.setFiles(_files);
+    _customEmojis->setTelegramManager(_manager);
+    _customEmojis->setFiles(_files);
 
     _wifiAutoDownloadSettings.setTelegramManager(_manager);
     _wifiAutoDownloadSettings.setConnectionType("wifi");

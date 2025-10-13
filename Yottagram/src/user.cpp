@@ -141,7 +141,8 @@ QString User::getStatusText() const
         return tr("Last seen recently");
     case Status::Empty:
         return tr("Never seen");
-
+    default:
+        return "";
     }
 }
 

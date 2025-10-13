@@ -33,11 +33,11 @@ TelegramManager::TelegramManager(): _messageId(1)
 
 void TelegramManager::init()
 {
-    _networkManager = NetworkManager::instance();
+    _networkManager = NetworkManager::sharedInstance();
 
     connect(&receiver, &TelegramReceiver::messageReceived, this, &TelegramManager::messageReceived);
     connect(this, &TelegramManager::updateOption, this, &TelegramManager::onUpdateOption);
-    connect(_networkManager, &NetworkManager::defaultRouteChanged, this, &TelegramManager::defaultRouteChanged);
+    connect(_networkManager.data(), &NetworkManager::defaultRouteChanged, this, &TelegramManager::defaultRouteChanged);
     connect(this, &TelegramManager::bootupComplete, [&](){ _bootupComplete = true; });
 
     defaultRouteChanged(_networkManager->defaultRoute());
@@ -70,6 +70,14 @@ void TelegramManager::sendQueryWithResponse(int64_t chatId, int32_t type, int32_
 {
     _messageId++;
     _messages[_messageId] = {chatId, type, subType};
+
+    receiver.manager.send(receiver.client, _messageId, td_api::object_ptr<td_api::Function>(message));
+}
+
+void TelegramManager::sendQueryWithResponse(int64_t chatId, int32_t type, int64_t messageId, td_api::Function *message)
+{
+    _messageId++;
+    _messages[_messageId] = {chatId, type, 0, messageId};
 
     receiver.manager.send(receiver.client, _messageId, td_api::object_ptr<td_api::Function>(message));
 }
@@ -208,6 +216,17 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
     case td_api::getForumTopics::ID:
         emit gotForumTopics(response.chatId, static_cast<td_api::forumTopics*>(message));
         break;
+    case td_api::getMessageProperties::ID:
+        emit gotMessageProperties(response.chatId, response.messageId, static_cast<td_api::messageProperties*>(message));
+        break;
+    case td_api::getCustomEmojiStickers::ID:
+        emit gotCustomEmojiStickers(response.chatId, response.messageId, static_cast<td_api::stickers*>(message));
+        break;
+    case td_api::getCustomEmojiReactionAnimations::ID:
+        emit gotCustomEmojiReactionAnimations(static_cast<td_api::stickers*>(message));
+        break;
+    default:
+        delete message;
     }
 }
 
@@ -218,10 +237,6 @@ void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
     if (id > 1) {
         handleMessageWithResponse(id, message);
         return;
-    }
-
-    if (_bootupComplete) {
-        qDebug() << message->get_id();
     }
 
     downcast_call(
@@ -276,9 +291,11 @@ void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
             [this](td_api::updateMessageReactions &updateMessageReactions) { qDebug() << "updateMessageReactions"; },
             [this](td_api::updateMessageReaction &updateMessageReaction) { qDebug() << "updateMessageReaction"; },
             [this](td_api::updateMessageInteractionInfo &updateMessageInteractionInfo) { this->updateMessageInteractionInfo(&updateMessageInteractionInfo); },
-            [](auto &update) { Q_UNUSED(update) }
+            [message](auto &update) { Q_UNUSED(update) qDebug() << "Unhandled message id: " << message->get_id(); }
         )
     );
+
+    delete message;
 }
 
 void TelegramManager::onUpdateOption(td_api::updateOption *updateOption)
@@ -331,6 +348,4 @@ void TelegramManager::updateConnectionState(td_api::updateConnectionState *updat
         qDebug() << "Bootup complete";
         emit bootupComplete();
     }
-
-    delete updateConnectionState;
 }

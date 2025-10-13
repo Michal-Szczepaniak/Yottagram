@@ -29,7 +29,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 //https://github.com/DrKLO/Telegram/blob/e397bd9afdfd9315bf099f78a903f8754d297d7a/TMessagesProj/jni/audio.c#L603
 const QString AudioRecorder::defaultStoragePath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
 
-AudioRecorder::AudioRecorder(QObject *parent) : QAudioRecorder(parent), _autoRemove(false), _recording(false)
+AudioRecorder::AudioRecorder(QObject *parent) : QAudioRecorder(parent), _codec(Vorbis), _autoRemove(false), _recording(false)
 {
     _codecSettingsMap = {
         { Vorbis, {"audio/vorbis", ".ogg",  "ogg"} },
@@ -38,7 +38,6 @@ AudioRecorder::AudioRecorder(QObject *parent) : QAudioRecorder(parent), _autoRem
         { FLAC,   {"audio/FLAC",   ".flac", "raw"} }
     };
     setAudioInput("pulseaudio:");
-    setCodec(Vorbis);
     setVolume(_volume);
 }
 

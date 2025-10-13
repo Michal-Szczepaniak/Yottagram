@@ -85,6 +85,8 @@ void SavedAnimations::onGotSavedAnimations(td_api::animations *animations)
         _savedAnimations[newAnimation.id] = newAnimation;
         emit dataChanged(createIndex(_savedAnimationsId.indexOf(newAnimation.id), 0), createIndex(_savedAnimationsId.indexOf(newAnimation.id), 0));
     }
+
+    delete animations;
 }
 
 void SavedAnimations::onIsAuthorizedChanged(bool isAuthorized)

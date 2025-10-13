@@ -59,6 +59,8 @@ QString Notifications::getGroupTypeAsString(td_api::NotificationGroupType *notif
         return tr("Calls");
     case td_api::notificationGroupTypeSecretChat::ID:
         return tr("Secret chat");
+    default:
+        return "";
     }
 }
 

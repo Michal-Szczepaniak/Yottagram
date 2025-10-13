@@ -31,6 +31,11 @@ void PinnedMessages::setUsers(shared_ptr<Users> users)
     _users = users;
 }
 
+void PinnedMessages::setCustomEmojis(shared_ptr<CustomEmojis> customEmojis)
+{
+    _customEmojis = customEmojis;
+}
+
 int64_t PinnedMessages::chatId() const
 {
     return _chatId;
@@ -118,6 +123,7 @@ void PinnedMessages::onGotSearchChatMessagesFilterPinned(int64_t chatId, td_api:
         n->setTelegramManager(_manager);
         n->setUsers(_users);
         n->setFiles(_files);
+        n->setCustomEmojis(_customEmojis);
         n->setChatId(_chatId);
         n->setMessage(m.release());
 

@@ -332,30 +332,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Pin message</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unpin message</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation type="unfinished">Redigera</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation type="unfinished">Kopiera</translation>
-    </message>
-    <message>
-        <source>Delete</source>
-        <translation type="unfinished">Ta bort</translation>
-    </message>
-    <message>
-        <source>Deselect</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Select</source>
         <translation type="unfinished"></translation>
     </message>
@@ -418,22 +394,6 @@
     <message>
         <source>Notify members</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Save to gallery</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Saved to: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You must download it first</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reply</source>
-        <translation type="unfinished">Svara</translation>
     </message>
     <message>
         <source>%1 is typing</source>
@@ -721,20 +681,44 @@
 <context>
     <name>MessageContextMenu</name>
     <message>
+        <source>Pin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Reply</source>
-        <translation>Svara</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished">Vidarebefordra</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation>Redigera</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>React</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation>Kopiera</translation>
+        <translation type="unfinished">Kopiera</translation>
+    </message>
+    <message>
+        <source>Saved to: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You must download it first</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Ta bort</translation>
+        <translation type="unfinished">Ta bort</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
