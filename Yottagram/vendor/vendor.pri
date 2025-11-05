@@ -11,4 +11,5 @@ include($$PWD/tg_owt/abseil-cpp.pri)
 include($$PWD/tg_owt/tg_owt.pri)
 include($$PWD/tgcalls/tgcalls.pri)
 include($$PWD/tdlib/tdlib.pri)
+include($$PWD/picoplayer/picoplayer.pri)
 

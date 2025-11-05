@@ -31,7 +31,7 @@ Row {
     }
     Thumbnail {
         id: thumbnail
-        image: if (typeof file.thumbnail !== "undefined") file.thumbnail
+        Binding on image { value: file.thumbnail; when: typeof file.thumbnail !== "undefined" }
         width: Theme.itemSizeSmall
         height: Theme.itemSizeSmall
         layer.enabled: true

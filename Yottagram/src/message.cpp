@@ -22,16 +22,13 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 #include <contents/animatedemoji.h>
 #include <libsailfishsilica/silicatheme.h>
+#include <set>
 
 Message::Message(QObject *parent) : QObject(parent), _message(nullptr), _properties(nullptr), _text(nullptr), _messageContent(nullptr), _linkPreview(nullptr)
 {
     _reformatTimer.setInterval(500);
     _reformatTimer.setSingleShot(true);
-    connect(&_reformatTimer, &QTimer::timeout, [this](){
-        _formattedMessage = formatTextAsHTML(_text->text_.get());
-
-        emit messageFormatedChanged(getId());
-    });
+    connect(&_reformatTimer, &QTimer::timeout, this, &Message::onReformatMessage);
 
     _reactionsUpdateTimer.setInterval(500);
     _reactionsUpdateTimer.setSingleShot(true);
@@ -61,8 +58,8 @@ void Message::setMessage(td_api::message *message, bool handleContent)
 void Message::setTelegramManager(shared_ptr<TelegramManager> manager)
 {
     _manager = manager;
-    connect(this->_manager.get(), SIGNAL(updateMessageSendSucceeded(td_api::updateMessageSendSucceeded*)), this, SLOT(updateMessageSendSucceeded(td_api::updateMessageSendSucceeded*)));
-    connect(this->_manager.get(), SIGNAL(updateMessageContent(td_api::updateMessageContent*)), this, SLOT(updateMessageContent(td_api::updateMessageContent*)));
+    connect(_manager.get(), &TelegramManager::updateMessageSendSucceeded, this, &Message::updateMessageSendSucceeded);
+    connect(_manager.get(), &TelegramManager::updateMessageContent, this, &Message::updateMessageContent);
 }
 
 void Message::setUsers(shared_ptr<Users> users)
@@ -78,6 +75,11 @@ void Message::setFiles(shared_ptr<Files> files)
 void Message::setCustomEmojis(shared_ptr<CustomEmojis> customEmojis)
 {
     _customEmojis = customEmojis;
+}
+
+void Message::setTextEntityProcessor(TextEntityProcessor *processor)
+{
+    _entityProcessor = processor;
 }
 
 int64_t Message::getId()
@@ -108,32 +110,33 @@ QString Message::getText(bool formatted)
     case td_api::messagePhoto::ID:
     {
         if (static_cast<Photo*>(_messageContent)->getCaption() == nullptr) return "";
-        return QString::fromStdString(static_cast<Photo*>(_messageContent)->getCaption()->text_);
+
+        return formatted ? _formattedMessage : QString::fromStdString(static_cast<Photo*>(_messageContent)->getCaption()->text_);
     }
     case td_api::messageVideo::ID:
     {
         if (static_cast<Video*>(_messageContent)->getCaption() == nullptr) return "";
-        return QString::fromStdString(static_cast<Video*>(_messageContent)->getCaption()->text_);
+        return formatted ? _formattedMessage : QString::fromStdString(static_cast<Video*>(_messageContent)->getCaption()->text_);
     }
     case td_api::messageDocument::ID:
     {
         if (static_cast<Document*>(_messageContent)->getCaption() == nullptr) return "";
-        return QString::fromStdString(static_cast<Document*>(_messageContent)->getCaption()->text_);
+        return formatted ? _formattedMessage : QString::fromStdString(static_cast<Document*>(_messageContent)->getCaption()->text_);
     }
     case td_api::messageAudio::ID:
     {
         if (static_cast<Audio*>(_messageContent)->getCaption() == nullptr) return "";
-        return QString::fromStdString(static_cast<Audio*>(_messageContent)->getCaption()->text_);
+        return formatted ? _formattedMessage : QString::fromStdString(static_cast<Audio*>(_messageContent)->getCaption()->text_);
     }
     case td_api::messageAnimation::ID:
     {
         if (static_cast<Animation*>(_messageContent)->getCaption() == nullptr) return "";
-        return QString::fromStdString(static_cast<Animation*>(_messageContent)->getCaption()->text_);
+        return formatted ? _formattedMessage : QString::fromStdString(static_cast<Animation*>(_messageContent)->getCaption()->text_);
     }
     case td_api::messageVoiceNote::ID:
     {
         if (static_cast<VoiceNote*>(_messageContent)->getCaption() == nullptr) return "";
-        return QString::fromStdString(static_cast<VoiceNote*>(_messageContent)->getCaption()->text_);
+        return formatted ? _formattedMessage : QString::fromStdString(static_cast<VoiceNote*>(_messageContent)->getCaption()->text_);
     }
     case td_api::messagePoll::ID:
         return static_cast<Poll*>(_messageContent)->getQuestion();
@@ -194,6 +197,49 @@ QString Message::getText(bool formatted)
     default:
         return tr("Message unsupported");
     }
+}
+
+QString Message::getEditText()
+{
+    QString formattedText;
+
+    switch (_contentTypeId) {
+    case td_api::messagePhoto::ID:
+        if (static_cast<Photo*>(_messageContent)->getCaption() != nullptr) {
+            formattedText = _entityProcessor->formatTextAsHTML(static_cast<Photo*>(_messageContent)->getCaption(), true);
+        }
+        break;
+    case td_api::messageVideo::ID:
+        if (static_cast<Video*>(_messageContent)->getCaption() != nullptr) {
+            formattedText = _entityProcessor->formatTextAsHTML(static_cast<Video*>(_messageContent)->getCaption(), true);
+        }
+        break;
+    case td_api::messageDocument::ID:
+        if (static_cast<Document*>(_messageContent)->getCaption() != nullptr) {
+            formattedText = _entityProcessor->formatTextAsHTML(static_cast<Document*>(_messageContent)->getCaption(), true);
+        }
+        break;
+    case td_api::messageAudio::ID:
+        if (static_cast<Audio*>(_messageContent)->getCaption() != nullptr) {
+            formattedText = _entityProcessor->formatTextAsHTML(static_cast<Audio*>(_messageContent)->getCaption(), true);
+        }
+        break;
+    case td_api::messageAnimation::ID:
+        if (static_cast<Animation*>(_messageContent)->getCaption() != nullptr) {
+            formattedText = _entityProcessor->formatTextAsHTML(static_cast<Animation*>(_messageContent)->getCaption(), true);
+        }
+        break;
+    case td_api::messageVoiceNote::ID:
+        if (static_cast<VoiceNote*>(_messageContent)->getCaption() != nullptr) {
+            formattedText = _entityProcessor->formatTextAsHTML(static_cast<VoiceNote*>(_messageContent)->getCaption(), true);
+        }
+        break;
+    case td_api::messageText::ID:
+        formattedText = _entityProcessor->formatTextAsHTML(_text->text_.get(), true);
+        break;
+    }
+
+    return formattedText;
 }
 
 QString Message::getType() const
@@ -368,7 +414,10 @@ bool Message::isEdited()
 bool Message::canBeEdited()
 {
     if (_properties == nullptr) return false;
-    return _properties->can_be_edited_;
+
+    static std::set<int64_t> editableContents = {td_api::messagePhoto::ID, td_api::messageVideo::ID, td_api::messageDocument::ID, td_api::messageAudio::ID, td_api::messageAnimation::ID, td_api::messageVoiceNote::ID, td_api::messageText::ID};
+
+    return _properties->can_be_edited_ && editableContents.contains(_contentTypeId);
 }
 
 bool Message::canBeForwarded()
@@ -462,6 +511,11 @@ QString Message::getSender()
     else return "user";
 }
 
+int32_t Message::getTimestamp()
+{
+    return _message->date_;
+}
+
 QString Message::getFormattedTimestamp()
 {
     QString format;
@@ -544,6 +598,11 @@ void Message::reformatMessage()
     _reformatTimer.start();
 }
 
+void Message::setEditDate(int32_t editDate)
+{
+    _message->edit_date_ = editDate;
+}
+
 bool Message::hasWebPage() const
 {
     return _linkPreview != nullptr;
@@ -557,7 +616,9 @@ LinkPreview* Message::getWebPage() const
 void Message::handleMessageContent(td_api::object_ptr<td_api::MessageContent> messageContent)
 {
     if (!messageContent) return;
+
     _contentTypeId = messageContent->get_id();
+
     if (_contentTypeId == td_api::messageText::ID) {
         if (static_cast<td_api::messageText*>(messageContent.get())->link_preview_) {
             if (_linkPreview == nullptr) {
@@ -575,24 +636,42 @@ void Message::handleMessageContent(td_api::object_ptr<td_api::MessageContent> me
             switch (_contentTypeId) {
             case td_api::messagePhoto::ID:
                 _messageContent = new Photo();
+                if (static_cast<td_api::messagePhoto*>(messageContent.get())->caption_) {
+                    _formattedMessage = formatTextAsHTML(static_cast<td_api::messagePhoto*>(messageContent.get())->caption_.get());
+                }
                 break;
             case td_api::messageSticker::ID:
                 _messageContent = new Sticker();
                 break;
             case td_api::messageVideo::ID:
                 _messageContent = new Video();
+                if (static_cast<td_api::messageVideo*>(messageContent.get())->caption_) {
+                    _formattedMessage = formatTextAsHTML(static_cast<td_api::messageVideo*>(messageContent.get())->caption_.get());
+                }
                 break;
             case td_api::messageDocument::ID:
                 _messageContent = new Document();
+                if (static_cast<td_api::messageDocument*>(messageContent.get())->caption_) {
+                    _formattedMessage = formatTextAsHTML(static_cast<td_api::messageDocument*>(messageContent.get())->caption_.get());
+                }
                 break;
             case td_api::messageAudio::ID:
                 _messageContent = new Audio();
+                if (static_cast<td_api::messageAudio*>(messageContent.get())->caption_) {
+                    _formattedMessage = formatTextAsHTML(static_cast<td_api::messageAudio*>(messageContent.get())->caption_.get());
+                }
                 break;
             case td_api::messageAnimation::ID:
                 _messageContent = new Animation();
+                if (static_cast<td_api::messageAnimation*>(messageContent.get())->caption_) {
+                    _formattedMessage = formatTextAsHTML(static_cast<td_api::messageAnimation*>(messageContent.get())->caption_.get());
+                }
                 break;
             case td_api::messageVoiceNote::ID:
                 _messageContent = new VoiceNote();
+                if (static_cast<td_api::messageVoiceNote*>(messageContent.get())->caption_) {
+                    _formattedMessage = formatTextAsHTML(static_cast<td_api::messageVoiceNote*>(messageContent.get())->caption_.get());
+                }
                 break;
             case td_api::messageVideoNote::ID:
                 _messageContent = new VideoNote();
@@ -626,6 +705,8 @@ void Message::handleMessageContent(td_api::object_ptr<td_api::MessageContent> me
             }
         } else {
             _messageContent->handleContent(move(messageContent));
+
+            onReformatMessage();
         }
     }
 }
@@ -634,7 +715,6 @@ void Message::updateMessageSendSucceeded(td_api::updateMessageSendSucceeded *upd
 {
     if (updateMessageSendSucceeded->message_ && updateMessageSendSucceeded->old_message_id_ == getId()) {
         _message = updateMessageSendSucceeded->message_.release();
-        handleMessageContent(std::move(_message->content_));
         emit messageIdChanged(updateMessageSendSucceeded->old_message_id_, getId());
         emit contentChanged(getId());
         emit messageChanged();
@@ -643,11 +723,10 @@ void Message::updateMessageSendSucceeded(td_api::updateMessageSendSucceeded *upd
 
 void Message::updateMessageContent(td_api::updateMessageContent *updateMessageContent)
 {
-    if (updateMessageContent->message_id_ == this->getId() && updateMessageContent->chat_id_ == getChatId()) {
-        _message->content_.release();
+    if (updateMessageContent->message_id_ == getId() && updateMessageContent->chat_id_ == getChatId() && (_messageContent != nullptr || _contentTypeId == td_api::messageText::ID)) {
         _message->content_ = move(updateMessageContent->new_content_);
         handleMessageContent(std::move(_message->content_));
-        emit contentChanged(this->getId());
+        emit contentChanged(getId());
     }
 }
 
@@ -667,6 +746,77 @@ void Message::onReactionLocalPathChanged(QString localPath, int32_t fileId)
     _reactionsUpdateTimer.start();
 }
 
+void Message::onReformatMessage()
+{
+    _formattedMessage = "";
+
+    switch (_contentTypeId) {
+    case td_api::messagePhoto::ID:
+        if (static_cast<Photo*>(_messageContent)->getCaption() != nullptr) {
+            _formattedMessage = formatTextAsHTML(static_cast<Photo*>(_messageContent)->getCaption());
+        }
+        break;
+    case td_api::messageVideo::ID:
+        if (static_cast<Video*>(_messageContent)->getCaption() != nullptr) {
+            _formattedMessage = formatTextAsHTML(static_cast<Video*>(_messageContent)->getCaption());
+        }
+        break;
+    case td_api::messageDocument::ID:
+        if (static_cast<Document*>(_messageContent)->getCaption() != nullptr) {
+            _formattedMessage = formatTextAsHTML(static_cast<Document*>(_messageContent)->getCaption());
+        }
+        break;
+    case td_api::messageAudio::ID:
+        if (static_cast<Audio*>(_messageContent)->getCaption() != nullptr) {
+            _formattedMessage = formatTextAsHTML(static_cast<Audio*>(_messageContent)->getCaption());
+        }
+        break;
+    case td_api::messageAnimation::ID:
+        if (static_cast<Animation*>(_messageContent)->getCaption() != nullptr) {
+            _formattedMessage = formatTextAsHTML(static_cast<Animation*>(_messageContent)->getCaption());
+        }
+        break;
+    case td_api::messageVoiceNote::ID:
+        if (static_cast<VoiceNote*>(_messageContent)->getCaption() != nullptr) {
+            _formattedMessage = formatTextAsHTML(static_cast<VoiceNote*>(_messageContent)->getCaption());
+        }
+        break;
+    case td_api::messageText::ID:
+        _formattedMessage = formatTextAsHTML(_text->text_.get());
+        break;
+    }
+
+    emit messageFormatedChanged(getId());
+}
+
+QString Message::formatTextAsHTML(td_api::formattedText *formattedText)
+{
+    std::vector<int64_t> customStickerIds;
+    for (td_api::object_ptr<td_api::textEntity> &entity : formattedText->entities_) {
+        if (entity->type_->get_id() == td_api::textEntityTypeCustomEmoji::ID) {
+            auto emojiId = static_cast<td_api::textEntityTypeCustomEmoji*>(entity->type_.get())->custom_emoji_id_;
+            if (_customEmojis->getCustomEmojiSticker(emojiId) == 0) {
+                customStickerIds.emplace_back(emojiId);
+            } else {
+                shared_ptr<File> file = _files->getFile(_customEmojis->getCustomEmojiSticker(emojiId));
+                if (file && file->localPath().isEmpty()) {
+                    connect(file.get(), &File::localPathChanged, this, &Message::onEntityLocalPathChanged, Qt::UniqueConnection);
+                }
+            }
+        }
+    }
+
+    if (!customStickerIds.empty()) {
+        _manager->sendQueryWithResponse(getChatId(), td_api::getCustomEmojiStickers::ID, getId(), new td_api::getCustomEmojiStickers(move(customStickerIds)));
+    }
+
+    if (_entityProcessor == nullptr) {
+        return "";
+    }
+
+    return _entityProcessor->formatTextAsHTML(formattedText);
+}
+
 int64_t Message::getChatId() const
 {
     return _chatId;
@@ -682,7 +832,46 @@ void Message::updateCustomEmojis(QVector<int32_t> fileIds)
     QVector<int32_t> entityIds;
     QVector<int32_t> reactionIds;
 
-    for (td_api::object_ptr<td_api::textEntity> &entity : _text->text_->entities_) {
+    td_api::formattedText* formattedText = nullptr;
+    switch (_contentTypeId) {
+    case td_api::messagePhoto::ID:
+        if (static_cast<Photo*>(_messageContent)->getCaption() != nullptr) {
+            formattedText = static_cast<Photo*>(_messageContent)->getCaption();
+        }
+        break;
+    case td_api::messageVideo::ID:
+        if (static_cast<Video*>(_messageContent)->getCaption() != nullptr) {
+            formattedText = static_cast<Video*>(_messageContent)->getCaption();
+        }
+        break;
+    case td_api::messageDocument::ID:
+        if (static_cast<Document*>(_messageContent)->getCaption() != nullptr) {
+            formattedText = static_cast<Document*>(_messageContent)->getCaption();
+        }
+        break;
+    case td_api::messageAudio::ID:
+        if (static_cast<Audio*>(_messageContent)->getCaption() != nullptr) {
+            formattedText = static_cast<Audio*>(_messageContent)->getCaption();
+        }
+        break;
+    case td_api::messageAnimation::ID:
+        if (static_cast<Animation*>(_messageContent)->getCaption() != nullptr) {
+            formattedText = static_cast<Animation*>(_messageContent)->getCaption();
+        }
+        break;
+    case td_api::messageVoiceNote::ID:
+        if (static_cast<VoiceNote*>(_messageContent)->getCaption() != nullptr) {
+            formattedText = static_cast<VoiceNote*>(_messageContent)->getCaption();
+        }
+        break;
+    case td_api::messageText::ID:
+        formattedText = _text->text_.get();
+        break;
+    }
+
+    if (formattedText == nullptr) return;
+
+    for (td_api::object_ptr<td_api::textEntity> &entity : formattedText->entities_) {
         if (entity->type_->get_id() == td_api::textEntityTypeCustomEmoji::ID) {
             auto emojiId = static_cast<td_api::textEntityTypeCustomEmoji*>(entity->type_.get())->custom_emoji_id_;
 
@@ -727,149 +916,5 @@ void Message::updateCustomEmojis(QVector<int32_t> fileIds)
         reformatMessage();
 
         emit messageFormatedChanged(getId());
-    }
-}
-
-QString Message::formatTextAsHTML(td_api::formattedText *formattedText)
-{
-    QString originalText = QString::fromStdString(formattedText->text_);
-    QString modifiedText = "";
-
-    std::vector<int64_t> customStickerIds;
-    for (td_api::object_ptr<td_api::textEntity> &entity : formattedText->entities_) {
-        if (entity->type_->get_id() == td_api::textEntityTypeCustomEmoji::ID) {
-            auto emojiId = static_cast<td_api::textEntityTypeCustomEmoji*>(entity->type_.get())->custom_emoji_id_;
-            if (_customEmojis->getCustomEmojiSticker(emojiId) == 0) {
-                customStickerIds.emplace_back(emojiId);
-            } else {
-                shared_ptr<File> file = _files->getFile(_customEmojis->getCustomEmojiSticker(emojiId));
-                if (file && file->localPath().isEmpty()) {
-                    connect(file.get(), &File::localPathChanged, this, &Message::onEntityLocalPathChanged, Qt::UniqueConnection);
-                }
-            }
-        }
-    }
-
-    if (!customStickerIds.empty()) {
-        _manager->sendQueryWithResponse(getChatId(), td_api::getCustomEmojiStickers::ID, getId(), new td_api::getCustomEmojiStickers(move(customStickerIds)));
-    }
-
-    for (int i = 0; i < originalText.length(); i++) {
-        int skip = 0;
-
-        for (td_api::object_ptr<td_api::textEntity> &entity : formattedText->entities_) {
-            modifiedText += getHTMLEntityForIndex(i, entity.get(), originalText, true, skip);
-        }
-
-        if (skip == 0) {
-            modifiedText += QString(originalText[i]).toHtmlEscaped();
-        }
-
-        for (auto it = formattedText->entities_.rbegin(); it != formattedText->entities_.rend(); it++) {
-            modifiedText += getHTMLEntityForIndex(i, (*it).get(), originalText, false, skip);
-        }
-
-        i += skip;
-    }
-
-    return modifiedText;
-}
-
-QString Message::getHTMLEntityForIndex(int index, td_api::textEntity *entity, QString originalText, bool startTag, int &skip)
-{
-    if (startTag && index != entity->offset_) return "";
-    else if (!startTag && index != (entity->offset_ + entity->length_ - 1)) return "";
-
-    switch (entity->type_->get_id()) {
-    case td_api::textEntityTypeBankCardNumber::ID:
-        return "";
-    case td_api::textEntityTypeBold::ID:
-        return startTag ? "<b>" : "</b>";
-    case td_api::textEntityTypeBotCommand::ID:
-        if (startTag) {
-            return "<a href=\"command://" + originalText.mid(entity->offset_, entity->length_) + "\">";
-        } else {
-            return "</a>";
-        }
-    case td_api::textEntityTypeCashtag::ID:
-        return "";
-    case td_api::textEntityTypeCode::ID:
-        return startTag ? "<code>" : "</code>";
-    case td_api::textEntityTypeCustomEmoji::ID:
-    {
-        if (!startTag) return "";
-
-        int32_t stickerId = _customEmojis->getCustomEmojiSticker(static_cast<td_api::textEntityTypeCustomEmoji*>(entity->type_.get())->custom_emoji_id_);
-        shared_ptr<File> file = _files->getFile(stickerId);
-        if (stickerId != 0 && file) {
-            QString localPath = file->localPath();
-            if (localPath == "") {
-                return "";
-            }
-
-            skip = entity->length_ - 1;
-            auto theme = Silica::Theme::instance();
-            return "<img width=\"" + QString::number(theme->fontSizeSmall()) + "\" height=\"" + QString::number(theme->fontSizeSmall()) + "\" align=\"middle\" src=\"" + localPath + "\"/>";
-        }
-        return "";
-    }
-    case td_api::textEntityTypeEmailAddress::ID:
-        if (startTag) {
-            return "<a href=\"mailto:" + originalText.mid(entity->offset_, entity->length_) + "\">";
-        } else {
-            return "</a>";
-        }
-    case td_api::textEntityTypeHashtag::ID:
-        return "";
-    case td_api::textEntityTypeItalic::ID:
-        return startTag ? "<i>" : "</i>";
-    case td_api::textEntityTypeMediaTimestamp::ID:
-        return "";
-    case td_api::textEntityTypeMention::ID:
-        if (startTag) {
-            std::shared_ptr<User> user = _users->getUserByUsername(originalText.mid(entity->offset_ + 1, entity->length_ - 1));
-            if (user)
-                return "<a href=\"userid://" + QString::number(user->getId()) + "\">";
-            else
-                return "<a>";
-        } else {
-            return "</a>";
-        }
-    case td_api::textEntityTypeMentionName::ID:
-        if (startTag) {
-            return "<a href=\"userid://" + QString::number(static_cast<td_api::textEntityTypeMentionName*>(entity->type_.get())->user_id_) + "\">";
-        } else {
-            return "</a>";
-        }
-    case td_api::textEntityTypePhoneNumber::ID:
-        if (startTag) {
-            return "<a href=\"tel:" + originalText.mid(entity->offset_, entity->length_) + "\">";
-        } else {
-            return "</a>";
-        }
-    case td_api::textEntityTypePre::ID:
-        return startTag ? "<pre>" : "</pre>";
-    case td_api::textEntityTypePreCode::ID:
-        return startTag ? "<pre><code>" : "</code></pre>";
-    case td_api::textEntityTypeSpoiler::ID:
-        return "";
-    case td_api::textEntityTypeStrikethrough::ID:
-        return startTag ? "<strike>" : "</strike>";
-    case td_api::textEntityTypeTextUrl::ID:
-        if (startTag) {
-            return "<a href=\"" + QString::fromStdString(static_cast<td_api::textEntityTypeTextUrl*>(entity->type_.get())->url_) + "\">";
-        } else {
-            return "</a>";
-        }
-    case td_api::textEntityTypeUnderline::ID:
-        return startTag ? "<u>" : "</u>";
-    case td_api::textEntityTypeUrl::ID:
-        if (startTag) {
-            return "<a href=\"" + originalText.mid(entity->offset_, entity->length_) + "\">";
-        } else {
-            return "</a>";
-        }
-    default:
-        return "";
     }
 }

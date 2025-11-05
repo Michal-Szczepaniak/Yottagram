@@ -2,7 +2,7 @@ include(vendor/vendor.pri)
 
 TARGET = yottagram
 
-QT += dbus multimedia location contacts
+QT += dbus multimedia location contacts xml
 
 CONFIG += c++2a link_pkgconfig sailfishapp iostream
 
@@ -59,6 +59,7 @@ SOURCES += src/core.cpp \
     src/contents/videonote.cpp \
     src/contents/voicenote.cpp \
     src/contents/animatedemoji.cpp \
+    src/currentuser.cpp \
     src/customemojis.cpp \
     src/datamanager.cpp \
     src/dbushelper.cpp \
@@ -76,6 +77,7 @@ SOURCES += src/core.cpp \
     src/savedanimations.cpp \
     src/stickerset.cpp \
     src/stickersets.cpp \
+    src/textentityprocessor.cpp \
     src/tgsioplugin/tgsioplugin.cpp \
     src/tgsioplugin/tgsiohandler.cpp \
     src/user.cpp \
@@ -102,15 +104,17 @@ DISTFILES += qml/yottagram.qml \
     qml/components/ScopeNotificationSettings.qml \
     qml/components/SilicaSignalListView.qml \
     qml/components/StickerPicker.qml \
+    qml/components/EmojiPicker.qml \
     qml/components/SubpageElement.qml \
     qml/components/SwitchButton.qml \
     qml/components/chatInfo/BasicGroupInfo.qml \
     qml/components/chatInfo/SupergroupInfo.qml \
     qml/components/chatInfo/UserInfo.qml \
     qml/components/functions/chatFolderIconHelper.js \
+    qml/components/functions/formatDuration.js \
     qml/components/functions/muteFormat.js \
-    qml/components/functions/foramtDuration.js \
     qml/components/functions/twemoji.js \
+    qml/components/functions/escapeHTML.js \
     qml/components/messageContent/AnimatedEmojiContent.qml \
     qml/components/messageContent/AnimatedStickerContent.qml \
     qml/components/messageContent/AnimationContent.qml \
@@ -143,6 +147,10 @@ DISTFILES += qml/yottagram.qml \
     qml/components/private/QuickScrollArea.qml \
     qml/components/private/QuickScrollButton.qml \
     qml/components/private/HighlightImage.qml \
+    qml/components/private/Util.js \
+    qml/components/private/RemorseItem.js \
+    qml/components/AppTextArea.qml \
+    qml/components/AppTextBase.qml \
     qml/cover/CoverPage.qml \
     qml/dialogs/PollDialog.qml \
     qml/dialogs/SetTtlDialog.qml \
@@ -160,6 +168,7 @@ DISTFILES += qml/yottagram.qml \
     src/ffmpegioplugin/ffmpegioplugin.json \
     sailjail/yottagram.desktop \
     translations/*.ts \
+    emoji.json \
     yottagram.desktop
 
 SAILFISHAPP_ICONS = 86x86 108x108 128x128 172x172
@@ -207,9 +216,11 @@ HEADERS += \
     src/contents/voicenote.h \
     src/contents/animatedemoji.h \
     src/core.h \
+    src/currentuser.h \
     src/customemojis.h \
     src/datamanager.h \
     src/dbushelper.h \
+    src/emoji.h \
     src/ffmpegioplugin/ffmpegiohandler.h \
     src/ffmpegioplugin/ffmpegioplugin.h \
     src/files/contentfile.h \
@@ -230,6 +241,7 @@ HEADERS += \
     src/savedanimations.h \
     src/stickerset.h \
     src/stickersets.h \
+    src/textentityprocessor.h \
     src/tgsioplugin/tgsioplugin.h \
     src/tgsioplugin/tgsiohandler.h \
     src/user.h \
@@ -238,7 +250,8 @@ HEADERS += \
     src/telegramstatus.h
 
 RESOURCES += \
-    qml/resources/icons.qrc
+    qml/resources/icons.qrc \
+    qml/resources/images.qrc \
 
 dbus.files = com.verdanditeam.yottagram.service
 dbus.path = /usr/share/dbus-1/services/

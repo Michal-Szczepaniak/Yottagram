@@ -33,6 +33,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QVector>
 #include <QQmlComponent>
 #include <chatlisttopics.h>
+#include <textentityprocessor.h>
 #include "components/userfullinfo.h"
 #include "components/basicgroupfullinfo.h"
 #include "components/supergroupfullinfo.h"
@@ -86,11 +87,16 @@ class Chat : public QAbstractListModel
     Q_PROPERTY(QString draftMessage READ draftMessage NOTIFY draftMessageChanged)
     Q_PROPERTY(int64_t draftMessageReplyId READ draftMessageReplyId NOTIFY draftMessageChanged)
     Q_PROPERTY(QString actionText READ actionText NOTIFY actionTextChanged)
+    Q_PROPERTY(ChatListTopics* topics READ getTopicModel NOTIFY topicsChanged)
+    Q_PROPERTY(int64_t topic READ getTopic WRITE setTopic NOTIFY topicChanged)
+    Q_PROPERTY(QStringList availableReactions READ getAvailableReactions NOTIFY availableReactionsChanged)
+    Q_PROPERTY(int onlineMemberCount READ getOnlineMemberCount NOTIFY onlineMemberCountChanged)
 public:
     enum MessageRoles {
         TypeRole = Qt::UserRole + 1,
         IdRole,
         MessageRole,
+        EditMessageRole,
         UnformattedMessageRole,
         MessageTypeRole,
         MessageTypeTextRole,
@@ -207,12 +213,14 @@ public:
     QStringList getRecentInlineBots() const;
     void setRecentInlineBots(QStringList bots);
     void updatePosition(td_api::chatPosition* position);
-    QString draftMessage() const;
+    QString draftMessage(bool formatted = true) const;
     int64_t draftMessageReplyId() const;
     Q_INVOKABLE void setDraftMessage(QString message, int64_t replyMessageId);
     void setDraftMessage(td_api::object_ptr<td_api::draftMessage> draftMessage);
     QString actionText();
     bool getIsForum() const;
+    QStringList getAvailableReactions() const;
+    int getOnlineMemberCount() const;
 
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setUsers(shared_ptr<Users> users);
@@ -230,8 +238,7 @@ public:
     td_api::chat* getChat();
     Q_INVOKABLE int getMessageIndex(int64_t messageId);
     int64_t getLatestMessageId() const;
-    td_api::message* getLastMessage();
-    shared_ptr<Message> lastMessage();
+    Message* lastMessage();
     int64_t getLastMessageId() const;
     void setLastMessage(td_api::object_ptr<td_api::message> lastMessage);
     void newMessage(td_api::object_ptr<td_api::message> message, bool addToList = true);
@@ -247,6 +254,7 @@ public:
     Q_INVOKABLE void getMoreChatMessages();
     Q_INVOKABLE int64_t getAuthorByIndex(int32_t index);
     Q_INVOKABLE void setMessageAsRead(int64_t messageId);
+    Q_INVOKABLE void setMessagesAsRead(QVariantList messages);
     Q_INVOKABLE void sendPhoto(QString path, int64_t replyToMessageId);
     Q_INVOKABLE void sendPhotos(QStringList paths, int64_t replyToMessageId);
     Q_INVOKABLE void sendFile(QString path, int64_t replyToMessageId);
@@ -262,7 +270,7 @@ public:
     Q_INVOKABLE void sendForwardedMessages(QStringList forwardedMessages, int64_t forwardedFrom);
     Q_INVOKABLE void open(QString path);
     Q_INVOKABLE void deleteMessage(int64_t messageId);
-    Q_INVOKABLE void editMessageText(int64_t messageId, QString messageText);
+    Q_INVOKABLE void editMessage(int64_t messageId, QString messageText);
     Q_INVOKABLE void chose(int64_t messageId, QString indexes);
     Q_INVOKABLE void openSecretChat();
     Q_INVOKABLE void closeSecretChat();
@@ -274,11 +282,14 @@ public:
     Q_INVOKABLE void sendAction(ChatAction action);
     Q_INVOKABLE void searchChatMembers(QString query);
     Q_INVOKABLE void loadContextPermissions(int64_t messageId);
-    Q_INVOKABLE ChatListTopics* getTopicModel() const;
-    Q_INVOKABLE void setTopic(int64_t topicId);
-    Q_INVOKABLE int64_t getTopic();
+    ChatListTopics* getTopicModel() const;
+    void setTopic(int64_t topicId);
+    int64_t getTopic();
     Q_INVOKABLE void fetchTopics();
     void setAutoDeleteTime(int32_t autoDeleteTime);
+    Q_INVOKABLE void addReaction(int64_t messageId, int index);
+    Q_INVOKABLE void getAvailableReactions(int64_t messageId);
+    Q_INVOKABLE void addReaction(int64_t messageId, QString reactionId);
 
     bool hasPhoto();
     File* getSmallPhoto();
@@ -315,6 +326,10 @@ signals:
     void actionTextChanged();
     void firstUnreadMentionChanged();
     void recentInlineBotsChanged();
+    void topicsChanged();
+    void topicChanged();
+    void availableReactionsChanged();
+    void onlineMemberCountChanged();
 
 public slots:
     void updateChatReadInbox(td_api::updateChatReadInbox *updateChatReadInbox);
@@ -334,6 +349,9 @@ public slots:
     void updateChatAction(td_api::updateChatAction *updateChatAction);
     void onGotSearchChatMessagesFilterUnreadMention(int64_t chatId, td_api::messages *messages);
     void updateMessageInteractionInfo(td_api::updateMessageInteractionInfo *updateMessageInteractionInfo);
+    void updateMessageEdited(td_api::updateMessageEdited *updateMessageEdited);
+    void updateChatAvailableReactions(td_api::updateChatAvailableReactions *updateChatAvailableReactions);
+    void updateChatOnlineMemberCount(td_api::updateChatOnlineMemberCount *updateChatOnlineMemberCount);
 
     void onGotChatHistory(int64_t chatId, td_api::messages *messages);
     void onGotSearchChatMembers(int64_t chatId, td_api::chatMembers *chatMembers);
@@ -343,6 +361,9 @@ public slots:
     void onCustomEmojiUpdated(int64_t chatId, int64_t messageId, QVector<int32_t> fileIds);
     void onMessageFormattedChanged(int64_t messageId);
     void onMessageReactionsChanged(int64_t messageId);
+    void onForumTopicUpdated(int64_t topicId);
+    void onDraftMessageEmojisChanged(QString path, int32_t fileId);
+    void onGotMessageAvailableReactions(int64_t chatId, td_api::availableReactions *availableReactions);
 
 private:
     int32_t _smallPhotoId;
@@ -351,8 +372,10 @@ private:
     int32_t _unreadMentionCount;
     int64_t _lastReadInboxMessageId;
     int64_t _lastReadOutboxMessageId;
+    int64_t _lastMessageId;
     bool _isAuthorized = false;
     bool _isOpen = false;
+    bool _isGeneralTopic = false;
     td_api::chat *_chat{};
     QVector<int64_t> _message_ids{};
     QHash<int64_t, Message*> _messages{};
@@ -373,12 +396,14 @@ private:
     QHash<int32_t, td_api::chatPosition*> _folderPositions{};
     QHash<int64_t, ChatAction> _chatActions{};
     QVector<int64_t> _getMessageCache{};
-    shared_ptr<Message> _lastMessage{};
     int64_t _firstUnreadMention;
     QList<int64_t> _recentBots{};
     QString _title;
     int64_t _currentTopicId = 0;
     ChatListTopics *_topicModel;
+    TextEntityProcessor _textEntityProcessor;
+    td_api::availableReactions *_availableReactions = nullptr;
+    int _onlineMemberCount = 0;
 };
 Q_DECLARE_METATYPE(Chat*)
 

@@ -25,6 +25,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QVariant>
 #include <QDateTime>
 #include <QDebug>
+#include <textentityprocessor.h>
 #include "core/telegrammanager.h"
 #include "files/files.h"
 #include "files/file.h"
@@ -66,10 +67,12 @@ public:
     void setUsers(shared_ptr<Users> users);
     void setFiles(shared_ptr<Files> files);
     void setCustomEmojis(shared_ptr<CustomEmojis> customEmojis);
+    void setTextEntityProcessor(TextEntityProcessor* processor);
 
     int64_t getId();
     QString getText(bool formatted = true);
     QString getTextUnformatted() { return getText(false); }
+    QString getEditText();
     QString getType() const;
     QString getTypeText();
     int32_t getContentType();
@@ -89,6 +92,7 @@ public:
     int64_t getSenderUserId();
     int64_t getSenderChatId();
     QString getSender();
+    int32_t getTimestamp();
     QString getFormattedTimestamp();
     QString getFormattedForwardTimestamp();
     bool containsUnreadMention() const;
@@ -99,6 +103,7 @@ public:
     void setMessageProperties(td_api::messageProperties *messageProperties);
     td_api::messageReactions* getReactions();
     void reformatMessage();
+    void setEditDate(int32_t editDate);
 
     bool hasWebPage() const;
     LinkPreview* getWebPage() const;
@@ -117,10 +122,6 @@ public:
 
     void updateCustomEmojis(QVector<int32_t> fileIds);
 
-private:
-    QString formatTextAsHTML(td_api::formattedText* formattedText);
-    QString getHTMLEntityForIndex(int index, td_api::textEntity *entity, QString originalText, bool startTag, int &skip);
-
 signals:
     void contentChanged(int64_t messageId);
     void messageIdChanged(int64_t oldMessageId, int64_t newMessageId);
@@ -133,6 +134,10 @@ public slots:
     void updateMessageContent(td_api::updateMessageContent *updateMessageContent);
     void onEntityLocalPathChanged(QString localPath, int32_t fileId);
     void onReactionLocalPathChanged(QString localPath, int32_t fileId);
+    void onReformatMessage();
+
+private:
+    QString formatTextAsHTML(td_api::formattedText* formattedText);
 
 private:
     int64_t _chatId;
@@ -149,6 +154,7 @@ private:
     QString _formattedMessage;
     QTimer _reformatTimer;
     QTimer _reactionsUpdateTimer;
+    TextEntityProcessor* _entityProcessor = nullptr;
 };
 
 #endif // MESSAGE_H

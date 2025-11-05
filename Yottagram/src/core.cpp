@@ -72,6 +72,8 @@ Core::Core(QObject *parent) : QObject(parent)
     _notifications.setFiles(_files);
     _customEmojis->setTelegramManager(_manager);
     _customEmojis->setFiles(_files);
+    _currentUser.setTelegramManager(_manager);
+    connect(&_authorization, &Authorization::isAuthorizedChanged, &_currentUser, &CurrentUser::onIsAuthorizedChanged);
 
     _wifiAutoDownloadSettings.setTelegramManager(_manager);
     _wifiAutoDownloadSettings.setConnectionType("wifi");
@@ -93,6 +95,12 @@ Core::Core(QObject *parent) : QObject(parent)
     _stickerSets.setTelegramManager(_manager);
     _stickerSets.setFiles(_files);
     connect(&_authorization, &Authorization::isAuthorizedChanged, &_stickerSets, &StickerSets::onIsAuthorizedChanged);
+
+    _emojiSets.setTelegramManager(_manager);
+    _emojiSets.setFiles(_files);
+    _emojiSets.setEmojiMode(true);
+    connect(&_authorization, &Authorization::isAuthorizedChanged, &_emojiSets, &StickerSets::onIsAuthorizedChanged);
+    connect(&_emojiSets, &StickerSets::gotCustomEmoji, _customEmojis.get(), &CustomEmojis::addCustomEmoji);
 
     _savedAnimations.setTelegramManager(_manager);
     _savedAnimations.setFiles(_files);

@@ -399,6 +399,30 @@
         <source>%1 is typing</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Emoji</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bold</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Italic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Underline</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Strike-through</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Monospace</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ChatList</name>
@@ -444,6 +468,10 @@
     </message>
     <message>
         <source>Loading</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Draft</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -647,10 +675,6 @@
         <translation type="unfinished">Umfrage</translation>
     </message>
     <message>
-        <source>Edited</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Forwarded from %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -676,6 +700,10 @@
     </message>
     <message>
         <source>Topic unhidden</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Edited</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1207,18 +1235,41 @@
     </message>
 </context>
 <context>
-    <name>foramtDuration</name>
+    <name>VideoPlayer</name>
+    <message>
+        <source>Video track</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1. %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Audio track</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Subtitle track</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select subtitle file</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>formatDuration</name>
     <message>
         <source>%L1 s</source>
-        <translation>%L1 Sekunden</translation>
+        <translation type="unfinished">%L1 Sekunden</translation>
     </message>
     <message>
         <source>%L1 min</source>
-        <translation>%L1 Minuten</translation>
+        <translation type="unfinished">%L1 Minuten</translation>
     </message>
     <message>
         <source>%L1 h</source>
-        <translation>%L1 Stunden</translation>
+        <translation type="unfinished">%L1 Stunden</translation>
     </message>
 </context>
 <context>

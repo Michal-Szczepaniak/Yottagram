@@ -32,6 +32,12 @@ Dialog {
     property var chat: null
     property var shareConfiguration: null
 
+    onStatusChanged: {
+        if (status === PageStatus.Active) {
+            chat.fetchTopics()
+        }
+    }
+
     SilicaFlickable {
         anchors.fill: parent
         contentHeight: parent.height
@@ -43,7 +49,7 @@ Dialog {
 
         SortFilterProxyModel {
             id: topicListProxyModel
-            sourceModel: chat.getTopicModel()
+            sourceModel: chat.topics
             sorters: [
                 RoleSorter { roleName: "isPinned"; sortOrder: Qt.DescendingOrder },
                 RoleSorter { roleName: "order"; sortOrder: Qt.DescendingOrder }
@@ -99,7 +105,8 @@ Dialog {
                             MenuItem {
                                 text: qsTr("Set as read")
                                 onClicked: {
-                                    chatList.markTopicAsRead(chatId)
+                                    chatList.markTopicAsRead(chatId, id)
+                                    chat.fetchTopics()
                                 }
                             }
 
@@ -247,7 +254,7 @@ Dialog {
                 }
 
                 onClicked: {
-                    chat.setTopic(id)
+                    chat.topic = id
                     pageStack.push(Qt.resolvedUrl("../pages/Chat.qml"), { chat: chat, shareConfiguration: shareConfiguration })
                 }
             }

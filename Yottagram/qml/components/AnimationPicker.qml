@@ -60,42 +60,13 @@ Item {
                 onReleased: animationPreview.path = ""
                 onCanceled: animationPreview.path = ""
 
-                Loader {
-                    active: thumbnail !== undefined
-                    sourceComponent: videoThumbnail ? videoComponent : imageComponent
+                Image {
+                    visible: !videoThumbnail
+                    anchors.fill: parent
+                    cache: true
+                    fillMode: Image.PreserveAspectCrop
                     asynchronous: true
-
-                    anchors.centerIn: parent
-                    width: parent.width - Theme.paddingSmall*2
-                    height: parent.width - Theme.paddingSmall*2
-                }
-
-                Component {
-                    id: imageComponent
-
-                    Image {
-                        visible: !videoThumbnail
-                        anchors.fill: parent
-                        cache: true
-                        fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
-                        source: thumbnail.localPath
-                    }
-                }
-
-
-                Component {
-                    id: videoComponent
-
-                    Video {
-                        visible: videoThumbnail
-                        anchors.fill: parent
-                        fillMode: Image.PreserveAspectCrop
-                        source: thumbnail.localPath
-                        autoLoad: true
-                        autoPlay: true
-                        Component.onCompleted: pause()
-                    }
+                    source: thumbnail.localPath
                 }
             }
         }

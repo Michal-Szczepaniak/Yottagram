@@ -21,13 +21,17 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QtQuick>
 #include <sailfishapp.h>
 #include <QDebug>
+#include <quickviewhelper.h>
 #include "core.h"
 #include "tgsioplugin/tgsioplugin.h"
 #include "ffmpegioplugin/ffmpegioplugin.h"
 #include <execinfo.h>
 #include <signal.h>
+#include <player/player.h>
+#include <volume/pulseaudiocontrol.h>
+#include <gst/gst.h>
 
-//Q_IMPORT_PLUGIN(TgsIOPlugin)
+Q_IMPORT_PLUGIN(TgsIOPlugin)
 Q_IMPORT_PLUGIN(ffmpegIOPlugin)
 
 void handler(int sig) {
@@ -60,28 +64,39 @@ int main(int argc, char *argv[])
     signal(SIGSEGV, handler);
     signal(SIGABRT, handler);
     signal(SIGBUS, handler);
+    gst_init (&argc, &argv);
+
     QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
     QSharedPointer<QQuickView> view(SailfishApp::createView());
+
+    QuickViewHelper::setView(view.data());
+
     qRegisterMetaType<int32_t>("int32_t");
     qRegisterMetaType<uint32_t>("uint32_t");
     qRegisterMetaType<int64_t>("int64_t");
     qRegisterMetaType<uint64_t>("uint64_t");
     qRegisterMetaType<QList<int64_t>>("QList<int64_t>");
     qmlRegisterType<ChatListTopics>("com.verdanditeam", 1, 0, "ChatListTopics");
+    qmlRegisterType<VideoPlayer>("com.verdanditeam.yt", 1, 0, "VideoPlayer");
 
     Core core;
     core.init();
+
+    PulseAudioControl pacontrol;
+    view->rootContext()->setContextProperty("pacontrol", &pacontrol);
 
     view->rootContext()->setContextProperty("authorization", &core._authorization);
     view->rootContext()->setContextProperty("telegramStatus", &core._telegramStatus);
     view->rootContext()->setContextProperty("chatList", core._chatList.get());
     view->rootContext()->setContextProperty("users", core._users.get());
     view->rootContext()->setContextProperty("stickerSets", &core._stickerSets);
+    view->rootContext()->setContextProperty("emojiSets", &core._emojiSets);
     view->rootContext()->setContextProperty("savedAnimations", &core._savedAnimations);
     view->rootContext()->setContextProperty("calls", &core._calls);
     view->rootContext()->setContextProperty("chatListFilters", &core._chatListFilters);
     view->rootContext()->setContextProperty("proxyModel", &core._proxyModel);
     view->rootContext()->setContextProperty("contactsModel", &core._contacts);
+    view->rootContext()->setContextProperty("currentUser", &core._currentUser);
     view->rootContext()->setContextProperty("wifiAutoDownloadSettings", &core._wifiAutoDownloadSettings);
     view->rootContext()->setContextProperty("mobileAutoDownloadSettings", &core._mobileAutoDownloadSettings);
     view->rootContext()->setContextProperty("roamingAutoDownloadSettings", &core._roamingAutoDownloadSettings);

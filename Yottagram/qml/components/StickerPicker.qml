@@ -38,7 +38,7 @@ Item {
         property int stickerPickerPickedPack: 0
 
         Component.onCompleted: {
-            stickerSetGridView.model = stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 267)
+            stickerSetGridView.model = stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 266)
         }
     }
 
@@ -46,7 +46,7 @@ Item {
         target: stickerSets
         onGotStickerSet: {
             if (stickerSetId == stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 257)) {
-                stickerSetGridView.model = stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 267)
+                stickerSetGridView.model = stickerSets.data(stickerSets.index(settings.stickerPickerPickedPack, 0), 266)
             }
         }
     }
@@ -80,12 +80,21 @@ Item {
                     fillMode: Image.PreserveAspectFit
                     anchors.centerIn: parent
                     asynchronous: true
-                    source: thumbnail && thumbnail.isDownloaded ? thumbnail.localPath : "image://theme/icon-m-other"
+                    source: {
+                        switch (type) {
+                        case "favourite":
+                            return "qrc:/icons/icon-m-love.png";
+                        case "recent":
+                            return "image://theme/icon-m-clock";
+                        }
+
+                        return thumbnail && thumbnail.isDownloaded ? thumbnail.localPath : "image://theme/icon-m-other"
+                    }
 
                     BusyIndicator {
                         size: BusyIndicatorSize.Medium
                         anchors.centerIn: parent
-                        running: !thumbnail || !thumbnail.isDownloaded || thumbnail.isDownloading
+                        running: (!thumbnail || !thumbnail.isDownloaded || thumbnail.isDownloading) && type === ""
                     }
                 }
 
@@ -104,21 +113,21 @@ Item {
             cellWidth: Math.floor(page.isLandscape ? root.width/(Math.floor(root.width/(root.height/5))) : root.width/5)
             cellHeight: cellWidth
             clip: true
-            cacheBuffer: 0
+            cacheBuffer: cellWidth*4
 
             delegate: GridItem {
                 width: stickerSetGridView.cellWidth
                 height: width
                 onClicked: root.stickerFileId = sticker.id
 
-                AnimatedImage {
+                Image {
                     anchors.centerIn: parent
                     width: parent.width - Theme.paddingSmall*2
                     height: parent.width - Theme.paddingSmall*2
-                    cache: true
+                    cache: false
                     fillMode: Image.PreserveAspectFit
                     asynchronous: true
-                    source: sticker.localPath
+                    source: thumbnail.localPath
                 }
             }
         }

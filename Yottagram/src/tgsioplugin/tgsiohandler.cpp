@@ -73,7 +73,7 @@ bool TgsIOHandler::load()
                 animation->size(width, height);
                 frameRate = animation->frameRate();
                 frameCount = (int) animation->totalFrame();
-                size = QSize(width, height);
+                size = QSize(160, 160);
                 LOG(size << frameCount << "frames," << frameRate << "fps");
                 render(0); // Pre-render first frame
             }
@@ -120,7 +120,10 @@ bool TgsIOHandler::read(QImage* out)
         if (currentFrame && currentRender.valid()) {
             std::future_status status = currentRender.wait_for(std::chrono::milliseconds(0));
             if (status != std::future_status::ready) {
-                return false;
+                LOG("Skipping frame" << currentFrame);
+                currentFrame = (currentFrame + 1) % frameCount;
+                *out = prevImage;
+                return true;
             }
         }
         finishRendering();

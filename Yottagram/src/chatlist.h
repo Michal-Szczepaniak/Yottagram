@@ -105,9 +105,10 @@ public:
     Q_INVOKABLE void closeChat(int64_t chatId);
     Chat* getChat(int64_t chatId) const;
     Q_INVOKABLE QVariant getChatAsVariant(int64_t chatId) const;
-    Q_INVOKABLE QVariant getChatAsVariantForUser(int64_t userId);
+    Q_INVOKABLE QVariant getChatAsVariantForUser(int64_t userId) const;
+    Q_INVOKABLE QVariant getSavedMessagesAsVariant() const;
     Q_INVOKABLE void markChatAsRead(int64_t chatId);
-    Q_INVOKABLE void markTopicAsRead(int64_t chatId);
+    Q_INVOKABLE void markTopicAsRead(int64_t chatId, int64_t topicId);
     Q_INVOKABLE QVariant getChannelNotificationSettings();
     Q_INVOKABLE QVariant getGroupNotificationSettings();
     Q_INVOKABLE QVariant getPrivateNotificationSettings();

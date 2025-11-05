@@ -92,28 +92,33 @@ AppContextMenu {
         }
 
         AppIconMenuItem {
-            icon.source: "image://theme/icon-m-edit"
-            description: qsTr("Edit")
+            icon.source: "image://theme/icon-m-delete"
+            description: qsTr("Delete")
 
             width: parent.width / parent.childrenCount
+            visible: canBeDeleted
 
-            visible: canBeEdited && chatList.selection.length == 0
-            onClicked: {
-                textInput.text = messageTextUnformatted.trim()
-                textInput.cursorPosition = messageText.length
-                chatPage.newEditMessageId = messageId
-                chatPage.newReplyMessageId = 0
-                textInput.focus = true
-            }
+            onClicked: remove()
         }
 
         AppIconMenuItem {
-            onClicked: console.log("react")
-
             icon.source: "image://theme/icon-m-outline-like"
             description: qsTr("React")
 
             width: parent.width / parent.childrenCount
+
+            onClicked: {
+                chat.getAvailableReactions(messageId)
+
+                attachmentLoader.reactionMessage = messageId
+                attachmentLoader.sourceComponent = emojiPicker
+                attachmentLoader.active = true
+                var timer = Qt.createQmlObject("import QtQuick 2.0; Timer {}", contextMenuLoader);
+                timer.interval = 1
+                timer.repeat = false
+                timer.triggered.connect(function () {uploadFlickable.scrollToBottom()})
+                timer.start()
+            }
         }
 
         AppIconMenuItem {
@@ -123,6 +128,22 @@ AppContextMenu {
             width: parent.width / parent.childrenCount
 
             onClicked: Clipboard.text = messageTextUnformatted.trim()
+        }
+
+        AppIconMenuItem {
+            icon.source: "image://theme/icon-m-edit"
+            description: qsTr("Edit")
+
+            width: parent.width / parent.childrenCount
+
+            visible: canBeEdited && chatList.selection.length == 0
+            onClicked: {
+                textInput.text = messageEditText
+                textInput.focus = true
+                textInput.cursorPosition = textInput.length
+                chatPage.newEditMessageId = messageId
+                chatPage.newReplyMessageId = 0
+            }
         }
 
         AppIconMenuItem {
@@ -173,16 +194,6 @@ AppContextMenu {
             Notification {
                 id: saveNotification
             }
-        }
-
-        AppIconMenuItem {
-            icon.source: "image://theme/icon-m-delete"
-            description: qsTr("Delete")
-
-            width: parent.width / parent.childrenCount
-            visible: canBeDeleted
-
-            onClicked: remove()
         }
     }
 }

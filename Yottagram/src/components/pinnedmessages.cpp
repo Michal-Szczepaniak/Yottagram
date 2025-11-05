@@ -1,6 +1,6 @@
 #include "pinnedmessages.h"
 
-PinnedMessages::PinnedMessages(QObject *parent): QObject(parent), _currentMessage(0), _chatId(0)
+PinnedMessages::PinnedMessages(QObject *parent): QObject(parent), _currentMessage(0), _chatId(0), _topicId(0)
 {
 
 }
@@ -24,16 +24,22 @@ void PinnedMessages::setTelegramManager(shared_ptr<TelegramManager> manager)
 void PinnedMessages::setFiles(shared_ptr<Files> files)
 {
     _files = files;
+
+    _entityProcessor.setFiles(files);
 }
 
 void PinnedMessages::setUsers(shared_ptr<Users> users)
 {
     _users = users;
+
+    _entityProcessor.setUsers(users);
 }
 
 void PinnedMessages::setCustomEmojis(shared_ptr<CustomEmojis> customEmojis)
 {
     _customEmojis = customEmojis;
+
+    _entityProcessor.setCustomEmojis(customEmojis);
 }
 
 int64_t PinnedMessages::chatId() const
@@ -83,6 +89,11 @@ QString PinnedMessages::typeText()
     return _messages[_currentMessage]->getTypeText();
 }
 
+void PinnedMessages::setTopic(int64_t topicId)
+{
+    _topicId = topicId;
+}
+
 void PinnedMessages::cycleMessage()
 {
     if (_currentMessage+1 >= _messages.size()) _currentMessage = 0;
@@ -111,6 +122,10 @@ void PinnedMessages::fetchMessages(int64_t fromMessage)
     searchMessages->from_message_id_ = fromMessage;
     searchMessages->limit_ = 2;
 
+    if (_topicId != 0) {
+        searchMessages->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_topicId);
+    }
+
     _manager->sendQueryWithResponse(_chatId, td_api::searchChatMessages::ID, td_api::searchMessagesFilterPinned::ID, searchMessages);
 }
 
@@ -124,6 +139,7 @@ void PinnedMessages::onGotSearchChatMessagesFilterPinned(int64_t chatId, td_api:
         n->setUsers(_users);
         n->setFiles(_files);
         n->setCustomEmojis(_customEmojis);
+        n->setTextEntityProcessor(&_entityProcessor);
         n->setChatId(_chatId);
         n->setMessage(m.release());
 

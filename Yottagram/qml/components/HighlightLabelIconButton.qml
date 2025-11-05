@@ -26,6 +26,7 @@ MouseArea {
     height: column.height
 
     property alias source: icon.source
+    property alias icon: icon
     property alias text: label.text
     property bool highlighted: pressed
 

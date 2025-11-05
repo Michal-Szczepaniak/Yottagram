@@ -86,7 +86,7 @@ Item {
                 } else if (!file.video.isDownloaded || !chatList.fileExists(file.video.localPath)) {
                     file.video.download()
                 } else if (file.video.isDownloaded) {
-                    pageStack.push(bigVideo, {path: file.video.localPath})
+                    pageStack.push(Qt.resolvedUrl("../../dialogs/VideoPlayer.qml"), {url: file.video.localPath, isLocal: true})
                 }
             }
         }

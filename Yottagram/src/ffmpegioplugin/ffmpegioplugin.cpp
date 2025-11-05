@@ -23,7 +23,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 QImageIOPlugin::Capabilities ffmpegIOPlugin::capabilities(QIODevice*, const QByteArray& format) const
 {
-    return Capabilities((format == ffmpegIOHandler::NAME) ? CanRead : 0);
+    return Capabilities(((format == ffmpegIOHandler::NAME) || (format == "mp4")) ? CanRead : 0);
 }
 
 QImageIOHandler* ffmpegIOPlugin::create(QIODevice* device, const QByteArray& format) const

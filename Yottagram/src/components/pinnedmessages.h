@@ -51,6 +51,7 @@ public:
     QString type();
     QString text();
     QString typeText();
+    void setTopic(int64_t topicId);
 
     Q_INVOKABLE void cycleMessage();
     Q_INVOKABLE void cycleMessageBack();
@@ -70,11 +71,13 @@ signals:
 private:
     unsigned int _currentMessage;
     int64_t _chatId;
+    int64_t _topicId;
     shared_ptr<TelegramManager> _manager;
     shared_ptr<Files> _files;
     shared_ptr<Users> _users;
     shared_ptr<CustomEmojis> _customEmojis;
     std::vector<Message*> _messages;
+    TextEntityProcessor _entityProcessor;
 };
 
 #endif // PINNEDMESSAGES_H

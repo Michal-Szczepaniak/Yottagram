@@ -40,7 +40,6 @@ ChatList::ChatList() :
     _updateListTimer.setInterval(1000);
     _updateListTimer.setSingleShot(true);
     connect(&_updateListTimer, &QTimer::timeout, [&](){
-        qDebug() << "Timeout";
         emit dataChanged(createIndex(0, 0), createIndex(rowCount(), 0), {OrderRole});
     });
 }
@@ -227,9 +226,17 @@ QVariant ChatList::data(const QModelIndex &index, int role) const
     case ChatElementRoles::UnreadMentionCountRole:
         return chatNode->getUnreadMentionCount();
     case ChatElementRoles::LastMessageRole:
-        return chatCache.lastMessage;
+        if (!chatNode->draftMessage().isEmpty()) {
+            return chatNode->draftMessage();
+        } else {
+            return chatCache.lastMessage;
+        }
     case ChatElementRoles::LastMessageAuthorRole:
-        return chatCache.lastAuthor;
+        if (!chatNode->draftMessage().isEmpty()) {
+            return tr("Draft") + ": ";
+        } else {
+            return chatCache.lastAuthor;
+        }
     case ChatElementRoles::IsSelfRole:
         return chatNode->isSelf();
     case ChatElementRoles::SecretChatStateRole:
@@ -242,13 +249,13 @@ QVariant ChatList::data(const QModelIndex &index, int role) const
         return chatNode->isPinned(getSelectedChatList());
     case ChatElementRoles::IsReadRole:
     {
-        td_api::message* message = chatNode->getLastMessage();
+        Message* message = chatNode->lastMessage();
         if (message == nullptr) return false;
 
-        if (message->is_outgoing_) {
-            return message->id_ <= chatNode->lastReadOutboxMessageId();
+        if (!message->received()) {
+            return message->getId() <= chatNode->lastReadOutboxMessageId();
         }  else {
-            return message->id_ <= chatNode->lastReadInboxMessageId();
+            return message->getId() <= chatNode->lastReadInboxMessageId();
         }
     }
     case ChatElementRoles::LastMessageTimestampRole:
@@ -307,23 +314,24 @@ void ChatList::updateChat(int64_t chat, QVector<int> roles) {
 
 QString ChatList::getLastMessageAuthor(Chat *chat)
 {
-    td_api::message* message = chat->getLastMessage();
+    Message* message = chat->lastMessage();
     if (message == nullptr) return "";
 
     QString lastMessageInfo = "";
 
-    if (message->is_outgoing_) {
+    if (!message->received()) {
         lastMessageInfo += "You: ";
     } else if (chat->getChatType() == "group" || chat->getChatType() == "supergroup") {
         QString name;
-        if (message->sender_id_->get_id() == td_api::messageSenderUser::ID) {
-            shared_ptr<User> user = _users->getUser(static_cast<td_api::messageSenderUser*>(message->sender_id_.get())->user_id_);
+        if (message->getSender() == "user") {
+            shared_ptr<User> user = _users->getUser(message->getSenderUserId());
             if(user != nullptr) name = user->getName();
-        } else if (message->sender_id_->get_id() == td_api::messageSenderChat::ID){
-            Chat* chat = getChat(static_cast<td_api::messageSenderChat*>(message->sender_id_.get())->chat_id_);
+        } else if (message->getSender() == "chat") {
+            Chat* chat = getChat(message->getSenderChatId());
             if (chat != nullptr) name = chat->getTitle();
         }
-        if(name != "") {
+
+        if (name != "") {
             lastMessageInfo += name.trimmed() + ": ";
         }
     }
@@ -333,10 +341,10 @@ QString ChatList::getLastMessageAuthor(Chat *chat)
 
 QString ChatList::getLastMessageTimestamp(Chat *chat)
 {
-    td_api::message* message = chat->getLastMessage();
+    Message* message = chat->lastMessage();
     if (message == nullptr) return "";
 
-    qint64 timestamp = message->date_;
+    qint64 timestamp = message->getTimestamp();
     qint64 current = QDateTime::currentMSecsSinceEpoch()/1000;
 
     auto diff = current - timestamp;
@@ -466,7 +474,7 @@ QVariant ChatList::getChatAsVariant(int64_t chatId) const
     }
 }
 
-QVariant ChatList::getChatAsVariantForUser(int64_t userId)
+QVariant ChatList::getChatAsVariantForUser(int64_t userId) const
 {
     int64_t chatId;
 
@@ -482,15 +490,29 @@ QVariant ChatList::getChatAsVariantForUser(int64_t userId)
     }
 }
 
+QVariant ChatList::getSavedMessagesAsVariant() const
+{
+    return getChatAsVariantForUser(_manager->getMyId());
+}
+
 void ChatList::markChatAsRead(int64_t chatId)
 {
-    _manager->sendQuery(new td_api::viewMessages(getChat(chatId)->getId(), {getChat(chatId)->getLastMessage()->id_}, td_api::make_object<td_api::messageSourceChatList>(),true));
+    _manager->sendQuery(new td_api::viewMessages(getChat(chatId)->getId(), {getChat(chatId)->lastMessage()->getId()}, td_api::make_object<td_api::messageSourceChatList>(),true));
     _manager->sendQuery(new td_api::toggleChatIsMarkedAsUnread(chatId, false));
 }
 
-void ChatList::markTopicAsRead(int64_t chatId)
+void ChatList::markTopicAsRead(int64_t chatId, int64_t topicId)
 {
-    _manager->sendQuery(new td_api::viewMessages(getChat(chatId)->getId(), {getChat(chatId)->getLastMessage()->id_}, td_api::make_object<td_api::messageSourceForumTopicHistory>(),true));
+    auto chat = getChat(chatId);
+    auto topics = chat->getTopicModel();
+
+    if (topics == nullptr) {
+        return;
+    }
+
+    int64_t lastMessageId = topics->getTopic(topicId)->last_message_->id_;
+
+    _manager->sendQuery(new td_api::viewMessages(chat->getId(), {lastMessageId}, td_api::make_object<td_api::messageSourceForumTopicHistory>(),true));
 }
 
 QVariant ChatList::getChannelNotificationSettings()
@@ -611,8 +633,8 @@ void ChatList::updateChatLastMessage(td_api::updateChatLastMessage *updateChatLa
     }
 
     if (updateChatLastMessage->last_message_) {
-        auto lastMessage = _chats[updateChatLastMessage->chat_id_]->getLastMessage();
-        if (lastMessage == nullptr || lastMessage->id_ != updateChatLastMessage->last_message_->id_) {
+        auto lastMessage = _chats[updateChatLastMessage->chat_id_]->lastMessage();
+        if (lastMessage == nullptr || lastMessage->getId() != updateChatLastMessage->last_message_->id_) {
             rolesToUpdate.append(LastMessageRole);
             rolesToUpdate.append(LastMessageAuthorRole);
             auto chat = _chats[updateChatLastMessage->chat_id_];
@@ -666,11 +688,13 @@ void ChatList::updateScopeNotificationSettings(td_api::updateScopeNotificationSe
 
 void ChatList::lastReadInboxMessageIdChanged(int64_t chatId, int64_t lastReadInboxMessageIdChanged)
 {
+    Q_UNUSED(lastReadInboxMessageIdChanged)
     updateChat(chatId, {IsReadRole});
 }
 
 void ChatList::lastReadOutboxMessageIdChanged(int64_t chatId, int64_t lastReadOutboxMessageIdChanged)
 {
+    Q_UNUSED(lastReadOutboxMessageIdChanged)
     updateChat(chatId, {IsReadRole});
 }
 

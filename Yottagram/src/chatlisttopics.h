@@ -45,6 +45,7 @@ public:
     td_api::forumTopic* getTopic(int64_t topicId);
 
 signals:
+    void forumTopicUpdated(int64_t topicId);
 
 public slots:
     void onUpdateForumTopic(td_api::updateForumTopic *updateForumTopic);
@@ -64,6 +65,7 @@ private:
     QHash<int64_t, td_api::forumTopic*> _topics;
     QVector<int64_t> _topicIds;
     QHash<int64_t, Message*> _messages;
+    TextEntityProcessor _entityProcessor;
 };
 
 #endif // CHATLISTTOPICS_H

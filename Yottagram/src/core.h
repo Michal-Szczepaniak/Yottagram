@@ -39,6 +39,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "contacts.h"
 #include "telegramstatus.h"
 #include "customemojis.h"
+#include "currentuser.h"
 
 using namespace std;
 
@@ -58,11 +59,13 @@ public:
     TelegramStatus _telegramStatus;
     Notifications _notifications;
     StickerSets _stickerSets;
+    StickerSets _emojiSets;
     SavedAnimations _savedAnimations;
     Calls _calls;
     ChatListFolders _chatListFilters;
     ProxyModel _proxyModel;
     Contacts _contacts;
+    CurrentUser _currentUser;
     shared_ptr<ChatList> _chatList;
     shared_ptr<Users> _users;
     shared_ptr<Files> _files;

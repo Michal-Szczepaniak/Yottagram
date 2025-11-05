@@ -19,16 +19,22 @@ void ChatListTopics::setTelegramManager(shared_ptr<TelegramManager> manager)
 void ChatListTopics::setUsers(shared_ptr<Users> users)
 {
     _users = users;
+
+    _entityProcessor.setUsers(users);
 }
 
 void ChatListTopics::setFiles(shared_ptr<Files> files)
 {
     _files = files;
+
+    _entityProcessor.setFiles(files);
 }
 
 void ChatListTopics::setCustomEmojis(shared_ptr<CustomEmojis> customEmojis)
 {
     _customEmojis = customEmojis;
+
+    _entityProcessor.setCustomEmojis(customEmojis);
 }
 
 int ChatListTopics::rowCount(const QModelIndex &parent) const
@@ -135,6 +141,7 @@ void ChatListTopics::setTopics(td_api::forumTopics *topics)
         message->setUsers(_users);
         message->setFiles(_files);
         message->setCustomEmojis(_customEmojis);
+        message->setTextEntityProcessor(&_entityProcessor);
         message->setChatId(_topics[topicId]->info_->chat_id_);
         message->setMessage(_topics[topicId]->last_message_.get());
 
@@ -164,6 +171,7 @@ void ChatListTopics::onUpdateForumTopic(td_api::updateForumTopic *updateForumTop
 
     int index = getTopicIndex(updateForumTopic->message_thread_id_);
     emit dataChanged(createIndex(index, 0), createIndex(index, 0), {});
+    emit forumTopicUpdated(updateForumTopic->message_thread_id_);
 }
 
 void ChatListTopics::onUpdateForumTopicInfo(td_api::updateForumTopicInfo *updateForumTopicInfo)

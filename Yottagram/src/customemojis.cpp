@@ -26,10 +26,20 @@ int32_t CustomEmojis::getCustomEmojiSticker(int64_t emojiId)
     return _customEmojiStickers[emojiId];
 }
 
-td_api::sticker *CustomEmojis::getCustomEmoji(int64_t emojiId)
+int32_t CustomEmojis::getCustomEmojiThumbnail(int64_t emojiId)
+{
+    if (!_customEmojiThumbnails.contains(emojiId)) {
+        return 0;
+    }
+
+    return _customEmojiThumbnails[emojiId];
+}
+
+CustomEmojis::CustomEmoji CustomEmojis::getCustomEmoji(int64_t emojiId)
 {
     if (!_customEmojis.contains(emojiId)) {
-        return nullptr;
+        qDebug() << "Missing emoji: " << emojiId;
+        return {};
     }
 
     return _customEmojis[emojiId];
@@ -47,17 +57,27 @@ void CustomEmojis::onGotCustomEmojiStickers(int64_t chatId, int64_t messageId, t
 
         int64_t emojiId = static_cast<td_api::stickerFullTypeCustomEmoji*>(sticker->full_type_.get())->custom_emoji_id_;
 
-        _customEmojiStickers[emojiId] = sticker->sticker_->id_;
-
-        if (_customEmojis.contains(emojiId)) {
-            delete _customEmojis[emojiId];
-        }
+        addCustomEmoji(emojiId, sticker->sticker_->id_, sticker->thumbnail_->file_->id_, QString::fromStdString(sticker->emoji_));
 
         _files->appendFile(move(sticker->sticker_), "sticker");
-        _customEmojis[emojiId] = sticker.release();
+        _files->appendFile(move(sticker->thumbnail_->file_), "thumbnail");
 
         fileIds.append(_customEmojiStickers[emojiId]);
     }
 
     emit messageUpdated(chatId, messageId, fileIds);
+}
+
+void CustomEmojis::addCustomEmoji(int64_t emojiId, int32_t stickerId, int32_t thumbnailId, QString emoji)
+{
+    _customEmojis[emojiId] = {
+        .emojiId = emojiId,
+        .stickerId = stickerId,
+        .thumbnailId = thumbnailId,
+        .emoji = emoji,
+    };
+
+    _customEmojiStickers[emojiId] = stickerId;
+    _customEmojiThumbnails[emojiId] = thumbnailId;
+
 }

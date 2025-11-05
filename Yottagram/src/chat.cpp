@@ -24,6 +24,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QFileInfo>
 #include <QDesktopServices>
 #include <QQmlEngine>
+#include <set>
 #include "overloaded.h"
 #include <contents/animatedemoji.h>
 #include <libsailfishsilica/silicatheme.h>
@@ -31,6 +32,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 Chat::Chat() :
     _smallPhotoId(0),
     _bigPhotoId(0),
+    _lastMessageId(0),
     _chat(nullptr),
     _files(nullptr),
     _notificationSettings(nullptr),
@@ -45,6 +47,7 @@ Chat::Chat() :
 Chat::Chat(td_api::chat* chat, shared_ptr<Files> files) :
     _smallPhotoId(0),
     _bigPhotoId(0),
+    _lastMessageId(0),
     _chat(chat),
     _files(files),
     _notificationSettings(move(chat->notification_settings_)),
@@ -57,6 +60,7 @@ Chat::Chat(td_api::chat* chat, shared_ptr<Files> files) :
     _basicGroupFullInfo = new BasicGroupFullInfo();
     _supergroupFullInfo = new SupergroupFullInfo();
     _title = QString::fromStdString(chat->title_);
+    _textEntityProcessor.setFiles(files);
 }
 
 Chat::~Chat()
@@ -198,8 +202,6 @@ QString Chat::getChatType() const
 
 int32_t Chat::getUnreadCount() const
 {
-    if (_currentTopicId != 0) return _topicModel->getTopic(_currentTopicId)->unread_count_;
-
     return _unreadCount;
 }
 
@@ -212,8 +214,6 @@ void Chat::setUnreadCount(int32_t unreadCount)
 
 int32_t Chat::getUnreadMentionCount() const
 {
-    if (_currentTopicId != 0) return _topicModel->getTopic(_currentTopicId)->unread_mention_count_;
-
     return _unreadMentionCount;
 }
 
@@ -252,7 +252,7 @@ void Chat::updateMessageMentionRead(int32_t unreadMentionCount, int64_t messageI
 
 int64_t Chat::lastReadInboxMessageId() const
 {
-    if (_currentTopicId != 0) {
+    if (_currentTopicId != 0 && !_isGeneralTopic) {
         return _topicModel->getTopic(_currentTopicId)->last_read_inbox_message_id_;
     }
 
@@ -267,7 +267,7 @@ void Chat::setLastReadInboxMessageId(int64_t messageId)
 
 int64_t Chat::lastReadOutboxMessageId() const
 {
-    if (_currentTopicId != 0) {
+    if (_currentTopicId != 0 && !_isGeneralTopic) {
         return _topicModel->getTopic(_currentTopicId)->last_read_outbox_message_id_;
     }
 
@@ -589,7 +589,6 @@ QStringList Chat::getRecentInlineBots() const
     QStringList out;
 
     for (int64_t id : _recentBots) {
-        qDebug() << id;
         out.append(QString::number(id));
     }
 
@@ -628,11 +627,16 @@ void Chat::updatePosition(td_api::chatPosition *position)
     else (*listPosition) = position;
 }
 
-QString Chat::draftMessage() const
+QString Chat::draftMessage(bool formatted) const
 {
-    if (!_chat->draft_message_) return "";
+    if (!_chat->draft_message_ || !_chat->draft_message_->input_message_text_) return "";
 
-    return QString::fromStdString(static_cast<td_api::inputMessageText*>(_chat->draft_message_->input_message_text_.get())->text_->text_);
+    if (!formatted) {
+        return QString::fromStdString(static_cast<td_api::inputMessageText*>(_chat->draft_message_->input_message_text_.get())->text_->text_);
+    }
+
+    QString result = ((Chat*)this)->_textEntityProcessor.formatTextAsHTML(static_cast<td_api::inputMessageText*>(_chat->draft_message_->input_message_text_.get())->text_.get(), true);
+    return result;
 }
 
 int64_t Chat::draftMessageReplyId() const
@@ -646,17 +650,37 @@ void Chat::setDraftMessage(QString message, int64_t replyMessageId)
 {
     td_api::object_ptr<td_api::draftMessage> newMessage = td_api::make_object<td_api::draftMessage>();
     auto messageContent = td_api::make_object<td_api::inputMessageText>();
-    messageContent->text_ = td_api::make_object<td_api::formattedText>();
-    messageContent->text_->text_ = message.toStdString();
+    messageContent->text_ = _textEntityProcessor.parseHTML(message);
     newMessage->input_message_text_ = move(messageContent);
     newMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyMessageId, nullptr, 0);
 
-    _manager->sendQuery(new td_api::setChatDraftMessage(getId(), 0, move(newMessage)));
+    _manager->sendQuery(new td_api::setChatDraftMessage(getId(), _currentTopicId, move(newMessage)));
 }
 
 void Chat::setDraftMessage(td_api::object_ptr<td_api::draftMessage> draftMessage)
 {
     _chat->draft_message_ = move(draftMessage);
+
+    std::vector<int64_t> customStickerIds;
+    if (_chat->draft_message_ && _chat->draft_message_->input_message_text_) {
+        for (td_api::object_ptr<td_api::textEntity> &entity : static_cast<td_api::inputMessageText*>(_chat->draft_message_->input_message_text_.get())->text_->entities_) {
+            if (entity->type_->get_id() == td_api::textEntityTypeCustomEmoji::ID) {
+                auto emojiId = static_cast<td_api::textEntityTypeCustomEmoji*>(entity->type_.get())->custom_emoji_id_;
+                if (_customEmojis->getCustomEmojiSticker(emojiId) == 0) {
+                    customStickerIds.emplace_back(emojiId);
+                } else {
+                    shared_ptr<File> file = _files->getFile(_customEmojis->getCustomEmojiSticker(emojiId));
+                    if (file && file->localPath().isEmpty()) {
+                        connect(file.get(), &File::localPathChanged, this, &Chat::onDraftMessageEmojisChanged, Qt::UniqueConnection);
+                    }
+                }
+            }
+        }
+    }
+    if (!customStickerIds.empty()) {
+        _manager->sendQueryWithResponse(getId(), td_api::getCustomEmojiStickers::ID, 0, new td_api::getCustomEmojiStickers(move(customStickerIds)));
+    }
+
     emit draftMessageChanged();
 }
 
@@ -726,6 +750,39 @@ bool Chat::getIsForum() const
     return info->getSupergroup()->is_forum_;
 }
 
+QStringList Chat::getAvailableReactions() const
+{
+    QStringList availableReactions;
+    if (_availableReactions == nullptr) return availableReactions;
+
+    if (_chat->available_reactions_ && _chat->available_reactions_->get_id() == td_api::chatAvailableReactionsSome::ID) {
+        for (auto &reaction : static_cast<td_api::chatAvailableReactionsSome*>(_chat->available_reactions_.get())->reactions_) {
+            if (reaction->get_id() == td_api::reactionTypeEmoji::ID) {
+                availableReactions.append(QString::fromStdString(static_cast<td_api::reactionTypeEmoji*>(reaction.get())->emoji_));
+            } else if (reaction->get_id() == td_api::reactionTypeCustomEmoji::ID) {
+                availableReactions.append(QString::number(static_cast<td_api::reactionTypeCustomEmoji*>(reaction.get())->custom_emoji_id_));
+            }
+        }
+
+        return availableReactions;
+    }
+
+    for (auto &reaction : _availableReactions->top_reactions_) {
+        if (reaction->type_->get_id() == td_api::reactionTypeEmoji::ID) {
+            availableReactions.append(QString::fromStdString(static_cast<td_api::reactionTypeEmoji*>(reaction->type_.get())->emoji_));
+        } else if (reaction->type_->get_id() == td_api::reactionTypeCustomEmoji::ID) {
+            availableReactions.append(QString::number(static_cast<td_api::reactionTypeCustomEmoji*>(reaction->type_.get())->custom_emoji_id_));
+        }
+    }
+
+    return availableReactions;
+}
+
+int Chat::getOnlineMemberCount() const
+{
+    return _onlineMemberCount;
+}
+
 void Chat::fetchTopics()
 {
     _manager->sendQueryWithResponse(getId(), td_api::getForumTopics::ID, 0, new td_api::getForumTopics(getId(), "", 0, 0, 0, 100));
@@ -755,6 +812,10 @@ void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
     connect(_manager.get(), &TelegramManager::gotForumTopics, this, &Chat::onGotForumTopics);
     connect(_manager.get(), &TelegramManager::gotMessageProperties, this, &Chat::onGotMessageProperties);
     connect(_manager.get(), &TelegramManager::updateMessageInteractionInfo, this, &Chat::updateMessageInteractionInfo);
+    connect(_manager.get(), &TelegramManager::updateMessageEdited, this, &Chat::updateMessageEdited);
+    connect(_manager.get(), &TelegramManager::gotMessageAvailableReactions, this, &Chat::onGotMessageAvailableReactions);
+    connect(_manager.get(), &TelegramManager::updateChatAvailableReactions, this, &Chat::updateChatAvailableReactions);
+    connect(_manager.get(), &TelegramManager::updateChatOnlineMemberCount, this, &Chat::updateChatOnlineMemberCount);
 
     if (_unreadMentionCount > 0) {
         _manager->sendQueryWithResponse(
@@ -769,11 +830,15 @@ void Chat::setTelegramManager(shared_ptr<TelegramManager> manager)
 void Chat::setUsers(shared_ptr<Users> users)
 {
     _users = users;
+
+    _textEntityProcessor.setUsers(users);
 }
 
 void Chat::setFiles(shared_ptr<Files> files)
 {
     _files = files;
+
+    _textEntityProcessor.setFiles(files);
 }
 
 void Chat::setCustomEmojis(shared_ptr<CustomEmojis> customEmojis)
@@ -781,6 +846,8 @@ void Chat::setCustomEmojis(shared_ptr<CustomEmojis> customEmojis)
     _customEmojis = customEmojis;
 
     connect(_customEmojis.get(), &CustomEmojis::messageUpdated, this, &Chat::onCustomEmojiUpdated);
+
+    _textEntityProcessor.setCustomEmojis(customEmojis);
 }
 
 void Chat::setSecretChatsInfo(shared_ptr<SecretChatsInfo> secretChatsInfo)
@@ -810,10 +877,11 @@ void Chat::setSupergroupsInfo(shared_ptr<SupergroupsInfo> supergroupsInfo)
 
 void Chat::injectDependencies(PinnedMessages *component)
 {
-    component->setTelegramManager(_manager);
     component->setFiles(_files);
     component->setUsers(_users);
     component->setCustomEmojis(_customEmojis);
+    component->setTopic(_currentTopicId);
+    component->setTelegramManager(_manager);
 }
 
 int Chat::rowCount(const QModelIndex &parent) const
@@ -850,6 +918,8 @@ QVariant Chat::data(const QModelIndex &index, int role) const
             return tr("Channel created");
         }
         return message->getText(false);
+    case MessageRoles::EditMessageRole:
+        return message->getEditText();
     case MessageRoles::MessageTypeRole:
         return message->getType();
     case MessageRoles::MessageTypeTextRole:
@@ -970,7 +1040,7 @@ QVariant Chat::data(const QModelIndex &index, int role) const
     case MessageRoles::CanBeForwardedRole:
         return message->canBeForwarded();
     case MessageRoles::CanBeDeletedRole:
-        return message->canBeDeleted();
+        return isSelf() || message->canBeDeleted();
     case MessageRoles::IsChannelPostRole:
         return message->isChannelPost();
     case MessageRoles::EditedDateRole:
@@ -1079,6 +1149,7 @@ QHash<int, QByteArray> Chat::roleNames() const
     roles[IdRole]   = "messageId";
     roles[MessageRole] = "messageText";
     roles[UnformattedMessageRole] = "messageTextUnformatted";
+    roles[EditMessageRole] = "messageEditText";
     roles[MessageTypeRole] = "messageType";
     roles[MessageTypeTextRole] = "messageTypeText";
     roles[ReceivedRole] = "received";
@@ -1147,44 +1218,24 @@ int64_t Chat::getLatestMessageId() const
     return 0;
 }
 
-td_api::message *Chat::getLastMessage()
+Message* Chat::lastMessage()
 {
-    return _chat->last_message_.get();
-}
-
-shared_ptr<Message> Chat::lastMessage()
-{
-    return _lastMessage;
+    return _messages.contains(_lastMessageId) ? _messages[_lastMessageId] : nullptr;
 }
 
 int64_t Chat::getLastMessageId() const
 {
-    if (_currentTopicId != 0) {
-        if (!_topicModel->getTopic(_currentTopicId)->last_message_) return 0;
-
-        return _topicModel->getTopic(_currentTopicId)->last_message_->id_;
-    }
-
-    if (!_chat->last_message_) return 0;
-
-    return _chat->last_message_->id_;
+    return _lastMessageId;
 }
 
 void Chat::setLastMessage(td_api::object_ptr<td_api::message> lastMessage)
 {
     if (!lastMessage) return;
-    _chat->last_message_ = move(lastMessage);
 
-    shared_ptr<Message> newLastMessage = make_shared<Message>();
-    newLastMessage->setTelegramManager(_manager);
-    newLastMessage->setUsers(_users);
-    newLastMessage->setFiles(_files);
-    newLastMessage->setCustomEmojis(_customEmojis);
-    newLastMessage->setChatId(getId());
-    newLastMessage->setMessage(_chat->last_message_.get());
-    _lastMessage = newLastMessage;
+    _lastMessageId = lastMessage->id_;
+    newMessage(move(lastMessage), false);
 
-    emit lastMessageIdChanged(_chat->last_message_->id_);
+    emit lastMessageIdChanged(_lastMessageId);
 }
 
 void Chat::newMessage(td_api::object_ptr<td_api::message> message, bool addToList)
@@ -1196,6 +1247,7 @@ void Chat::newMessage(td_api::object_ptr<td_api::message> message, bool addToLis
         newMessage->setFiles(_files);
         newMessage->setCustomEmojis(_customEmojis);
         newMessage->setChatId(getId());
+        newMessage->setTextEntityProcessor(&_textEntityProcessor);
         newMessage->setMessage(message.release());
         connect(newMessage, &Message::contentChanged, this, &Chat::onMessageContentChanged);
         connect(newMessage, &Message::messageIdChanged, this, &Chat::onMessageIdChanged);
@@ -1244,18 +1296,16 @@ void Chat::sendMessage(QString message, int64_t replyToMessageId)
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
 
-    if (_currentTopicId != 0 && !_topicModel->getTopic(_currentTopicId)->info_->is_general_) {
+    if (_currentTopicId != 0 && !_isGeneralTopic) {
         sendMessage->message_thread_id_ = _currentTopicId;
     }
 
     if (replyToMessageId != 0) {
-        qDebug() << replyToMessageId;
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0);
     }
 
     auto messageContent = td_api::make_object<td_api::inputMessageText>();
-    messageContent->text_ = td_api::make_object<td_api::formattedText>();
-    messageContent->text_->text_ = message.toStdString();
+    messageContent->text_ = _textEntityProcessor.parseHTML(message);
     sendMessage->input_message_content_ = std::move(messageContent);
 
     _manager->sendQuery(sendMessage);
@@ -1266,7 +1316,6 @@ void Chat::getMoreChatHistory()
     auto min = std::min_element(_message_ids.begin(), _message_ids.end());
 
     if (_message_ids.end() != min) {
-
         getChatHistory(*min, 30);
     }
 }
@@ -1289,7 +1338,31 @@ int64_t Chat::getAuthorByIndex(int32_t index)
 
 void Chat::setMessageAsRead(int64_t messageId)
 {
-    _manager->sendQuery(new td_api::viewMessages(getId(), {messageId}, td_api::make_object<td_api::messageSourceChatHistory>(), false));
+    td_api::object_ptr<td_api::MessageSource> source;
+    if (_currentTopicId != 0) {
+        source = td_api::make_object<td_api::messageSourceForumTopicHistory>();
+    } else {
+        source = td_api::make_object<td_api::messageSourceChatHistory>();
+    }
+
+    _manager->sendQuery(new td_api::viewMessages(getId(), {messageId}, move(source), false));
+}
+
+void Chat::setMessagesAsRead(QVariantList messages)
+{
+    td_api::object_ptr<td_api::MessageSource> source;
+    if (_currentTopicId != 0) {
+        source = td_api::make_object<td_api::messageSourceForumTopicHistory>();
+    } else {
+        source = td_api::make_object<td_api::messageSourceChatHistory>();
+    }
+
+    std::vector<int64_t> ids;
+    for (QVariant v : messages) {
+        ids.emplace_back(v.toLongLong());
+    }
+
+    _manager->sendQuery(new td_api::viewMessages(getId(), {ids.begin(), ids.end()}, move(source), false));
 }
 
 void Chat::sendPhoto(QString path, int64_t replyToMessageId)
@@ -1584,18 +1657,33 @@ void Chat::deleteMessage(int64_t messageId)
     _manager->sendQuery(new td_api::deleteMessages(_chat->id_, std::vector<int64_t>(1, messageId), true));
 }
 
-void Chat::editMessageText(int64_t messageId, QString messageText)
+void Chat::editMessage(int64_t messageId, QString messageText)
 {
-    auto editMessage = new td_api::editMessageText();
-    editMessage->chat_id_ = _chat->id_;
-    editMessage->message_id_ = messageId;
+    if (!_messages.contains(messageId)) return;
 
-    auto messageContent = td_api::make_object<td_api::inputMessageText>();
-    messageContent->text_ = td_api::make_object<td_api::formattedText>();
-    messageContent->text_->text_ = messageText.toStdString();
-    editMessage->input_message_content_ = std::move(messageContent);
+    td_api::Function* query;
+    auto message = _messages[messageId];
+    static std::set<int64_t> contentsWithCaptions = {td_api::messagePhoto::ID, td_api::messageVideo::ID, td_api::messageDocument::ID, td_api::messageAudio::ID, td_api::messageAnimation::ID, td_api::messageVoiceNote::ID};
+    if (contentsWithCaptions.contains(message->getContentType())) {
+        auto editMessage = new td_api::editMessageCaption();
+        editMessage->chat_id_ = _chat->id_;
+        editMessage->message_id_ = messageId;
+        editMessage->caption_ = _textEntityProcessor.parseHTML(messageText);
 
-    _manager->sendQuery(editMessage);
+        query = editMessage;
+    } else {
+        auto editMessage = new td_api::editMessageText();
+        editMessage->chat_id_ = _chat->id_;
+        editMessage->message_id_ = messageId;
+
+        auto messageContent = td_api::make_object<td_api::inputMessageText>();
+        messageContent->text_ = _textEntityProcessor.parseHTML(messageText);
+        editMessage->input_message_content_ = std::move(messageContent);
+
+        query = editMessage;
+    }
+
+    _manager->sendQuery(query);
 }
 
 void Chat::chose(int64_t messageId, QString indexes)
@@ -1694,7 +1782,7 @@ void Chat::sendAction(ChatAction action)
         tdAction = td_api::make_object<td_api::chatActionWatchingAnimations>();
         break;
     }
-    _manager->sendQuery(new td_api::sendChatAction(getId(), 0, "", move(tdAction)));
+    _manager->sendQuery(new td_api::sendChatAction(getId(), _currentTopicId, "", move(tdAction)));
 }
 
 void Chat::searchChatMembers(QString query)
@@ -1724,6 +1812,13 @@ void Chat::setTopic(int64_t topicId)
 {
     _currentTopicId = topicId;
 
+    auto topic = _topicModel->getTopic(_currentTopicId);
+    if (topic != nullptr) {
+        _isGeneralTopic = topic->info_->is_general_;
+        _lastMessageId = topic->last_message_ ? topic->last_message_->id_ : 0;
+    }
+
+    emit topicChanged();
     emit lastReadInboxMessageIdChanged(getId(), lastReadInboxMessageId());
     emit lastReadOutboxMessageIdChanged(getId(), lastReadOutboxMessageId());
     emit latestMessageIdChanged(getLatestMessageId());
@@ -1741,13 +1836,89 @@ void Chat::setAutoDeleteTime(int32_t autoDeleteTime)
     _manager->sendQuery(new td_api::setChatMessageAutoDeleteTime(getId(), autoDeleteTime));
 }
 
+void Chat::addReaction(int64_t messageId, int index)
+{
+    if (!_messages.contains(messageId)) return;
+    auto message = _messages[messageId];
+
+    int i = 0;
+    td_api::messageReaction* targetReaction = nullptr;
+    for (td_api::object_ptr<td_api::messageReaction> &reaction : message->getReactions()->reactions_) {
+        if (reaction->type_->get_id() == td_api::reactionTypeEmoji::ID || reaction->type_->get_id() == td_api::reactionTypeCustomEmoji::ID) {
+            if (i == index) {
+                targetReaction = reaction.get();
+                break;
+            }
+            i++;
+        }
+    }
+
+    if (targetReaction == nullptr) {
+        return;
+    }
+
+    if (targetReaction->is_chosen_) {
+        auto query = new td_api::removeMessageReaction();
+        query->chat_id_ = getId();
+        query->message_id_ = messageId;
+        query->reaction_type_ = targetReaction->type_->get_id() == td_api::reactionTypeEmoji::ID ?
+            static_cast<td_api::object_ptr<td_api::ReactionType>>(td_api::make_object<td_api::reactionTypeEmoji>(static_cast<td_api::reactionTypeEmoji*>(targetReaction->type_.get())->emoji_)) :
+            static_cast<td_api::object_ptr<td_api::ReactionType>>(td_api::make_object<td_api::reactionTypeCustomEmoji>(static_cast<td_api::reactionTypeCustomEmoji*>(targetReaction->type_.get())->custom_emoji_id_));
+
+        _manager->sendQuery(query);
+    } else {
+        auto query = new td_api::addMessageReaction();
+        query->chat_id_ = getId();
+        query->message_id_ = messageId;
+        query->reaction_type_ = targetReaction->type_->get_id() == td_api::reactionTypeEmoji::ID ?
+            static_cast<td_api::object_ptr<td_api::ReactionType>>(td_api::make_object<td_api::reactionTypeEmoji>(static_cast<td_api::reactionTypeEmoji*>(targetReaction->type_.get())->emoji_)) :
+            static_cast<td_api::object_ptr<td_api::ReactionType>>(td_api::make_object<td_api::reactionTypeCustomEmoji>(static_cast<td_api::reactionTypeCustomEmoji*>(targetReaction->type_.get())->custom_emoji_id_));
+        query->is_big_ = false;
+        query->update_recent_reactions_ = false;
+
+        _manager->sendQuery(query);
+    }
+}
+
+void Chat::getAvailableReactions(int64_t messageId)
+{
+    _manager->sendQueryWithResponse(getId(), td_api::getMessageAvailableReactions::ID, 0, new td_api::getMessageAvailableReactions(getId(), messageId, 25));
+}
+
+void Chat::addReaction(int64_t messageId, QString reactionId)
+{
+    auto query = new td_api::addMessageReaction();
+    query->chat_id_ = getId();
+    query->message_id_ = messageId;
+    bool isCustomEmoji = false;
+    reactionId.toLongLong(&isCustomEmoji);
+    query->reaction_type_ = isCustomEmoji ?
+        static_cast<td_api::object_ptr<td_api::ReactionType>>(td_api::make_object<td_api::reactionTypeCustomEmoji>(reactionId.toLongLong())) :
+        static_cast<td_api::object_ptr<td_api::ReactionType>>(td_api::make_object<td_api::reactionTypeEmoji>(reactionId.toStdString()));
+    query->is_big_ = false;
+    query->update_recent_reactions_ = true;
+
+    _manager->sendQuery(query);
+}
+
 void Chat::getChatHistory(int64_t from_message, int limit, int offset, bool localOnly)
 {
+    if (_currentTopicId != 0) {
+        auto searchChatMessagesQuery = new td_api::searchChatMessages();
+        searchChatMessagesQuery->chat_id_ = _chat->id_;
+        searchChatMessagesQuery->from_message_id_ = from_message;
+        searchChatMessagesQuery->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+        searchChatMessagesQuery->offset_ = offset;
+        searchChatMessagesQuery->limit_ = offset < 0 ? std::max(limit, -offset + 1) : limit;
+
+        _manager->sendQueryWithResponse(getId(), td_api::getChatHistory::ID, td_api::searchChatMessages::ID, searchChatMessagesQuery);
+    }
+
     auto getChatHistoryQuery = new td_api::getChatHistory();
     getChatHistoryQuery->chat_id_ = _chat->id_;
     getChatHistoryQuery->from_message_id_ = from_message;
     getChatHistoryQuery->offset_ = offset;
-    getChatHistoryQuery->limit_ = limit;
+    getChatHistoryQuery->limit_ = offset < 0 ? std::max(limit, -offset) : limit;
     getChatHistoryQuery->only_local_ = localOnly;
 
     _manager->sendQueryWithResponse(getId(), td_api::getChatHistory::ID, 0, getChatHistoryQuery);
@@ -1833,10 +2004,7 @@ QString Chat::getCustomEmojiReaction(int64_t messageId, td_api::reactionTypeCust
         if (!localPath.isEmpty()) {
             return localPath;
         } else {
-            td_api::sticker* emoji = _customEmojis->getCustomEmoji(emojiReaction->custom_emoji_id_);
-            if (nullptr == emoji) return "";
-
-            return QString::fromStdString(emoji->emoji_);
+            return _customEmojis->getCustomEmoji(emojiReaction->custom_emoji_id_).emoji;
         }
     } else {
         _manager->sendQueryWithResponse(getId(), td_api::getCustomEmojiStickers::ID, messageId, new td_api::getCustomEmojiStickers({emojiReaction->custom_emoji_id_}));
@@ -1904,8 +2072,8 @@ void Chat::onMessageContentChanged(int64_t messageId)
 {
     auto index = getMessageIndex(messageId);
 
-    if (0 != index) {
-        emit dataChanged(createIndex(index, 0), createIndex(index, 0), {FileRole, MessageRole, HasWebPageRole, WebPageRole, PollRole});
+    if (-1 != index) {
+        emit dataChanged(createIndex(index, 0), createIndex(index, 0), {FileRole, MessageRole, UnformattedMessageRole, HasWebPageRole, WebPageRole, PollRole});
     }
 }
 
@@ -2017,7 +2185,7 @@ void Chat::updateChatAction(td_api::updateChatAction *updateChatAction)
         )
     );
 
-    if (action != ChatAction::None && updateChatAction->action_->get_id() == td_api::chatActionCancel::ID) {
+    if (action != ChatAction::None && updateChatAction->action_->get_id() != td_api::chatActionCancel::ID) {
         _chatActions[userId] = action;
     }
 
@@ -2047,18 +2215,52 @@ void Chat::updateMessageInteractionInfo(td_api::updateMessageInteractionInfo *up
     }
 }
 
+void Chat::updateMessageEdited(td_api::updateMessageEdited *updateMessageEdited)
+{
+    if (getId() != updateMessageEdited->chat_id_) return;
+
+    int64_t messageId = updateMessageEdited->message_id_;
+
+    if (_messages.contains(messageId)) {
+        _messages[messageId]->setEditDate(updateMessageEdited->edit_date_);
+
+        auto index = getMessageIndex(messageId);
+        emit dataChanged(createIndex(index, 0), createIndex(index, 0), {EditedRole, EditedDateRole});
+    }
+}
+
+void Chat::updateChatAvailableReactions(td_api::updateChatAvailableReactions *updateChatAvailableReactions)
+{
+    if (getId() != updateChatAvailableReactions->chat_id_) return;
+
+    _chat->available_reactions_ = move(updateChatAvailableReactions->available_reactions_);
+
+    emit availableReactionsChanged();
+}
+
+void Chat::updateChatOnlineMemberCount(td_api::updateChatOnlineMemberCount *updateChatOnlineMemberCount)
+{
+    if (getId() != updateChatOnlineMemberCount->chat_id_) return;
+
+    _onlineMemberCount = updateChatOnlineMemberCount->online_member_count_;
+
+    emit onlineMemberCountChanged();
+}
+
 void Chat::onGotChatHistory(int64_t chatId, td_api::messages *messages)
 {
     if (chatId != getId()) return;
 
-    if (messages->total_count_ == 0 || messages->messages_.size() <= 0 || !messages->messages_[0]) {
+    if (messages->messages_.size() <= 0 || !messages->messages_[0]) {
         qDebug() << "nada";
         emit gotChatHistory();
         return;
     };
 
+    int totalCount = messages->messages_.size();
+
     int addedMessages = 0;
-    for (int i = 0; i < messages->total_count_; i++) {
+    for (int i = 0; i < totalCount; i++) {
         if (messages->messages_[i]) {
             int64_t id = messages->messages_[i]->id_;
             if (false == _messages.contains(id)) {
@@ -2070,7 +2272,7 @@ void Chat::onGotChatHistory(int64_t chatId, td_api::messages *messages)
     }
 
     beginInsertRows(QModelIndex(), rowCount(), rowCount()+addedMessages-1);
-    for (int i = 0; i < messages->total_count_; i++) {
+    for (int i = 0; i < totalCount; i++) {
         td_api::message* message = messages->messages_[i].release();
         if (message != nullptr) {
             if (false == _messages.contains(message->id_)) {
@@ -2080,6 +2282,7 @@ void Chat::onGotChatHistory(int64_t chatId, td_api::messages *messages)
                 newMessage->setFiles(_files);
                 newMessage->setCustomEmojis(_customEmojis);
                 newMessage->setChatId(getId());
+                newMessage->setTextEntityProcessor(&_textEntityProcessor);
                 newMessage->setMessage(message);
                 connect(newMessage, &Message::contentChanged, this, &Chat::onMessageContentChanged);
                 connect(newMessage, &Message::messageIdChanged, this, &Chat::onMessageIdChanged);
@@ -2137,9 +2340,13 @@ void Chat::onGotForumTopics(int64_t chatId, td_api::forumTopics *forumTopics)
         _topicModel->setUsers(_users);
         _topicModel->setFiles(_files);
         _topicModel->setCustomEmojis(_customEmojis);
+
+        connect(_topicModel, &ChatListTopics::forumTopicUpdated, this, &Chat::onForumTopicUpdated);
     }
 
     _topicModel->setTopics(forumTopics);
+
+    emit topicsChanged();
 }
 
 void Chat::onGotMessageProperties(int64_t chatId, int64_t messageId, td_api::messageProperties *messageProperties)
@@ -2158,6 +2365,8 @@ void Chat::onCustomEmojiUpdated(int64_t chatId, int64_t messageId, QVector<int32
 
     if (_messages.contains(messageId)) {
         _messages[messageId]->updateCustomEmojis(fileIds);
+    } else {
+        emit draftMessageChanged();
     }
 }
 
@@ -2171,4 +2380,34 @@ void Chat::onMessageReactionsChanged(int64_t messageId)
 {
     auto index = getMessageIndex(messageId);
     emit dataChanged(createIndex(index, 0), createIndex(index, 0), {ReactionsRole});
+}
+
+void Chat::onForumTopicUpdated(int64_t topicId)
+{
+    if (topicId != _currentTopicId) return;
+
+    emit lastReadInboxMessageIdChanged(getId(), lastReadInboxMessageId());
+    emit lastReadOutboxMessageIdChanged(getId(), lastReadOutboxMessageId());
+    emit unreadMentionCountChanged(getUnreadMentionCount());
+}
+
+void Chat::onDraftMessageEmojisChanged(QString path, int32_t fileId)
+{
+    Q_UNUSED(path)
+    Q_UNUSED(fileId)
+
+    emit draftMessageChanged();
+}
+
+void Chat::onGotMessageAvailableReactions(int64_t chatId, td_api::availableReactions *availableReactions)
+{
+    if (chatId != getId()) return;
+
+    if (_availableReactions != nullptr) {
+        delete _availableReactions;
+    }
+
+    _availableReactions = availableReactions;
+
+    emit availableReactionsChanged();
 }

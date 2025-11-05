@@ -22,7 +22,7 @@ import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
 import "messageContent"
-import "functions/foramtDuration.js" as FormatDuration
+import "functions/formatDuration.js" as FormatDuration
 import "functions/twemoji.js" as Twemoji
 
 Column {
@@ -152,7 +152,6 @@ Column {
     Loader {
         id: contentLoader
         width: {
-            console.log(messageType)
             switch(messageType) {
             case "photo":
                 if (file.biggestPhotoSize.width == 0) return Theme.itemSizeHuge*2
@@ -366,7 +365,7 @@ Column {
 
     Label {
         id: textField
-        textFormat: Text.StyledText
+        textFormat: messageText.indexOf("<s>") == -1 ? Text.StyledText : Text.RichText
         text: Twemoji.emojify(messageText.replace(/\n/g, '<br>'), Theme.fontSizeSmall)
         font.pixelSize: settings.fontSize
         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
@@ -383,6 +382,7 @@ Column {
                 pageStack.push(Qt.resolvedUrl("../components/chatInfo/UserInfo.qml"), { userId: link.substring(9), chat: chatList.getChatAsVariantForUser(link.substring(9)) })
             } else if (link.substring(0, 10) === "command://") {
                 chat.sendMessage(link.substring(10), 0)
+            } else if (link.substring(0, 8) === "emoji://") {
             } else {
                 Qt.openUrlExternally(link)
             }
@@ -428,6 +428,7 @@ Column {
 
         Row {
             id: reactionsRow
+            spacing: Theme.paddingSmall
 
             Repeater {
                 model: reactions
@@ -449,16 +450,20 @@ Column {
                             width: reaction.height
                             height: width
                             visible: Twemoji.test(modelData)
-                            source: 'qrc:///emoji/' + Twemoji.emojifyRaw(modelData) + '.svg'
+                            Binding on source { value: 'qrc:///emoji/' + Twemoji.emojifyRaw(modelData) + '.svg'; when: reactionImage.visible }
                             anchors.verticalCenter: parent.verticalCenter
+                            cache: !settings.animatedEmoji
                         }
 
                         AnimatedImage {
                             width: reaction.height
                             height: width
                             visible: !reactionImage.visible
-                            source: if (!reactionImage.visible) modelData
+                            Binding on source { value: modelData; when: !reactionImage.visible }
                             anchors.verticalCenter: parent.verticalCenter
+                            cache: false
+                            paused: !Qt.application.active || !settings.animatedEmoji
+                            asynchronous: true
                         }
 
                         Label {
@@ -473,7 +478,7 @@ Column {
                     MouseArea {
                         anchors.fill: parent
 
-                        onClicked: console.log("react")
+                        onClicked: chat.addReaction(messageId, index)
                     }
                 }
             }

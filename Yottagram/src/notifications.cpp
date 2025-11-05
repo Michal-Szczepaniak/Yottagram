@@ -103,7 +103,7 @@ void Notifications::updateNotificationGroup(td_api::updateNotificationGroup *upd
             newNotification->setReplacesId(static_cast<uint32_t>(notification->id_));
             newNotification->setTimestamp(QDateTime::fromTime_t(static_cast<uint>(notification->date_)));
             QVariantList arguments;
-            arguments.append(QVariant::fromValue(chat->getId()));
+            arguments.append(QVariant::fromValue((qint64)chat->getId()));
             QVariantList actions;
             actions.append(Notification::remoteAction("default", "openChat", "com.verdanditeam.yottagram", "/", "com.verdanditeam.yottagram", "openChat", arguments));
             newNotification->setRemoteActions(actions);
@@ -127,7 +127,7 @@ void Notifications::updateNotificationGroup(td_api::updateNotificationGroup *upd
             newNotification->setReplacesId(static_cast<uint32_t>(notification->id_));
             newNotification->setTimestamp(QDateTime::fromTime_t(static_cast<uint>(notification->date_)));
             QVariantList arguments;
-            arguments.append(QVariant::fromValue(chat->getId()));
+            arguments.append(QVariant::fromValue((qint64)chat->getId()));
             QVariantList actions;
             actions.append(Notification::remoteAction("default", "openChat", "com.verdanditeam.yottagram", "/", "com.verdanditeam.yottagram", "openChat", arguments));
             newNotification->publish();

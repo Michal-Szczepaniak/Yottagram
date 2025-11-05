@@ -120,6 +120,11 @@ signals:
     void updateMessageInteractionInfo(td_api::updateMessageInteractionInfo *updateMessageInteractionInfo);
     void updateForumTopic(td_api::updateForumTopic *updateForumTopic);
     void updateForumTopicInfo(td_api::updateForumTopicInfo *updateForumTopicInfo);
+    void updateRecentStickers(td_api::updateRecentStickers *updateRecentStickers);
+    void updateFavouriteStickers(td_api::updateFavoriteStickers *updateFavouriteStickers);
+    void updateMessageEdited(td_api::updateMessageEdited *updateMessageEdited);
+    void updateChatAvailableReactions(td_api::updateChatAvailableReactions *updateChatAvailableReactions);
+    void updateChatOnlineMemberCount(td_api::updateChatOnlineMemberCount *updateChatOnlineMemberCount);
 
 // Responses
     void gotChatHistory(int64_t chatId, td_api::messages *messages);
@@ -143,6 +148,10 @@ signals:
     void gotMessageProperties(int64_t chatId, int64_t messageId, td_api::messageProperties *messageProperties);
     void gotCustomEmojiStickers(int64_t chatId, int64_t messageId, td_api::stickers *stickers);
     void gotCustomEmojiReactionAnimations(td_api::stickers *stickers);
+    void gotRecentStickers(td_api::stickers *stickers);
+    void gotFavouriteStickers(td_api::stickers *stickers);
+    void gotMessageAvailableReactions(int64_t chatId, td_api::availableReactions *availableReactions);
+    void gotMe(td_api::user *me);
 
     void myIdChanged(int32_t myId);
     void error(int64_t chatId, int32_t type, int32_t subType, int32_t code, QString message);
@@ -160,7 +169,7 @@ private:
     QThread receiverThread;
     QTimer incomingMessageCheckTimer;
     int32_t _myId;
-    QSharedPointer<NetworkManager> _networkManager;
+    NetworkManager* _networkManager;
     QString _networkType;
     QHash<uint64_t, MessageWithResponse> _messages;
     uint64_t _messageId;

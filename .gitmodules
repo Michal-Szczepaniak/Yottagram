@@ -16,3 +16,6 @@
 	path = Yottagram/vendor/tgcalls/upstream
 	url = https://github.com/Michal-Szczepaniak/tgcalls
 	branch = yottagram
+[submodule "Yottagram/vendor/picoplayer"]
+	path = Yottagram/vendor/picoplayer
+	url = https://github.com/michal-Szczepaniak/picoplayer

@@ -32,14 +32,13 @@ Item {
         anchors.fill: parent
     }
 
-    Video {
+    AnimatedImage {
         anchors.centerIn: parent
         width: parent.width/1.5
         height: parent.height/1.5
         fillMode: Image.PreserveAspectFit
         source: path
-        autoLoad: true
-        autoPlay: true
-        onStopped: play()
+        cache: false
+        asynchronous: true
     }
 }

@@ -81,7 +81,6 @@ For license and copyright information please follow this link:
 */
 
 const QByteArray ffmpegIOHandler::NAME("webm");
-const QByteArray ffmpegIOHandler::GZ_MAGIC("\x1f\x8b");
 
 constexpr auto kAlignImageBy = 64;
 constexpr auto kImageFormat = QImage::Format_ARGB32_Premultiplied;

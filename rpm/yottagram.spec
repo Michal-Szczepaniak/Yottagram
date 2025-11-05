@@ -4,10 +4,10 @@ Name:       yottagram
 %{!?qtc_qmake5:%define qtc_qmake5 %qmake5}
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
-%global debug_package %{nil}
+#global debug_package %{nil}
 Summary:    Yottagram
 Version:    0.7.0
-Release:    27
+Release:    54
 Group:      Qt/Qt
 License:    GPLv3
 URL:        http://verdanditeam.com/
@@ -15,6 +15,7 @@ Source0:    %{name}-%{version}.tar.bz2
 Patch0:     disable-x11-and-desktop-capture.patch
 Patch1:     force-mono-mic.patch
 Requires:   sailfishsilica-qt5 >= 0.10.9
+Requires:   qt5-qtquickcontrols-layouts
 BuildRequires:  pkgconfig(sailfishapp) >= 1.0.2
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5Qml)
@@ -36,6 +37,18 @@ BuildRequires:  pkgconfig(gio-2.0)
 BuildRequires:  pkgconfig(alsa)
 BuildRequires:  pkgconfig(openh264)
 BuildRequires:  pkgconfig(sailfishsilica)
+BuildRequires:  pkgconfig(Qt5OpenGL)
+BuildRequires:  pkgconfig(Qt5OpenGLExtensions)
+BuildRequires:  pkgconfig(audioresource-qt)
+BuildRequires:  pkgconfig(dbus-1)
+BuildRequires:  pkgconfig(dbus-glib-1)
+BuildRequires:  pkgconfig(gstreamer-webrtc-1.0)
+BuildRequires:  pkgconfig(gstreamer-sdp-1.0)
+BuildRequires:  pkgconfig(gstreamer-1.0)
+BuildRequires:  pkgconfig(glib-2.0)
+BuildRequires:  pkgconfig(nemo-gstreamer-interfaces-1.0)
+BuildRequires:  dbus-glib-devel
+BuildRequires:  nemo-qml-plugin-notifications-qt5-devel
 BuildRequires:  desktop-file-utils
 BuildRequires:  pkgconfig(audioresource-qt)
 BuildRequires:  libdwarf-devel

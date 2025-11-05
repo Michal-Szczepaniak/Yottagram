@@ -123,6 +123,17 @@ Page {
                     chatList.switchChatList(activeChatList)
                 }
             }
+
+            MenuItem {
+                text: qsTr("Saved messages")
+                onClicked: {
+                    var chat = chatList.getSavedMessagesAsVariant()
+                    var configuration = page.shareConfiguration
+                    configuration = configuration
+                    page.shareConfiguration = null
+                    pageStack.push(Qt.resolvedUrl("Chat.qml"), { chat: chat, shareConfiguration: configuration })
+                }
+            }
         }
 
         SilicaListView {
@@ -393,7 +404,6 @@ Page {
                     page.shareConfiguration = null
 
                     if (type === "supergroup" && chat.supergroupInfo.isForum) {
-                        chat.fetchTopics()
                         pageStack.push(Qt.resolvedUrl("../dialogs/TopicPickerDialog.qml"), { chat: chat, shareConfiguration: configuration })
                     } else {
                         pageStack.push(Qt.resolvedUrl("Chat.qml"), { chat: chat, shareConfiguration: configuration })

@@ -34,8 +34,8 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
-import "/usr/lib64/qt5/qml/Sailfish/Silica/private/Util.js" as Util
-import "/usr/lib64/qt5/qml/Sailfish/Silica/private/RemorseItem.js" as RemorseItem
+import "private/Util.js" as Util
+import "private/RemorseItem.js" as RemorseItem
 import "private"
 
 SilicaMouseArea {

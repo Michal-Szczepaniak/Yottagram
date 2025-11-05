@@ -33,11 +33,11 @@ TelegramManager::TelegramManager(): _messageId(1)
 
 void TelegramManager::init()
 {
-    _networkManager = NetworkManager::sharedInstance();
+    _networkManager = NetworkManager::instance();
 
     connect(&receiver, &TelegramReceiver::messageReceived, this, &TelegramManager::messageReceived);
     connect(this, &TelegramManager::updateOption, this, &TelegramManager::onUpdateOption);
-    connect(_networkManager.data(), &NetworkManager::defaultRouteChanged, this, &TelegramManager::defaultRouteChanged);
+    connect(_networkManager, &NetworkManager::defaultRouteChanged, this, &TelegramManager::defaultRouteChanged);
     connect(this, &TelegramManager::bootupComplete, [&](){ _bootupComplete = true; });
 
     defaultRouteChanged(_networkManager->defaultRoute());
@@ -160,7 +160,11 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
 
     switch (response.type) {
     case td_api::getChatHistory::ID:
-        emit gotChatHistory(response.chatId, static_cast<td_api::messages*>(message));
+        if (response.subType == td_api::searchChatMessages::ID) {
+            emit gotChatHistory(response.chatId, new td_api::messages(static_cast<td_api::foundChatMessages*>(message)->total_count_, std::move(static_cast<td_api::foundChatMessages*>(message)->messages_)));
+        } else {
+            emit gotChatHistory(response.chatId, static_cast<td_api::messages*>(message));
+        }
         break;
     case td_api::getChats::ID:
         emit gotChats(static_cast<td_api::chats*>(message));
@@ -225,9 +229,22 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
     case td_api::getCustomEmojiReactionAnimations::ID:
         emit gotCustomEmojiReactionAnimations(static_cast<td_api::stickers*>(message));
         break;
+    case td_api::getRecentStickers::ID:
+        emit gotRecentStickers(static_cast<td_api::stickers*>(message));
+        break;
+    case td_api::getFavoriteStickers::ID:
+        emit gotFavouriteStickers(static_cast<td_api::stickers*>(message));
+        break;
+    case td_api::getMessageAvailableReactions::ID:
+        emit gotMessageAvailableReactions(response.chatId, static_cast<td_api::availableReactions*>(message));
+        break;
+    case td_api::getMe::ID:
+        emit gotMe(static_cast<td_api::user*>(message));
+        break;
     default:
         delete message;
     }
+
 }
 
 void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
@@ -288,9 +305,12 @@ void TelegramManager::messageReceived(uint64_t id, td_api::Object* message)
             [this](td_api::updateForumTopicInfo &updateForumTopicInfo) { this->updateForumTopicInfo(&updateForumTopicInfo); },
             [](td_api::error &error) { qWarning() << "Error: code: " << error.code_ << " message: " << QString::fromStdString(error.message_); },
             [this](td_api::updateConnectionState &updateConnectionState) { this->updateConnectionState(&updateConnectionState); },
-            [this](td_api::updateMessageReactions &updateMessageReactions) { qDebug() << "updateMessageReactions"; },
-            [this](td_api::updateMessageReaction &updateMessageReaction) { qDebug() << "updateMessageReaction"; },
-            [this](td_api::updateMessageInteractionInfo &updateMessageInteractionInfo) { this->updateMessageInteractionInfo(&updateMessageInteractionInfo); },
+            [this](td_api::updateMessageInteractionInfo &updateMessageInteractionInfo) { emit this->updateMessageInteractionInfo(&updateMessageInteractionInfo); },
+            [this](td_api::updateRecentStickers &updateRecentStickers) { emit this->updateRecentStickers(&updateRecentStickers); },
+            [this](td_api::updateFavoriteStickers &updateFavouriteStickers) { emit this->updateFavouriteStickers(&updateFavouriteStickers); },
+            [this](td_api::updateMessageEdited &updateMessageEdited) { emit this->updateMessageEdited(&updateMessageEdited); },
+            [this](td_api::updateChatAvailableReactions &updateChatAvailableReactions) { emit this->updateChatAvailableReactions(&updateChatAvailableReactions); },
+            [this](td_api::updateChatOnlineMemberCount &updateChatOnlineMemberCount) { emit this->updateChatOnlineMemberCount(&updateChatOnlineMemberCount); },
             [message](auto &update) { Q_UNUSED(update) qDebug() << "Unhandled message id: " << message->get_id(); }
         )
     );

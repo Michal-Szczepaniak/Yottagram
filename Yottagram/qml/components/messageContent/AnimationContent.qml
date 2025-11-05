@@ -37,28 +37,29 @@ Item {
 
     Component {
         id: videoComponent
-        Video {
+        AnimatedImage {
             id: videoPlayer
             fillMode: VideoOutput.PreserveAspectFit
-            muted: true
-            autoPlay: true
-            onStopped: {
-                videoPlayer.seek(0)
-                videoPlayer.play()
-            }
-
             width: chatPage.width/2.5
             source: file.animation.localPath
-            height: metaData.resolution ?
-                        (width * (metaData.resolution.height/metaData.resolution.width)) :
-                        ((file.size.width > 0 && file.size.height > 0) ? (width * (file.size.height/file.size.width)) : Theme.itemSizeLarge)
+            cache: false
+            asynchronous: true
+            height: (file.size.width > 0 && file.size.height > 0) ? (width * (file.size.height/file.size.width)) : Theme.itemSizeLarge
+
+            function play() {
+                playing = true;
+            }
+
+            function pause() {
+                playing = false;
+            }
         }
     }
 
     MouseArea {
         anchors.fill: parent
         onClicked: {
-            if (videoLoader.item.playbackState === MediaPlayer.PlayingState) {
+            if (videoLoader.item.playing) {
                 videoLoader.item.pause();
             } else {
                 videoLoader.item.play();
@@ -68,8 +69,8 @@ Item {
 
     Image {
         id: thumbnail
-        source: file.thumbnail.localPath
-        visible: !videoLoader.active || videoLoader.item.playbackState === MediaPlayer.StoppedState
+        Binding on source { value: file.thumbnail.localPath; when: visible }
+        visible: !videoLoader.active || !videoLoader.item.playing
         anchors.fill: parent
         asynchronous: true
         cache: true
@@ -80,7 +81,7 @@ Item {
         source: thumbnail
         radius: 32
         cached: true
-        visible: !videoLoader.active || videoLoader.item.playbackState === MediaPlayer.StoppedState
+        visible: !videoLoader.active || !videoLoader.item.playing
     }
 
     Rectangle {
@@ -89,7 +90,7 @@ Item {
         anchors.centerIn: parent
         width: downloadButton.width
         height: downloadButton.height
-        visible: !file.animation.isDownloading && !file.animation.isUploading && (!videoLoader.active || videoLoader.item.playbackState !== MediaPlayer.PlayingState)
+        visible: !file.animation.isDownloading && !file.animation.isUploading && (!videoLoader.active || !videoLoader.item.playing)
         radius: 90
     }
 
@@ -102,7 +103,7 @@ Item {
 
     IconButton {
         id: downloadButton
-        visible: !file.animation.isDownloaded || !file.animation.isUploaded || !videoLoader.active || videoLoader.item.playbackState !== MediaPlayer.PlayingState
+        visible: !file.animation.isDownloaded || !file.animation.isUploaded || !videoLoader.active || !videoLoader.item.playing
         icon.source: (file.animation.isDownloading || file.animation.isUploading) ? "image://theme/icon-m-cancel" : (!file.animation.isDownloaded ? "image://theme/icon-m-cloud-download" : "image://theme/icon-m-play")
         icon.asynchronous: true
         width: Theme.itemSizeMedium
@@ -122,7 +123,7 @@ Item {
                         videoLoader.active = true
                         return
                     } else {
-                        videoLoader.item.play()
+                        videoLoader.item.play();
                     }
                 }
             }

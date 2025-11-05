@@ -36,28 +36,37 @@ public:
         IsInstalledRole,
         IsArchivedRole,
         IsOfficialRole,
-        IsAnimatedRole,
         IsMasksRole,
         IsViewedRole,
-        StickerSetRole
+        StickerSetRole,
+        TypeRole,
     };
 
     explicit StickerSets(QObject *parent = nullptr);
     ~StickerSets();
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setFiles(shared_ptr<Files> files);
+    void setEmojiMode(bool enable);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = IdRole) const;
     QHash<int, QByteArray> roleNames() const;
 
-    Q_INVOKABLE void getStickerSets();
+private:
+    void setupStickers();
+    void setupEmojis();
+
 signals:
     void gotStickerSet(int64_t stickerSetId);
+    void gotCustomEmoji(int64_t emojiId, int32_t stickerId, int32_t thumbnailId, QString emoji);
 
 public slots:
     void updateInstalledStickerSets(td_api::updateInstalledStickerSets *updateInstalledStickerSets);
+    void updateRecentStickers(td_api::updateRecentStickers *updateRecentStickers);
+    void updateFavouriteStickers(td_api::updateFavoriteStickers *updateFavouriteStickers);
     void onGotStickerSet(td_api::stickerSet *stickerSet);
+    void onGotRecentStickers(td_api::stickers *stickers);
+    void onGotFavouriteStickers(td_api::stickers *stickers);
     void onIsAuthorizedChanged(bool isAuthorized);
 
 private:
@@ -66,6 +75,8 @@ private:
     QVector<int64_t> _installedStickerSetIds;
     QVector<int64_t> _stickerSetIds;
     QHash<int64_t, StickerSet*> _stickerSets;
+    QVector<StickerSet*> _predefinedStickerSets;
+    bool _emojiMode = false;
 };
 
 #endif // STICKERSETS_H

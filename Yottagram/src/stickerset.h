@@ -30,20 +30,25 @@ class StickerSet : public QAbstractListModel
     Q_OBJECT
 public:
     enum StickerRoles {
-        EmojiRole = Qt::UserRole + 1,
+        IdRole = Qt::UserRole + 1,
+        EmojiRole,
+        ReactionIdRole,
         IsAnimatedRole,
         IsMaskRole,
-        StickerRole
+        StickerRole,
+        ThumbnailRole,
+        TypeRole,
     };
 
     explicit StickerSet(QObject *parent = nullptr);
     void setStickerSet(td_api::stickerSet *stickerSet);
+    void setStickers(td_api::stickers *stickers, QString type);
     void setTelegramManager(shared_ptr<TelegramManager> manager);
     void setFiles(shared_ptr<Files> files);
 
     int64_t getId() const;
-    bool getIsAnimated() const;
     shared_ptr<File> getThumbnail();
+    QString getType();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = EmojiRole) const;
@@ -57,8 +62,11 @@ private:
     std::shared_ptr<TelegramManager> _manager;
     std::shared_ptr<Files> _files;
     td_api::stickerSet *_stickerSet;
+    td_api::stickers *_stickers;
     int32_t _thumbnailId;
     QVector<int32_t> _stickerIds;
+    QVector<int32_t> _thumbnailIds;
+    QString _type;
 };
 Q_DECLARE_METATYPE(StickerSet*)
 

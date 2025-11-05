@@ -41,6 +41,7 @@ Item {
         Label {
             anchors.centerIn: parent
             visible: !root.avatarPhoto
+            color: Theme.primaryColor
             text: {
                 if (root.userName === "") return "DA";
                 var n = root.userName.split(' ')

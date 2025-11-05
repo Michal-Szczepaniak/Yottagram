@@ -214,7 +214,7 @@
     </message>
     <message>
         <source>Long press to select mute duration</source>
-        <translation type="unfinished"></translation>
+        <translation>Mantén pulsado para seleccionar el tiempo de silenciado</translation>
     </message>
 </context>
 <context>
@@ -397,7 +397,31 @@
     </message>
     <message>
         <source>%1 is typing</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 está escribiendo</translation>
+    </message>
+    <message>
+        <source>Emoji</source>
+        <translation>Emoticono</translation>
+    </message>
+    <message>
+        <source>Bold</source>
+        <translation>Negrita</translation>
+    </message>
+    <message>
+        <source>Italic</source>
+        <translation>Cursiva</translation>
+    </message>
+    <message>
+        <source>Underline</source>
+        <translation>Subrayado</translation>
+    </message>
+    <message>
+        <source>Strike-through</source>
+        <translation>Tachado</translation>
+    </message>
+    <message>
+        <source>Monospace</source>
+        <translation>Monespaciado</translation>
     </message>
 </context>
 <context>
@@ -444,7 +468,11 @@
     </message>
     <message>
         <source>Loading</source>
-        <translation type="unfinished"></translation>
+        <translation>Cargando</translation>
+    </message>
+    <message>
+        <source>Draft</source>
+        <translation>Borrador</translation>
     </message>
 </context>
 <context>
@@ -595,130 +623,130 @@
     </message>
     <message>
         <source>Photo</source>
-        <translation type="unfinished">Foto</translation>
+        <translation>Foto</translation>
     </message>
     <message>
         <source>Video</source>
-        <translation type="unfinished">Vídeo</translation>
+        <translation>Vídeo</translation>
     </message>
     <message>
         <source>Document</source>
-        <translation type="unfinished">Doc.</translation>
+        <translation>Documento</translation>
     </message>
     <message>
         <source>Audio</source>
-        <translation type="unfinished">Audio</translation>
+        <translation>Audio</translation>
     </message>
     <message>
         <source>Animation</source>
-        <translation type="unfinished"></translation>
+        <translation>Animación</translation>
     </message>
     <message>
         <source>Voice note</source>
-        <translation type="unfinished"></translation>
+        <translation>Nota de voz</translation>
     </message>
     <message>
         <source>Location</source>
-        <translation type="unfinished">Ubicación</translation>
+        <translation>Ubicación</translation>
     </message>
     <message>
         <source>Contact</source>
-        <translation type="unfinished">Contacto</translation>
+        <translation>Contacto</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation type="unfinished">Sticker</translation>
+        <translation>Sticker</translation>
     </message>
     <message>
         <source>Video note</source>
-        <translation type="unfinished"></translation>
+        <translation>Nota de vídeo</translation>
     </message>
     <message>
         <source>Message unsupported</source>
-        <translation type="unfinished"></translation>
+        <translation>Mensaje no soportado</translation>
     </message>
     <message>
         <source>Users joined</source>
-        <translation type="unfinished"></translation>
+        <translation>Usuarios añadidos</translation>
     </message>
     <message>
         <source>Poll</source>
-        <translation type="unfinished">Encuesta</translation>
-    </message>
-    <message>
-        <source>Edited</source>
-        <translation type="unfinished"></translation>
+        <translation>Encuesta</translation>
     </message>
     <message>
         <source>Forwarded from %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Reenviado de %1</translation>
     </message>
     <message>
         <source>Topic %1 created</source>
-        <translation type="unfinished"></translation>
+        <translation>El tema %1 fue creado</translation>
     </message>
     <message>
         <source>Topic %1 edited</source>
-        <translation type="unfinished"></translation>
+        <translation>El tema %1 fue editado</translation>
     </message>
     <message>
         <source>Topic closed</source>
-        <translation type="unfinished"></translation>
+        <translation>Tema cerrado</translation>
     </message>
     <message>
         <source>Topic opened</source>
-        <translation type="unfinished"></translation>
+        <translation>Tema abierto</translation>
     </message>
     <message>
         <source>Topic hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>Tema oculto</translation>
     </message>
     <message>
         <source>Topic unhidden</source>
-        <translation type="unfinished"></translation>
+        <translation>Tema visible</translation>
+    </message>
+    <message>
+        <source>Edited</source>
+        <translation>Editado</translation>
     </message>
 </context>
 <context>
     <name>MessageContextMenu</name>
     <message>
         <source>Pin</source>
-        <translation type="unfinished"></translation>
+        <translation>Fijar</translation>
     </message>
     <message>
         <source>Reply</source>
-        <translation type="unfinished"></translation>
+        <translation>Responder</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation type="unfinished">Reenviar</translation>
+        <translation>Reenviar</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>Editar</translation>
     </message>
     <message>
         <source>React</source>
-        <translation type="unfinished"></translation>
+        <translation>Reaccionar</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation type="unfinished">Copiar</translation>
+        <translation>Copiar</translation>
     </message>
     <message>
         <source>Saved to: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Guardado en: %1</translation>
     </message>
     <message>
         <source>You must download it first</source>
-        <translation type="unfinished"></translation>
+        <translation>Primero debes descargarlo</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Borrar</translation>
+        <translation>Borrar</translation>
     </message>
     <message>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Guardar</translation>
     </message>
 </context>
 <context>
@@ -1022,11 +1050,11 @@
     </message>
     <message>
         <source>Long press to select mute duration</source>
-        <translation type="unfinished"></translation>
+        <translation>Mantén pulsado para seleccionar el tiempo de silenciado</translation>
     </message>
     <message>
         <source>Voice message volume boost</source>
-        <translation type="unfinished"></translation>
+        <translation>Aumento de volumen en mensajes de voz</translation>
     </message>
 </context>
 <context>
@@ -1089,30 +1117,30 @@
     </message>
     <message>
         <source>Long press to select mute duration</source>
-        <translation type="unfinished"></translation>
+        <translation>Mantén pulsado para seleccionar el tiempo de silenciado</translation>
     </message>
 </context>
 <context>
     <name>TopicPickerDialog</name>
     <message>
         <source>Pick topic</source>
-        <translation type="unfinished"></translation>
+        <translation>Selecciona tema</translation>
     </message>
     <message>
         <source>Unpin from top</source>
-        <translation type="unfinished">Desfijar de arriba</translation>
+        <translation>Desfijar de arriba</translation>
     </message>
     <message>
         <source>Pin to top</source>
-        <translation type="unfinished">Fijar arriba</translation>
+        <translation>Fijar arriba</translation>
     </message>
     <message>
         <source>Set as read</source>
-        <translation type="unfinished">Marcar como leído</translation>
+        <translation>Marcar como leído</translation>
     </message>
     <message>
         <source>Delete chat</source>
-        <translation type="unfinished">Borrar chat</translation>
+        <translation>Borrar chat</translation>
     </message>
 </context>
 <context>
@@ -1202,11 +1230,34 @@
     </message>
     <message>
         <source>Long press to select mute duration</source>
-        <translation type="unfinished"></translation>
+        <translation>Mantén pulsado para seleccionar el tiempo de silenciado</translation>
     </message>
 </context>
 <context>
-    <name>foramtDuration</name>
+    <name>VideoPlayer</name>
+    <message>
+        <source>Video track</source>
+        <translation>Pista de vídeo</translation>
+    </message>
+    <message>
+        <source>%1. %2</source>
+        <translation>%1. %2</translation>
+    </message>
+    <message>
+        <source>Audio track</source>
+        <translation>Pista de audio</translation>
+    </message>
+    <message>
+        <source>Subtitle track</source>
+        <translation>Pista de subtítulo</translation>
+    </message>
+    <message>
+        <source>Select subtitle file</source>
+        <translation>Selecciona archivo de subtítulo</translation>
+    </message>
+</context>
+<context>
+    <name>formatDuration</name>
     <message>
         <source>%L1 s</source>
         <translation>%L1 s</translation>

@@ -22,6 +22,7 @@ import QtQuick 2.6
 import Sailfish.Silica 1.0
 import QtMultimedia 5.0
 import QtGraphicalEffects 1.0
+import QtQuick.Layouts 1.1
 import org.nemomobile.notifications 1.0
 import org.nemomobile.configuration 1.0
 import Sailfish.Pickers 1.0
@@ -31,6 +32,7 @@ import com.verdanditeam.user 1.0
 import com.verdanditeam.audiorecorder 1.0
 import com.verdanditeam.pinnedmessages 1.0
 import com.verdanditeam.data 1.0
+import "../components/functions/twemoji.js" as Twemoji
 import "../components/functions/muteFormat.js" as TimeFormat
 import "../components"
 import "../components/messageContent"
@@ -102,6 +104,7 @@ Page {
         if (status === PageStatus.Deactivating) {
             chat.foundChatMembers = []
             chat.recentInlineBots = []
+            chat.setDraftMessage(textInput.text, chatPage.newReplyMessageId)
             chatList.closeChat(chat.id)
         }
         if (status === PageStatus.Active) {
@@ -201,8 +204,8 @@ Page {
         filters: [
             ValueFilter {
                 roleName: "topic"
-                value: chat.getTopic()
-                enabled: chat.getTopic() != 0
+                value: chat.topic
+                enabled: chat.topic != 0
             }
         ]
     }
@@ -475,7 +478,7 @@ Page {
                     onLastMessageIdChanged: {
                         var highlightMessage = Math.max(0, messages.indexAt(0, messages.contentY + messages.height -1))
                         var messageItem = chatProxyModel.get(highlightMessage)
-                        if ((!messageItem.isRead || messageItem.containsUnreadMention) && messageItem.received && messages.initDone) {
+                        if ((!messageItem.isRead || messageItem.containsUnreadMention) && (messageItem.received || chat.topic != 0) && messages.initDone) {
                             if (messageItem.containsUnreadMention || messageItem.containsUnreadReply) {
                                 messages.blinkMessage = highlightMessage
                                 messages.blinkMessage = messages.blinkMessage
@@ -549,8 +552,8 @@ Page {
                 onContentYChanged: {
                     var highlightMessage = Math.max(0, indexAt(0, contentY + height - Theme.paddingSmall))
                     var messageItem = chatProxyModel.get(highlightMessage)
-                    if ((!messageItem.isRead || messageItem.containsUnreadMention) && messageItem.received && initDone) {
-                        if ((messageItem.containsUnreadMention || messageItem.containsUnreadReply) && messages.blinkMessage == -1) {
+                    if ((!messageItem.isRead || messageItem.containsUnreadMention) && (messageItem.received || chat.topic != 0) && initDone) {
+                        if ((messageItem.containsUnreadMention || messageItem.containsUnreadReply) &&  messages.blinkMessage == -1) {
                             blinkMessage = highlightMessage
                             blinkMessage = blinkMessage
                         }
@@ -769,14 +772,14 @@ Page {
                                 width: height
                                 height: parent.height - Theme.paddingSmall
                                 userName: user.name
-                                avatarPhoto: user.smallPhoto.localPath
+                                Binding on avatarPhoto { value: user.smallPhoto.localPath; when: user.smallPhoto !== null }
                             }
 
                             DetailItem {
                                 width: parent.width - Theme.paddingLarge - avatar.width - Theme.paddingLarge
                                 anchors.verticalCenter: parent.verticalCenter
                                 label: user.name
-                                value: "@" + user.username
+                                Binding on value { value: "@" + user.username; when: user.username.length > 0 }
                                 alignment: Qt.AlignLeft
                                 leftMargin: 0
                                 rightMargin: 0
@@ -784,15 +787,20 @@ Page {
                         }
 
                         onClicked: {
-                            var txtinput = textInput
                             var tmpChat = chat
-                            var position = txtinput.cursorPosition
+                            var position = textInput.cursorPosition
 
-                            var cutText = txtinput.text.slice(0,position)
-                            var result = (/(?:^|\s)\@\S*$/.exec(cutText))[0].trim().slice(1)
+                            var cutText = textInput._editor.getText(0,position)
+                            var result = (/(?:^|\s)\@\S*$/.exec(cutText))[0].trim()
 
-                            txtinput.text = txtinput.text.slice(0,position-result.length) + user.username + txtinput.text.slice(position,txtinput.text.length) + " "
-                            txtinput.cursorPosition = position + user.username.length - result.length + 1
+                            textInput._editor.remove(position - result.length, position)
+                            position = textInput.cursorPosition
+
+                            if (user.username.length === 0) {
+                                textInput._editor.insert(position, '<a href="userid://' + user.id + '" >' + user.name.trim() + '</a> ')
+                            } else {
+                                textInput._editor.insert(position, '<a href="userid://' + user.id + '" >@' + user.username + '</a> ')
+                            }
 
                             tmpChat.foundChatMembers = []
                             tmpChat.recentInlineBots = []
@@ -926,37 +934,89 @@ Page {
                     }
                 }
 
-//                SilicaListView {
-//                    id: formatRow
-//                    anchors.left: parent.left
-//                    anchors.leftMargin: Theme.paddingLarge
-//                    anchors.right: parent.right
-//                    anchors.rightMargin: Theme.paddingLarge
-//                    spacing: Theme.paddingLarge
-//                    visible: textInput.selectedText !== ""
-//                    height: visible ? Theme.itemSizeMedium : 0
-//                    orientation: Qt.Horizontal
-//                    layoutDirection: Qt.LeftToRight
-//                    model: ["bold", "italic", "underline", "strikethrough", "monospace"]
-//                    property var names: [qsTr("bold"), qsTr("italic"), qsTr("underline"), qsTr("strikethrough"), qsTr("monospace")]
-//                    delegate: Label {
-//                        anchors.verticalCenter: parent.verticalCenter
-//                        text: formatRow.names[index]
+                SilicaListView {
+                    id: formatRow
+                    anchors.left: parent.left
+                    anchors.leftMargin: Theme.paddingLarge
+                    anchors.right: parent.right
+                    anchors.rightMargin: Theme.paddingLarge
+                    spacing: Theme.paddingLarge
+                    visible: textInput.selectedText !== ""
+                    height: visible ? Theme.itemSizeMedium : 0
+                    orientation: Qt.Horizontal
+                    layoutDirection: Qt.LeftToRight
+                    model: ["bold", "italic", "underline", "strikethrough", "monospace"]
+                    property var names: [qsTr("Bold"), qsTr("Italic"), qsTr("Underline"), qsTr("Strike-through"), qsTr("Monospace")]
+                    delegate: Label {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: formatRow.names[index]
 
-//                        MouseArea {
-//                            anchors.fill: parent
+                        MouseArea {
+                            anchors.fill: parent
 
-//                            onPressed: parent.highlighted = pressed
+                            onPressedChanged: parent.highlighted = pressed
 
-//                            onClicked: {
-//                                switch(index) {
-//                                case 0:
-//                                    textInput.text = "<b>" + textInput.text + "</b>"
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
+                            onClicked: {
+                                var selectedText = textInput._editor.getFormattedText(textInput.selectionStart, textInput.selectionEnd)
+                                    .split("<!--StartFragment-->")[1]
+                                    .split("<!--EndFragment-->")[0]
+
+                                textInput._editor.remove(textInput.selectionStart, textInput.selectionEnd)
+
+                                switch(index) {
+                                case 0:
+                                    if (selectedText.indexOf("font-weight:600;") >= 0) {
+                                        selectedText = selectedText.replace("font-weight:600;", "")
+                                    } else {
+                                        selectedText = selectedText.replace("font-family:'monospace';", "")
+                                        selectedText = '<b>' + selectedText + '</b>'
+                                    }
+
+                                    break;
+                                case 1:
+                                    if (selectedText.indexOf("font-style:italic;") >= 0) {
+                                        selectedText = selectedText.replace("font-style:italic;", "")
+                                    } else {
+                                        selectedText = selectedText.replace("font-family:'monospace';", "")
+                                        selectedText = '<i>' + selectedText + '</i>'
+                                    }
+                                    break;
+                                case 2:
+                                    if (selectedText.indexOf("text-decoration: underline;") >= 0) {
+                                        selectedText = selectedText.replace("text-decoration: underline;", "")
+                                    } else {
+                                        selectedText = selectedText.replace("text-decoration: line-through;", "")
+                                        selectedText = selectedText.replace("font-family:'monospace';", "")
+                                        selectedText = '<u>' + selectedText + '</u>'
+                                    }
+                                    break;
+                                case 3:
+                                    if (selectedText.indexOf("text-decoration: line-through;") >= 0) {
+                                        selectedText = selectedText.replace("text-decoration: line-through;", "")
+                                    } else {
+                                        selectedText = selectedText.replace("text-decoration: underline;", "")
+                                        selectedText = selectedText.replace("font-family:'monospace';", "")
+                                        selectedText = '<s>' + selectedText + '</s>'
+                                    }
+                                    break;
+                                case 4:
+                                    if (selectedText.indexOf("font-family:'monospace';") >= 0) {
+                                        selectedText = selectedText.replace("font-family:'monospace';", "")
+                                    } else {
+                                        selectedText = selectedText.replace("font-weight:600;", "")
+                                        selectedText = selectedText.replace("font-style:italic;", "")
+                                        selectedText = selectedText.replace("text-decoration: underline;", "")
+                                        selectedText = selectedText.replace("text-decoration: line-through;", "")
+                                        selectedText = '<code>' + selectedText + '</code>'
+                                    }
+                                    break;
+                                }
+
+                                textInput._editor.insert(textInput._editor.selectionStart, selectedText)
+                            }
+                        }
+                    }
+                }
 
                 AudioRecorder {
                     id: audioRecorder
@@ -989,6 +1049,7 @@ Page {
                     id: attachmentLoader
                     active: false
                     asynchronous: true
+                    property var reactionMessage: 0
 
                     height: active ? Screen.height/2 + Theme.paddingLarge : 0
                     width: parent.width
@@ -1016,6 +1077,30 @@ Page {
                 }
 
                 Component {
+                    id: emojiPicker
+
+                    EmojiPicker {
+                        height: visible ? Screen.height/2 + Theme.paddingLarge : 0
+                        width: attachmentLoader.width
+                        page: chatPage
+                        opacity: uploadFlickable.contentY/(inputItem.height- Theme.itemSizeLarge)
+                        onVisibleChanged: chat.sendAction(visible ? Chat.ChoosingSticker : Chat.None)
+                        reactionMessage: attachmentLoader.reactionMessage
+
+                        onEmojiChanged: {
+                            if (attachmentLoader.reactionMessage != 0) {
+                                attachmentLoader.active = false
+                                uploadFlickable.scrollToTop()
+                                return;
+                            }
+
+                            textInput._editor.insert(textInput._editor.cursorPosition, emoji)
+                            emoji = ""
+                        }
+                    }
+                }
+
+                Component {
                     id: animationPicker
 
                     AnimationPicker {
@@ -1037,7 +1122,7 @@ Page {
                     height: textInput.height
                     width: parent.width
 
-                    TextArea {
+                    AppTextArea {
                         id: textInput
 
                         property bool typingUsername: false
@@ -1053,7 +1138,7 @@ Page {
                         focusOutBehavior: FocusBehavior.KeepFocus
                         height: visible ? Math.min(implicitHeight, Theme.itemSizeExtraLarge) : 0
                         width: parent.width - (sendButton.visible ? sendButton.width : 0)
-                        visible: !attachmentLoader.active
+                        visible: !attachmentLoader.active || attachmentLoader.sourceComponent === emojiPicker
                         inputMethodHints: typingUsername ? Qt.ImhNoPredictiveText : Qt.ImhNone
 
                         onFocusChanged: {
@@ -1063,7 +1148,7 @@ Page {
 
                         EnterKey.onClicked: {
                             if (!settings.sendButton) {
-                                textInput.text = textInput.text.slice(0,textInput.cursorPosition-1) + textInput.text.slice(textInput.cursorPosition,textInput.text.length)
+                                textInput._editor.remove(textInput.cursorPosition-1, textInput.cursorPosition)
                                 sendMessage()
                             }
                         }
@@ -1082,7 +1167,7 @@ Page {
                             repeat: false
                             interval: 100
                             onTriggered: {
-                                var cutText = textInput.text.slice(0,textInput.cursorPosition)
+                                var cutText = textInput._editor.getText(0,textInput.cursorPosition)
                                 var results = (/(?:^|\s)\@\S*$/.exec(cutText))
 
                                 if (results !== null) {
@@ -1099,7 +1184,7 @@ Page {
                         function sendMessage() {
                             if(textInput.text.length != 0) {
                                 if (chatPage.newEditMessageId != 0) {
-                                    chat.editMessageText(chatPage.newEditMessageId, textInput.text)
+                                    chat.editMessage(chatPage.newEditMessageId, textInput.text)
                                     chatPage.newEditMessageId = 0
                                 } else {
                                     chat.sendMessage(textInput.text, chatPage.newReplyMessageId)
@@ -1123,16 +1208,16 @@ Page {
                         anchors.verticalCenter: textInput.verticalCenter
                         height: visible ? textInput.height : 0
                         icon.source: "image://theme/icon-m-send"
-                        visible: settings.sendButton && !attachmentLoader.active
+                        visible: settings.sendButton && (!attachmentLoader.active || attachmentLoader.sourceComponent === emojiPicker)
                         onClicked: textInput.sendMessage()
                     }
                 }
 
-                Column {
+                GridLayout {
                     id: uploadMediaPanel
                     width: parent.width
-                    spacing: Theme.paddingLarge
-                    padding: Theme.paddingLarge
+                    columns: 5
+                    rowSpacing: Theme.paddingLarge
                     visible: {
                         var type = chat.getChatType()
                         if (attachmentLoader.active) return false
@@ -1141,143 +1226,144 @@ Page {
                         return chat.canSendMediaMessages
                     }
                     height: if (!visible) 0
-                    property int columns: 5
                     property real cellWidth: (width-Theme.paddingLarge*2)/columns
                     property int actualHeight: if (attachmentLoader.active) {
-                                                   attachmentLoader.height - textInput.implicitHeight
+                                                   attachmentLoader.height - textInput.height
                                                 } else if (!textInput.enabled) {
                                                    0
                                                 } else {
-                                                   implicitHeight
+                                                   implicitHeight + Theme.paddingLarge
                                                }
 
-                    Row {
-                        x: Theme.paddingMedium
-                        width: parent.width - Theme.paddingMedium*2
-                        id: firstRow
-                        visible: !uploadMediaPanel.hidePickers
 
-                        HighlightLabelIconButton {
-                            width: uploadMediaPanel.cellWidth
-                            text: qsTr("Image")
-                            source: "image://theme/icon-m-file-image"
-                            onClicked: pageStack.push(imagePickerPage)
-                        }
 
-                        HighlightLabelIconButton {
-                            width: uploadMediaPanel.cellWidth
-                            text: qsTr("Video")
-                            source: "image://theme/icon-m-file-video"
-                            onClicked: pageStack.push(videoPickerPage)
-                        }
+                    HighlightLabelIconButton {
+                        width: uploadMediaPanel.cellWidth
+                        text: qsTr("Image")
+                        source: "image://theme/icon-m-file-image"
+                        onClicked: pageStack.push(imagePickerPage)
+                    }
 
-                        HighlightLabelIconButton {
-                            width: uploadMediaPanel.cellWidth
-                            text: qsTr("Audio")
-                            source: "image://theme/icon-m-file-audio"
-                            onClicked: pageStack.push(musicPickerPage)
-                        }
+                    HighlightLabelIconButton {
+                        width: uploadMediaPanel.cellWidth
+                        text: qsTr("Video")
+                        source: "image://theme/icon-m-file-video"
+                        onClicked: pageStack.push(videoPickerPage)
+                    }
 
-                        HighlightLabelIconButton {
-                            width: uploadMediaPanel.cellWidth
-                            text: qsTr("Document")
-                            source: "image://theme/icon-m-file-document-light"
-                            onClicked: pageStack.push(documentPickerPage)
-                        }
+                    HighlightLabelIconButton {
+                        width: uploadMediaPanel.cellWidth
+                        text: qsTr("Audio")
+                        source: "image://theme/icon-m-file-audio"
+                        onClicked: pageStack.push(musicPickerPage)
+                    }
 
-                        HighlightLabelIconButton {
-                            width: uploadMediaPanel.cellWidth
-                            text: qsTr("File")
-                            source: "image://theme/icon-m-file-other-light"
-                            onClicked: pageStack.push(filePickerPage)
+                    HighlightLabelIconButton {
+                        width: uploadMediaPanel.cellWidth
+                        text: qsTr("Document")
+                        source: "image://theme/icon-m-file-document-light"
+                        onClicked: pageStack.push(documentPickerPage)
+                    }
+
+                    HighlightLabelIconButton {
+                        width: uploadMediaPanel.cellWidth
+                        text: qsTr("File")
+                        source: "image://theme/icon-m-file-other-light"
+                        onClicked: pageStack.push(filePickerPage)
+                    }
+
+                    HighlightLabelIconButton {
+                        width: uploadMediaPanel.cellWidth
+                        text: qsTr("Poll")
+                        source: "image://theme/icon-m-events"
+                        onClicked: pageStack.push(pollDialog)
+                        visible: {
+                            var type = chat.getChatType()
+                            if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canSendPolls
+                            if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canSendPolls
+                            return chat.canSendPolls
                         }
                     }
 
-                    Row {
-                        x: Theme.paddingMedium
-                        width: parent.width - Theme.paddingMedium*2
-                        visible: !uploadMediaPanel.hidePickers
-
-                        HighlightLabelIconButton {
-                            width: uploadMediaPanel.cellWidth
-                            text: qsTr("Poll")
-                            source: "image://theme/icon-m-events"
-                            onClicked: pageStack.push(pollDialog)
-                            visible: {
-                                var type = chat.getChatType()
-                                if ((type === "supergroup" || type === "channel") && chat.supergroupInfo.memberType !== "member") return chat.supergroupInfo.canSendPolls
-                                if (type === "group" && chat.basicGroupInfo.memberType !== "member") return chat.basicGroupInfo.canSendPolls
-                                return chat.canSendPolls
-                            }
-                        }
-
-                        HighlightLabelIconButton {
-                            width: uploadMediaPanel.cellWidth
-                            text: qsTr("Sticker")
-                            source: "image://theme/icon-m-other"
-                            onClicked: {
-                                textInput.focus = false
-                                attachmentLoader.sourceComponent = stickerPicker
-                                attachmentLoader.active = true
-                                var timer = Qt.createQmlObject("import QtQuick 2.0; Timer {}", root);
-                                timer.interval = 1
-                                timer.repeat = false
-                                timer.triggered.connect(function () {uploadFlickable.scrollToBottom()})
-                                timer.start()
-                            }
-                        }
-
-                        HighlightLabelIconButton {
-                            width: uploadMediaPanel.cellWidth
-                            text: qsTr("GIF")
-                            source: "image://theme/icon-m-play"
-                            onClicked: {
-                                textInput.focus = false
-                                attachmentLoader.sourceComponent = animationPicker
-                                attachmentLoader.active = true
-                                uploadFlickable.scrollToBottom()
-                            }
-                        }
-
-                        HighlightLabelIconButton {
-                            id: voiceMessageButton
-                            width: uploadMediaPanel.cellWidth
-                            text: qsTr("Voice Note")
-                            source: audioRecorder.recording ? (Theme.LightOnDark ? "image://theme/icon-m-call-recording-on-light" : "image://theme/icon-m-call-recording-on-dark"): "image://theme/icon-m-mic"
-                            onPressed: audioRecorder.startRecording()
-                            visible: !attachmentLoader.active
-                            property var duration
-                            onReleased: {
-                                duration = audioRecorder.duration
-                                audioRecorder.stopRecording()
-                            }
-                            onClicked: {
-                                notification.publish()
-                            }
-
-                            Notification {
-                                id: notification
-
-                                isTransient: true
-                                previewSummary: qsTr("Press and hold record button to record voice note.")
-                            }
-                        }
-
-                        HighlightLabelIconButton {
-                            width: uploadMediaPanel.cellWidth
-                            text: qsTr("Location")
-                            source: "image://theme/icon-m-location"
-                            onClicked: {
-                                pageStack.push(locationPickerDialog)
-                            }
+                    HighlightLabelIconButton {
+                        width: uploadMediaPanel.cellWidth
+                        text: qsTr("Emoji")
+                        source: 'qrc:///emoji/' + Twemoji.emojifyRaw("🙂") + '.svg'
+                        icon.width: Theme.iconSizeMedium - Theme.paddingSmall
+                        icon.height: Theme.iconSizeMedium - Theme.paddingSmall
+                        icon.sourceSize.width: Theme.iconSizeMedium - Theme.paddingSmall
+                        icon.sourceSize.height: Theme.iconSizeMedium - Theme.paddingSmall
+                        onClicked: {
+                            attachmentLoader.reactionMessage = 0
+                            attachmentLoader.sourceComponent = emojiPicker
+                            attachmentLoader.active = true
+                            var timer = Qt.createQmlObject("import QtQuick 2.0; Timer {}", root);
+                            timer.interval = 1
+                            timer.repeat = false
+                            timer.triggered.connect(function () {uploadFlickable.scrollToBottom()})
+                            timer.start()
                         }
                     }
 
-                    Row {
-                        x: Theme.horizontalPageMargin
-                        width: parent.width - Theme.horizontalPageMargin*2
-                        height: 1
-                        visible: !uploadMediaPanel.hidePickers
+                    HighlightLabelIconButton {
+                        width: uploadMediaPanel.cellWidth
+                        text: qsTr("Sticker")
+                        source: "image://theme/icon-m-other"
+                        onClicked: {
+                            textInput.focus = false
+                            attachmentLoader.sourceComponent = stickerPicker
+                            attachmentLoader.active = true
+                            var timer = Qt.createQmlObject("import QtQuick 2.0; Timer {}", root);
+                            timer.interval = 1
+                            timer.repeat = false
+                            timer.triggered.connect(function () {uploadFlickable.scrollToBottom()})
+                            timer.start()
+                        }
+                    }
+
+                    HighlightLabelIconButton {
+                        width: uploadMediaPanel.cellWidth
+                        text: qsTr("GIF")
+                        source: "image://theme/icon-m-play"
+                        onClicked: {
+                            textInput.focus = false
+                            attachmentLoader.sourceComponent = animationPicker
+                            attachmentLoader.active = true
+                            uploadFlickable.scrollToBottom()
+                        }
+                    }
+
+                    HighlightLabelIconButton {
+                        id: voiceMessageButton
+                        width: uploadMediaPanel.cellWidth
+                        text: qsTr("Voice Note")
+                        source: audioRecorder.recording ? (Theme.LightOnDark ? "image://theme/icon-m-call-recording-on-light" : "image://theme/icon-m-call-recording-on-dark"): "image://theme/icon-m-mic"
+                        onPressed: audioRecorder.startRecording()
+                        visible: !attachmentLoader.active
+                        property var duration
+                        onReleased: {
+                            duration = audioRecorder.duration
+                            audioRecorder.stopRecording()
+                        }
+                        onClicked: {
+                            notification.publish()
+                        }
+
+                        Notification {
+                            id: notification
+
+                            isTransient: true
+                            previewSummary: qsTr("Press and hold record button to record voice note.")
+                        }
+                    }
+
+                    HighlightLabelIconButton {
+                        width: uploadMediaPanel.cellWidth
+                        text: qsTr("Location")
+                        source: "image://theme/icon-m-location"
+                        onClicked: {
+                            pageStack.push(locationPickerDialog)
+                        }
                     }
                 }
             }
@@ -1413,30 +1499,6 @@ Page {
                     }
                 }
             }
-        }
-    }
-
-    Dialog {
-        id: bigVideo
-        property string path
-
-        allowedOrientations: Orientation.All
-
-        SilicaFlickable {
-            anchors.fill: parent
-
-            Video {
-                id: video
-                anchors.fill: parent
-                source: bigVideo.path
-                autoPlay: true
-                fillMode: Image.PreserveAspectFit
-            }
-        }
-
-        onDone: {
-            video.stop()
-            bigVideo.path = ""
         }
     }
 
