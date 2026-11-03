@@ -6,7 +6,7 @@ Name:       yottagram
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 #global debug_package %{nil}
 Summary:    Yottagram
-Version:    0.7.3
+Version:    0.7.4
 Release:    1
 Group:      Qt/Qt
 License:    GPLv3
@@ -22,13 +22,13 @@ BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(Qt5Quick)
 BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(Qt5Contacts)
-BuildRequires:  pkgconfig(openssl)
+BuildRequires:  openssl-devel
 BuildRequires:  pkgconfig(connman-qt5)
-BuildRequires:  pkgconfig(vorbisfile)
 BuildRequires:  pkgconfig(nemonotifications-qt5)
 BuildRequires:  pkgconfig(libavcodec)
 BuildRequires:  pkgconfig(vpx)
 BuildRequires:  pkgconfig(opus)
+BuildRequires:  pkgconfig(ogg)
 BuildRequires:  pkgconfig(libjpeg)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(libpulse)

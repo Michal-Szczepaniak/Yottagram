@@ -1667,7 +1667,13 @@ void Chat::editMessage(int64_t messageId, QString messageText)
     td_api::Function* query;
     auto message = _messages[messageId];
     static std::set<int64_t> contentsWithCaptions = {td_api::messagePhoto::ID, td_api::messageVideo::ID, td_api::messageDocument::ID, td_api::messageAudio::ID, td_api::messageAnimation::ID, td_api::messageVoiceNote::ID};
-    if (contentsWithCaptions.contains(message->getContentType())) {
+
+    bool contentWithCaption = false;
+    if (contentsWithCaptions.find(message->getContentType()) != contentsWithCaptions.end()) {
+        contentWithCaption = true;
+    }
+
+    if (contentWithCaption) {
         auto editMessage = new td_api::editMessageCaption();
         editMessage->chat_id_ = _chat->id_;
         editMessage->message_id_ = messageId;

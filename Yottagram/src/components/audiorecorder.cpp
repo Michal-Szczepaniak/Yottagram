@@ -21,24 +21,21 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include "audiorecorder.h"
 #include <QDir>
 #include <QStandardPaths>
-#include <QTemporaryFile>
+#include <QDebug>
 #include <QUrl>
 #include <stdio.h>
 #include <stdlib.h>
-#include <vorbis/vorbisfile.h>
+#include <opusfile.h>
+
 //https://github.com/DrKLO/Telegram/blob/e397bd9afdfd9315bf099f78a903f8754d297d7a/TMessagesProj/jni/audio.c#L603
 const QString AudioRecorder::defaultStoragePath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
 
-AudioRecorder::AudioRecorder(QObject *parent) : QAudioRecorder(parent), _codec(Vorbis), _autoRemove(false), _recording(false)
+AudioRecorder::AudioRecorder(QObject *parent) : QObject(parent), _autoRemove(false), _recording(false),
+    _audioResource((QObject*)this, AudioResourceQt::AudioResource::MediaType)
 {
-    _codecSettingsMap = {
-        { Vorbis, {"audio/vorbis", ".ogg",  "ogg"} },
-        { Speex,  {"audio/speex",  ".oga",  "ogg"} },
-        { PCM,    {"audio/PCM",    ".wav",  "wav"} },
-        { FLAC,   {"audio/FLAC",   ".flac", "raw"} }
-    };
-    setAudioInput("pulseaudio:");
     setVolume(_volume);
+
+    connect(&_audioResource, &AudioResourceQt::AudioResource::acquiredChanged, [this](){ if (!_audioResource.isAcquired()) stopRecording(); });
 }
 
 AudioRecorder::~AudioRecorder()
@@ -49,12 +46,6 @@ AudioRecorder::~AudioRecorder()
 QString AudioRecorder::location() const
 {
     return _location;
-}
-
-
-AudioRecorder::AudioCodec AudioRecorder::codec() const
-{
-    return _codec;
 }
 
 bool AudioRecorder::autoRemove() const
@@ -75,8 +66,33 @@ qreal AudioRecorder::getVolume() const
 void AudioRecorder::setVolume(qreal volume)
 {
     _volume = volume;
+}
 
-    QAudioRecorder::setVolume(volume);
+int AudioRecorder::state()
+{
+    if (!_pipeline)
+        return GST_STATE_NULL;
+
+    GstState current;
+    GstState pending;
+
+    GstStateChangeReturn ret = gst_element_get_state(
+        _pipeline,
+        &current,
+        &pending,
+        0
+    );
+
+    if (ret == GST_STATE_CHANGE_FAILURE)
+        return GST_STATE_NULL;
+
+    if (pending == GST_STATE_PLAYING)
+        return pending;
+
+    if (pending == GST_STATE_NULL)
+        return pending;
+
+    return current;
 }
 
 void AudioRecorder::setLocation(const QString &location)
@@ -88,30 +104,11 @@ void AudioRecorder::setLocation(const QString &location)
     emit locationChanged(_location);
 }
 
-void AudioRecorder::normalize()
-{
-    QFile qf(_location);
-    qf.open(QIODevice::ReadOnly);
-    int fd = qf.handle();
-    FILE* f = fdopen(fd, "rb");
-    OggVorbis_File vf;
-}
-
-void AudioRecorder::setCodec(AudioRecorder::AudioCodec codec)
-{
-    if (_codec == codec)
-        return;
-
-    _codec = codec;
-    emit codecChanged(_codec);
-}
-
 void AudioRecorder::startRecording()
 {
-    if(state() != QMediaRecorder::StoppedState)
-    {
+    if (_pipeline)
         return;
-    }
+
     _file = new QTemporaryFile(defaultStoragePath + "/XXXXXX.ogg", this);
     _file->setAutoRemove(false);
     _file->open();
@@ -119,31 +116,75 @@ void AudioRecorder::startRecording()
     _file->close();
     _file->deleteLater();
 
-    QAudioEncoderSettings encoderSettings;
-    CodecSetting codec = _codecSettingsMap[this->codec()];
+    _audioResource.acquire();
 
-    encoderSettings.setCodec(codec.codec);
-    encoderSettings.setEncodingMode(QMultimedia::ConstantBitRateEncoding);
-    encoderSettings.setQuality(QMultimedia::HighQuality);
+    QString pipelineDescription = QString(
+        "pulsesrc ! "
+        "audioconvert ! "
+        "audioresample ! "
+        "volume volume=%2 !"
+        "opusenc bitrate=48000 ! "
+        "oggmux ! "
+        "filesink location=\"%1\""
+    ).arg(_location).arg(_volume);
 
-    int selectedSampleRate = 16000;
-    encoderSettings.setSampleRate(selectedSampleRate);
+    GError *error = nullptr;
 
-    setEncodingSettings(encoderSettings);
-    setOutputLocation(QUrl(location()));
-    setContainerFormat(codec.container);
+    _pipeline = gst_parse_launch(pipelineDescription.toUtf8().constData(), &error);
 
-    record();
+    if (!_pipeline) {
+        qWarning() << "Failed to create pipeline:"
+                   << (error ? error->message : "unknown error");
+
+        if (error)
+            g_error_free(error);
+
+        return;
+    }
+
+    GstStateChangeReturn ret = gst_element_set_state(_pipeline, GST_STATE_PLAYING);
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+        qWarning() << "Failed to start recording";
+
+        gst_object_unref(_pipeline);
+        _pipeline = nullptr;
+
+        return;
+    }
+
     _recording = true;
     emit recordingChanged(_recording);
 }
 
 void AudioRecorder::stopRecording()
 {
-    stop();
+    if (!_pipeline)
+        return;
+
+    gst_element_send_event(_pipeline, gst_event_new_eos());
+
+    GstBus *bus = gst_element_get_bus(_pipeline);
+
+    gst_bus_timed_pop_filtered(
+        bus,
+        GST_CLOCK_TIME_NONE,
+        static_cast<GstMessageType>(
+            GST_MESSAGE_EOS |
+            GST_MESSAGE_ERROR
+        )
+    );
+
+    gst_object_unref(bus);
+
+    gst_element_set_state(
+        _pipeline,
+        GST_STATE_NULL);
+
+    gst_object_unref(_pipeline);
+    _pipeline = nullptr;
+
     _recording = false;
     emit recordingChanged(_recording);
-
 }
 
 void AudioRecorder::deleteRecording()
@@ -170,75 +211,58 @@ static inline void set_bits(char *bytes, int32_t bitOffset, int32_t value) {
 
 QString AudioRecorder::getWaveform()
 {
-    //https://xiph.org/vorbis/doc/vorbisfile/example.html
-//    https://github.com/DrKLO/Telegram/blob/e397bd9afdfd9315bf099f78a903f8754d297d7a/TMessagesProj/jni/audio.c#L603
-    QFile qf(_location);
-    qf.open(QIODevice::ReadOnly);
-    int fd = qf.handle();
-    FILE* f = fdopen(fd, "rb");
-    OggVorbis_File vf;
-    int eof=0;
-    int current_section;
-
-    int code = ov_open(f,&vf,NULL,0);
-    if(code == 0) {
+    int error = OPUS_OK;
+    OggOpusFile *opusFile = op_open_file(_location.toStdString().c_str(), &error);
+    if(opusFile != NULL && error == OPUS_OK) {
         int bufferSize = 1024 * 128;
-        char sampleBuffer[bufferSize];
-        int64_t totalSamples = ov_pcm_total(&vf,-1);
+        opus_int16 sampleBuffer[bufferSize];
+
+        int64_t totalSamples = op_pcm_total(opusFile, -1);
         const uint32_t resultSamples = 100;
         int32_t sampleRate = qMax(1, (int32_t) (totalSamples / resultSamples));
-        quint16 samples[100];
-        for (int32_t i = 0; i < resultSamples; i++)
-            samples[i] = 0;
-            uint64_t sampleIndex = 0;
-            quint16 peakSample = 0;
+        uint16_t *samples = (uint16_t*)malloc(100 * 2);
+        uint64_t sampleIndex = 0;
+        uint16_t peakSample = 0;
+        int32_t index = 0;
 
-            uint32_t index = 0;
-            while (!eof) {
-            long ret = ov_read(&vf, sampleBuffer, bufferSize, 1, 2,
-                                      1, &current_section);
-            if (ret == 0) {
-                eof=1;
-            } else if (ret < 0) {
-                qWarning() << "Can't get samples for waveform. code - " + ret;
-            } else {
-                for (int32_t i = 0; i+1 < ret; i = i+2) {
-                    qint16 temp = ((qint16)sampleBuffer[i] << 8) | sampleBuffer[i+1];
-                    quint16 sample = (quint16) qAbs(temp);
-                    if (sample > peakSample) {
-                        peakSample = sample;
+        while (1) {
+            int readSamples = op_read(opusFile, sampleBuffer, bufferSize / 2, NULL);
+            for (int32_t i = 0; i < readSamples; i++) {
+                uint16_t sample = (uint16_t) abs(sampleBuffer[i]);
+                if (sample > peakSample) {
+                    peakSample = sample;
+                }
+                if (sampleIndex++ % sampleRate == 0) {
+                    if (index < resultSamples) {
+                        samples[index++] = peakSample;
                     }
-                    if (sampleIndex++ % sampleRate == 0) {
-                        if (index < resultSamples) {
-                            samples[index++] = peakSample;
-                        }
-                        peakSample = 0;
-                    }
+                    peakSample = 0;
                 }
             }
+            if (readSamples == 0) {
+                break;
+            }
         }
-        ov_clear(&vf);
-        qf.close();
 
         int64_t sumSamples = 0;
-        for (int32_t i = 0; i < resultSamples; i++)
+        for (int32_t i = 0; i < resultSamples; i++) {
             sumSamples += samples[i];
-
-        uint32_t bitstreamLength = (resultSamples * 5) / 8 + 1;
-
-        quint16 peak = (quint16) (sumSamples * 1.8f / resultSamples);
-        if (peak < 2500)
+        }
+        uint16_t peak = (uint16_t) (sumSamples * 1.8f / resultSamples);
+        if (peak < 2500) {
             peak = 2500;
-
+        }
 
         for (int32_t i = 0; i < resultSamples; i++) {
-            quint16 sample =  samples[i];
-
+            uint16_t sample = (uint16_t) ((int64_t) samples[i]);
             if (sample > peak) {
                 samples[i] = peak;
             }
         }
 
+        op_free(opusFile);
+
+        uint32_t bitstreamLength = (resultSamples * 5) / 8 + 1;
         char *bytes = new char[bitstreamLength + 4];
         memset(bytes, 0, bitstreamLength + 4);
 
@@ -250,13 +274,13 @@ QString AudioRecorder::getWaveform()
         QString resultArray = QString::fromLatin1(bytes,bitstreamLength);
 
         delete[] bytes;
+        free(samples);
 
         return resultArray;
     } else {
-        qDebug() << "Can't get waverofm. code - " << code;
+        qDebug() << "Can't get waverofm. code - " << error;
     }
 
-    qf.close();
     return QString();
 }
 

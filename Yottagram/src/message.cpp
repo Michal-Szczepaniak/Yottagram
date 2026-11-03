@@ -417,7 +417,12 @@ bool Message::canBeEdited()
 
     static std::set<int64_t> editableContents = {td_api::messagePhoto::ID, td_api::messageVideo::ID, td_api::messageDocument::ID, td_api::messageAudio::ID, td_api::messageAnimation::ID, td_api::messageVoiceNote::ID, td_api::messageText::ID};
 
-    return _properties->can_be_edited_ && editableContents.contains(_contentTypeId);
+    bool isEditable = false;
+    if (editableContents.find(_contentTypeId) != editableContents.end()) {
+        isEditable = true;
+    }
+
+    return _properties->can_be_edited_ && isEditable;
 }
 
 bool Message::canBeForwarded()

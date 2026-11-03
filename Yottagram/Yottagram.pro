@@ -4,17 +4,17 @@ TARGET = yottagram
 
 QT += dbus multimedia location contacts xml
 
-CONFIG += c++2a link_pkgconfig sailfishapp iostream
+CONFIG += c++17 link_pkgconfig sailfishapp iostream
 
-QMAKE_CXXFLAGS_RELEASE += -std=c++2a -O3
+QMAKE_CXXFLAGS_RELEASE += -std=c++17 -O3
 QMAKE_CXXFLAGS_RELEASE -= -g
 QMAKE_CXXFLAGS_DEBUG -= -O1
 QMAKE_CXXFLAGS_DEBUG -= -O2
-QMAKE_CXXFLAGS_DEBUG *= -O0 -Wno-unused-parameter -g
+QMAKE_CXXFLAGS_DEBUG *= -O0 -Wno-unused-parameter -g -std=c++17
 
 INCLUDEPATH += /usr/include/glib-2.0 $$PWD/src
 
-PKGCONFIG += zlib openssl nemonotifications-qt5 connman-qt5 vorbisfile systemsettings libavcodec libavformat libavutil opus libjpeg libpng libswresample libswscale protobuf gio-2.0 alsa glib-2.0 libpulse libpulse-mainloop-glib vpx openh264 audioresource-qt sailfishsilica
+PKGCONFIG += zlib openssl nemonotifications-qt5 connman-qt5 systemsettings libavcodec libavformat libavutil ogg opus libjpeg libpng libswresample libswscale protobuf gio-2.0 alsa glib-2.0 libpulse libpulse-mainloop-glib vpx openh264 audioresource-qt sailfishsilica
 
 DEFINES += QT_STATICPLUGIN APP_VERSION=$$(APP_VERSION)
 

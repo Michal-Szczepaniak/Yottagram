@@ -1020,7 +1020,7 @@ Page {
 
                 AudioRecorder {
                     id: audioRecorder
-                    onStateChanged: voiceNoteTimer.start()
+                    onRecordingChanged: voiceNoteTimer.start()
                     volume: settings.voiceMessageBoost
                 }
 
@@ -1028,7 +1028,7 @@ Page {
                     id: voiceNoteTimer
                     interval: 100
                     repeat: false
-                    onTriggered: if (audioRecorder.state == 0) {
+                    onTriggered: if (!audioRecorder.recording) {
                                      chat.sendVoiceNote(audioRecorder.location, audioRecorder.getWaveform(), voiceMessageButton.duration, chatPage.newReplyMessageId)
                                      uploadFlickable.contentY = 0
                                      chatPage.newReplyMessageId = 0
@@ -1338,7 +1338,9 @@ Page {
                         width: uploadMediaPanel.cellWidth
                         text: qsTr("Voice Note")
                         source: audioRecorder.recording ? (Theme.LightOnDark ? "image://theme/icon-m-call-recording-on-light" : "image://theme/icon-m-call-recording-on-dark"): "image://theme/icon-m-mic"
-                        onPressed: audioRecorder.startRecording()
+                        onPressed: {
+                            audioRecorder.startRecording()
+                        }
                         visible: !attachmentLoader.active
                         property var duration
                         onReleased: {

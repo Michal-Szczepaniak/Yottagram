@@ -69,6 +69,31 @@ Page {
     }
 
     Connections {
+        target: Qt.application
+
+        onActiveChanged: {
+            if (Qt.application.active) {
+                console.log("offline timer stop")
+                offlineTimer.stop()
+                telegramStatus.setStatus(true)
+            } else {
+                console.log("offline timer start")
+                offlineTimer.start()
+            }
+        }
+    }
+
+    Timer {
+        id: offlineTimer
+        interval: 30000
+        repeat: false
+        onTriggered: {
+            console.log("offline")
+            telegramStatus.setStatus(false)
+        }
+    }
+
+    Connections {
         target: authorization
         onWaitingForPhoneNumber: {
             pageStack.replace(Qt.resolvedUrl("AuthorizationNumber.qml"));

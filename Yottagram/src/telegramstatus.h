@@ -15,6 +15,8 @@ public:
     void setTelegramManager(shared_ptr<TelegramManager> manager);
 
     bool getBootupComplete() const;
+
+    Q_INVOKABLE void setStatus(bool status);
 public slots:
     void onBootupComplete();
 
