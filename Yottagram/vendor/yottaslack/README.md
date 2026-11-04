@@ -6,7 +6,8 @@ Slack support is packaged separately as `yottagram-slack`, which holds this libr
 
 ## Setup
 
-1. Create a Slack app from `slack-app-manifest.yml` and install it to your workspace.
+1. Tap **Create Slack app** on the login page, or create one from `slack-app-manifest.yml`, and install it to your workspace. Everyone needs their own app: a shared one counts as distributed outside the Marketplace, which limits `conversations.history` to 1 call a minute.
+   For an account you can't risk, use **Create read-only Slack app** instead. Its token has no write scopes, so Slack itself refuses any write, and the app hides what it can't do.
 2. Build the app as usual. `yottaslack.pri` runs `build.sh` before linking and installs the library to `/usr/share/yottagram/lib`. The build target needs one of:
 
    - `go` installed in it, which compiles with the target's `gcc`. Go runs under `qemu` there, so `build.sh` turns its garbage collector off and uses one thread, otherwise it crashes. The first build takes a while.
@@ -18,7 +19,7 @@ Slack support is packaged separately as `yottagram-slack`, which holds this libr
 
    With neither, the build stops with an error.
 3. Start it in Slack mode and paste the User OAuth Token (`xoxp-...`). It's stored in plaintext in `QSettings` under `slackToken`.
-4. For instant updates, create an app-level token (`xapp-...`) with the `connections:write` scope under Basic Information, and paste it in the app's Settings. It's stored the same way under `slackAppToken`. Without it, the open chat is polled every 5 seconds.
+4. For instant updates, create an app-level token (`xapp-...`) with the `connections:write` scope under Basic Information, and paste it on the login page or in the app's Settings. It's stored the same way under `slackAppToken`. Without it, the open chat is polled every 5 seconds.
 
 ## Testing
 

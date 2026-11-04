@@ -23,6 +23,7 @@ type fakeSlack struct {
 	postGate chan struct{}
 	postTS   string
 	marked   string
+	scopes   string
 	reacted  string
 	uploaded string
 	comment  string
@@ -34,6 +35,9 @@ func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch r.URL.Path {
 	case "/auth.test":
+		f.mu.Lock()
+		w.Header().Set("X-OAuth-Scopes", f.scopes)
+		f.mu.Unlock()
 		fmt.Fprint(w, `{"ok":true,"user_id":"UME"}`)
 	case "/users.info":
 		fmt.Fprintf(w, `{"ok":true,"user":{"id":%q,"name":%q}}`, r.Form.Get("user"), strings.ToLower(r.Form.Get("user")))
@@ -708,6 +712,75 @@ func TestCustomEmoji(t *testing.T) {
 			t.Fatalf("got %v", emojis)
 		}
 		return
+	}
+}
+
+func TestAppTokenWaitsForLogin(t *testing.T) {
+	s, _ := newTestSession(t)
+
+	s.setAppToken("xapp-test")
+
+	s.mu.Lock()
+	started := s.stopRealtime != nil
+	s.mu.Unlock()
+	if started {
+		t.Fatal("realtime must wait for the chat list")
+	}
+}
+
+func TestReadOnlyTokenWritesNothing(t *testing.T) {
+	s, fake := newTestSession(t)
+	fake.mu.Lock()
+	fake.scopes = "channels:read,channels:history"
+	fake.postTS = "1712345678.000300"
+	fake.mu.Unlock()
+
+	chats := login(t, s)
+	nextEvent(t, s, "ready")
+
+	for _, entry := range chats["chats"].([]any) {
+		if entry.(map[string]any)["read_only"] != true {
+			t.Fatalf("got %v", entry)
+		}
+	}
+
+	id := chatID(t, chats, "#general")
+	s.handleEvent(messageEvent("1712345678.000300", "UME", "mine"))
+
+	requests := []string{
+		fmt.Sprintf(`{"id":8,"method":"send","params":{"chat":%d,"text":"hi"}}`, id),
+		fmt.Sprintf(`{"id":9,"method":"edit","params":{"chat":%d,"message":1712345678000300,"text":"hi"}}`, id),
+		fmt.Sprintf(`{"id":10,"method":"delete","params":{"chat":%d,"messages":[1712345678000300]}}`, id),
+		fmt.Sprintf(`{"id":11,"method":"react","params":{"chat":%d,"message":1712345678000300,"emoji":"👍","add":true}}`, id),
+		fmt.Sprintf(`{"id":12,"method":"upload","params":{"chat":%d,"files":[{"path":"/nonexistent"}]}}`, id),
+		`{"id":13,"method":"properties","params":{"message":1712345678000300}}`,
+	}
+	for _, request := range requests {
+		s.Handle([]byte(request))
+	}
+
+	refused := map[float64]bool{}
+	for len(refused) < len(requests) {
+		e := next(t, s)
+		if id, ok := e["id"].(float64); ok && id >= 8 {
+			if e["error"] == nil {
+				t.Fatalf("got %v", e)
+			}
+			refused[id] = true
+		}
+	}
+
+	// Reading only changes what's shown here, Slack isn't told
+	s.handleEvent(messageEvent("1712345678.000400", "UANN", "theirs"))
+	call(s, 14, "view", fmt.Sprintf(`{"chat":%d,"message":1712345678000400}`, id))
+	for next(t, s)["id"] != float64(14) {
+	}
+	time.Sleep(50 * time.Millisecond)
+
+	fake.mu.Lock()
+	defer fake.mu.Unlock()
+	if fake.posted != "" || fake.reacted != "" || fake.uploaded != "" || fake.marked != "" {
+		t.Fatalf("a write reached Slack: %q %q %q %q", fake.posted, fake.reacted, fake.uploaded, fake.marked)
 	}
 }
 

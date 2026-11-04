@@ -272,13 +272,15 @@ td_api::object_ptr<td_api::chatPhotoInfo> makeChatPhoto(const QJsonObject &objec
 
 td_api::object_ptr<td_api::chat> makeChat(const QJsonObject &object)
 {
+    bool canSend = !object["read_only"].toBool();
+
     auto permissions = td_api::make_object<td_api::chatPermissions>();
-    permissions->can_send_basic_messages_ = true;
-    permissions->can_send_audios_ = true;
-    permissions->can_send_documents_ = true;
-    permissions->can_send_photos_ = true;
-    permissions->can_send_videos_ = true;
-    permissions->can_send_voice_notes_ = true;
+    permissions->can_send_basic_messages_ = canSend;
+    permissions->can_send_audios_ = canSend;
+    permissions->can_send_documents_ = canSend;
+    permissions->can_send_photos_ = canSend;
+    permissions->can_send_videos_ = canSend;
+    permissions->can_send_voice_notes_ = canSend;
 
     auto chat = td_api::make_object<td_api::chat>();
     chat->id_ = toInt64(object["id"]);

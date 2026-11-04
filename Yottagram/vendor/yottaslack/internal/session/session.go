@@ -84,6 +84,7 @@ type wireChat struct {
 	SupergroupID int64  `json:"supergroup_id,omitempty"`
 	Order        int64  `json:"order"`
 	Folder       int    `json:"folder"`
+	ReadOnly     bool   `json:"read_only,omitempty"`
 	dm           bool
 
 	Photo *wirePhoto `json:"photo,omitempty"`
@@ -169,6 +170,9 @@ type Session struct {
 	nextOrder    int64
 	stopRealtime context.CancelFunc
 	realtimeUp   bool
+	synced       bool
+	appToken     string
+	readOnly     bool
 }
 
 // New creates a session storing its state in dataDir.
@@ -312,7 +316,7 @@ func (s *Session) dispatch(r request) {
 			Token string `json:"token"`
 		}
 		if err = json.Unmarshal(r.Params, &p); err == nil {
-			s.startRealtime(p.Token)
+			s.setAppToken(p.Token)
 			s.replyOK(r.ID)
 		}
 	case "me":
@@ -468,6 +472,10 @@ func (s *Session) login(id uint64, token, appToken string, retry bool) {
 
 	if scopes := s.api.Scopes(); scopes != "" {
 		s.log("token scopes: %s", scopes)
+
+		s.mu.Lock()
+		s.readOnly = !hasScope(scopes, "chat:write")
+		s.mu.Unlock()
 	}
 
 	s.replyOK(id)
@@ -475,8 +483,54 @@ func (s *Session) login(id uint64, token, appToken string, retry bool) {
 	s.emit(map[string]any{"event": "users", "users": []*user{me}})
 
 	s.sync()
+
+	s.mu.Lock()
+	s.synced = true
+	if appToken == "" {
+		appToken = s.appToken
+	}
+	s.mu.Unlock()
+
 	s.startRealtime(appToken)
 	s.spawn(s.loadPreviews)
+}
+
+func hasScope(scopes, scope string) bool {
+	for _, item := range strings.Split(scopes, ",") {
+		if strings.TrimSpace(item) == scope {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Session) isReadOnly() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.readOnly
+}
+
+// refuseWrite is for a token without write scopes. Slack would refuse too, this
+// gives a clear answer and never lets a request leave the phone.
+func (s *Session) refuseWrite(id uint64) bool {
+	if s.isReadOnly() {
+		s.replyError(id, codeBadRequest, "This workspace is connected read-only")
+		return true
+	}
+	return false
+}
+
+// setAppToken holds a token set during login until the chats are known, as
+// events for them would otherwise look like new chats.
+func (s *Session) setAppToken(token string) {
+	s.mu.Lock()
+	s.appToken = token
+	synced := s.synced
+	s.mu.Unlock()
+
+	if synced {
+		s.startRealtime(token)
+	}
 }
 
 // authTest retries network failures when logging in with a stored token, as
@@ -730,9 +784,10 @@ func (s *Session) emitChats(conversations []api.Conversation) {
 
 func (s *Session) makeWireChat(conversation api.Conversation) wireChat {
 	entry := wireChat{
-		ID:    s.ids.Chat(conversation.ID),
-		Title: s.conversationTitle(conversation),
-		dm:    conversation.IsIM || conversation.IsMpim,
+		ID:       s.ids.Chat(conversation.ID),
+		Title:    s.conversationTitle(conversation),
+		ReadOnly: s.isReadOnly(),
+		dm:       conversation.IsIM || conversation.IsMpim,
 	}
 
 	entry.Folder = folderChannels
@@ -1082,6 +1137,10 @@ func (s *Session) loadPreview(c *chat) {
 }
 
 func (s *Session) send(id uint64, chatID int64, content string) {
+	if s.refuseWrite(id) {
+		return
+	}
+
 	c := s.findChat(chatID)
 	if c == nil {
 		s.replyError(id, codeBadRequest, "unknown chat")
@@ -1161,7 +1220,7 @@ func (s *Session) send(id uint64, chatID int64, content string) {
 // them without the edit and delete actions.
 func (s *Session) properties(id uint64, messageID int64) {
 	s.mu.Lock()
-	own := s.own[messageID]
+	own := s.own[messageID] && !s.readOnly
 	s.mu.Unlock()
 
 	if !own {
@@ -1172,6 +1231,10 @@ func (s *Session) properties(id uint64, messageID int64) {
 }
 
 func (s *Session) edit(id uint64, chatID, messageID int64, content string) {
+	if s.refuseWrite(id) {
+		return
+	}
+
 	c := s.findChat(chatID)
 	if c == nil {
 		s.replyError(id, codeBadRequest, "unknown chat")
@@ -1205,6 +1268,10 @@ func (s *Session) edit(id uint64, chatID, messageID int64, content string) {
 }
 
 func (s *Session) deleteMessages(id uint64, chatID int64, messageIDs []int64) {
+	if s.refuseWrite(id) {
+		return
+	}
+
 	c := s.findChat(chatID)
 	if c == nil {
 		s.replyError(id, codeBadRequest, "unknown chat")

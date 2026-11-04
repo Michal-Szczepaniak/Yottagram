@@ -52,7 +52,7 @@ func (s *Session) readUpTo(c *chat, id int64, mark bool) {
 	notified := c.notified
 	c.notified = nil
 
-	startMark := mark && !c.marking
+	startMark := mark && !c.marking && !s.readOnly
 	if startMark {
 		c.marking = true
 	}

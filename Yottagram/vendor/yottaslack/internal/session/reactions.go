@@ -180,6 +180,10 @@ func (s *Session) reactionName(messageID int64, emoji string) string {
 }
 
 func (s *Session) react(id uint64, chatID, messageID int64, emoji string, custom int64, add bool) {
+	if s.refuseWrite(id) {
+		return
+	}
+
 	c := s.findChat(chatID)
 	if c == nil {
 		s.replyError(id, codeBadRequest, "unknown chat")
@@ -308,6 +312,10 @@ type upload struct {
 // sendFiles uploads to Slack, which posts the messages itself. They arrive like
 // anyone else's.
 func (s *Session) sendFiles(id uint64, chatID int64, files []upload) {
+	if s.refuseWrite(id) {
+		return
+	}
+
 	c := s.findChat(chatID)
 	if c == nil {
 		s.replyError(id, codeBadRequest, "unknown chat")

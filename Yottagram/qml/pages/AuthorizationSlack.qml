@@ -28,11 +28,54 @@ Page {
 
     property bool busy: false
 
+    // Keep in sync with vendor/yottaslack/slack-app-manifest.yml
+    readonly property var manifest: ({
+        display_information: {
+            name: "Yottagram",
+            description: "Slack on Sailfish OS through Yottagram"
+        },
+        oauth_config: {
+            scopes: {
+                user: [
+                    "channels:read", "groups:read", "im:read", "mpim:read",
+                    "channels:history", "groups:history", "im:history", "mpim:history",
+                    "users:read", "chat:write",
+                    "channels:write", "groups:write", "im:write", "mpim:write",
+                    "files:read", "files:write", "reactions:read", "reactions:write", "emoji:read"
+                ]
+            }
+        },
+        settings: {
+            event_subscriptions: {
+                user_events: [
+                    "message.channels", "message.groups", "message.im", "message.mpim",
+                    "reaction_added", "reaction_removed"
+                ]
+            },
+            org_deploy_enabled: false,
+            socket_mode_enabled: true,
+            token_rotation_enabled: false
+        }
+    })
+
+    function createApp(readOnly) {
+        var app = JSON.parse(JSON.stringify(manifest))
+        if (readOnly) {
+            app.display_information.name = "Yottagram read-only"
+            app.oauth_config.scopes.user = app.oauth_config.scopes.user.filter(function(scope) {
+                return scope.indexOf(":write") === -1
+            })
+        }
+
+        Qt.openUrlExternally("https://api.slack.com/apps?new_app=1&manifest_json=" + encodeURIComponent(JSON.stringify(app)))
+    }
+
     function submit() {
         if (token.text.trim() === "") return
 
         errorLabel.text = ""
         busy = true
+        if (appToken.text.trim() !== "") authorization.setSlackAppToken(appToken.text)
         authorization.sendSlackToken(token.text)
     }
 
@@ -70,12 +113,44 @@ Page {
                 font.pixelSize: Theme.fontSizeExtraLarge
             }
 
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                wrapMode: Text.Wrap
+                color: Theme.highlightColor
+                font.pixelSize: Theme.fontSizeSmall
+                text: qsTr("1. Create the app below, then install it to your workspace.\n2. Copy the User OAuth Token from OAuth & Permissions.\n3. For instant updates, generate an app-level token with the connections:write scope in Basic Information.")
+            }
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Create Slack app")
+                onClicked: page.createApp(false)
+            }
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Create read-only Slack app")
+                onClicked: page.createApp(true)
+            }
+
             TextField {
                 id: token
                 width: column.width
                 echoMode: TextInput.Password
                 inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhSensitiveData
+                label: qsTr("User OAuth Token")
                 placeholderText: "xoxp-..."
+                Keys.onReturnPressed: page.submit()
+            }
+
+            TextField {
+                id: appToken
+                width: column.width
+                echoMode: TextInput.Password
+                inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhSensitiveData
+                label: qsTr("App token, optional")
+                placeholderText: "xapp-..."
                 Keys.onReturnPressed: page.submit()
             }
 
