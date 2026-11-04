@@ -108,7 +108,8 @@ void Notifications::updateNotificationGroup(td_api::updateNotificationGroup *upd
             QVariantList arguments;
             arguments.append(QVariant::fromValue((qint64)chat->getId()));
             QVariantList actions;
-            actions.append(Notification::remoteAction("default", "openChat", "com.verdanditeam.yottagram", "/", "com.verdanditeam.yottagram", "openChat", arguments));
+            QString service = TelegramManager::isSlackMode() ? "com.verdanditeam.yottagram.slack" : "com.verdanditeam.yottagram";
+            actions.append(Notification::remoteAction("default", "openChat", service, "/", "com.verdanditeam.yottagram", "openChat", arguments));
             newNotification->setRemoteActions(actions);
             newNotification->publish();
             _notifications[notification->id_] = newNotification;

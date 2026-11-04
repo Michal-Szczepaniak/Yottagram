@@ -2,7 +2,7 @@
 
 Slack backend for Yottagram, written in Go and loaded by `src/slack/slackbackend.cpp` with `QLibrary`.
 
-Run `yottagram --slack`, or use the Yottagram Slack launcher, to start in Slack mode. It has its own settings and D-Bus name, so it can run next to the Telegram instance.
+Slack support is packaged separately as `yottagram-slack`, which holds this library, the launcher and its D-Bus service. Run `yottagram --slack`, or use the Yottagram Slack launcher, to start in Slack mode. It has its own settings and D-Bus name, so it can run next to the Telegram instance.
 
 ## Setup
 
@@ -35,7 +35,7 @@ go test -race ./...
 | `internal/api` | Slack Web API client, pagination, 429 handling |
 | `internal/ids` | `ts` to message id, persisted Slack id to integer tables |
 | `internal/text` | mrkdwn to and from plain text |
-| `internal/session` | Requests, startup sequence, history, send, polling, realtime events |
+| `internal/session` | Requests, startup sequence, history, send, polling, realtime events, files, unread state |
 | `internal/socket` | Minimal WebSocket client, so the library has no dependencies |
 
 ## Protocol
@@ -49,8 +49,8 @@ go test -race ./...
 {"event":"new_message","message":{}}
 ```
 
-Methods: `login`, `realtime`, `me`, `history`, `send`, `properties`, `edit`, `delete`, `open`, `close`.
+Methods: `login`, `realtime`, `network`, `me`, `history`, `send`, `view`, `download`, `properties`, `edit`, `delete`, `open`, `close`.
 
-Events: `auth_ready`, `users`, `chats`, `ready`, `new_message`, `last_message`, `send_succeeded`, `message_content`, `delete_messages`, `member_count`, `log`.
+Events: `auth_ready`, `users`, `chats`, `ready`, `new_message`, `last_message`, `send_succeeded`, `message_content`, `delete_messages`, `member_count`, `read_inbox`, `notify`, `notify_clear`, `file`, `folders`, `log`.
 
 The order of events matters; see the comment at the top of `internal/session/session.go`.

@@ -26,6 +26,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QSettings>
+#include <algorithm>
 
 namespace {
 
@@ -34,6 +35,49 @@ const char *APP_TOKEN_KEY = "slackAppToken";
 const char *APP_TOKEN_OPTION = "slack_app_token";
 const int INVALID_TOKEN_CODE = 401;
 const unsigned long CLOSE_TIMEOUT = 3000;
+
+// Slack's markup for what the app's rich input formats. Slack parses the same
+// markers from plain text, so anything else can stay as typed.
+QString toMrkdwn(const td_api::formattedText &text)
+{
+    QString result = QString::fromStdString(text.text_);
+
+    vector<const td_api::textEntity*> entities;
+    for (const auto &entity : text.entities_) {
+        entities.push_back(entity.get());
+    }
+    std::sort(entities.begin(), entities.end(), [](const td_api::textEntity *a, const td_api::textEntity *b) {
+        return a->offset_ > b->offset_;
+    });
+
+    for (const td_api::textEntity *entity : entities) {
+        QString marker;
+        switch (entity->type_->get_id()) {
+        case td_api::textEntityTypeBold::ID:
+            marker = "*";
+            break;
+        case td_api::textEntityTypeItalic::ID:
+            marker = "_";
+            break;
+        case td_api::textEntityTypeStrikethrough::ID:
+            marker = "~";
+            break;
+        case td_api::textEntityTypeCode::ID:
+            marker = "`";
+            break;
+        case td_api::textEntityTypePre::ID:
+            marker = "```";
+            break;
+        default:
+            continue;
+        }
+
+        result.insert(entity->offset_ + entity->length_, marker);
+        result.insert(entity->offset_, marker);
+    }
+
+    return result;
+}
 
 }
 
@@ -150,10 +194,20 @@ void SlackBackend::send(uint64_t id, td_api::object_ptr<td_api::Function> functi
         }
         break;
     }
-    case td_api::loadChats::ID:
-    case td_api::setNetworkType::ID:
-    case td_api::setAutoDownloadSettings::ID:
+    case td_api::setNetworkType::ID: {
+        auto query = static_cast<td_api::setNetworkType*>(function.get());
+        call(id, "network", {{"online", !query->type_ || query->type_->get_id() != td_api::networkTypeNone::ID}});
+        break;
+    }
     case td_api::viewMessages::ID:
+        handleViewMessages(id, static_cast<td_api::viewMessages*>(function.get()));
+        break;
+    case td_api::downloadFile::ID:
+        call(id, "download", {{"file", static_cast<td_api::downloadFile*>(function.get())->file_id_}});
+        break;
+    case td_api::cancelDownloadFile::ID:
+    case td_api::loadChats::ID:
+    case td_api::setAutoDownloadSettings::ID:
     case td_api::setChatDraftMessage::ID:
     case td_api::sendChatAction::ID:
         reply(id, new td_api::ok());
@@ -178,7 +232,21 @@ void SlackBackend::handleSendMessage(uint64_t id, td_api::sendMessage *query)
 
     call(id, "send", {
         {"chat", static_cast<double>(query->chat_id_)},
-        {"text", QString::fromStdString(content->text_->text_)}
+        {"text", toMrkdwn(*content->text_)}
+    });
+}
+
+void SlackBackend::handleViewMessages(uint64_t id, td_api::viewMessages *query)
+{
+    if (query->message_ids_.empty()) {
+        reply(id, new td_api::ok());
+        return;
+    }
+
+    int64_t newest = *std::max_element(query->message_ids_.begin(), query->message_ids_.end());
+    call(id, "view", {
+        {"chat", static_cast<double>(query->chat_id_)},
+        {"message", static_cast<double>(newest)}
     });
 }
 
@@ -198,7 +266,7 @@ void SlackBackend::handleEditMessage(uint64_t id, td_api::editMessageText *query
     call(id, "edit", {
         {"chat", static_cast<double>(query->chat_id_)},
         {"message", static_cast<double>(query->message_id_)},
-        {"text", QString::fromStdString(content->text_->text_)}
+        {"text", toMrkdwn(*content->text_)}
     });
 }
 

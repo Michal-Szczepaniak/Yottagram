@@ -3,12 +3,15 @@ package api
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptrace"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,6 +23,7 @@ const (
 	requestTimeout    = 30 * time.Second
 	maxRateRetries    = 5
 	defaultRetryAfter = 5 * time.Second
+	slowCallThreshold = time.Second
 	pageSize          = 200
 )
 
@@ -50,6 +54,50 @@ func IsAPIError(err error) bool {
 	return errors.As(err, &apiError)
 }
 
+// timeline records when the stages of a request finished. Connection attempts
+// can run in parallel, hence the lock.
+type timeline struct {
+	started time.Time
+
+	mu     sync.Mutex
+	stages []string
+}
+
+func (t *timeline) mark(stage string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.stages = append(t.stages, fmt.Sprintf("%s=%dms", stage, time.Since(t.started).Milliseconds()))
+}
+
+func (t *timeline) String() string {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return strings.Join(t.stages, " ")
+}
+
+func (t *timeline) trace() *httptrace.ClientTrace {
+	return &httptrace.ClientTrace{
+		GotConn: func(info httptrace.GotConnInfo) {
+			if info.Reused {
+				t.mark("reused")
+			} else {
+				t.mark("connected")
+			}
+		},
+		DNSDone: func(httptrace.DNSDoneInfo) { t.mark("dns") },
+		ConnectDone: func(network, addr string, err error) {
+			if err != nil {
+				t.mark("failed " + addr)
+			} else {
+				t.mark("tcp " + addr)
+			}
+		},
+		TLSHandshakeDone:     func(tls.ConnectionState, error) { t.mark("tls") },
+		WroteRequest:         func(httptrace.WroteRequestInfo) { t.mark("sent") },
+		GotFirstResponseByte: func() { t.mark("response") },
+	}
+}
+
 // Client calls Slack. A 429 pauses the method that hit it, as Slack's limits are
 // per method. Everything else keeps working, so previews can't delay an edit.
 type Client struct {
@@ -59,8 +107,13 @@ type Client struct {
 	// RateLimited, if set, is called when a method gets paused
 	RateLimited func(method string, wait time.Duration)
 
+	// SlowCall, if set, is called when a request takes unusually long, with
+	// when each stage of it finished
+	SlowCall func(method string, took time.Duration, stages string)
+
 	mu          sync.Mutex
 	token       string
+	scopes      string
 	pausedUntil map[string]time.Time
 }
 
@@ -71,6 +124,13 @@ func New() *Client {
 		HTTP:        &http.Client{Timeout: requestTimeout},
 		pausedUntil: map[string]time.Time{},
 	}
+}
+
+// Scopes returns what Slack last said the token can do.
+func (c *Client) Scopes() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.scopes
 }
 
 // SetToken sets the token used for every call.
@@ -131,6 +191,12 @@ func (c *Client) post(ctx context.Context, method string, params url.Values) ([]
 	}
 	defer response.Body.Close()
 
+	if scopes := response.Header.Get("X-OAuth-Scopes"); scopes != "" {
+		c.mu.Lock()
+		c.scopes = scopes
+		c.mu.Unlock()
+	}
+
 	if response.StatusCode == http.StatusTooManyRequests {
 		retryAfter := defaultRetryAfter
 		if seconds, err := strconv.Atoi(response.Header.Get("Retry-After")); err == nil && seconds > 0 {
@@ -157,7 +223,12 @@ func (c *Client) Call(ctx context.Context, method string, params url.Values, out
 			return err
 		}
 
-		body, retryAfter, err := c.post(ctx, method, params)
+		started := time.Now()
+		stages := &timeline{started: started}
+		body, retryAfter, err := c.post(httptrace.WithClientTrace(ctx, stages.trace()), method, params)
+		if took := time.Since(started); took > slowCallThreshold && c.SlowCall != nil {
+			c.SlowCall(method, took, stages.String())
+		}
 		if err != nil {
 			return err
 		}
@@ -191,6 +262,28 @@ func (c *Client) Call(ctx context.Context, method string, params url.Values, out
 type Profile struct {
 	DisplayName string `json:"display_name"`
 	RealName    string `json:"real_name"`
+	Image72     string `json:"image_72"`
+	Image192    string `json:"image_192"`
+}
+
+// Number accepts both forms Slack uses for some numbers, and treats anything
+// else as 0, so one odd field can't lose a whole page of messages.
+type Number int64
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (n *Number) UnmarshalJSON(data []byte) error {
+	value, err := strconv.ParseFloat(strings.Trim(string(data), `"`), 64)
+	if err != nil {
+		*n = 0
+		return nil
+	}
+	*n = Number(value)
+	return nil
+}
+
+// Described is a conversation's topic or purpose.
+type Described struct {
+	Value string `json:"value"`
 }
 
 // User is a Slack user.
@@ -198,6 +291,8 @@ type User struct {
 	ID      string  `json:"id"`
 	Name    string  `json:"name"`
 	Deleted bool    `json:"deleted"`
+	IsBot   bool    `json:"is_bot"`
+	IsApp   bool    `json:"is_app_user"`
 	Profile Profile `json:"profile"`
 }
 
@@ -209,18 +304,45 @@ type Conversation struct {
 	IsMpim     bool   `json:"is_mpim"`
 	User       string `json:"user"`
 	NumMembers int    `json:"num_members"`
+	LastRead   string `json:"last_read"`
+
+	Topic   Described `json:"topic"`
+	Purpose Described `json:"purpose"`
 }
 
 // File is a message attachment uploaded to Slack.
 type File struct {
-	Name  string `json:"name"`
-	Title string `json:"title"`
+	Name       string `json:"name"`
+	Title      string `json:"title"`
+	Mimetype   string `json:"mimetype"`
+	Size       Number `json:"size"`
+	URLPrivate string `json:"url_private"`
+	Thumb360   string `json:"thumb_360"`
+	Thumb720   string `json:"thumb_720"`
+	Thumb360W  Number `json:"thumb_360_w"`
+	Thumb360H  Number `json:"thumb_360_h"`
+	OriginalW  Number `json:"original_w"`
+	OriginalH  Number `json:"original_h"`
+}
+
+// Room is the call behind a huddle message.
+type Room struct {
+	DateStart Number `json:"date_start"`
+	DateEnd   Number `json:"date_end"`
 }
 
 // Attachment is a legacy message attachment.
 type Attachment struct {
-	Fallback string `json:"fallback"`
-	Text     string `json:"text"`
+	Fallback    string `json:"fallback"`
+	Text        string `json:"text"`
+	Title       string `json:"title"`
+	FromURL     string `json:"from_url"`
+	OriginalURL string `json:"original_url"`
+	ServiceName string `json:"service_name"`
+	ImageURL    string `json:"image_url"`
+	ImageWidth  Number `json:"image_width"`
+	ImageHeight Number `json:"image_height"`
+	ImageBytes  Number `json:"image_bytes"`
 }
 
 // BotProfile names the integration that posted a message.
@@ -237,6 +359,8 @@ type Edited struct {
 type Message struct {
 	TS          string       `json:"ts"`
 	ThreadTS    string       `json:"thread_ts"`
+	Subtype     string       `json:"subtype"`
+	Room        *Room        `json:"room"`
 	User        string       `json:"user"`
 	BotID       string       `json:"bot_id"`
 	Username    string       `json:"username"`
@@ -406,6 +530,66 @@ func (c *Client) UpdateMessage(ctx context.Context, channel, ts, text string) (M
 // DeleteMessage deletes a message.
 func (c *Client) DeleteMessage(ctx context.Context, channel, ts string) error {
 	return c.Call(ctx, "chat.delete", url.Values{"channel": {channel}, "ts": {ts}}, nil)
+}
+
+// describeURL names where a URL points without its file name or signature.
+func describeURL(address *url.URL) string {
+	first, _, _ := strings.Cut(strings.TrimPrefix(address.Path, "/"), "/")
+	return address.Host + "/" + first
+}
+
+// Mark tells Slack the conversation is read up to ts.
+func (c *Client) Mark(ctx context.Context, channel, ts string) error {
+	return c.Call(ctx, "conversations.mark", url.Values{"channel": {channel}, "ts": {ts}}, nil)
+}
+
+// Download saves a URL to path and returns its size. auth sends the token,
+// which Slack's own files need. Without the files:read scope Slack answers with
+// its login page, so HTML is an error there.
+func (c *Client) Download(ctx context.Context, address string, auth bool, path string) (int64, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, address, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	if auth {
+		c.mu.Lock()
+		token := c.token
+		c.mu.Unlock()
+		request.Header.Set("Authorization", "Bearer "+token)
+	}
+
+	response, err := (&http.Client{}).Do(request)
+	if err != nil {
+		return 0, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("download: %s from %s, asked %s, auth %v", response.Status, describeURL(response.Request.URL), describeURL(request.URL), auth)
+	}
+	if auth && strings.HasPrefix(response.Header.Get("Content-Type"), "text/html") {
+		return 0, errors.New("download: got a login page, is the files:read scope missing?")
+	}
+
+	temporary := path + ".part"
+	file, err := os.Create(temporary)
+	if err != nil {
+		return 0, err
+	}
+
+	size, err := io.Copy(file, response.Body)
+	if closeErr := file.Close(); err == nil {
+		err = closeErr
+	}
+	if err == nil {
+		err = os.Rename(temporary, path)
+	}
+	if err != nil {
+		os.Remove(temporary)
+		return 0, err
+	}
+	return size, nil
 }
 
 func (c *Client) PostMessage(ctx context.Context, channel, text string) (Message, error) {

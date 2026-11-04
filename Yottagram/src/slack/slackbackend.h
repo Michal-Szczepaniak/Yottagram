@@ -48,6 +48,7 @@ private:
     void call(uint64_t id, const QString &method, const QJsonObject &params = QJsonObject());
     void reply(uint64_t id, td_api::Object* object);
     void replyError(uint64_t id, int32_t code, const string &message);
+    void handleViewMessages(uint64_t id, td_api::viewMessages *query);
     void handleSendMessage(uint64_t id, td_api::sendMessage *query);
     void handleEditMessage(uint64_t id, td_api::editMessageText *query);
     void handleDeleteMessages(uint64_t id, td_api::deleteMessages *query);

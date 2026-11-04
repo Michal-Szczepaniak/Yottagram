@@ -19,6 +19,11 @@ oauth_config:
       - mpim:history
       - users:read
       - chat:write
+      - channels:write
+      - groups:write
+      - im:write
+      - mpim:write
+      - files:read
 settings:
   event_subscriptions:
     user_events:

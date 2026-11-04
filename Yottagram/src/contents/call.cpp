@@ -14,7 +14,7 @@ void Call::handleContent(td_api::object_ptr<td_api::MessageContent> content)
     }
 }
 
-bool Call::duration() const
+int Call::duration() const
 {
     return _call->duration_;
 }

@@ -76,6 +76,13 @@ Requires:       %{name} >= %{version}
 %description transferengine-plugin
 Yottagram's Transfer Engine plugin
 
+%package slack
+Summary:        Slack support for Yottagram
+Requires:       %{name} = %{version}-%{release}
+
+%description slack
+Adds a Yottagram Slack launcher, which runs Yottagram against a Slack workspace
+
 %prep
 %setup -q -n %{name}-%{version}
 
@@ -108,14 +115,18 @@ desktop-file-install --delete-original       \
 %{_bindir}/%{name}
 %defattr(-,root,root,-)
 %{_datadir}/%{name}
+%exclude %{_datadir}/%{name}/lib
 %{_datadir}/dbus-1/services/com.verdanditeam.yottagram.service
-%{_datadir}/dbus-1/services/com.verdanditeam.yottagram.slack.service
 %{_datadir}/lipstick/notificationcategories/x-verdanditeam.yottagram.im.conf
 %{_datadir}/applications/%{name}.desktop
-%{_datadir}/applications/%{name}-slack.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
-%{_datadir}/icons/hicolor/*/apps/%{name}-slack.png
 %{_libdir}/libopenh264.so*
+
+%files slack
+%{_datadir}/%{name}/lib
+%{_datadir}/dbus-1/services/com.verdanditeam.yottagram.slack.service
+%{_datadir}/applications/%{name}-slack.desktop
+%{_datadir}/icons/hicolor/*/apps/%{name}-slack.png
 
 %files voicecall-plugin
 %{_libdir}/voicecall/plugins/libyottagram-voicecall-plugin.so

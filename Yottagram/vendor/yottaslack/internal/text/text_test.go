@@ -40,3 +40,45 @@ func TestEscapedRoundTrip(t *testing.T) {
 		t.Fatalf("got %q", got)
 	}
 }
+
+func TestFormat(t *testing.T) {
+	cases := []struct {
+		input, text string
+		entities    []Entity
+	}{
+		{"plain snake_case_name 2*3*4", "plain snake_case_name 2*3*4", nil},
+		{"*bold* and _it_", "bold and it", []Entity{{Offset: 0, Length: 4, Type: "bold"}, {Offset: 9, Length: 2, Type: "italic"}}},
+		{"~gone~", "gone", []Entity{{Offset: 0, Length: 4, Type: "strikethrough"}}},
+		{"*_both_*", "both", []Entity{{Offset: 0, Length: 4, Type: "bold"}, {Offset: 0, Length: 4, Type: "italic"}}},
+		{"`*a*`", "*a*", []Entity{{Offset: 0, Length: 3, Type: "code"}}},
+		{"```x\ny```", "x\ny", []Entity{{Offset: 0, Length: 3, Type: "pre"}}},
+		{"😀 *b*", "😀 b", []Entity{{Offset: 3, Length: 1, Type: "bold"}}},
+		{"<https://a.example|site>", "site", []Entity{{Offset: 0, Length: 4, Type: "text_url", URL: "https://a.example"}}},
+		{"<https://a.example>", "https://a.example", []Entity{{Offset: 0, Length: 17, Type: "url"}}},
+		{"hi <@U1>", "hi @name-U1", []Entity{{Offset: 3, Length: 8, Type: "bold"}}},
+		{"a &amp; *b*", "a & b", []Entity{{Offset: 4, Length: 1, Type: "bold"}}},
+	}
+
+	for _, c := range cases {
+		got, entities := Format(c.input, name)
+		if got != c.text {
+			t.Errorf("Format(%q) = %q, want %q", c.input, got, c.text)
+		}
+		if len(entities) != len(c.entities) {
+			t.Errorf("Format(%q) entities = %v, want %v", c.input, entities, c.entities)
+			continue
+		}
+		for i := range entities {
+			if entities[i] != c.entities[i] {
+				t.Errorf("Format(%q) entity %d = %v, want %v", c.input, i, entities[i], c.entities[i])
+			}
+		}
+	}
+}
+
+func TestTrimKeepsEntitiesOnText(t *testing.T) {
+	value, entities := Trim("\n bold \n", []Entity{{Offset: 2, Length: 4, Type: "bold"}})
+	if value != "bold" || entities[0].Offset != 0 || entities[0].Length != 4 {
+		t.Fatalf("got %q, %v", value, entities)
+	}
+}

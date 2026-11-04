@@ -29,7 +29,6 @@ type envelope struct {
 type slackEvent struct {
 	api.Message
 	Type      string      `json:"type"`
-	Subtype   string      `json:"subtype"`
 	Channel   string      `json:"channel"`
 	Hidden    bool        `json:"hidden"`
 	DeletedTS string      `json:"deleted_ts"`
@@ -80,6 +79,15 @@ func (s *Session) realtime(ctx context.Context, events chan<- json.RawMessage) {
 	backoff := time.Second
 
 	for {
+		if s.isOffline() {
+			select {
+			case <-time.After(offlineCheck):
+				continue
+			case <-ctx.Done():
+				return
+			}
+		}
+
 		connected, err := s.runSocket(ctx, events)
 		if ctx.Err() != nil {
 			return
@@ -278,6 +286,8 @@ func (s *Session) receiveMessage(c *chat, m api.Message) {
 	if isNewest {
 		s.emitLastMessage(item)
 	}
+	s.notify(c, item, m)
+	s.noteIncoming(c, item)
 }
 
 func (s *Session) changeMessage(c *chat, m api.Message) {
@@ -291,11 +301,18 @@ func (s *Session) changeMessage(c *chat, m api.Message) {
 	isNewest := item.ID == c.newest
 	s.mu.Unlock()
 
-	s.emit(map[string]any{"event": "message_content", "chat": c.id, "message_id": item.ID, "text": item.Text, "edit_date": item.EditDate})
+	s.emit(contentEvent(item))
 
 	// Must follow the content, this is what refreshes the chat list's preview
 	if isNewest {
 		s.emitLastMessage(item)
+	}
+}
+
+func contentEvent(item message) map[string]any {
+	return map[string]any{
+		"event": "message_content", "chat": item.Chat, "message_id": item.ID, "edit_date": item.EditDate,
+		"text": item.Text, "entities": item.Entities, "media": item.Media, "preview": item.Preview,
 	}
 }
 

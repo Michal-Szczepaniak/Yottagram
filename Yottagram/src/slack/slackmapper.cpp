@@ -40,18 +40,135 @@ string toStdString(const QJsonValue &value)
     return value.toString().toStdString();
 }
 
-td_api::object_ptr<td_api::formattedText> makeText(const QJsonValue &value)
+td_api::object_ptr<td_api::TextEntityType> makeEntityType(const QJsonObject &entity)
+{
+    QString type = entity["type"].toString();
+
+    if (type == "bold") return td_api::make_object<td_api::textEntityTypeBold>();
+    if (type == "italic") return td_api::make_object<td_api::textEntityTypeItalic>();
+    if (type == "strikethrough") return td_api::make_object<td_api::textEntityTypeStrikethrough>();
+    if (type == "code") return td_api::make_object<td_api::textEntityTypeCode>();
+    if (type == "pre") return td_api::make_object<td_api::textEntityTypePre>();
+    if (type == "url") return td_api::make_object<td_api::textEntityTypeUrl>();
+    if (type == "text_url") return td_api::make_object<td_api::textEntityTypeTextUrl>(toStdString(entity["url"]));
+    return nullptr;
+}
+
+td_api::object_ptr<td_api::formattedText> makeText(const QJsonValue &value, const QJsonArray &entities = QJsonArray())
 {
     auto text = td_api::make_object<td_api::formattedText>();
     text->text_ = toStdString(value);
+
+    for (const QJsonValue &item : entities) {
+        QJsonObject entity = item.toObject();
+        auto type = makeEntityType(entity);
+        if (type) {
+            text->entities_.push_back(td_api::make_object<td_api::textEntity>(entity["offset"].toInt(), entity["length"].toInt(), std::move(type)));
+        }
+    }
+
     return text;
 }
 
-td_api::object_ptr<td_api::messageText> makeContent(const QJsonValue &value)
+td_api::object_ptr<td_api::file> makeFile(const QJsonObject &object)
 {
+    int64_t size = toInt64(object["size"]);
+    bool done = object["done"].toBool();
+
+    auto local = td_api::make_object<td_api::localFile>();
+    local->path_ = done ? toStdString(object["path"]) : "";
+    local->can_be_downloaded_ = true;
+    local->is_downloading_active_ = object["active"].toBool();
+    local->is_downloading_completed_ = done;
+    local->downloaded_size_ = done ? size : 0;
+
+    auto remote = td_api::make_object<td_api::remoteFile>();
+    remote->id_ = QString::number(object["id"].toInt()).toStdString();
+    remote->unique_id_ = remote->id_;
+    remote->is_uploading_completed_ = true;
+    remote->uploaded_size_ = size;
+
+    auto file = td_api::make_object<td_api::file>();
+    file->id_ = object["id"].toInt();
+    file->size_ = size;
+    file->expected_size_ = size;
+    file->local_ = std::move(local);
+    file->remote_ = std::move(remote);
+    return file;
+}
+
+td_api::object_ptr<td_api::photoSize> makePhotoSize(const char *type, const QJsonValue &file, const QJsonValue &width, const QJsonValue &height)
+{
+    auto size = td_api::make_object<td_api::photoSize>();
+    size->type_ = type;
+    size->photo_ = makeFile(file.toObject());
+    size->width_ = static_cast<int32_t>(toInt64(width));
+    size->height_ = static_cast<int32_t>(toInt64(height));
+    return size;
+}
+
+td_api::object_ptr<td_api::linkPreview> makeLinkPreview(const QJsonObject &object)
+{
+    auto article = td_api::make_object<td_api::linkPreviewTypeArticle>();
+    if (object.contains("image")) {
+        article->photo_ = td_api::make_object<td_api::photo>();
+        article->photo_->sizes_.push_back(makePhotoSize("x", object["image"], object["width"], object["height"]));
+    }
+
+    auto preview = td_api::make_object<td_api::linkPreview>();
+    preview->url_ = toStdString(object["url"]);
+    preview->display_url_ = preview->url_;
+    preview->site_name_ = toStdString(object["site"]);
+    preview->title_ = toStdString(object["title"]);
+    preview->description_ = makeText(object["text"]);
+    preview->type_ = std::move(article);
+    return preview;
+}
+
+td_api::object_ptr<td_api::MessageContent> makeContent(const QJsonObject &object)
+{
+    QJsonObject media = object["media"].toObject();
+    QString kind = media["kind"].toString();
+    auto caption = makeText(object["text"], object["entities"].toArray());
+
+    if (kind == "photo") {
+        auto photo = td_api::make_object<td_api::photo>();
+        if (media.contains("thumb")) {
+            photo->sizes_.push_back(makePhotoSize("m", media["thumb"], media["thumb_width"], media["thumb_height"]));
+        }
+        photo->sizes_.push_back(makePhotoSize("x", media["file"], media["width"], media["height"]));
+
+        auto content = td_api::make_object<td_api::messagePhoto>();
+        content->photo_ = std::move(photo);
+        content->caption_ = std::move(caption);
+        return std::move(content);
+    }
+
+    if (kind == "document") {
+        auto document = td_api::make_object<td_api::document>();
+        document->file_name_ = toStdString(media["name"]);
+        document->mime_type_ = toStdString(media["mime"]);
+        document->document_ = makeFile(media["file"].toObject());
+
+        auto content = td_api::make_object<td_api::messageDocument>();
+        content->document_ = std::move(document);
+        content->caption_ = std::move(caption);
+        return std::move(content);
+    }
+
+    if (kind == "call") {
+        auto content = td_api::make_object<td_api::messageCall>();
+        content->discard_reason_ = td_api::make_object<td_api::callDiscardReasonHungUp>();
+        content->duration_ = static_cast<int32_t>(toInt64(media["duration"]));
+        return std::move(content);
+    }
+
     auto content = td_api::make_object<td_api::messageText>();
-    content->text_ = makeText(value);
-    return content;
+    content->text_ = std::move(caption);
+    if (object["preview"].isObject()) {
+        content->link_preview_ = makeLinkPreview(object["preview"].toObject());
+    }
+    return std::move(content);
 }
 
 td_api::object_ptr<td_api::message> makeMessage(const QJsonObject &object)
@@ -66,7 +183,7 @@ td_api::object_ptr<td_api::message> makeMessage(const QJsonObject &object)
     message->is_outgoing_ = object["outgoing"].toBool();
     message->date_ = static_cast<int32_t>(toInt64(object["date"]));
     message->edit_date_ = static_cast<int32_t>(toInt64(object["edit_date"]));
-    message->content_ = makeContent(object["text"]);
+    message->content_ = makeContent(object);
     return message;
 }
 
@@ -80,6 +197,14 @@ td_api::object_ptr<td_api::user> makeUser(const QJsonObject &object)
     user->type_ = td_api::make_object<td_api::userTypeRegular>();
     user->have_access_ = true;
 
+    if (object.contains("photo")) {
+        QJsonObject photo = object["photo"].toObject();
+        user->profile_photo_ = td_api::make_object<td_api::profilePhoto>();
+        user->profile_photo_->id_ = toInt64(object["id"]);
+        user->profile_photo_->small_ = makeFile(photo["small"].toObject());
+        user->profile_photo_->big_ = makeFile(photo["big"].toObject());
+    }
+
     QString username = object["username"].toString();
     if (!username.isEmpty()) {
         user->usernames_ = td_api::make_object<td_api::usernames>();
@@ -89,10 +214,14 @@ td_api::object_ptr<td_api::user> makeUser(const QJsonObject &object)
     return user;
 }
 
-td_api::object_ptr<td_api::chatPosition> makePosition(int64_t order)
+td_api::object_ptr<td_api::chatPosition> makePosition(int64_t order, int32_t folder = 0)
 {
     auto position = td_api::make_object<td_api::chatPosition>();
-    position->list_ = td_api::make_object<td_api::chatListMain>();
+    if (folder != 0) {
+        position->list_ = td_api::make_object<td_api::chatListFolder>(folder);
+    } else {
+        position->list_ = td_api::make_object<td_api::chatListMain>();
+    }
     position->order_ = order;
     return position;
 }
@@ -102,6 +231,14 @@ td_api::object_ptr<td_api::chatNotificationSettings> makeNotificationSettings()
     auto settings = td_api::make_object<td_api::chatNotificationSettings>();
     settings->show_preview_ = true;
     return settings;
+}
+
+td_api::object_ptr<td_api::chatPhotoInfo> makeChatPhoto(const QJsonObject &object)
+{
+    auto photo = td_api::make_object<td_api::chatPhotoInfo>();
+    photo->small_ = makeFile(object["small"].toObject());
+    photo->big_ = makeFile(object["big"].toObject());
+    return photo;
 }
 
 td_api::object_ptr<td_api::chat> makeChat(const QJsonObject &object)
@@ -114,6 +251,10 @@ td_api::object_ptr<td_api::chat> makeChat(const QJsonObject &object)
     chat->title_ = toStdString(object["title"]);
     chat->permissions_ = std::move(permissions);
     chat->notification_settings_ = makeNotificationSettings();
+
+    if (object.contains("photo")) {
+        chat->photo_ = makeChatPhoto(object["photo"].toObject());
+    }
 
     if (object["type"].toString() == "private") {
         auto type = td_api::make_object<td_api::chatTypePrivate>();
@@ -189,6 +330,16 @@ void mapReply(uint64_t id, const QJsonObject &object, vector<Output> &outputs)
     }
 }
 
+td_api::updateNotificationGroup* makeNotificationGroup(const QJsonObject &object)
+{
+    auto update = new td_api::updateNotificationGroup();
+    update->notification_group_id_ = static_cast<int32_t>(toInt64(object["group"]));
+    update->type_ = td_api::make_object<td_api::notificationGroupTypeMessages>();
+    update->chat_id_ = toInt64(object["chat"]);
+    update->notification_settings_chat_id_ = update->chat_id_;
+    return update;
+}
+
 void mapEvent(const QJsonObject &object, vector<Output> &outputs)
 {
     QString event = object["event"].toString();
@@ -227,6 +378,11 @@ void mapEvent(const QJsonObject &object, vector<Output> &outputs)
             position->chat_id_ = toInt64(chat["id"]);
             position->position_ = makePosition(toInt64(chat["order"]));
             outputs.push_back({0, position});
+
+            auto folderPosition = new td_api::updateChatPosition();
+            folderPosition->chat_id_ = toInt64(chat["id"]);
+            folderPosition->position_ = makePosition(toInt64(chat["order"]), chat["folder"].toInt());
+            outputs.push_back({0, folderPosition});
         }
     } else if (event == "ready") {
         auto update = new td_api::updateConnectionState();
@@ -247,7 +403,7 @@ void mapEvent(const QJsonObject &object, vector<Output> &outputs)
         auto update = new td_api::updateMessageContent();
         update->chat_id_ = toInt64(object["chat"]);
         update->message_id_ = toInt64(object["message_id"]);
-        update->new_content_ = makeContent(object["text"]);
+        update->new_content_ = makeContent(object);
         outputs.push_back({0, update});
 
         int32_t editDate = static_cast<int32_t>(toInt64(object["edit_date"]));
@@ -271,6 +427,65 @@ void mapEvent(const QJsonObject &object, vector<Output> &outputs)
         update->supergroup_id_ = toInt64(object["supergroup_id"]);
         update->supergroup_full_info_ = td_api::make_object<td_api::supergroupFullInfo>();
         update->supergroup_full_info_->member_count_ = object["count"].toInt();
+        update->supergroup_full_info_->description_ = toStdString(object["description"]);
+        outputs.push_back({0, update});
+    } else if (event == "read_inbox") {
+        auto read = new td_api::updateChatReadInbox();
+        read->chat_id_ = toInt64(object["chat"]);
+        read->last_read_inbox_message_id_ = toInt64(object["last_read"]);
+        read->unread_count_ = object["unread"].toInt();
+        outputs.push_back({0, read});
+
+        auto messages = new td_api::updateUnreadMessageCount();
+        messages->chat_list_ = td_api::make_object<td_api::chatListMain>();
+        messages->unread_count_ = object["unread_messages"].toInt();
+        messages->unread_unmuted_count_ = messages->unread_count_;
+        outputs.push_back({0, messages});
+
+        auto chats = new td_api::updateUnreadChatCount();
+        chats->chat_list_ = td_api::make_object<td_api::chatListMain>();
+        chats->total_count_ = object["total_chats"].toInt();
+        chats->unread_count_ = object["unread_chats"].toInt();
+        chats->unread_unmuted_count_ = chats->unread_count_;
+        outputs.push_back({0, chats});
+    } else if (event == "notify") {
+        auto type = td_api::make_object<td_api::notificationTypeNewMessage>();
+        type->message_ = makeMessage(object["message"].toObject());
+        type->show_preview_ = true;
+
+        auto notification = td_api::make_object<td_api::notification>();
+        notification->id_ = object["id"].toInt();
+        notification->date_ = static_cast<int32_t>(toInt64(object["date"]));
+        notification->type_ = std::move(type);
+
+        auto update = makeNotificationGroup(object);
+        update->total_count_ = 1;
+        update->added_notifications_.push_back(std::move(notification));
+        outputs.push_back({0, update});
+    } else if (event == "notify_clear") {
+        auto update = makeNotificationGroup(object);
+        for (const QJsonValue &id : object["ids"].toArray()) {
+            update->removed_notification_ids_.push_back(id.toInt());
+        }
+        outputs.push_back({0, update});
+    } else if (event == "file") {
+        auto update = new td_api::updateFile();
+        update->file_ = makeFile(object["file"].toObject());
+        outputs.push_back({0, update});
+    } else if (event == "folders") {
+        auto update = new td_api::updateChatFolders();
+        for (const QJsonValue &value : object["folders"].toArray()) {
+            QJsonObject folder = value.toObject();
+
+            auto name = td_api::make_object<td_api::chatFolderName>();
+            name->text_ = makeText(folder["name"]);
+
+            auto info = td_api::make_object<td_api::chatFolderInfo>();
+            info->id_ = folder["id"].toInt();
+            info->name_ = std::move(name);
+            info->icon_ = td_api::make_object<td_api::chatFolderIcon>(toStdString(folder["icon"]));
+            update->chat_folders_.push_back(std::move(info));
+        }
         outputs.push_back({0, update});
     } else if (event == "log") {
         qWarning() << "yottaslack:" << object["message"].toString();

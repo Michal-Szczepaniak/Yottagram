@@ -19,6 +19,7 @@ type fakeSlack struct {
 	history  []string
 	postGate chan struct{}
 	postTS   string
+	marked   string
 }
 
 func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +38,12 @@ func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			{"id":"DANN","is_im":true,"user":"UANN"},
 			{"id":"GMP","name":"mpdm-ann--me-1","is_mpim":true}]}`)
 	case "/conversations.info":
-		fmt.Fprintf(w, `{"ok":true,"channel":{"id":%q,"name":"new","num_members":42}}`, r.Form.Get("channel"))
+		fmt.Fprintf(w, `{"ok":true,"channel":{"id":%q,"name":"new","num_members":42,"last_read":"1712345678.000100","purpose":{"value":"talk"}}}`, r.Form.Get("channel"))
+	case "/conversations.mark":
+		f.mu.Lock()
+		f.marked = r.Form.Get("ts")
+		f.mu.Unlock()
+		fmt.Fprint(w, `{"ok":true}`)
 	case "/chat.update":
 		fmt.Fprintf(w, `{"ok":true,"message":{"text":%q,"edited":{"ts":"1712345700.000000"}}}`, r.Form.Get("text"))
 	case "/chat.delete":
@@ -92,6 +98,7 @@ func newTestSession(t *testing.T) (*Session, *fakeSlack) {
 	s.appAPI.BaseURL = server.URL
 	s.pollInterval = time.Hour
 	s.previewInterval = time.Hour
+	s.markDelay = time.Millisecond
 	return s, fake
 }
 
@@ -274,7 +281,7 @@ func TestEventWaitsForSend(t *testing.T) {
 func TestEventSkipsThreadReplies(t *testing.T) {
 	s, _ := newTestSession(t)
 	login(t, s)
-	nextEvent(t, s, "ready")
+	nextEvent(t, s, "folders")
 
 	s.handleEvent([]byte(`{"type":"message","channel":"CGEN","user":"UANN","text":"reply","ts":"1712345678.000300","thread_ts":"1712345678.000100"}`))
 
@@ -401,6 +408,133 @@ func TestEditingNewestRefreshesPreview(t *testing.T) {
 	last := nextEvent(t, s, "last_message")["message"].(map[string]any)
 	if last["text"] != "fixed" {
 		t.Fatalf("got %v", last)
+	}
+}
+
+func TestPreviewCountsUnread(t *testing.T) {
+	s, fake := newTestSession(t)
+	s.previewInterval = time.Millisecond
+	fake.setHistory(
+		slackMessage("1712345678.000300", "UANN", "new"),
+		slackMessage("1712345678.000200", "UME", "mine"),
+		slackMessage("1712345678.000100", "UANN", "read"),
+	)
+
+	login(t, s)
+
+	read := nextEvent(t, s, "read_inbox")
+	if read["unread"] != float64(1) || read["last_read"] != float64(1712345678000100) {
+		t.Fatalf("got %v", read)
+	}
+}
+
+func TestViewingMarksReadOnSlack(t *testing.T) {
+	s, fake := newTestSession(t)
+	chats := login(t, s)
+	nextEvent(t, s, "ready")
+
+	s.handleEvent(messageEvent("1712345678.000300", "UANN", "hi"))
+	if read := nextEvent(t, s, "read_inbox"); read["unread"] != float64(1) {
+		t.Fatalf("got %v", read)
+	}
+
+	call(s, 8, "view", fmt.Sprintf(`{"chat":%d,"message":1712345678000300}`, chatID(t, chats, "#general")))
+	if read := nextEvent(t, s, "read_inbox"); read["unread"] != float64(0) {
+		t.Fatalf("got %v", read)
+	}
+
+	deadline := time.Now().Add(testTimeout)
+	for time.Now().Before(deadline) {
+		fake.mu.Lock()
+		marked := fake.marked
+		fake.mu.Unlock()
+		if marked == "1712345678.000300" {
+			return
+		}
+		time.Sleep(time.Millisecond)
+	}
+	t.Fatal("conversations.mark wasn't called")
+}
+
+func TestNotifiesForMentionsOnly(t *testing.T) {
+	s, _ := newTestSession(t)
+	login(t, s)
+	nextEvent(t, s, "ready")
+
+	s.handleEvent(messageEvent("1712345678.000300", "UANN", "hello all"))
+	s.handleEvent(messageEvent("1712345678.000400", "UANN", "hi <@UME>"))
+
+	notified := nextEvent(t, s, "notify")["message"].(map[string]any)
+	if notified["id"] != float64(1712345678000400) {
+		t.Fatalf("got %v", notified)
+	}
+}
+
+func TestHuddleBecomesCall(t *testing.T) {
+	s, _ := newTestSession(t)
+	login(t, s)
+	nextEvent(t, s, "ready")
+
+	s.handleEvent(messageEvent("1712345678.000300", "UANN", "Ann and Bob were in the huddle for 14m."))
+
+	item := nextEvent(t, s, "new_message")["message"].(map[string]any)
+	content := item["media"].(map[string]any)
+	if content["kind"] != "call" || content["duration"] != float64(840) {
+		t.Fatalf("got %v", item)
+	}
+}
+
+func TestMessageWithImage(t *testing.T) {
+	s, _ := newTestSession(t)
+	login(t, s)
+	nextEvent(t, s, "ready")
+
+	s.handleEvent([]byte(`{"type":"message","channel":"CGEN","user":"UANN","text":"look","ts":"1712345678.000300","files":[
+		{"name":"a.png","mimetype":"image/png","size":10,"url_private":"https://f.example/a.png","thumb_360":"https://f.example/t.png",
+		"thumb_360_w":360,"thumb_360_h":"240","original_w":720,"original_h":480}]}`))
+
+	item := nextEvent(t, s, "new_message")["message"].(map[string]any)
+	content := item["media"].(map[string]any)
+	if content["kind"] != "photo" || content["thumb_height"] != float64(240) || item["text"] != "look" {
+		t.Fatalf("got %v", item)
+	}
+}
+
+func TestDownloadReportsFile(t *testing.T) {
+	s, _ := newTestSession(t)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "content")
+	}))
+	t.Cleanup(server.Close)
+
+	file := s.fileFor(server.URL+"/a.png", "", 0, false)
+	call(s, 8, "download", fmt.Sprintf(`{"file":%d}`, file.ID))
+
+	deadline := time.Now().Add(testTimeout)
+	for time.Now().Before(deadline) {
+		state := nextEvent(t, s, "file")["file"].(map[string]any)
+		if state["done"] == true {
+			if state["size"] != float64(7) {
+				t.Fatalf("got %v", state)
+			}
+			return
+		}
+	}
+	t.Fatal("no finished file")
+}
+
+func TestUploadedAvatar(t *testing.T) {
+	cases := map[string]string{
+		"https://avatars.slack-edge.com/2024/a_72.png":               "https://avatars.slack-edge.com/2024/a_72.png",
+		"https://secure.gravatar.com/avatar/abc.jpg?s=72":            "",
+		"https://a.slack-edge.com/df10d/img/avatars/ava_0001-72.png": "",
+	}
+
+	for input, want := range cases {
+		if got := uploadedAvatar(input); got != want {
+			t.Errorf("uploadedAvatar(%q) = %q, want %q", input, got, want)
+		}
 	}
 }
 

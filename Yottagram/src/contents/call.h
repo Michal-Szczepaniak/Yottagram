@@ -13,7 +13,7 @@ public:
     explicit Call(QObject *parent = nullptr);
     void handleContent(td_api::object_ptr<td_api::MessageContent> content) override;
 
-    bool duration() const;
+    int duration() const;
 
 signals:
     void callChanged();

@@ -32,6 +32,17 @@ const (
 	maxNewerPages   = 5
 	newerPageSize   = 200
 	maxLoginBackoff = 30 * time.Second
+	listRetries     = 3
+	previewLimit    = 50
+	maxDownloads    = 4
+	markDelay       = 2 * time.Second
+	offlineCheck    = 5 * time.Second
+
+	slackbotID = "USLACKBOT"
+
+	folderChannels = 1
+	folderDirect   = 2
+	folderApps     = 3
 
 	// conversations.history allows about 50 calls a minute. This uses 30, the
 	// rest is for opening chats
@@ -57,6 +68,12 @@ type user struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Username  string `json:"username"`
+	Avatar    string `json:"avatar,omitempty"`
+	AvatarBig string `json:"avatar_big,omitempty"`
+	Bot       bool   `json:"bot,omitempty"`
+
+	Photo      *wirePhoto `json:"photo,omitempty"`
+	avatarSent bool
 }
 
 type wireChat struct {
@@ -66,7 +83,10 @@ type wireChat struct {
 	UserID       int64  `json:"user_id,omitempty"`
 	SupergroupID int64  `json:"supergroup_id,omitempty"`
 	Order        int64  `json:"order"`
+	Folder       int    `json:"folder"`
 	dm           bool
+
+	Photo *wirePhoto `json:"photo,omitempty"`
 }
 
 type message struct {
@@ -77,6 +97,10 @@ type message struct {
 	Date     int64  `json:"date"`
 	Text     string `json:"text"`
 	EditDate int64  `json:"edit_date,omitempty"`
+
+	Entities []text.Entity `json:"entities,omitempty"`
+	Media    *media        `json:"media,omitempty"`
+	Preview  *linkPreview  `json:"preview,omitempty"`
 }
 
 type chat struct {
@@ -91,6 +115,12 @@ type chat struct {
 
 	// 0 for direct messages
 	supergroupID int64
+	dm           bool
+
+	lastRead int64
+	unread   []int64
+	notified []int32
+	marking  bool
 
 	// Held for writing during a send and for reading during a history request.
 	// A history reply during a send can contain the message under its real id
@@ -119,6 +149,15 @@ type Session struct {
 	tempID int64
 
 	previewInterval time.Duration
+	markDelay       time.Duration
+
+	filesDir         string
+	files            map[string]*fileEntry
+	filesByID        map[int32]*fileEntry
+	nextFile         int32
+	downloads        chan struct{}
+	nextNotification int32
+	offline          bool
 
 	bySlackID    map[string]*chat
 	own          map[int64]bool
@@ -130,6 +169,11 @@ type Session struct {
 // New creates a session storing its state in dataDir.
 func New(dataDir string) (*Session, error) {
 	if err := os.MkdirAll(dataDir, 0o700); err != nil {
+		return nil, err
+	}
+
+	filesDir := filepath.Join(dataDir, "files")
+	if err := os.MkdirAll(filesDir, 0o700); err != nil {
 		return nil, err
 	}
 
@@ -146,6 +190,11 @@ func New(dataDir string) (*Session, error) {
 		usersPath:       filepath.Join(dataDir, "users.json"),
 		pollInterval:    pollInterval,
 		previewInterval: previewInterval,
+		markDelay:       markDelay,
+		filesDir:        filesDir,
+		files:           map[string]*fileEntry{},
+		filesByID:       map[int32]*fileEntry{},
+		downloads:       make(chan struct{}, maxDownloads),
 		ctx:             ctx,
 		cancel:          cancel,
 		events:          make(chan string, eventQueueSize),
@@ -157,6 +206,9 @@ func New(dataDir string) (*Session, error) {
 
 	s.api.RateLimited = func(method string, wait time.Duration) {
 		s.log("%s rate limited for %v", method, wait)
+	}
+	s.api.SlowCall = func(method string, took time.Duration, stages string) {
+		s.log("%s took %v: %s", method, took, stages)
 	}
 	return s, nil
 }
@@ -275,6 +327,31 @@ func (s *Session) dispatch(r request) {
 		if err = json.Unmarshal(r.Params, &p); err == nil {
 			s.send(r.ID, p.Chat, p.Text)
 		}
+	case "view":
+		var p struct {
+			Chat    int64 `json:"chat"`
+			Message int64 `json:"message"`
+		}
+		if err = json.Unmarshal(r.Params, &p); err == nil {
+			s.view(r.ID, p.Chat, p.Message)
+		}
+	case "download":
+		var p struct {
+			File int32 `json:"file"`
+		}
+		if err = json.Unmarshal(r.Params, &p); err == nil {
+			s.download(r.ID, p.File)
+		}
+	case "network":
+		var p struct {
+			Online bool `json:"online"`
+		}
+		if err = json.Unmarshal(r.Params, &p); err == nil {
+			s.mu.Lock()
+			s.offline = !p.Online
+			s.mu.Unlock()
+			s.replyOK(r.ID)
+		}
 	case "properties":
 		var p struct {
 			Message int64 `json:"message"`
@@ -341,6 +418,10 @@ func (s *Session) login(id uint64, token, appToken string, retry bool) {
 	s.users[me.SlackID] = me
 	s.mu.Unlock()
 
+	if scopes := s.api.Scopes(); scopes != "" {
+		s.log("token scopes: %s", scopes)
+	}
+
 	s.replyOK(id)
 	s.emit(map[string]any{"event": "auth_ready", "my_id": me.ID})
 	s.emit(map[string]any{"event": "users", "users": []*user{me}})
@@ -392,13 +473,13 @@ func (s *Session) sync() {
 		s.log("users.list failed: %v", err)
 	}
 
-	conversations, err := s.api.Conversations(s.ctx)
-	if err != nil {
-		s.log("users.conversations failed: %v", err)
-	}
-
-	s.emitChats(conversations)
+	s.emitChats(s.loadConversations())
 	s.emit(map[string]any{"event": "ready"})
+	s.emit(map[string]any{"event": "folders", "folders": []map[string]any{
+		{"id": folderChannels, "name": "Channels", "icon": "Channels"},
+		{"id": folderDirect, "name": "Direct messages", "icon": "Private"},
+		{"id": folderApps, "name": "Apps", "icon": "Bots"},
+	}})
 
 	if err := s.ids.Save(); err != nil {
 		s.log("saving ids failed: %v", err)
@@ -408,6 +489,30 @@ func (s *Session) sync() {
 		if err := s.refreshUsers(); err != nil {
 			s.log("users.list failed: %v", err)
 		}
+	}
+}
+
+// loadConversations retries, as an empty list looks like having no chats.
+func (s *Session) loadConversations() []api.Conversation {
+	backoff := time.Second
+
+	for attempt := 1; ; attempt++ {
+		conversations, err := s.api.Conversations(s.ctx)
+		if err == nil {
+			return conversations
+		}
+
+		s.log("users.conversations failed: %v", err)
+		if attempt == listRetries || api.IsAuthError(err) {
+			return nil
+		}
+
+		select {
+		case <-time.After(backoff):
+		case <-s.ctx.Done():
+			return nil
+		}
+		backoff *= 2
 	}
 }
 
@@ -447,7 +552,11 @@ func (s *Session) refreshUsers() error {
 	for _, slackUser := range slackUsers {
 		u := s.makeUser(slackUser)
 		all = append(all, u)
-		if known, ok := s.users[u.SlackID]; !ok || *known != *u {
+		known, ok := s.users[u.SlackID]
+		if ok {
+			u.avatarSent = known.avatarSent
+		}
+		if !ok || *known != *u {
 			s.users[u.SlackID] = u
 			changed = append(changed, u)
 		}
@@ -473,6 +582,15 @@ func (s *Session) emitUsers(users []*user) {
 	}
 }
 
+// uploadedAvatar drops what Slack fills in for people without a photo: a
+// Gravatar lookup of their email, or one of its generic pictures.
+func uploadedAvatar(address string) string {
+	if strings.Contains(address, "gravatar.com") || strings.Contains(address, "/avatars/ava_") {
+		return ""
+	}
+	return address
+}
+
 func (s *Session) makeUser(slackUser api.User) *user {
 	name := slackUser.Profile.DisplayName
 	if name == "" {
@@ -487,6 +605,9 @@ func (s *Session) makeUser(slackUser api.User) *user {
 		ID:        s.ids.User(slackUser.ID),
 		FirstName: name,
 		Username:  slackUser.Name,
+		Avatar:    uploadedAvatar(slackUser.Profile.Image72),
+		AvatarBig: uploadedAvatar(slackUser.Profile.Image192),
+		Bot:       slackUser.IsBot || slackUser.IsApp || slackUser.ID == slackbotID,
 	}
 }
 
@@ -564,9 +685,21 @@ func (s *Session) makeWireChat(conversation api.Conversation) wireChat {
 		dm:    conversation.IsIM || conversation.IsMpim,
 	}
 
+	entry.Folder = folderChannels
+	if entry.dm {
+		entry.Folder = folderDirect
+	}
+
 	if conversation.IsIM {
+		u := s.ensureUser(conversation.User)
 		entry.Type = "private"
-		entry.UserID = s.ensureUser(conversation.User).ID
+		entry.UserID = u.ID
+		if u.Bot {
+			entry.Folder = folderApps
+		}
+		if u.Avatar != "" {
+			entry.Photo = s.avatarPhoto(u)
+		}
 	} else {
 		entry.Type = "group"
 		entry.SupergroupID = s.ids.Supergroup(conversation.ID)
@@ -580,7 +713,7 @@ func (s *Session) trackChat(entry wireChat, slackID string) *chat {
 
 	c := s.chats[entry.ID]
 	if c == nil {
-		c = &chat{id: entry.ID, slackID: slackID, supergroupID: entry.SupergroupID}
+		c = &chat{id: entry.ID, slackID: slackID, supergroupID: entry.SupergroupID, dm: entry.dm}
 		s.chats[entry.ID] = c
 		s.bySlackID[slackID] = c
 	}
@@ -652,34 +785,6 @@ func (s *Session) userName(slackID string) string {
 	return s.ensureUser(slackID).FirstName
 }
 
-func (s *Session) messageText(m api.Message) string {
-	var parts []string
-
-	if m.Text != "" {
-		parts = append(parts, text.FromMrkdwn(m.Text, s.userName))
-	}
-	for _, file := range m.Files {
-		name := file.Title
-		if name == "" {
-			name = file.Name
-		}
-		parts = append(parts, "[file: "+name+"]")
-	}
-	if len(parts) == 0 {
-		for _, attachment := range m.Attachments {
-			if attachment.Text != "" {
-				parts = append(parts, text.FromMrkdwn(attachment.Text, s.userName))
-			} else if attachment.Fallback != "" {
-				parts = append(parts, attachment.Fallback)
-			}
-		}
-	}
-	if len(parts) == 0 {
-		return "[unsupported message]"
-	}
-	return strings.TrimSpace(strings.Join(parts, "\n"))
-}
-
 func (s *Session) toMessage(c *chat, m api.Message) (message, error) {
 	id, err := ids.ParseTS(m.TS)
 	if err != nil {
@@ -687,6 +792,8 @@ func (s *Session) toMessage(c *chat, m api.Message) (message, error) {
 	}
 
 	sender := s.sender(m)
+	s.announceAvatar(sender)
+
 	s.mu.Lock()
 	outgoing := s.me != nil && sender.ID == s.me.ID
 	if outgoing {
@@ -701,14 +808,18 @@ func (s *Session) toMessage(c *chat, m api.Message) (message, error) {
 		}
 	}
 
+	content := s.render(m)
 	return message{
 		ID:       id,
 		Chat:     c.id,
 		Sender:   sender.ID,
 		Outgoing: outgoing,
 		Date:     id / 1000000,
-		Text:     s.messageText(m),
+		Text:     content.Text,
 		EditDate: editDate,
+		Entities: content.Entities,
+		Media:    content.Media,
+		Preview:  content.Preview,
 	}, nil
 }
 
@@ -862,13 +973,6 @@ func (s *Session) loadPreviews() {
 	s.mu.Unlock()
 
 	for _, c := range chats {
-		s.mu.Lock()
-		known := c.newest != 0
-		s.mu.Unlock()
-		if known {
-			continue
-		}
-
 		select {
 		case <-time.After(s.previewInterval):
 		case <-s.ctx.Done():
@@ -879,7 +983,12 @@ func (s *Session) loadPreviews() {
 }
 
 func (s *Session) loadPreview(c *chat) {
-	page, err := s.api.History(s.ctx, c.slackID, api.HistoryParams{Limit: 1})
+	conversation, err := s.api.ConversationInfo(s.ctx, c.slackID)
+	if err != nil && !errors.Is(err, context.Canceled) {
+		s.log("loading read state failed: %v", err)
+	}
+
+	page, err := s.api.History(s.ctx, c.slackID, api.HistoryParams{Limit: previewLimit})
 	if err != nil {
 		if !errors.Is(err, context.Canceled) {
 			s.log("loading preview failed: %v", err)
@@ -910,6 +1019,7 @@ func (s *Session) loadPreview(c *chat) {
 	if isNewest {
 		s.emitLastMessage(item)
 	}
+	s.applyHistoryReads(c, conversation.LastRead, page.Messages)
 }
 
 func (s *Session) send(id uint64, chatID int64, content string) {
@@ -980,10 +1090,11 @@ func (s *Session) send(id uint64, chatID int64, content string) {
 	}
 
 	s.emit(map[string]any{"event": "send_succeeded", "old_id": tempID, "message": sent})
-	if sent.Text != content {
-		s.emit(map[string]any{"event": "message_content", "chat": c.id, "message_id": sent.ID, "text": sent.Text})
+	if sent.Text != content || len(sent.Entities) > 0 || sent.Media != nil || sent.Preview != nil {
+		s.emit(contentEvent(sent))
 	}
 	s.emitLastMessage(sent)
+	s.readUpTo(c, sent.ID, false)
 	s.replyOK(id)
 }
 
@@ -1057,13 +1168,17 @@ func (s *Session) sentMessage(c *chat, posted api.Message, me *user) (message, e
 	if err != nil {
 		return message{}, err
 	}
+	content := s.render(posted)
 	return message{
 		ID:       id,
 		Chat:     c.id,
 		Sender:   me.ID,
 		Outgoing: true,
 		Date:     id / 1000000,
-		Text:     s.messageText(posted),
+		Text:     content.Text,
+		Entities: content.Entities,
+		Media:    content.Media,
+		Preview:  content.Preview,
 	}, nil
 }
 
@@ -1098,7 +1213,24 @@ func (s *Session) fetchMemberCount(ctx context.Context, c *chat) {
 		}
 		return
 	}
-	s.emit(map[string]any{"event": "member_count", "supergroup_id": c.supergroupID, "count": info.NumMembers})
+
+	var description []string
+	for _, value := range []string{info.Topic.Value, info.Purpose.Value} {
+		if value != "" {
+			description = append(description, text.FromMrkdwn(value, s.userName))
+		}
+	}
+
+	s.emit(map[string]any{
+		"event": "member_count", "supergroup_id": c.supergroupID, "count": info.NumMembers,
+		"description": strings.Join(description, "\n\n"),
+	})
+}
+
+func (s *Session) isOffline() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.offline
 }
 
 func (s *Session) closeChat(chatID int64) {
@@ -1126,7 +1258,7 @@ func (s *Session) poll(ctx context.Context, c *chat) {
 		case <-ticker.C:
 			// With realtime up this is only a safety net. The first one still
 			// runs, to catch up on what arrived while the chat was closed.
-			if s.isRealtimeUp() && time.Since(lastPoll) < safetyPollInterval {
+			if s.isOffline() || s.isRealtimeUp() && time.Since(lastPoll) < safetyPollInterval {
 				continue
 			}
 			lastPoll = time.Now()
@@ -1189,6 +1321,7 @@ func (s *Session) pollOnce(c *chat) error {
 		if isNew {
 			s.emit(map[string]any{"event": "new_message", "message": m})
 			s.emitLastMessage(m)
+			s.noteIncoming(c, m)
 		}
 	}
 	return nil
