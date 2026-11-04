@@ -343,6 +343,22 @@ Page {
                 text: qsTr("Proxy settings")
                 onClicked: pageStack.push(Qt.resolvedUrl("../components/ProxySettings.qml"))
             }
+
+            TextField {
+                id: slackAppToken
+                width: parent.width
+                visible: slackMode
+                echoMode: TextInput.Password
+                inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhSensitiveData
+                label: qsTr("Slack app token, leave empty to turn instant updates off")
+                placeholderText: "xapp-..."
+                EnterKey.iconSource: "image://theme/icon-m-enter-accept"
+                EnterKey.onClicked: {
+                    authorization.setSlackAppToken(text)
+                    text = ""
+                    focus = false
+                }
+            }
         }
         VerticalScrollDecorator {}
     }

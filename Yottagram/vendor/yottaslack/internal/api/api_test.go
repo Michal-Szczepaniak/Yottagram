@@ -4,8 +4,10 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 )
 
 func TestCallRetriesAfterRateLimit(t *testing.T) {
@@ -36,6 +38,48 @@ func TestCallRetriesAfterRateLimit(t *testing.T) {
 	}
 	if atomic.LoadInt32(&calls) != 2 {
 		t.Fatalf("got %d calls", calls)
+	}
+}
+
+func TestRateLimitOnlyPausesThatMethod(t *testing.T) {
+	limited := make(chan struct{})
+	var once sync.Once
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/slow" {
+			w.Header().Set("Retry-After", "60")
+			w.WriteHeader(http.StatusTooManyRequests)
+			once.Do(func() { close(limited) })
+			return
+		}
+		w.Write([]byte(`{"ok":true}`))
+	}))
+	defer server.Close()
+
+	client := New()
+	client.BaseURL = server.URL
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	paused := make(chan string, 1)
+	client.RateLimited = func(method string, wait time.Duration) { paused <- method }
+
+	go client.Call(ctx, "slow", nil, nil)
+	<-limited
+	if method := <-paused; method != "slow" {
+		t.Fatalf("got %q", method)
+	}
+
+	done := make(chan error, 1)
+	go func() { done <- client.Call(ctx, "fast", nil, nil) }()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("another method's rate limit held this call back")
 	}
 }
 

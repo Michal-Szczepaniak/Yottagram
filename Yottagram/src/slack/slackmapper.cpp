@@ -65,6 +65,7 @@ td_api::object_ptr<td_api::message> makeMessage(const QJsonObject &object)
     message->sender_id_ = std::move(sender);
     message->is_outgoing_ = object["outgoing"].toBool();
     message->date_ = static_cast<int32_t>(toInt64(object["date"]));
+    message->edit_date_ = static_cast<int32_t>(toInt64(object["edit_date"]));
     message->content_ = makeContent(object["text"]);
     return message;
 }
@@ -178,6 +179,11 @@ void mapReply(uint64_t id, const QJsonObject &object, vector<Output> &outputs)
         outputs.push_back({id, reply});
     } else if (type == "user") {
         outputs.push_back({id, makeUser(result["user"].toObject()).release()});
+    } else if (type == "properties") {
+        auto reply = new td_api::messageProperties();
+        reply->can_be_edited_ = true;
+        reply->can_be_deleted_for_all_users_ = true;
+        outputs.push_back({id, reply});
     } else {
         outputs.push_back({id, new td_api::ok()});
     }
@@ -243,6 +249,15 @@ void mapEvent(const QJsonObject &object, vector<Output> &outputs)
         update->message_id_ = toInt64(object["message_id"]);
         update->new_content_ = makeContent(object["text"]);
         outputs.push_back({0, update});
+
+        int32_t editDate = static_cast<int32_t>(toInt64(object["edit_date"]));
+        if (editDate != 0) {
+            auto edited = new td_api::updateMessageEdited();
+            edited->chat_id_ = toInt64(object["chat"]);
+            edited->message_id_ = toInt64(object["message_id"]);
+            edited->edit_date_ = editDate;
+            outputs.push_back({0, edited});
+        }
     } else if (event == "delete_messages") {
         auto update = new td_api::updateDeleteMessages();
         update->chat_id_ = toInt64(object["chat"]);

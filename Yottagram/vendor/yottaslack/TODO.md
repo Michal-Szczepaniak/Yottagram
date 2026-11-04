@@ -12,16 +12,17 @@
 
 ## Core
 
-- [ ] Realtime updates. Check first whether Socket Mode delivers user-scoped events
+- [x] Realtime updates over Socket Mode
 - [ ] Unread counts and marking as read (`conversations.mark`)
 - [ ] Notifications, which have to be synthesized because they only come from `updateNotificationGroup`
-- [ ] Chat list previews before a chat is opened
+- [x] Chat list previews before a chat is opened
 - [ ] Recent-first order for direct messages
 
 ## Messages
 
 - [ ] Formatting: bold, italic, code, links and mentions as text entities, in both directions
-- [ ] Edits and deletes, your own and other people's
+- [x] Showing edits and deletes from Slack
+- [x] Editing and deleting from the app
 - [ ] Reactions
 - [ ] Threads
 - [ ] Avatars

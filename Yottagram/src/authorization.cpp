@@ -126,6 +126,12 @@ void Authorization::sendSlackToken(QString token)
     _manager->sendQuery(new td_api::checkAuthenticationBotToken(token.toStdString()));
 }
 
+void Authorization::setSlackAppToken(QString token)
+{
+    auto value = td_api::make_object<td_api::optionValueString>(token.toStdString());
+    _manager->sendQuery(new td_api::setOption("slack_app_token", std::move(value)));
+}
+
 void Authorization::onError(int64_t chatId, int32_t type, int32_t subType, int32_t code, QString message)
 {
     Q_UNUSED(chatId)
@@ -134,7 +140,7 @@ void Authorization::onError(int64_t chatId, int32_t type, int32_t subType, int32
 
     if (type == td_api::checkAuthenticationBotToken::ID) {
         emit slackLoginFailed(message);
-    } else if (type == td_api::sendMessage::ID) {
+    } else if (type == td_api::sendMessage::ID || type == td_api::editMessageText::ID || type == td_api::deleteMessages::ID) {
         emit messageSendFailed(message);
     }
 }

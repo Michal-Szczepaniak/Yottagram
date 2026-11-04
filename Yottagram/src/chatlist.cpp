@@ -633,25 +633,27 @@ void ChatList::updateChatLastMessage(td_api::updateChatLastMessage *updateChatLa
     }
 
     if (updateChatLastMessage->last_message_) {
-        auto lastMessage = _chats[updateChatLastMessage->chat_id_]->lastMessage();
+        auto chat = _chats[updateChatLastMessage->chat_id_];
+        auto lastMessage = chat->lastMessage();
         if (lastMessage == nullptr || lastMessage->getId() != updateChatLastMessage->last_message_->id_) {
-            rolesToUpdate.append(LastMessageRole);
-            rolesToUpdate.append(LastMessageAuthorRole);
-            auto chat = _chats[updateChatLastMessage->chat_id_];
             chat->setLastMessage(move(updateChatLastMessage->last_message_));
-
-            if (!_chatCache.contains(updateChatLastMessage->chat_id_)) {
-                _chatCache[updateChatLastMessage->chat_id_] = {};
-            }
-
-            auto &cache = _chatCache[updateChatLastMessage->chat_id_];
-            cache.lastMessage = chat->lastMessage()->getTypeText().toHtmlEscaped();
-            cache.lastAuthor = getLastMessageAuthor(chat);
-            if (cache.lastAuthor.length() > 12) {
-                cache.lastAuthor = cache.lastAuthor.left(12) + "...";
-            }
-            cache.lastTimestamp = getLastMessageTimestamp(chat);
         }
+
+        // Also when it's the same message, it may have been edited
+        rolesToUpdate.append(LastMessageRole);
+        rolesToUpdate.append(LastMessageAuthorRole);
+
+        if (!_chatCache.contains(updateChatLastMessage->chat_id_)) {
+            _chatCache[updateChatLastMessage->chat_id_] = {};
+        }
+
+        auto &cache = _chatCache[updateChatLastMessage->chat_id_];
+        cache.lastMessage = chat->lastMessage()->getTypeText().toHtmlEscaped();
+        cache.lastAuthor = getLastMessageAuthor(chat);
+        if (cache.lastAuthor.length() > 12) {
+            cache.lastAuthor = cache.lastAuthor.left(12) + "...";
+        }
+        cache.lastTimestamp = getLastMessageTimestamp(chat);
     }
 
     updateChat(updateChatLastMessage->chat_id_, rolesToUpdate);

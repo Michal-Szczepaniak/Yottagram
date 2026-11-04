@@ -1074,6 +1074,10 @@
         <source>Voice message volume boost</source>
         <translation>Incremento volume note vocali</translation>
     </message>
+    <message>
+        <source>Slack app token, leave empty to turn instant updates off</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SupergroupInfo</name>

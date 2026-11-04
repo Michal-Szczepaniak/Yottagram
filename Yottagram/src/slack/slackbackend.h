@@ -49,6 +49,8 @@ private:
     void reply(uint64_t id, td_api::Object* object);
     void replyError(uint64_t id, int32_t code, const string &message);
     void handleSendMessage(uint64_t id, td_api::sendMessage *query);
+    void handleEditMessage(uint64_t id, td_api::editMessageText *query);
+    void handleDeleteMessages(uint64_t id, td_api::deleteMessages *query);
 
     QLibrary _library;
     SlackLibrary _api;

@@ -6,19 +6,19 @@ func name(id string) string { return "name-" + id }
 
 func TestFromMrkdwn(t *testing.T) {
 	cases := map[string]string{
-		"plain":                             "plain",
-		"a &amp; b &lt;c&gt;":               "a & b <c>",
-		"&amp;lt;":                          "&lt;",
-		"hi <@U1>":                          "hi @name-U1",
-		"hi <@U1|ignored>":                  "hi @name-U1",
-		"in <#C1|general>":                  "in #general",
-		"<!here> look":                      "@here look",
-		"<!subteam^S1|@team>":               "@team",
-		"<!date^1392734382^{date}|Feb 18>":  "Feb 18",
-		"<https://a.example>":               "https://a.example",
-		"<https://a.example|a site>":        "a site (https://a.example)",
+		"plain":                                 "plain",
+		"a &amp; b &lt;c&gt;":                   "a & b <c>",
+		"&amp;lt;":                              "&lt;",
+		"hi <@U1>":                              "hi @name-U1",
+		"hi <@U1|ignored>":                      "hi @name-U1",
+		"in <#C1|general>":                      "in #general",
+		"<!here> look":                          "@here look",
+		"<!subteam^S1|@team>":                   "@team",
+		"<!date^1392734382^{date}|Feb 18>":      "Feb 18",
+		"<https://a.example>":                   "https://a.example",
+		"<https://a.example|a site>":            "a site (https://a.example)",
 		"<https://a.example|https://a.example>": "https://a.example",
-		"<mailto:a@b.example|a@b.example>":  "a@b.example",
+		"<mailto:a@b.example|a@b.example>":      "a@b.example",
 	}
 
 	for input, want := range cases {

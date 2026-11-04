@@ -33,6 +33,10 @@ const (
 	newerPageSize   = 200
 	maxLoginBackoff = 30 * time.Second
 
+	// conversations.history allows about 50 calls a minute. This uses 30, the
+	// rest is for opening chats
+	previewInterval = 2 * time.Second
+
 	// Smaller message ids are row indexes or other junk from the UI
 	minPlausibleMessageID = int64(100000000000000)
 
@@ -72,6 +76,7 @@ type message struct {
 	Outgoing bool   `json:"outgoing"`
 	Date     int64  `json:"date"`
 	Text     string `json:"text"`
+	EditDate int64  `json:"edit_date,omitempty"`
 }
 
 type chat struct {
@@ -97,6 +102,7 @@ type chat struct {
 // Session is one logged-in Slack account.
 type Session struct {
 	api          *api.Client
+	appAPI       *api.Client
 	ids          *ids.Store
 	usersPath    string
 	pollInterval time.Duration
@@ -111,6 +117,14 @@ type Session struct {
 	users  map[string]*user
 	chats  map[int64]*chat
 	tempID int64
+
+	previewInterval time.Duration
+
+	bySlackID    map[string]*chat
+	own          map[int64]bool
+	nextOrder    int64
+	stopRealtime context.CancelFunc
+	realtimeUp   bool
 }
 
 // New creates a session storing its state in dataDir.
@@ -125,17 +139,26 @@ func New(dataDir string) (*Session, error) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	return &Session{
-		api:          api.New(),
-		ids:          store,
-		usersPath:    filepath.Join(dataDir, "users.json"),
-		pollInterval: pollInterval,
-		ctx:          ctx,
-		cancel:       cancel,
-		events:       make(chan string, eventQueueSize),
-		users:        map[string]*user{},
-		chats:        map[int64]*chat{},
-	}, nil
+	s := &Session{
+		api:             api.New(),
+		appAPI:          api.New(),
+		ids:             store,
+		usersPath:       filepath.Join(dataDir, "users.json"),
+		pollInterval:    pollInterval,
+		previewInterval: previewInterval,
+		ctx:             ctx,
+		cancel:          cancel,
+		events:          make(chan string, eventQueueSize),
+		users:           map[string]*user{},
+		chats:           map[int64]*chat{},
+		bySlackID:       map[string]*chat{},
+		own:             map[int64]bool{},
+	}
+
+	s.api.RateLimited = func(method string, wait time.Duration) {
+		s.log("%s rate limited for %v", method, wait)
+	}
+	return s, nil
 }
 
 // Next returns the next event, or false on timeout or after Close.
@@ -217,11 +240,20 @@ func (s *Session) dispatch(r request) {
 	switch r.Method {
 	case "login":
 		var p struct {
-			Token string `json:"token"`
-			Retry bool   `json:"retry"`
+			Token    string `json:"token"`
+			AppToken string `json:"app_token"`
+			Retry    bool   `json:"retry"`
 		}
 		if err = json.Unmarshal(r.Params, &p); err == nil {
-			s.login(r.ID, p.Token, p.Retry)
+			s.login(r.ID, p.Token, p.AppToken, p.Retry)
+		}
+	case "realtime":
+		var p struct {
+			Token string `json:"token"`
+		}
+		if err = json.Unmarshal(r.Params, &p); err == nil {
+			s.startRealtime(p.Token)
+			s.replyOK(r.ID)
 		}
 	case "me":
 		s.getMe(r.ID)
@@ -242,6 +274,30 @@ func (s *Session) dispatch(r request) {
 		}
 		if err = json.Unmarshal(r.Params, &p); err == nil {
 			s.send(r.ID, p.Chat, p.Text)
+		}
+	case "properties":
+		var p struct {
+			Message int64 `json:"message"`
+		}
+		if err = json.Unmarshal(r.Params, &p); err == nil {
+			s.properties(r.ID, p.Message)
+		}
+	case "edit":
+		var p struct {
+			Chat    int64  `json:"chat"`
+			Message int64  `json:"message"`
+			Text    string `json:"text"`
+		}
+		if err = json.Unmarshal(r.Params, &p); err == nil {
+			s.edit(r.ID, p.Chat, p.Message, p.Text)
+		}
+	case "delete":
+		var p struct {
+			Chat     int64   `json:"chat"`
+			Messages []int64 `json:"messages"`
+		}
+		if err = json.Unmarshal(r.Params, &p); err == nil {
+			s.deleteMessages(r.ID, p.Chat, p.Messages)
 		}
 	case "open", "close":
 		var p struct {
@@ -264,7 +320,7 @@ func (s *Session) dispatch(r request) {
 	}
 }
 
-func (s *Session) login(id uint64, token string, retry bool) {
+func (s *Session) login(id uint64, token, appToken string, retry bool) {
 	s.api.SetToken(token)
 
 	selfID, err := s.authTest(retry)
@@ -290,6 +346,8 @@ func (s *Session) login(id uint64, token string, retry bool) {
 	s.emit(map[string]any{"event": "users", "users": []*user{me}})
 
 	s.sync()
+	s.startRealtime(appToken)
+	s.spawn(s.loadPreviews)
 }
 
 // authTest retries network failures when logging in with a stored token, as
@@ -467,24 +525,9 @@ func (s *Session) emitChats(conversations []api.Conversation) {
 	chats := make([]wireChat, 0, len(conversations))
 
 	for _, conversation := range conversations {
-		id := s.ids.Chat(conversation.ID)
-		entry := wireChat{ID: id, Title: s.conversationTitle(conversation), dm: conversation.IsIM || conversation.IsMpim}
-
-		if conversation.IsIM {
-			entry.Type = "private"
-			entry.UserID = s.ensureUser(conversation.User).ID
-		} else {
-			entry.Type = "group"
-			entry.SupergroupID = s.ids.Supergroup(conversation.ID)
-		}
-
+		entry := s.makeWireChat(conversation)
 		chats = append(chats, entry)
-
-		s.mu.Lock()
-		if _, known := s.chats[id]; !known {
-			s.chats[id] = &chat{id: id, slackID: conversation.ID, supergroupID: entry.SupergroupID}
-		}
-		s.mu.Unlock()
+		s.trackChat(entry, conversation.ID)
 	}
 
 	// The API doesn't expose the sidebar, so this is its default layout:
@@ -502,6 +545,7 @@ func (s *Session) emitChats(conversations []api.Conversation) {
 		chats[i].Order = int64(len(chats) - i)
 		s.chats[chats[i].ID].order = chats[i].Order
 	}
+	s.nextOrder = int64(len(chats))
 	s.mu.Unlock()
 
 	for start := 0; start < len(chats); start += batchSize {
@@ -511,6 +555,36 @@ func (s *Session) emitChats(conversations []api.Conversation) {
 		}
 		s.emit(map[string]any{"event": "chats", "chats": chats[start:end]})
 	}
+}
+
+func (s *Session) makeWireChat(conversation api.Conversation) wireChat {
+	entry := wireChat{
+		ID:    s.ids.Chat(conversation.ID),
+		Title: s.conversationTitle(conversation),
+		dm:    conversation.IsIM || conversation.IsMpim,
+	}
+
+	if conversation.IsIM {
+		entry.Type = "private"
+		entry.UserID = s.ensureUser(conversation.User).ID
+	} else {
+		entry.Type = "group"
+		entry.SupergroupID = s.ids.Supergroup(conversation.ID)
+	}
+	return entry
+}
+
+func (s *Session) trackChat(entry wireChat, slackID string) *chat {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	c := s.chats[entry.ID]
+	if c == nil {
+		c = &chat{id: entry.ID, slackID: slackID, supergroupID: entry.SupergroupID}
+		s.chats[entry.ID] = c
+		s.bySlackID[slackID] = c
+	}
+	return c
 }
 
 func (s *Session) conversationTitle(conversation api.Conversation) string {
@@ -615,7 +689,17 @@ func (s *Session) toMessage(c *chat, m api.Message) (message, error) {
 	sender := s.sender(m)
 	s.mu.Lock()
 	outgoing := s.me != nil && sender.ID == s.me.ID
+	if outgoing {
+		s.own[id] = true
+	}
 	s.mu.Unlock()
+
+	var editDate int64
+	if m.Edited != nil {
+		if edited, err := ids.ParseTS(m.Edited.TS); err == nil {
+			editDate = edited / 1000000
+		}
+	}
 
 	return message{
 		ID:       id,
@@ -624,6 +708,7 @@ func (s *Session) toMessage(c *chat, m api.Message) (message, error) {
 		Outgoing: outgoing,
 		Date:     id / 1000000,
 		Text:     s.messageText(m),
+		EditDate: editDate,
 	}, nil
 }
 
@@ -765,6 +850,68 @@ func (s *Session) history(id uint64, chatID, from int64, offset, limit int) {
 	}
 }
 
+// loadPreviews fetches each chat's last message, as Slack's chat list doesn't
+// include it. It starts at the top of the list, which is what's on screen.
+func (s *Session) loadPreviews() {
+	s.mu.Lock()
+	chats := make([]*chat, 0, len(s.chats))
+	for _, c := range s.chats {
+		chats = append(chats, c)
+	}
+	sort.Slice(chats, func(a, b int) bool { return chats[a].order > chats[b].order })
+	s.mu.Unlock()
+
+	for _, c := range chats {
+		s.mu.Lock()
+		known := c.newest != 0
+		s.mu.Unlock()
+		if known {
+			continue
+		}
+
+		select {
+		case <-time.After(s.previewInterval):
+		case <-s.ctx.Done():
+			return
+		}
+		s.loadPreview(c)
+	}
+}
+
+func (s *Session) loadPreview(c *chat) {
+	page, err := s.api.History(s.ctx, c.slackID, api.HistoryParams{Limit: 1})
+	if err != nil {
+		if !errors.Is(err, context.Canceled) {
+			s.log("loading preview failed: %v", err)
+		}
+		return
+	}
+	if len(page.Messages) == 0 {
+		return
+	}
+
+	// A send in progress has a newer message than this one
+	c.sending.RLock()
+	defer c.sending.RUnlock()
+
+	item, err := s.toMessage(c, page.Messages[0])
+	if err != nil {
+		s.log("skipping preview: %v", err)
+		return
+	}
+
+	s.mu.Lock()
+	isNewest := item.ID > c.newest
+	if isNewest {
+		c.newest = item.ID
+	}
+	s.mu.Unlock()
+
+	if isNewest {
+		s.emitLastMessage(item)
+	}
+}
+
 func (s *Session) send(id uint64, chatID int64, content string) {
 	c := s.findChat(chatID)
 	if c == nil {
@@ -818,8 +965,11 @@ func (s *Session) send(id uint64, chatID int64, content string) {
 	s.mu.Lock()
 	c.inflight--
 	c.sendGen++
-	if err == nil && sent.ID > c.newest {
-		c.newest = sent.ID
+	if err == nil {
+		s.own[sent.ID] = true
+		if sent.ID > c.newest {
+			c.newest = sent.ID
+		}
 	}
 	s.mu.Unlock()
 
@@ -834,6 +984,71 @@ func (s *Session) send(id uint64, chatID int64, content string) {
 		s.emit(map[string]any{"event": "message_content", "chat": c.id, "message_id": sent.ID, "text": sent.Text})
 	}
 	s.emitLastMessage(sent)
+	s.replyOK(id)
+}
+
+// properties answers with an error for messages that aren't ours, which leaves
+// them without the edit and delete actions.
+func (s *Session) properties(id uint64, messageID int64) {
+	s.mu.Lock()
+	own := s.own[messageID]
+	s.mu.Unlock()
+
+	if !own {
+		s.replyError(id, codeBadRequest, "not your message")
+		return
+	}
+	s.reply(id, map[string]any{"type": "properties"})
+}
+
+func (s *Session) edit(id uint64, chatID, messageID int64, content string) {
+	c := s.findChat(chatID)
+	if c == nil {
+		s.replyError(id, codeBadRequest, "unknown chat")
+		return
+	}
+
+	content = strings.TrimSpace(content)
+	if content == "" {
+		s.replyError(id, codeBadRequest, "message is empty")
+		return
+	}
+
+	ts := ids.FormatTS(messageID)
+	posted, err := s.api.UpdateMessage(s.ctx, c.slackID, ts, text.ToMrkdwn(content))
+	if err != nil {
+		s.replyError(id, codeFailed, err.Error())
+		return
+	}
+
+	s.mu.Lock()
+	posted.User = s.me.SlackID
+	s.mu.Unlock()
+
+	posted.TS = ts
+	if posted.Edited == nil {
+		posted.Edited = &api.Edited{TS: ids.FormatTS(time.Now().UnixMicro())}
+	}
+
+	s.changeMessage(c, posted)
+	s.replyOK(id)
+}
+
+func (s *Session) deleteMessages(id uint64, chatID int64, messageIDs []int64) {
+	c := s.findChat(chatID)
+	if c == nil {
+		s.replyError(id, codeBadRequest, "unknown chat")
+		return
+	}
+
+	for _, messageID := range messageIDs {
+		ts := ids.FormatTS(messageID)
+		if err := s.api.DeleteMessage(s.ctx, c.slackID, ts); err != nil {
+			s.replyError(id, codeFailed, err.Error())
+			return
+		}
+		s.deleteMessage(c, ts)
+	}
 	s.replyOK(id)
 }
 
@@ -904,9 +1119,18 @@ func (s *Session) poll(ctx context.Context, c *chat) {
 	ticker := time.NewTicker(s.pollInterval)
 	defer ticker.Stop()
 
+	var lastPoll time.Time
+
 	for {
 		select {
 		case <-ticker.C:
+			// With realtime up this is only a safety net. The first one still
+			// runs, to catch up on what arrived while the chat was closed.
+			if s.isRealtimeUp() && time.Since(lastPoll) < safetyPollInterval {
+				continue
+			}
+			lastPoll = time.Now()
+
 			if err := s.pollOnce(c); err != nil && !errors.Is(err, context.Canceled) {
 				s.log("poll failed: %v", err)
 			}

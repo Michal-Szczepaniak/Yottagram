@@ -89,6 +89,7 @@ int main(int argc, char *argv[])
 
     PulseAudioControl pacontrol;
     view->rootContext()->setContextProperty("pacontrol", &pacontrol);
+    view->rootContext()->setContextProperty("slackMode", slackMode);
     view->rootContext()->setContextProperty("dbusService", slackMode ? "com.verdanditeam.yottagram.slack" : "com.verdanditeam.yottagram");
 
     view->rootContext()->setContextProperty("authorization", &core._authorization);

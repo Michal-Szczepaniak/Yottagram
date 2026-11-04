@@ -23,12 +23,15 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QSettings>
 
 namespace {
 
 const char *TOKEN_KEY = "slackToken";
+const char *APP_TOKEN_KEY = "slackAppToken";
+const char *APP_TOKEN_OPTION = "slack_app_token";
 const int INVALID_TOKEN_CODE = 401;
 const unsigned long CLOSE_TIMEOUT = 3000;
 
@@ -85,7 +88,7 @@ void SlackBackend::start()
         return;
     }
 
-    call(STORED_TOKEN_LOGIN_ID, "login", {{"token", token}, {"retry", true}});
+    call(STORED_TOKEN_LOGIN_ID, "login", {{"token", token}, {"app_token", QSettings().value(APP_TOKEN_KEY).toString()}, {"retry", true}});
 }
 
 void SlackBackend::send(uint64_t id, td_api::object_ptr<td_api::Function> function)
@@ -94,7 +97,7 @@ void SlackBackend::send(uint64_t id, td_api::object_ptr<td_api::Function> functi
     case td_api::checkAuthenticationBotToken::ID:
         _pendingToken = QString::fromStdString(static_cast<td_api::checkAuthenticationBotToken*>(function.get())->token_).trimmed();
         _loginRequestId = id;
-        call(id, "login", {{"token", _pendingToken}});
+        call(id, "login", {{"token", _pendingToken}, {"app_token", QSettings().value(APP_TOKEN_KEY).toString()}});
         break;
     case td_api::getMe::ID:
         call(id, "me");
@@ -112,6 +115,15 @@ void SlackBackend::send(uint64_t id, td_api::object_ptr<td_api::Function> functi
     case td_api::sendMessage::ID:
         handleSendMessage(id, static_cast<td_api::sendMessage*>(function.get()));
         break;
+    case td_api::editMessageText::ID:
+        handleEditMessage(id, static_cast<td_api::editMessageText*>(function.get()));
+        break;
+    case td_api::deleteMessages::ID:
+        handleDeleteMessages(id, static_cast<td_api::deleteMessages*>(function.get()));
+        break;
+    case td_api::getMessageProperties::ID:
+        call(id, "properties", {{"message", static_cast<double>(static_cast<td_api::getMessageProperties*>(function.get())->message_id_)}});
+        break;
     case td_api::openChat::ID:
         call(id, "open", {{"chat", static_cast<double>(static_cast<td_api::openChat*>(function.get())->chat_id_)}});
         break;
@@ -127,9 +139,19 @@ void SlackBackend::send(uint64_t id, td_api::object_ptr<td_api::Function> functi
         reply(id, settings);
         break;
     }
+    case td_api::setOption::ID: {
+        auto query = static_cast<td_api::setOption*>(function.get());
+        if (query->name_ == APP_TOKEN_OPTION && query->value_ && query->value_->get_id() == td_api::optionValueString::ID) {
+            QString token = QString::fromStdString(static_cast<td_api::optionValueString*>(query->value_.get())->value_).trimmed();
+            QSettings().setValue(APP_TOKEN_KEY, token);
+            call(id, "realtime", {{"token", token}});
+        } else {
+            reply(id, new td_api::ok());
+        }
+        break;
+    }
     case td_api::loadChats::ID:
     case td_api::setNetworkType::ID:
-    case td_api::setOption::ID:
     case td_api::setAutoDownloadSettings::ID:
     case td_api::viewMessages::ID:
     case td_api::setChatDraftMessage::ID:
@@ -157,6 +179,39 @@ void SlackBackend::handleSendMessage(uint64_t id, td_api::sendMessage *query)
     call(id, "send", {
         {"chat", static_cast<double>(query->chat_id_)},
         {"text", QString::fromStdString(content->text_->text_)}
+    });
+}
+
+void SlackBackend::handleEditMessage(uint64_t id, td_api::editMessageText *query)
+{
+    if (!query->input_message_content_ || query->input_message_content_->get_id() != td_api::inputMessageText::ID) {
+        replyError(id, 400, "Only text messages are supported");
+        return;
+    }
+
+    auto content = static_cast<td_api::inputMessageText*>(query->input_message_content_.get());
+    if (!content->text_) {
+        replyError(id, 400, "Message is empty");
+        return;
+    }
+
+    call(id, "edit", {
+        {"chat", static_cast<double>(query->chat_id_)},
+        {"message", static_cast<double>(query->message_id_)},
+        {"text", QString::fromStdString(content->text_->text_)}
+    });
+}
+
+void SlackBackend::handleDeleteMessages(uint64_t id, td_api::deleteMessages *query)
+{
+    QJsonArray messages;
+    for (int64_t messageId : query->message_ids_) {
+        messages.append(static_cast<double>(messageId));
+    }
+
+    call(id, "delete", {
+        {"chat", static_cast<double>(query->chat_id_)},
+        {"messages", messages}
     });
 }
 

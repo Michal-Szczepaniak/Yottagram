@@ -48,6 +48,7 @@ public:
     Q_INVOKABLE void sendCode(QString code);
     Q_INVOKABLE void sendPassword(QString password);
     Q_INVOKABLE void sendSlackToken(QString token);
+    Q_INVOKABLE void setSlackAppToken(QString token);
 
 public slots:
     void messageReceived(uint64_t id, td_api::Object* object);

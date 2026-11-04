@@ -37,7 +37,11 @@ func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			{"id":"DANN","is_im":true,"user":"UANN"},
 			{"id":"GMP","name":"mpdm-ann--me-1","is_mpim":true}]}`)
 	case "/conversations.info":
-		fmt.Fprint(w, `{"ok":true,"channel":{"id":"CGEN","num_members":42}}`)
+		fmt.Fprintf(w, `{"ok":true,"channel":{"id":%q,"name":"new","num_members":42}}`, r.Form.Get("channel"))
+	case "/chat.update":
+		fmt.Fprintf(w, `{"ok":true,"message":{"text":%q,"edited":{"ts":"1712345700.000000"}}}`, r.Form.Get("text"))
+	case "/chat.delete":
+		fmt.Fprint(w, `{"ok":true}`)
 	case "/conversations.history":
 		f.mu.Lock()
 		items := strings.Join(f.history, ",")
@@ -85,7 +89,9 @@ func newTestSession(t *testing.T) (*Session, *fakeSlack) {
 	t.Cleanup(s.Close)
 
 	s.api.BaseURL = server.URL
+	s.appAPI.BaseURL = server.URL
 	s.pollInterval = time.Hour
+	s.previewInterval = time.Hour
 	return s, fake
 }
 
@@ -202,6 +208,199 @@ func TestOpenReportsMemberCount(t *testing.T) {
 	count := nextEvent(t, s, "member_count")
 	if count["count"] != float64(42) || count["supergroup_id"] == float64(0) {
 		t.Fatalf("got %v", count)
+	}
+}
+
+func TestLoginLoadsPreviews(t *testing.T) {
+	s, fake := newTestSession(t)
+	s.previewInterval = time.Millisecond
+	fake.setHistory(slackMessage("1712345678.000300", "UANN", "hi"))
+
+	chats := login(t, s)
+
+	last := nextEvent(t, s, "last_message")
+	if last["chat"] != float64(chatID(t, chats, "#general")) {
+		t.Fatalf("the top of the list goes first, got %v", last)
+	}
+}
+
+func messageEvent(ts, sender, body string) []byte {
+	return []byte(fmt.Sprintf(`{"type":"message","channel":"CGEN","user":%q,"text":%q,"ts":%q}`, sender, body, ts))
+}
+
+func TestEventDeliversMessage(t *testing.T) {
+	s, _ := newTestSession(t)
+	login(t, s)
+	nextEvent(t, s, "ready")
+
+	s.handleEvent(messageEvent("1712345678.000300", "UANN", "hi"))
+
+	item := nextEvent(t, s, "new_message")["message"].(map[string]any)
+	if item["text"] != "hi" || item["id"] != float64(1712345678000300) {
+		t.Fatalf("got %v", item)
+	}
+	nextEvent(t, s, "last_message")
+}
+
+func TestEventWaitsForSend(t *testing.T) {
+	s, fake := newTestSession(t)
+	chats := login(t, s)
+	nextEvent(t, s, "ready")
+
+	gate := make(chan struct{})
+	fake.mu.Lock()
+	fake.postGate = gate
+	fake.postTS = "1712345678.000300"
+	fake.mu.Unlock()
+
+	call(s, 8, "send", fmt.Sprintf(`{"chat":%d,"text":"hi"}`, chatID(t, chats, "#general")))
+	nextEvent(t, s, "last_message")
+
+	// The socket is faster than the chat.postMessage reply
+	done := make(chan struct{})
+	go func() {
+		s.handleEvent(messageEvent("1712345678.000300", "UME", "hi"))
+		close(done)
+	}()
+	if raw, ok := s.Next(200 * time.Millisecond); ok {
+		t.Fatalf("delivered during the send: %s", raw)
+	}
+
+	close(gate)
+	nextEvent(t, s, "send_succeeded")
+	<-done
+}
+
+func TestEventSkipsThreadReplies(t *testing.T) {
+	s, _ := newTestSession(t)
+	login(t, s)
+	nextEvent(t, s, "ready")
+
+	s.handleEvent([]byte(`{"type":"message","channel":"CGEN","user":"UANN","text":"reply","ts":"1712345678.000300","thread_ts":"1712345678.000100"}`))
+
+	if raw, ok := s.Next(200 * time.Millisecond); ok {
+		t.Fatalf("got %s", raw)
+	}
+}
+
+func TestEventEditsMessage(t *testing.T) {
+	s, _ := newTestSession(t)
+	login(t, s)
+	nextEvent(t, s, "ready")
+
+	s.handleEvent([]byte(`{"type":"message","subtype":"message_changed","channel":"CGEN","ts":"1712345679.000000",
+		"message":{"ts":"1712345678.000300","user":"UANN","text":"fixed"}}`))
+
+	edit := nextEvent(t, s, "message_content")
+	if edit["text"] != "fixed" || edit["message_id"] != float64(1712345678000300) {
+		t.Fatalf("got %v", edit)
+	}
+}
+
+func TestDeletingNewestRefreshesLastMessage(t *testing.T) {
+	s, fake := newTestSession(t)
+	login(t, s)
+	nextEvent(t, s, "ready")
+
+	s.handleEvent(messageEvent("1712345678.000300", "UANN", "oops"))
+	nextEvent(t, s, "last_message")
+
+	// Slack can still list the deleted message for a moment
+	fake.setHistory(slackMessage("1712345678.000300", "UANN", "oops"), slackMessage("1712345678.000100", "UANN", "older"))
+	s.handleEvent([]byte(`{"type":"message","subtype":"message_deleted","channel":"CGEN","deleted_ts":"1712345678.000300","ts":"1712345679.000000"}`))
+
+	nextEvent(t, s, "delete_messages")
+	last := nextEvent(t, s, "last_message")["message"].(map[string]any)
+	if last["text"] != "older" {
+		t.Fatalf("got %v", last)
+	}
+}
+
+func TestEventAddsUnknownChat(t *testing.T) {
+	s, _ := newTestSession(t)
+	chats := login(t, s)
+	nextEvent(t, s, "ready")
+
+	s.handleEvent([]byte(`{"type":"message","channel":"CNEW","user":"UANN","text":"hi","ts":"1712345678.000300"}`))
+
+	added := nextEvent(t, s, "chats")["chats"].([]any)[0].(map[string]any)
+	if added["title"] != "#new" {
+		t.Fatalf("got %v", added)
+	}
+	for _, value := range chats["chats"].([]any) {
+		if value.(map[string]any)["order"].(float64) >= added["order"].(float64) {
+			t.Fatalf("a new chat goes on top, got %v", added)
+		}
+	}
+	nextEvent(t, s, "new_message")
+}
+
+func TestEditFromAppMarksMessageEdited(t *testing.T) {
+	s, _ := newTestSession(t)
+	chats := login(t, s)
+	nextEvent(t, s, "ready")
+
+	call(s, 8, "edit", fmt.Sprintf(`{"chat":%d,"message":1712345678000300,"text":"fixed\n"}`, chatID(t, chats, "#general")))
+
+	edit := nextEvent(t, s, "message_content")
+	if edit["text"] != "fixed" || edit["edit_date"] != float64(1712345700) {
+		t.Fatalf("got %v", edit)
+	}
+}
+
+func TestDeleteFromApp(t *testing.T) {
+	s, _ := newTestSession(t)
+	chats := login(t, s)
+	nextEvent(t, s, "ready")
+
+	call(s, 8, "delete", fmt.Sprintf(`{"chat":%d,"messages":[1712345678000300]}`, chatID(t, chats, "#general")))
+
+	deleted := nextEvent(t, s, "delete_messages")["ids"].([]any)
+	if deleted[0] != float64(1712345678000300) {
+		t.Fatalf("got %v", deleted)
+	}
+}
+
+func TestPropertiesOnlyForOwnMessages(t *testing.T) {
+	s, _ := newTestSession(t)
+	login(t, s)
+	nextEvent(t, s, "ready")
+
+	s.handleEvent(messageEvent("1712345678.000300", "UME", "mine"))
+	s.handleEvent(messageEvent("1712345678.000400", "UANN", "theirs"))
+
+	reply := func(id int, message int64) event {
+		call(s, id, "properties", fmt.Sprintf(`{"message":%d}`, message))
+		for {
+			if e := next(t, s); e["id"] == float64(id) {
+				return e
+			}
+		}
+	}
+
+	if e := reply(8, 1712345678000300); e["result"] == nil {
+		t.Fatalf("got %v", e)
+	}
+	if e := reply(9, 1712345678000400); e["error"] == nil {
+		t.Fatalf("got %v", e)
+	}
+}
+
+func TestEditingNewestRefreshesPreview(t *testing.T) {
+	s, _ := newTestSession(t)
+	login(t, s)
+	nextEvent(t, s, "ready")
+
+	s.handleEvent(messageEvent("1712345678.000300", "UANN", "oops"))
+	nextEvent(t, s, "last_message")
+
+	s.handleEvent([]byte(`{"type":"message","subtype":"message_changed","channel":"CGEN","ts":"1712345679.000000",
+		"message":{"ts":"1712345678.000300","user":"UANN","text":"fixed"}}`))
+
+	nextEvent(t, s, "message_content")
+	last := nextEvent(t, s, "last_message")["message"].(map[string]any)
+	if last["text"] != "fixed" {
+		t.Fatalf("got %v", last)
 	}
 }
 

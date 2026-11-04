@@ -18,6 +18,7 @@ Run `yottagram --slack`, or use the Yottagram Slack launcher, to start in Slack 
 
    With neither, the build stops with an error.
 3. Start it in Slack mode and paste the User OAuth Token (`xoxp-...`). It's stored in plaintext in `QSettings` under `slackToken`.
+4. For instant updates, create an app-level token (`xapp-...`) with the `connections:write` scope under Basic Information, and paste it in the app's Settings. It's stored the same way under `slackAppToken`. Without it, the open chat is polled every 5 seconds.
 
 ## Testing
 
@@ -25,14 +26,6 @@ Run `yottagram --slack`, or use the Yottagram Slack launcher, to start in Slack 
 go vet ./...
 go test -race ./...
 ```
-
-Try it against a real workspace without the app:
-
-```sh
-SLACK_TOKEN=xoxp-... go run ./cmd/yscli
-```
-
-Each line of stdin is sent as a request, and every event is printed.
 
 ## Layout
 
@@ -42,8 +35,8 @@ Each line of stdin is sent as a request, and every event is printed.
 | `internal/api` | Slack Web API client, pagination, 429 handling |
 | `internal/ids` | `ts` to message id, persisted Slack id to integer tables |
 | `internal/text` | mrkdwn to and from plain text |
-| `internal/session` | Requests, startup sequence, history, send, polling |
-| `cmd/yscli` | Terminal driver |
+| `internal/session` | Requests, startup sequence, history, send, polling, realtime events |
+| `internal/socket` | Minimal WebSocket client, so the library has no dependencies |
 
 ## Protocol
 
@@ -56,7 +49,7 @@ Each line of stdin is sent as a request, and every event is printed.
 {"event":"new_message","message":{}}
 ```
 
-Methods: `login`, `me`, `history`, `send`, `open`, `close`.
+Methods: `login`, `realtime`, `me`, `history`, `send`, `properties`, `edit`, `delete`, `open`, `close`.
 
 Events: `auth_ready`, `users`, `chats`, `ready`, `new_message`, `last_message`, `send_succeeded`, `message_content`, `delete_messages`, `member_count`, `log`.
 

@@ -38,7 +38,7 @@ func IsAuthError(err error) bool {
 		return false
 	}
 	switch apiError.Code {
-	case "invalid_auth", "not_authed", "token_revoked", "token_expired", "account_inactive":
+	case "invalid_auth", "not_authed", "token_revoked", "token_expired", "account_inactive", "not_allowed_token_type":
 		return true
 	}
 	return false
@@ -50,19 +50,27 @@ func IsAPIError(err error) bool {
 	return errors.As(err, &apiError)
 }
 
-// Client calls Slack. A 429 pauses every call, not only the method that hit it.
+// Client calls Slack. A 429 pauses the method that hit it, as Slack's limits are
+// per method. Everything else keeps working, so previews can't delay an edit.
 type Client struct {
 	BaseURL string
 	HTTP    *http.Client
 
+	// RateLimited, if set, is called when a method gets paused
+	RateLimited func(method string, wait time.Duration)
+
 	mu          sync.Mutex
 	token       string
-	pausedUntil time.Time
+	pausedUntil map[string]time.Time
 }
 
 // New returns a client for the production API.
 func New() *Client {
-	return &Client{BaseURL: defaultBaseURL, HTTP: &http.Client{Timeout: requestTimeout}}
+	return &Client{
+		BaseURL:     defaultBaseURL,
+		HTTP:        &http.Client{Timeout: requestTimeout},
+		pausedUntil: map[string]time.Time{},
+	}
 }
 
 // SetToken sets the token used for every call.
@@ -72,9 +80,9 @@ func (c *Client) SetToken(token string) {
 	c.token = token
 }
 
-func (c *Client) waitForPause(ctx context.Context) error {
+func (c *Client) waitForPause(ctx context.Context, method string) error {
 	c.mu.Lock()
-	wait := time.Until(c.pausedUntil)
+	wait := time.Until(c.pausedUntil[method])
 	c.mu.Unlock()
 
 	if wait <= 0 {
@@ -92,12 +100,15 @@ func (c *Client) waitForPause(ctx context.Context) error {
 	}
 }
 
-func (c *Client) pause(duration time.Duration) {
+func (c *Client) pause(method string, duration time.Duration) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
+	if until := time.Now().Add(duration); until.After(c.pausedUntil[method]) {
+		c.pausedUntil[method] = until
+	}
+	c.mu.Unlock()
 
-	if until := time.Now().Add(duration); until.After(c.pausedUntil) {
-		c.pausedUntil = until
+	if c.RateLimited != nil {
+		c.RateLimited(method, duration)
 	}
 }
 
@@ -142,7 +153,7 @@ func (c *Client) Call(ctx context.Context, method string, params url.Values, out
 	}
 
 	for attempt := 0; ; attempt++ {
-		if err := c.waitForPause(ctx); err != nil {
+		if err := c.waitForPause(ctx, method); err != nil {
 			return err
 		}
 
@@ -155,7 +166,7 @@ func (c *Client) Call(ctx context.Context, method string, params url.Values, out
 			if attempt >= maxRateRetries {
 				return &Error{Method: method, Code: "ratelimited"}
 			}
-			c.pause(retryAfter)
+			c.pause(method, retryAfter)
 			continue
 		}
 
@@ -217,9 +228,15 @@ type BotProfile struct {
 	Name string `json:"name"`
 }
 
+// Edited marks a message as changed after it was posted.
+type Edited struct {
+	TS string `json:"ts"`
+}
+
 // Message is a Slack message.
 type Message struct {
 	TS          string       `json:"ts"`
+	ThreadTS    string       `json:"thread_ts"`
 	User        string       `json:"user"`
 	BotID       string       `json:"bot_id"`
 	Username    string       `json:"username"`
@@ -227,6 +244,7 @@ type Message struct {
 	Files       []File       `json:"files"`
 	Attachments []Attachment `json:"attachments"`
 	BotProfile  *BotProfile  `json:"bot_profile"`
+	Edited      *Edited      `json:"edited"`
 }
 
 type responseMetadata struct {
@@ -325,6 +343,15 @@ type HistoryPage struct {
 }
 
 // History fetches one page of a conversation.
+// OpenSocket returns a Socket Mode URL. It needs the app-level token.
+func (c *Client) OpenSocket(ctx context.Context) (string, error) {
+	var response struct {
+		URL string `json:"url"`
+	}
+	err := c.Call(ctx, "apps.connections.open", url.Values{}, &response)
+	return response.URL, err
+}
+
 func (c *Client) ConversationInfo(ctx context.Context, channel string) (Conversation, error) {
 	var response struct {
 		Channel Conversation `json:"channel"`
@@ -360,6 +387,27 @@ func (c *Client) History(ctx context.Context, channel string, p HistoryParams) (
 }
 
 // PostMessage sends text and returns the stored message.
+// UpdateMessage edits a message. Slack only allows that for your own.
+func (c *Client) UpdateMessage(ctx context.Context, channel, ts, text string) (Message, error) {
+	var response struct {
+		Text    string  `json:"text"`
+		Message Message `json:"message"`
+	}
+	err := c.Call(ctx, "chat.update", url.Values{"channel": {channel}, "ts": {ts}, "text": {text}}, &response)
+	if err != nil {
+		return Message{}, err
+	}
+	if response.Message.Text == "" {
+		response.Message.Text = response.Text
+	}
+	return response.Message, nil
+}
+
+// DeleteMessage deletes a message.
+func (c *Client) DeleteMessage(ctx context.Context, channel, ts string) error {
+	return c.Call(ctx, "chat.delete", url.Values{"channel": {channel}, "ts": {ts}}, nil)
+}
+
 func (c *Client) PostMessage(ctx context.Context, channel, text string) (Message, error) {
 	var response struct {
 		TS      string  `json:"ts"`
