@@ -101,6 +101,8 @@ type message struct {
 	Entities []text.Entity `json:"entities,omitempty"`
 	Media    *media        `json:"media,omitempty"`
 	Preview  *linkPreview  `json:"preview,omitempty"`
+
+	Reactions []wireReaction `json:"reactions,omitempty"`
 }
 
 type chat struct {
@@ -161,6 +163,9 @@ type Session struct {
 
 	bySlackID    map[string]*chat
 	own          map[int64]bool
+	reactions    map[int64][]api.Reaction
+	customEmoji  map[string]customEmoji
+	customNames  map[int64]string
 	nextOrder    int64
 	stopRealtime context.CancelFunc
 	realtimeUp   bool
@@ -202,6 +207,9 @@ func New(dataDir string) (*Session, error) {
 		chats:           map[int64]*chat{},
 		bySlackID:       map[string]*chat{},
 		own:             map[int64]bool{},
+		reactions:       map[int64][]api.Reaction{},
+		customEmoji:     map[string]customEmoji{},
+		customNames:     map[int64]string{},
 	}
 
 	s.api.RateLimited = func(method string, wait time.Duration) {
@@ -335,12 +343,16 @@ func (s *Session) dispatch(r request) {
 		if err = json.Unmarshal(r.Params, &p); err == nil {
 			s.view(r.ID, p.Chat, p.Message)
 		}
-	case "download":
+	case "download", "cancel_download":
 		var p struct {
 			File int32 `json:"file"`
 		}
 		if err = json.Unmarshal(r.Params, &p); err == nil {
-			s.download(r.ID, p.File)
+			if r.Method == "download" {
+				s.download(r.ID, p.File)
+			} else {
+				s.cancelDownload(r.ID, p.File)
+			}
 		}
 	case "network":
 		var p struct {
@@ -351,6 +363,42 @@ func (s *Session) dispatch(r request) {
 			s.offline = !p.Online
 			s.mu.Unlock()
 			s.replyOK(r.ID)
+		}
+	case "react":
+		var p struct {
+			Chat    int64  `json:"chat"`
+			Message int64  `json:"message"`
+			Emoji   string `json:"emoji"`
+			Custom  int64  `json:"custom"`
+			Add     bool   `json:"add"`
+		}
+		if err = json.Unmarshal(r.Params, &p); err == nil {
+			s.react(r.ID, p.Chat, p.Message, p.Emoji, p.Custom, p.Add)
+		}
+	case "custom_emojis":
+		var p struct {
+			IDs []int64 `json:"ids"`
+		}
+		if err = json.Unmarshal(r.Params, &p); err == nil {
+			s.customEmojis(r.ID, p.IDs)
+		}
+	case "available_reactions":
+		s.availableReactions(r.ID)
+	case "members":
+		var p struct {
+			Query string `json:"query"`
+			Limit int    `json:"limit"`
+		}
+		if err = json.Unmarshal(r.Params, &p); err == nil {
+			s.searchMembers(r.ID, p.Query, p.Limit)
+		}
+	case "upload":
+		var p struct {
+			Chat  int64    `json:"chat"`
+			Files []upload `json:"files"`
+		}
+		if err = json.Unmarshal(r.Params, &p); err == nil {
+			s.sendFiles(r.ID, p.Chat, p.Files)
 		}
 	case "properties":
 		var p struct {
@@ -465,6 +513,8 @@ func (s *Session) replyLoginError(id uint64, err error) {
 // sync sends everything the chat list needs. Users must come first: a DM's
 // title and every message preview depend on them.
 func (s *Session) sync() {
+	s.loadCustomEmoji()
+
 	cached := s.loadUserCache()
 
 	if len(cached) > 0 {
@@ -808,18 +858,27 @@ func (s *Session) toMessage(c *chat, m api.Message) (message, error) {
 		}
 	}
 
+	s.mu.Lock()
+	if len(m.Reactions) > 0 {
+		s.reactions[id] = m.Reactions
+	} else {
+		delete(s.reactions, id)
+	}
+	s.mu.Unlock()
+
 	content := s.render(m)
 	return message{
-		ID:       id,
-		Chat:     c.id,
-		Sender:   sender.ID,
-		Outgoing: outgoing,
-		Date:     id / 1000000,
-		Text:     content.Text,
-		EditDate: editDate,
-		Entities: content.Entities,
-		Media:    content.Media,
-		Preview:  content.Preview,
+		ID:        id,
+		Chat:      c.id,
+		Sender:    sender.ID,
+		Outgoing:  outgoing,
+		Date:      id / 1000000,
+		Text:      content.Text,
+		EditDate:  editDate,
+		Entities:  content.Entities,
+		Media:     content.Media,
+		Preview:   content.Preview,
+		Reactions: s.wireReactions(m.Reactions),
 	}, nil
 }
 
@@ -1030,7 +1089,7 @@ func (s *Session) send(id uint64, chatID int64, content string) {
 	}
 
 	// TDLib does this for Telegram, the app relies on it
-	content = strings.TrimSpace(content)
+	content, markup := s.withMentions(strings.TrimSpace(content))
 	if content == "" {
 		s.replyError(id, codeBadRequest, "message is empty")
 		return
@@ -1065,7 +1124,7 @@ func (s *Session) send(id uint64, chatID int64, content string) {
 	s.emit(map[string]any{"event": "new_message", "message": temp})
 	s.emitLastMessage(temp)
 
-	posted, err := s.api.PostMessage(s.ctx, c.slackID, text.ToMrkdwn(content))
+	posted, err := s.api.PostMessage(s.ctx, c.slackID, markup)
 
 	var sent message
 	if err == nil {
@@ -1119,14 +1178,14 @@ func (s *Session) edit(id uint64, chatID, messageID int64, content string) {
 		return
 	}
 
-	content = strings.TrimSpace(content)
+	content, markup := s.withMentions(strings.TrimSpace(content))
 	if content == "" {
 		s.replyError(id, codeBadRequest, "message is empty")
 		return
 	}
 
 	ts := ids.FormatTS(messageID)
-	posted, err := s.api.UpdateMessage(s.ctx, c.slackID, ts, text.ToMrkdwn(content))
+	posted, err := s.api.UpdateMessage(s.ctx, c.slackID, ts, markup)
 	if err != nil {
 		s.replyError(id, codeFailed, err.Error())
 		return

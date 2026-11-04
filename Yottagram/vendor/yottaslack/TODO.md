@@ -23,10 +23,13 @@
 ## Messages
 
 - [x] Formatting: bold, italic, strikethrough, code and links, in both directions
-- [ ] Sending mentions as real Slack mentions
+- [x] Sending mentions as real Slack mentions
 - [x] Showing edits and deletes from Slack
 - [x] Editing and deleting from the app
-- [ ] Reactions
+- [x] Reactions, shown and added, with the common emoji
+- [x] `:emoji:` names in messages, with the common emoji
+- [x] Custom workspace emoji, shown in text and reactions
+- [ ] Picking custom emoji in the app
 - [ ] Threads
 - [x] Avatars
 - [x] Link previews
@@ -35,7 +38,8 @@
 - [x] Folders for channels, direct messages and apps
 - [ ] Evicting old files from the download cache
 - [x] Receiving files and images
-- [ ] Uploading files, which also brings back the media panel
+- [x] Uploading files
+- [ ] Upload progress, and hiding the media panel buttons Slack has no use for
 
 ## Before a public release
 

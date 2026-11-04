@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -80,6 +81,24 @@ func TestRateLimitOnlyPausesThatMethod(t *testing.T) {
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("another method's rate limit held this call back")
+	}
+}
+
+func TestDownloadReportsProgress(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Length", "7")
+		w.Write([]byte("content"))
+	}))
+	defer server.Close()
+
+	var done, total int64
+	path := filepath.Join(t.TempDir(), "file")
+	size, err := New().Download(context.Background(), server.URL, false, path, func(d, n int64) { done, total = d, n })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if size != 7 || done != 7 || total != 7 {
+		t.Fatalf("got %d, %d of %d", size, done, total)
 	}
 }
 

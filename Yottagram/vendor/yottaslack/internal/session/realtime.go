@@ -33,6 +33,12 @@ type slackEvent struct {
 	Hidden    bool        `json:"hidden"`
 	DeletedTS string      `json:"deleted_ts"`
 	Changed   api.Message `json:"message"`
+	Reaction  string      `json:"reaction"`
+	Item      struct {
+		Type    string `json:"type"`
+		Channel string `json:"channel"`
+		TS      string `json:"ts"`
+	} `json:"item"`
 }
 
 // startRealtime replaces the running connection, if any. An empty token leaves
@@ -241,6 +247,10 @@ func (s *Session) handleEvent(raw []byte) {
 		s.log("invalid event: %v", err)
 		return
 	}
+	if e.Type == "reaction_added" || e.Type == "reaction_removed" {
+		s.handleReaction(e)
+		return
+	}
 	if e.Type != "message" {
 		return
 	}
@@ -265,6 +275,22 @@ func (s *Session) handleEvent(raw []byte) {
 		if !e.Hidden && !isReply {
 			s.receiveMessage(c, e.Message)
 		}
+	}
+}
+
+func (s *Session) handleReaction(e slackEvent) {
+	if e.Item.Type != "message" {
+		return
+	}
+
+	id, err := ids.ParseTS(e.Item.TS)
+	if err != nil {
+		s.log("skipping reaction: %v", err)
+		return
+	}
+
+	if c := s.chatForSlackID(e.Item.Channel); c != nil {
+		s.changeReaction(c, id, e.Reaction, e.User, e.Type == "reaction_added")
 	}
 }
 

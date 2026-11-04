@@ -36,6 +36,9 @@ const char *APP_TOKEN_OPTION = "slack_app_token";
 const int INVALID_TOKEN_CODE = 401;
 const unsigned long CLOSE_TIMEOUT = 3000;
 
+const QString MENTION_START = QString(QChar(0xE000));
+const QString MENTION_END = QString(QChar(0xE001));
+
 // Slack's markup for what the app's rich input formats. Slack parses the same
 // markers from plain text, so anything else can stay as typed.
 QString toMrkdwn(const td_api::formattedText &text)
@@ -68,6 +71,15 @@ QString toMrkdwn(const td_api::formattedText &text)
         case td_api::textEntityTypePre::ID:
             marker = "```";
             break;
+        case td_api::textEntityTypeMention::ID:
+            // The library knows the Slack ids, it swaps these for real mentions
+            result.replace(entity->offset_, entity->length_, MENTION_START + result.mid(entity->offset_, entity->length_) + MENTION_END);
+            continue;
+        case td_api::textEntityTypeMentionName::ID: {
+            auto mention = static_cast<const td_api::textEntityTypeMentionName*>(entity->type_.get());
+            result.replace(entity->offset_, entity->length_, MENTION_START + "#" + QString::number(mention->user_id_) + MENTION_END);
+            continue;
+        }
         default:
             continue;
         }
@@ -77,6 +89,55 @@ QString toMrkdwn(const td_api::formattedText &text)
     }
 
     return result;
+}
+
+bool appendUpload(td_api::InputMessageContent *content, QJsonArray &files)
+{
+    const td_api::InputFile *file = nullptr;
+    const td_api::formattedText *caption = nullptr;
+
+    switch (content->get_id()) {
+    case td_api::inputMessagePhoto::ID: {
+        auto input = static_cast<td_api::inputMessagePhoto*>(content);
+        file = input->photo_.get();
+        caption = input->caption_.get();
+        break;
+    }
+    case td_api::inputMessageVideo::ID: {
+        auto input = static_cast<td_api::inputMessageVideo*>(content);
+        file = input->video_.get();
+        caption = input->caption_.get();
+        break;
+    }
+    case td_api::inputMessageAudio::ID: {
+        auto input = static_cast<td_api::inputMessageAudio*>(content);
+        file = input->audio_.get();
+        caption = input->caption_.get();
+        break;
+    }
+    case td_api::inputMessageDocument::ID: {
+        auto input = static_cast<td_api::inputMessageDocument*>(content);
+        file = input->document_.get();
+        caption = input->caption_.get();
+        break;
+    }
+    case td_api::inputMessageVoiceNote::ID: {
+        auto input = static_cast<td_api::inputMessageVoiceNote*>(content);
+        file = input->voice_note_.get();
+        caption = input->caption_.get();
+        break;
+    }
+    default:
+        return false;
+    }
+
+    if (file == nullptr || file->get_id() != td_api::inputFileLocal::ID) return false;
+
+    files.append(QJsonObject{
+        {"path", QString::fromStdString(static_cast<const td_api::inputFileLocal*>(file)->path_)},
+        {"caption", caption != nullptr ? toMrkdwn(*caption) : QString()}
+    });
+    return true;
 }
 
 }
@@ -159,6 +220,35 @@ void SlackBackend::send(uint64_t id, td_api::object_ptr<td_api::Function> functi
     case td_api::sendMessage::ID:
         handleSendMessage(id, static_cast<td_api::sendMessage*>(function.get()));
         break;
+    case td_api::sendMessageAlbum::ID:
+        handleSendAlbum(id, static_cast<td_api::sendMessageAlbum*>(function.get()));
+        break;
+    case td_api::addMessageReaction::ID: {
+        auto query = static_cast<td_api::addMessageReaction*>(function.get());
+        handleReaction(id, query->chat_id_, query->message_id_, query->reaction_type_.get(), true);
+        break;
+    }
+    case td_api::removeMessageReaction::ID: {
+        auto query = static_cast<td_api::removeMessageReaction*>(function.get());
+        handleReaction(id, query->chat_id_, query->message_id_, query->reaction_type_.get(), false);
+        break;
+    }
+    case td_api::getCustomEmojiStickers::ID: {
+        QJsonArray ids;
+        for (int64_t emojiId : static_cast<td_api::getCustomEmojiStickers*>(function.get())->custom_emoji_ids_) {
+            ids.append(static_cast<double>(emojiId));
+        }
+        call(id, "custom_emojis", {{"ids", ids}});
+        break;
+    }
+    case td_api::getMessageAvailableReactions::ID:
+        call(id, "available_reactions");
+        break;
+    case td_api::searchChatMembers::ID: {
+        auto query = static_cast<td_api::searchChatMembers*>(function.get());
+        call(id, "members", {{"query", QString::fromStdString(query->query_)}, {"limit", query->limit_}});
+        break;
+    }
     case td_api::editMessageText::ID:
         handleEditMessage(id, static_cast<td_api::editMessageText*>(function.get()));
         break;
@@ -206,6 +296,8 @@ void SlackBackend::send(uint64_t id, td_api::object_ptr<td_api::Function> functi
         call(id, "download", {{"file", static_cast<td_api::downloadFile*>(function.get())->file_id_}});
         break;
     case td_api::cancelDownloadFile::ID:
+        call(id, "cancel_download", {{"file", static_cast<td_api::cancelDownloadFile*>(function.get())->file_id_}});
+        break;
     case td_api::loadChats::ID:
     case td_api::setAutoDownloadSettings::ID:
     case td_api::setChatDraftMessage::ID:
@@ -219,8 +311,19 @@ void SlackBackend::send(uint64_t id, td_api::object_ptr<td_api::Function> functi
 
 void SlackBackend::handleSendMessage(uint64_t id, td_api::sendMessage *query)
 {
-    if (!query->input_message_content_ || query->input_message_content_->get_id() != td_api::inputMessageText::ID) {
-        replyError(id, 400, "Only text messages are supported");
+    if (!query->input_message_content_) {
+        replyError(id, 400, "Message is empty");
+        return;
+    }
+
+    if (query->input_message_content_->get_id() != td_api::inputMessageText::ID) {
+        QJsonArray files;
+        if (!appendUpload(query->input_message_content_.get(), files)) {
+            replyError(id, 400, "Slack only supports text and files");
+            return;
+        }
+
+        call(id, "upload", {{"chat", static_cast<double>(query->chat_id_)}, {"files", files}});
         return;
     }
 
@@ -234,6 +337,39 @@ void SlackBackend::handleSendMessage(uint64_t id, td_api::sendMessage *query)
         {"chat", static_cast<double>(query->chat_id_)},
         {"text", toMrkdwn(*content->text_)}
     });
+}
+
+void SlackBackend::handleSendAlbum(uint64_t id, td_api::sendMessageAlbum *query)
+{
+    QJsonArray files;
+    for (auto &content : query->input_message_contents_) {
+        if (!content || !appendUpload(content.get(), files)) {
+            replyError(id, 400, "Slack only supports text and files");
+            return;
+        }
+    }
+
+    call(id, "upload", {{"chat", static_cast<double>(query->chat_id_)}, {"files", files}});
+}
+
+void SlackBackend::handleReaction(uint64_t id, int64_t chatId, int64_t messageId, const td_api::ReactionType *type, bool add)
+{
+    QJsonObject params{
+        {"chat", static_cast<double>(chatId)},
+        {"message", static_cast<double>(messageId)},
+        {"add", add}
+    };
+
+    if (type != nullptr && type->get_id() == td_api::reactionTypeEmoji::ID) {
+        params["emoji"] = QString::fromStdString(static_cast<const td_api::reactionTypeEmoji*>(type)->emoji_);
+    } else if (type != nullptr && type->get_id() == td_api::reactionTypeCustomEmoji::ID) {
+        params["custom"] = static_cast<double>(static_cast<const td_api::reactionTypeCustomEmoji*>(type)->custom_emoji_id_);
+    } else {
+        replyError(id, 400, "Unsupported reaction");
+        return;
+    }
+
+    call(id, "react", params);
 }
 
 void SlackBackend::handleViewMessages(uint64_t id, td_api::viewMessages *query)

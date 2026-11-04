@@ -49,8 +49,8 @@ go test -race ./...
 {"event":"new_message","message":{}}
 ```
 
-Methods: `login`, `realtime`, `network`, `me`, `history`, `send`, `view`, `download`, `properties`, `edit`, `delete`, `open`, `close`.
+Methods: `login`, `realtime`, `network`, `me`, `history`, `send`, `upload`, `react`, `available_reactions`, `custom_emojis`, `members`, `view`, `download`, `cancel_download`, `properties`, `edit`, `delete`, `open`, `close`.
 
-Events: `auth_ready`, `users`, `chats`, `ready`, `new_message`, `last_message`, `send_succeeded`, `message_content`, `delete_messages`, `member_count`, `read_inbox`, `notify`, `notify_clear`, `file`, `folders`, `log`.
+Events: `auth_ready`, `users`, `chats`, `ready`, `new_message`, `last_message`, `send_succeeded`, `message_content`, `delete_messages`, `member_count`, `reactions`, `read_inbox`, `notify`, `notify_clear`, `file`, `folders`, `log`.
 
 The order of events matters; see the comment at the top of `internal/session/session.go`.

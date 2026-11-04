@@ -1,8 +1,10 @@
 package session
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/hex"
+	"errors"
 	"net/url"
 	"os"
 	"path"
@@ -22,6 +24,8 @@ type wireFile struct {
 	Path   string `json:"path"`
 	Active bool   `json:"active"`
 	Done   bool   `json:"done"`
+
+	Downloaded int64 `json:"downloaded"`
 }
 
 type wirePhoto struct {
@@ -54,8 +58,9 @@ type linkPreview struct {
 
 type fileEntry struct {
 	wireFile
-	url  string
-	auth bool
+	url    string
+	auth   bool
+	cancel context.CancelFunc
 }
 
 type rendered struct {
@@ -129,17 +134,30 @@ func (s *Session) download(id uint64, fileID int32) {
 }
 
 func (s *Session) fetchFile(entry *fileEntry) {
+	ctx, cancel := context.WithCancel(s.ctx)
+	defer cancel()
+
+	s.mu.Lock()
+	entry.cancel = cancel
+	s.mu.Unlock()
+
+	var size int64
+	var err error
+
 	select {
 	case s.downloads <- struct{}{}:
-		defer func() { <-s.downloads }()
-	case <-s.ctx.Done():
-		return
+		size, err = s.api.Download(ctx, entry.url, entry.auth, entry.Path, func(done, total int64) {
+			s.fileProgress(entry, done, total)
+		})
+		<-s.downloads
+	case <-ctx.Done():
+		err = ctx.Err()
 	}
-
-	size, err := s.api.Download(s.ctx, entry.url, entry.auth, entry.Path)
 
 	s.mu.Lock()
 	entry.Active = false
+	entry.cancel = nil
+	entry.Downloaded = 0
 	if err == nil {
 		entry.Size = size
 		entry.Done = true
@@ -147,10 +165,32 @@ func (s *Session) fetchFile(entry *fileEntry) {
 	state := entry.wireFile
 	s.mu.Unlock()
 
-	if err != nil {
+	if err != nil && !errors.Is(err, context.Canceled) {
 		s.log("download failed: %v", err)
 	}
 	s.emit(map[string]any{"event": "file", "file": state})
+}
+
+func (s *Session) fileProgress(entry *fileEntry, done, total int64) {
+	s.mu.Lock()
+	entry.Downloaded = done
+	if total > 0 {
+		entry.Size = total
+	}
+	state := entry.wireFile
+	s.mu.Unlock()
+
+	s.emit(map[string]any{"event": "file", "file": state})
+}
+
+func (s *Session) cancelDownload(id uint64, fileID int32) {
+	s.mu.Lock()
+	if entry := s.filesByID[fileID]; entry != nil && entry.cancel != nil {
+		entry.cancel()
+	}
+	s.mu.Unlock()
+
+	s.replyOK(id)
 }
 
 func (s *Session) avatarPhoto(u *user) *wirePhoto {
@@ -262,7 +302,7 @@ func (s *Session) render(m api.Message) rendered {
 	}
 
 	var r rendered
-	body, entities := text.Format(m.Text, s.userName)
+	body, entities := text.FormatWith(m.Text, s.userName, s.customEmojiID)
 
 	var extras []string
 	for _, file := range m.Files {

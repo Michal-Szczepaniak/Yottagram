@@ -57,6 +57,10 @@ func TestFormat(t *testing.T) {
 		{"<https://a.example>", "https://a.example", []Entity{{Offset: 0, Length: 17, Type: "url"}}},
 		{"hi <@U1>", "hi @name-U1", []Entity{{Offset: 3, Length: 8, Type: "bold"}}},
 		{"a &amp; *b*", "a & b", []Entity{{Offset: 4, Length: 1, Type: "bold"}}},
+		{"nice :+1:", "nice 👍", nil},
+		{":+1::skin-tone-3: ok", "👍 ok", nil},
+		{"at 12:30:45 :not_an_emoji:", "at 12:30:45 :not_an_emoji:", nil},
+		{"`:smile:`", ":smile:", []Entity{{Offset: 0, Length: 7, Type: "code"}}},
 	}
 
 	for _, c := range cases {
@@ -73,6 +77,23 @@ func TestFormat(t *testing.T) {
 				t.Errorf("Format(%q) entity %d = %v, want %v", c.input, i, entities[i], c.entities[i])
 			}
 		}
+	}
+}
+
+func TestFormatWithCustomEmoji(t *testing.T) {
+	custom := func(name string) int64 {
+		if name == "party_parrot" {
+			return 7
+		}
+		return 0
+	}
+
+	got, entities := FormatWith("a :party_parrot: :nope:", name, custom)
+	if got != "a :party_parrot: :nope:" {
+		t.Fatalf("got %q", got)
+	}
+	if len(entities) != 1 || entities[0] != (Entity{Offset: 2, Length: 14, Type: "custom_emoji", Emoji: 7}) {
+		t.Fatalf("got %v", entities)
 	}
 }
 

@@ -51,6 +51,7 @@ td_api::object_ptr<td_api::TextEntityType> makeEntityType(const QJsonObject &ent
     if (type == "pre") return td_api::make_object<td_api::textEntityTypePre>();
     if (type == "url") return td_api::make_object<td_api::textEntityTypeUrl>();
     if (type == "text_url") return td_api::make_object<td_api::textEntityTypeTextUrl>(toStdString(entity["url"]));
+    if (type == "custom_emoji") return td_api::make_object<td_api::textEntityTypeCustomEmoji>(toInt64(entity["emoji"]));
     return nullptr;
 }
 
@@ -80,7 +81,7 @@ td_api::object_ptr<td_api::file> makeFile(const QJsonObject &object)
     local->can_be_downloaded_ = true;
     local->is_downloading_active_ = object["active"].toBool();
     local->is_downloading_completed_ = done;
-    local->downloaded_size_ = done ? size : 0;
+    local->downloaded_size_ = done ? size : toInt64(object["downloaded"]);
 
     auto remote = td_api::make_object<td_api::remoteFile>();
     remote->id_ = QString::number(object["id"].toInt()).toStdString();
@@ -171,6 +172,28 @@ td_api::object_ptr<td_api::MessageContent> makeContent(const QJsonObject &object
     return std::move(content);
 }
 
+td_api::object_ptr<td_api::messageInteractionInfo> makeInteractionInfo(const QJsonArray &reactions)
+{
+    auto list = td_api::make_object<td_api::messageReactions>();
+    for (const QJsonValue &value : reactions) {
+        QJsonObject reaction = value.toObject();
+
+        auto item = td_api::make_object<td_api::messageReaction>();
+        if (reaction.contains("custom")) {
+            item->type_ = td_api::make_object<td_api::reactionTypeCustomEmoji>(toInt64(reaction["custom"]));
+        } else {
+            item->type_ = td_api::make_object<td_api::reactionTypeEmoji>(toStdString(reaction["emoji"]));
+        }
+        item->total_count_ = static_cast<int32_t>(toInt64(reaction["count"]));
+        item->is_chosen_ = reaction["chosen"].toBool();
+        list->reactions_.push_back(std::move(item));
+    }
+
+    auto info = td_api::make_object<td_api::messageInteractionInfo>();
+    info->reactions_ = std::move(list);
+    return info;
+}
+
 td_api::object_ptr<td_api::message> makeMessage(const QJsonObject &object)
 {
     auto sender = td_api::make_object<td_api::messageSenderUser>();
@@ -184,6 +207,12 @@ td_api::object_ptr<td_api::message> makeMessage(const QJsonObject &object)
     message->date_ = static_cast<int32_t>(toInt64(object["date"]));
     message->edit_date_ = static_cast<int32_t>(toInt64(object["edit_date"]));
     message->content_ = makeContent(object);
+
+    QJsonArray reactions = object["reactions"].toArray();
+    if (!reactions.isEmpty()) {
+        message->interaction_info_ = makeInteractionInfo(reactions);
+    }
+
     return message;
 }
 
@@ -245,6 +274,11 @@ td_api::object_ptr<td_api::chat> makeChat(const QJsonObject &object)
 {
     auto permissions = td_api::make_object<td_api::chatPermissions>();
     permissions->can_send_basic_messages_ = true;
+    permissions->can_send_audios_ = true;
+    permissions->can_send_documents_ = true;
+    permissions->can_send_photos_ = true;
+    permissions->can_send_videos_ = true;
+    permissions->can_send_voice_notes_ = true;
 
     auto chat = td_api::make_object<td_api::chat>();
     chat->id_ = toInt64(object["id"]);
@@ -320,6 +354,46 @@ void mapReply(uint64_t id, const QJsonObject &object, vector<Output> &outputs)
         outputs.push_back({id, reply});
     } else if (type == "user") {
         outputs.push_back({id, makeUser(result["user"].toObject()).release()});
+    } else if (type == "available_reactions") {
+        auto reply = new td_api::availableReactions();
+        for (const QJsonValue &emoji : result["emojis"].toArray()) {
+            auto reaction = td_api::make_object<td_api::availableReaction>();
+            reaction->type_ = td_api::make_object<td_api::reactionTypeEmoji>(toStdString(emoji));
+            reply->top_reactions_.push_back(std::move(reaction));
+        }
+        outputs.push_back({id, reply});
+    } else if (type == "custom_emojis") {
+        auto reply = new td_api::stickers();
+        for (const QJsonValue &value : result["emojis"].toArray()) {
+            QJsonObject emoji = value.toObject();
+
+            auto fullType = td_api::make_object<td_api::stickerFullTypeCustomEmoji>();
+            fullType->custom_emoji_id_ = toInt64(emoji["id"]);
+
+            auto thumbnail = td_api::make_object<td_api::thumbnail>();
+            thumbnail->file_ = makeFile(emoji["file"].toObject());
+
+            auto sticker = td_api::make_object<td_api::sticker>();
+            sticker->emoji_ = toStdString(emoji["name"]);
+            sticker->full_type_ = std::move(fullType);
+            sticker->thumbnail_ = std::move(thumbnail);
+            sticker->sticker_ = makeFile(emoji["file"].toObject());
+            reply->stickers_.push_back(std::move(sticker));
+        }
+        outputs.push_back({id, reply});
+    } else if (type == "members") {
+        auto reply = new td_api::chatMembers();
+        for (const QJsonValue &user : result["users"].toArray()) {
+            auto sender = td_api::make_object<td_api::messageSenderUser>();
+            sender->user_id_ = toInt64(user);
+
+            auto member = td_api::make_object<td_api::chatMember>();
+            member->member_id_ = std::move(sender);
+            member->status_ = td_api::make_object<td_api::chatMemberStatusMember>();
+            reply->members_.push_back(std::move(member));
+        }
+        reply->total_count_ = static_cast<int32_t>(reply->members_.size());
+        outputs.push_back({id, reply});
     } else if (type == "properties") {
         auto reply = new td_api::messageProperties();
         reply->can_be_edited_ = true;
@@ -428,6 +502,12 @@ void mapEvent(const QJsonObject &object, vector<Output> &outputs)
         update->supergroup_full_info_ = td_api::make_object<td_api::supergroupFullInfo>();
         update->supergroup_full_info_->member_count_ = object["count"].toInt();
         update->supergroup_full_info_->description_ = toStdString(object["description"]);
+        outputs.push_back({0, update});
+    } else if (event == "reactions") {
+        auto update = new td_api::updateMessageInteractionInfo();
+        update->chat_id_ = toInt64(object["chat"]);
+        update->message_id_ = toInt64(object["message_id"]);
+        update->interaction_info_ = makeInteractionInfo(object["reactions"].toArray());
         outputs.push_back({0, update});
     } else if (event == "read_inbox") {
         auto read = new td_api::updateChatReadInbox();

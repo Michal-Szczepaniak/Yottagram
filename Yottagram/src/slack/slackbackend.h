@@ -50,6 +50,8 @@ private:
     void replyError(uint64_t id, int32_t code, const string &message);
     void handleViewMessages(uint64_t id, td_api::viewMessages *query);
     void handleSendMessage(uint64_t id, td_api::sendMessage *query);
+    void handleSendAlbum(uint64_t id, td_api::sendMessageAlbum *query);
+    void handleReaction(uint64_t id, int64_t chatId, int64_t messageId, const td_api::ReactionType *type, bool add);
     void handleEditMessage(uint64_t id, td_api::editMessageText *query);
     void handleDeleteMessages(uint64_t id, td_api::deleteMessages *query);
 

@@ -62,6 +62,7 @@ type Entity struct {
 	Length int    `json:"length"`
 	Type   string `json:"type"`
 	URL    string `json:"url,omitempty"`
+	Emoji  int64  `json:"emoji,omitempty"`
 }
 
 type formatter struct {
@@ -69,12 +70,19 @@ type formatter struct {
 	length   int
 	entities []Entity
 	userName func(id string) string
+	custom   func(name string) int64
 }
 
 // Format renders Slack's message markup as text with entities, ordered so that
 // an entity comes before the ones nested in it.
 func Format(value string, userName func(id string) string) (string, []Entity) {
-	f := &formatter{userName: userName}
+	return FormatWith(value, userName, nil)
+}
+
+// FormatWith also marks custom emoji. custom returns an emoji's id, or 0. The
+// :name: stays in the text, for showing until its picture has loaded.
+func FormatWith(value string, userName func(id string) string, custom func(name string) int64) (string, []Entity) {
+	f := &formatter{userName: userName, custom: custom}
 	f.parse(value)
 
 	// Inner entities finish first, this puts them after outer ones of the same size
@@ -126,6 +134,16 @@ func (f *formatter) parse(value string) {
 				i += end + 2
 				continue
 			}
+		case ':':
+			if char, size := emojiAt(value[i:]); size > 0 {
+				f.write(char)
+				i += size
+				continue
+			}
+			if size := f.customEmoji(value[i:]); size > 0 {
+				i += size
+				continue
+			}
 		case '*', '_', '~':
 			if end := closingMarker(value, i); end > 0 {
 				start := f.length
@@ -168,6 +186,44 @@ func (f *formatter) token(body string) {
 			f.mark(start, "url", "")
 		}
 	}
+}
+
+func (f *formatter) customEmoji(value string) int {
+	end := strings.IndexByte(value[1:], ':')
+	if f.custom == nil || end <= 0 {
+		return 0
+	}
+
+	id := f.custom(value[1 : end+1])
+	if id == 0 {
+		return 0
+	}
+
+	start := f.length
+	f.write(value[:end+2])
+	f.entities = append(f.entities, Entity{Offset: start, Length: f.length - start, Type: "custom_emoji", Emoji: id})
+	return end + 2
+}
+
+// emojiAt reads a :name: from the start of value, with its skin tone if any.
+func emojiAt(value string) (string, int) {
+	end := strings.IndexByte(value[1:], ':')
+	if end <= 0 {
+		return "", 0
+	}
+
+	char, ok := Emoji(value[1 : end+1])
+	if !ok {
+		return "", 0
+	}
+
+	size := end + 2
+	if rest := value[size:]; strings.HasPrefix(rest, ":skin-tone-") {
+		if close := strings.IndexByte(rest[1:], ':'); close > 0 {
+			size += close + 2
+		}
+	}
+	return char, size
 }
 
 func markerType(marker byte) string {

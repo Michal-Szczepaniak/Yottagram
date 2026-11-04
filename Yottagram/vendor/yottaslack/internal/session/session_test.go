@@ -3,8 +3,11 @@ package session
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -20,6 +23,10 @@ type fakeSlack struct {
 	postGate chan struct{}
 	postTS   string
 	marked   string
+	reacted  string
+	uploaded string
+	comment  string
+	posted   string
 }
 
 func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +53,25 @@ func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{"ok":true}`)
 	case "/chat.update":
 		fmt.Fprintf(w, `{"ok":true,"message":{"text":%q,"edited":{"ts":"1712345700.000000"}}}`, r.Form.Get("text"))
+	case "/reactions.add", "/reactions.remove":
+		f.mu.Lock()
+		f.reacted = r.URL.Path + " " + r.Form.Get("name")
+		f.mu.Unlock()
+		fmt.Fprint(w, `{"ok":true}`)
+	case "/files.getUploadURLExternal":
+		fmt.Fprintf(w, `{"ok":true,"upload_url":"http://%s/upload","file_id":"F1"}`, r.Host)
+	case "/upload":
+		content, _ := io.ReadAll(r.Body)
+		f.mu.Lock()
+		f.uploaded = string(content)
+		f.mu.Unlock()
+	case "/files.completeUploadExternal":
+		f.mu.Lock()
+		f.comment = r.Form.Get("initial_comment") + " in " + r.Form.Get("channel_id")
+		f.mu.Unlock()
+		fmt.Fprint(w, `{"ok":true}`)
+	case "/emoji.list":
+		fmt.Fprint(w, `{"ok":true,"emoji":{"party_parrot":"https://emoji.example/p.gif","parrot":"alias:party_parrot","broken":"alias:missing"}}`)
 	case "/chat.delete":
 		fmt.Fprint(w, `{"ok":true}`)
 	case "/conversations.history":
@@ -61,6 +87,9 @@ func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if gate != nil {
 			<-gate
 		}
+		f.mu.Lock()
+		f.posted = r.Form.Get("text")
+		f.mu.Unlock()
 		if ts == "" {
 			fmt.Fprint(w, `{"ok":false,"error":"channel_not_found"}`)
 			return
@@ -535,6 +564,150 @@ func TestUploadedAvatar(t *testing.T) {
 		if got := uploadedAvatar(input); got != want {
 			t.Errorf("uploadedAvatar(%q) = %q, want %q", input, got, want)
 		}
+	}
+}
+
+func TestReactionsFromHistoryAndEvents(t *testing.T) {
+	s, _ := newTestSession(t)
+	login(t, s)
+	nextEvent(t, s, "ready")
+
+	s.handleEvent([]byte(`{"type":"message","channel":"CGEN","user":"UANN","text":"hi","ts":"1712345678.000300",
+		"reactions":[{"name":"+1::skin-tone-2","count":2,"users":["UME","UANN"]},{"name":"company_logo","count":1,"users":["UANN"]}]}`))
+
+	item := nextEvent(t, s, "new_message")["message"].(map[string]any)
+	reactions := item["reactions"].([]any)
+	first := reactions[0].(map[string]any)
+	if first["emoji"] != "👍" || first["count"] != float64(2) || first["chosen"] != true {
+		t.Fatalf("got %v", reactions)
+	}
+	if reactions[1].(map[string]any)["emoji"] != unknownReaction {
+		t.Fatalf("got %v", reactions)
+	}
+
+	added := []byte(`{"type":"reaction_added","user":"UANN","reaction":"tada","item":{"type":"message","channel":"CGEN","ts":"1712345678.000300"}}`)
+	s.handleEvent(added)
+	s.handleEvent(added)
+
+	nextEvent(t, s, "reactions")
+	updated := nextEvent(t, s, "reactions")["reactions"].([]any)
+	last := updated[len(updated)-1].(map[string]any)
+	if len(updated) != 3 || last["emoji"] != "🎉" || last["count"] != float64(1) {
+		t.Fatalf("the same event twice must count once, got %v", updated)
+	}
+}
+
+func TestReactFromApp(t *testing.T) {
+	s, fake := newTestSession(t)
+	chats := login(t, s)
+	nextEvent(t, s, "ready")
+
+	id := chatID(t, chats, "#general")
+	call(s, 8, "react", fmt.Sprintf(`{"chat":%d,"message":1712345678000300,"emoji":"❤️","add":true}`, id))
+
+	reactions := nextEvent(t, s, "reactions")["reactions"].([]any)
+	first := reactions[0].(map[string]any)
+	if first["chosen"] != true {
+		t.Fatalf("got %v", reactions)
+	}
+
+	fake.mu.Lock()
+	defer fake.mu.Unlock()
+	if fake.reacted != "/reactions.add heart" {
+		t.Fatalf("got %q", fake.reacted)
+	}
+}
+
+func TestMentionsAreSentToSlack(t *testing.T) {
+	s, fake := newTestSession(t)
+	chats := login(t, s)
+	nextEvent(t, s, "ready")
+
+	fake.mu.Lock()
+	fake.postTS = "1712345678.000300"
+	fake.mu.Unlock()
+
+	call(s, 8, "send", fmt.Sprintf(`{"chat":%d,"text":"hi \ue000@ann\ue001 & co"}`, chatID(t, chats, "#general")))
+
+	temp := nextEvent(t, s, "new_message")["message"].(map[string]any)
+	if temp["text"] != "hi @ann & co" {
+		t.Fatalf("got %q", temp["text"])
+	}
+	nextEvent(t, s, "send_succeeded")
+
+	fake.mu.Lock()
+	defer fake.mu.Unlock()
+	if fake.posted != "hi <@UANN> &amp; co" {
+		t.Fatalf("got %q", fake.posted)
+	}
+}
+
+func TestSearchMembers(t *testing.T) {
+	s, _ := newTestSession(t)
+	login(t, s)
+	nextEvent(t, s, "ready")
+
+	call(s, 8, "members", `{"query":"AN","limit":5}`)
+	for {
+		e := next(t, s)
+		if e["id"] != float64(8) {
+			continue
+		}
+		users := e["result"].(map[string]any)["users"].([]any)
+		if len(users) != 1 {
+			t.Fatalf("got %v", users)
+		}
+		return
+	}
+}
+
+func TestUpload(t *testing.T) {
+	s, fake := newTestSession(t)
+	chats := login(t, s)
+	nextEvent(t, s, "ready")
+
+	path := filepath.Join(t.TempDir(), "a.txt")
+	if err := os.WriteFile(path, []byte("content"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	call(s, 8, "upload", fmt.Sprintf(`{"chat":%d,"files":[{"path":%q,"caption":"look"}]}`, chatID(t, chats, "#general"), path))
+	for next(t, s)["id"] != float64(8) {
+	}
+
+	fake.mu.Lock()
+	defer fake.mu.Unlock()
+	if fake.uploaded != "content" || fake.comment != "look in CGEN" {
+		t.Fatalf("got %q, %q", fake.uploaded, fake.comment)
+	}
+}
+
+func TestCustomEmoji(t *testing.T) {
+	s, _ := newTestSession(t)
+	login(t, s)
+	nextEvent(t, s, "ready")
+
+	s.handleEvent([]byte(`{"type":"message","channel":"CGEN","user":"UANN","text":"hi :parrot:","ts":"1712345678.000300",
+		"reactions":[{"name":"party_parrot","count":1,"users":["UME"]}]}`))
+
+	item := nextEvent(t, s, "new_message")["message"].(map[string]any)
+	entity := item["entities"].([]any)[0].(map[string]any)
+	reaction := item["reactions"].([]any)[0].(map[string]any)
+	if entity["type"] != "custom_emoji" || reaction["custom"] == nil {
+		t.Fatalf("got %v", item)
+	}
+
+	call(s, 8, "custom_emojis", fmt.Sprintf(`{"ids":[%d]}`, int64(reaction["custom"].(float64))))
+	for {
+		e := next(t, s)
+		if e["id"] != float64(8) {
+			continue
+		}
+		emojis := e["result"].(map[string]any)["emojis"].([]any)
+		if len(emojis) != 1 || emojis[0].(map[string]any)["name"] != ":party_parrot:" {
+			t.Fatalf("got %v", emojis)
+		}
+		return
 	}
 }
 

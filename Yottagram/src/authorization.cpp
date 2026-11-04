@@ -140,7 +140,7 @@ void Authorization::onError(int64_t chatId, int32_t type, int32_t subType, int32
 
     if (type == td_api::checkAuthenticationBotToken::ID) {
         emit slackLoginFailed(message);
-    } else if (type == td_api::sendMessage::ID || type == td_api::editMessageText::ID || type == td_api::deleteMessages::ID) {
+    } else if (type == td_api::sendMessage::ID || type == td_api::sendMessageAlbum::ID || type == td_api::editMessageText::ID || type == td_api::deleteMessages::ID) {
         emit messageSendFailed(message);
     }
 }

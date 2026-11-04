@@ -24,6 +24,10 @@ oauth_config:
       - im:write
       - mpim:write
       - files:read
+      - files:write
+      - reactions:read
+      - reactions:write
+      - emoji:read
 settings:
   event_subscriptions:
     user_events:
@@ -31,6 +35,8 @@ settings:
       - message.groups
       - message.im
       - message.mpim
+      - reaction_added
+      - reaction_removed
   org_deploy_enabled: false
   socket_mode_enabled: true
   token_rotation_enabled: false

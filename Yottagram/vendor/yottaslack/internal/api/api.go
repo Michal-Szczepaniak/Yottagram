@@ -12,6 +12,7 @@ import (
 	"net/http/httptrace"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,6 +25,7 @@ const (
 	maxRateRetries    = 5
 	defaultRetryAfter = 5 * time.Second
 	slowCallThreshold = time.Second
+	progressInterval  = 300 * time.Millisecond
 	pageSize          = 200
 )
 
@@ -46,6 +48,12 @@ func IsAuthError(err error) bool {
 		return true
 	}
 	return false
+}
+
+// IsCode reports whether Slack answered with this error.
+func IsCode(err error, code string) bool {
+	var apiError *Error
+	return errors.As(err, &apiError) && apiError.Code == code
 }
 
 // IsAPIError reports whether Slack answered, even if with an error.
@@ -355,6 +363,13 @@ type Edited struct {
 	TS string `json:"ts"`
 }
 
+// Reaction is one emoji on a message, Users may not list everyone.
+type Reaction struct {
+	Name  string   `json:"name"`
+	Count Number   `json:"count"`
+	Users []string `json:"users"`
+}
+
 // Message is a Slack message.
 type Message struct {
 	TS          string       `json:"ts"`
@@ -369,6 +384,7 @@ type Message struct {
 	Attachments []Attachment `json:"attachments"`
 	BotProfile  *BotProfile  `json:"bot_profile"`
 	Edited      *Edited      `json:"edited"`
+	Reactions   []Reaction   `json:"reactions"`
 }
 
 type responseMetadata struct {
@@ -538,15 +554,101 @@ func describeURL(address *url.URL) string {
 	return address.Host + "/" + first
 }
 
+// CustomEmoji returns the workspace's emoji as name to URL, or to alias:name.
+func (c *Client) CustomEmoji(ctx context.Context) (map[string]string, error) {
+	var response struct {
+		Emoji map[string]string `json:"emoji"`
+	}
+	err := c.Call(ctx, "emoji.list", nil, &response)
+	return response.Emoji, err
+}
+
+// AddReaction adds an emoji to a message.
+func (c *Client) AddReaction(ctx context.Context, channel, ts, name string) error {
+	return c.Call(ctx, "reactions.add", url.Values{"channel": {channel}, "timestamp": {ts}, "name": {name}}, nil)
+}
+
+// RemoveReaction removes an emoji from a message.
+func (c *Client) RemoveReaction(ctx context.Context, channel, ts, name string) error {
+	return c.Call(ctx, "reactions.remove", url.Values{"channel": {channel}, "timestamp": {ts}, "name": {name}}, nil)
+}
+
+// Upload posts a file to a conversation.
+func (c *Client) Upload(ctx context.Context, channel, path, comment string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	info, err := file.Stat()
+	if err != nil {
+		return err
+	}
+
+	name := filepath.Base(path)
+	var target struct {
+		UploadURL string `json:"upload_url"`
+		FileID    string `json:"file_id"`
+	}
+	params := url.Values{"filename": {name}, "length": {strconv.FormatInt(info.Size(), 10)}}
+	if err := c.Call(ctx, "files.getUploadURLExternal", params, &target); err != nil {
+		return err
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, target.UploadURL, file)
+	if err != nil {
+		return err
+	}
+	request.ContentLength = info.Size()
+	request.Header.Set("Content-Type", "application/octet-stream")
+
+	response, err := (&http.Client{}).Do(request)
+	if err != nil {
+		return err
+	}
+	response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("upload: %s", response.Status)
+	}
+
+	files, err := json.Marshal([]map[string]string{{"id": target.FileID, "title": name}})
+	if err != nil {
+		return err
+	}
+
+	params = url.Values{"files": {string(files)}, "channel_id": {channel}}
+	if comment != "" {
+		params.Set("initial_comment", comment)
+	}
+	return c.Call(ctx, "files.completeUploadExternal", params, nil)
+}
+
 // Mark tells Slack the conversation is read up to ts.
 func (c *Client) Mark(ctx context.Context, channel, ts string) error {
 	return c.Call(ctx, "conversations.mark", url.Values{"channel": {channel}, "ts": {ts}}, nil)
 }
 
-// Download saves a URL to path and returns its size. auth sends the token,
-// which Slack's own files need. Without the files:read scope Slack answers with
-// its login page, so HTML is an error there.
-func (c *Client) Download(ctx context.Context, address string, auth bool, path string) (int64, error) {
+// progressWriter counts what passes through it, reporting now and then.
+type progressWriter struct {
+	done, total int64
+	reported    time.Time
+	report      func(done, total int64)
+}
+
+func (w *progressWriter) Write(content []byte) (int, error) {
+	w.done += int64(len(content))
+	if time.Since(w.reported) >= progressInterval {
+		w.reported = time.Now()
+		w.report(w.done, w.total)
+	}
+	return len(content), nil
+}
+
+// Download saves a URL to path and returns its size, reporting progress on the
+// way. auth sends the token, which Slack's own files need. Without the
+// files:read scope Slack answers with its login page, so HTML is an error there.
+func (c *Client) Download(ctx context.Context, address string, auth bool, path string, report func(done, total int64)) (int64, error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, address, nil)
 	if err != nil {
 		return 0, err
@@ -578,7 +680,8 @@ func (c *Client) Download(ctx context.Context, address string, auth bool, path s
 		return 0, err
 	}
 
-	size, err := io.Copy(file, response.Body)
+	progress := &progressWriter{total: response.ContentLength, report: report}
+	size, err := io.Copy(io.MultiWriter(file, progress), response.Body)
 	if closeErr := file.Close(); err == nil {
 		err = closeErr
 	}
