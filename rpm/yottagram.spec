@@ -109,9 +109,12 @@ desktop-file-install --delete-original       \
 %defattr(-,root,root,-)
 %{_datadir}/%{name}
 %{_datadir}/dbus-1/services/com.verdanditeam.yottagram.service
+%{_datadir}/dbus-1/services/com.verdanditeam.yottagram.slack.service
 %{_datadir}/lipstick/notificationcategories/x-verdanditeam.yottagram.im.conf
 %{_datadir}/applications/%{name}.desktop
+%{_datadir}/applications/%{name}-slack.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
+%{_datadir}/icons/hicolor/*/apps/%{name}-slack.png
 %{_libdir}/libopenh264.so*
 
 %files voicecall-plugin

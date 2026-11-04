@@ -104,6 +104,21 @@
     </message>
 </context>
 <context>
+    <name>AuthorizationSlack</name>
+    <message>
+        <source>Login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Slack user token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Submit</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AutoDownloadSettings</name>
     <message>
         <source>Load slow preset</source>
@@ -421,6 +436,10 @@
     </message>
     <message>
         <source>Monospace</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Message not sent</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

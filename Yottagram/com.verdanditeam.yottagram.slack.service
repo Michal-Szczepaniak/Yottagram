@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=com.verdanditeam.yottagram.slack
+Exec=/usr/bin/invoker --type=generic /usr/bin/yottagram --slack

@@ -67,6 +67,11 @@ int main(int argc, char *argv[])
     gst_init (&argc, &argv);
 
     QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
+
+    // Separate settings, so that it can run next to the Telegram instance
+    const bool slackMode = TelegramManager::isSlackMode();
+    if (slackMode) QCoreApplication::setOrganizationName(QCoreApplication::organizationName() + ".slack");
+
     QSharedPointer<QQuickView> view(SailfishApp::createView());
 
     QuickViewHelper::setView(view.data());
@@ -84,6 +89,7 @@ int main(int argc, char *argv[])
 
     PulseAudioControl pacontrol;
     view->rootContext()->setContextProperty("pacontrol", &pacontrol);
+    view->rootContext()->setContextProperty("dbusService", slackMode ? "com.verdanditeam.yottagram.slack" : "com.verdanditeam.yottagram");
 
     view->rootContext()->setContextProperty("authorization", &core._authorization);
     view->rootContext()->setContextProperty("telegramStatus", &core._telegramStatus);

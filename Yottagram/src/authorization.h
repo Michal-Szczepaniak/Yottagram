@@ -47,14 +47,19 @@ public:
     Q_INVOKABLE void sendNumber(QString number);
     Q_INVOKABLE void sendCode(QString code);
     Q_INVOKABLE void sendPassword(QString password);
+    Q_INVOKABLE void sendSlackToken(QString token);
 
 public slots:
     void messageReceived(uint64_t id, td_api::Object* object);
+    void onError(int64_t chatId, int32_t type, int32_t subType, int32_t code, QString message);
 
 signals:
     void waitingForCode();
     void waitingForPassword();
     void waitingForPhoneNumber();
+    void waitingForSlackToken();
+    void slackLoginFailed(QString message);
+    void messageSendFailed(QString message);
 
     void isAuthorizedChanged(bool);
 

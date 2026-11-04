@@ -19,30 +19,43 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "telegrammanager.h"
+#include "tdlibbackend.h"
 #include "../overloaded.h"
+#include "../slack/slackbackend.h"
 #include <QDebug>
 #include <QSettings>
 #include <QGuiApplication>
 
 TelegramManager::TelegramManager(): _messageId(1)
 {
+    if (isSlackMode()) {
+        _backend = make_unique<SlackBackend>();
+    } else {
+        _backend = make_unique<TdlibBackend>();
+    }
+
+    connect(_backend.get(), &Backend::messageReceived, this, &TelegramManager::messageReceived, Qt::QueuedConnection);
     connect(QGuiApplication::instance(), &QGuiApplication::aboutToQuit, this, [this]() {
-        receiver.manager.execute(td_api::make_object<td_api::close>());
+        _backend->close();
     });
+}
+
+bool TelegramManager::isSlackMode()
+{
+    return QCoreApplication::arguments().contains("--slack");
 }
 
 void TelegramManager::init()
 {
     _networkManager = NetworkManager::instance();
 
-    connect(&receiver, &TelegramReceiver::messageReceived, this, &TelegramManager::messageReceived);
     connect(this, &TelegramManager::updateOption, this, &TelegramManager::onUpdateOption);
     connect(_networkManager, &NetworkManager::defaultRouteChanged, this, &TelegramManager::defaultRouteChanged);
     connect(this, &TelegramManager::bootupComplete, [&](){ _bootupComplete = true; });
 
     defaultRouteChanged(_networkManager->defaultRoute());
 
-    receiver.start();
+    _backend->start();
 }
 
 void TelegramManager::sendQuery(td_api::Function* message)
@@ -50,7 +63,7 @@ void TelegramManager::sendQuery(td_api::Function* message)
     _messageId++;
     _messages[_messageId] = {0, message->get_id(), 0};
 
-    receiver.manager.send(receiver.client, _messageId, td_api::object_ptr<td_api::Function>(message));
+    _backend->send(_messageId, td_api::object_ptr<td_api::Function>(message));
 }
 
 void TelegramManager::sendQuerySync(td_api::Function *message)
@@ -58,12 +71,7 @@ void TelegramManager::sendQuerySync(td_api::Function *message)
     _messageId++;
     _messages[_messageId] = {0, message->get_id(), 0};
 
-    receiver.manager.send(receiver.client, _messageId, td_api::object_ptr<td_api::Function>(message));
-}
-
-td_api::object_ptr<td_api::Object> TelegramManager::sendQuerySyncWithResponse(td_api::Function *message)
-{
-    return receiver.manager.execute(td_api::object_ptr<td_api::Function>(message));
+    _backend->send(_messageId, td_api::object_ptr<td_api::Function>(message));
 }
 
 void TelegramManager::sendQueryWithResponse(int64_t chatId, int32_t type, int32_t subType, td_api::Function *message)
@@ -71,7 +79,7 @@ void TelegramManager::sendQueryWithResponse(int64_t chatId, int32_t type, int32_
     _messageId++;
     _messages[_messageId] = {chatId, type, subType};
 
-    receiver.manager.send(receiver.client, _messageId, td_api::object_ptr<td_api::Function>(message));
+    _backend->send(_messageId, td_api::object_ptr<td_api::Function>(message));
 }
 
 void TelegramManager::sendQueryWithResponse(int64_t chatId, int32_t type, int64_t messageId, td_api::Function *message)
@@ -79,7 +87,7 @@ void TelegramManager::sendQueryWithResponse(int64_t chatId, int32_t type, int64_
     _messageId++;
     _messages[_messageId] = {chatId, type, 0, messageId};
 
-    receiver.manager.send(receiver.client, _messageId, td_api::object_ptr<td_api::Function>(message));
+    _backend->send(_messageId, td_api::object_ptr<td_api::Function>(message));
 }
 
 void TelegramManager::sendQueryWithResponse(int64_t chatId, int32_t type, td_api::Function *message)

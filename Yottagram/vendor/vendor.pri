@@ -13,4 +13,5 @@ include($$PWD/tgcalls/tgcalls.pri)
 include($$PWD/tdlib/tdlib.pri)
 include($$PWD/picoplayer/picoplayer.pri)
 include($$PWD/opusfile/opusfile.pri)
+include($$PWD/yottaslack/yottaslack.pri)
 

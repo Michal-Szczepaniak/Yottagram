@@ -35,7 +35,7 @@ Page {
 
     DBusAdaptor {
         id: shareDBusInterface
-        service: "com.verdanditeam.yottagram"
+        service: dbusService
         path: "/"
         iface: "com.verdanditeam.yottagram"
         xml: '<interface name="com.verdanditeam.yottagram">
@@ -105,6 +105,10 @@ Page {
 
         onWaitingForPassword: {
             pageStack.replace(Qt.resolvedUrl("AuthorizationPassword.qml"));
+        }
+
+        onWaitingForSlackToken: {
+            pageStack.replace(Qt.resolvedUrl("AuthorizationSlack.qml"));
         }
 
         onIsAuthorizedChanged: {

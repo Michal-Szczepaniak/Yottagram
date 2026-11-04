@@ -1,0 +1,25 @@
+# Create the app at https://api.slack.com/apps -> Create New App -> From a manifest,
+# install it to your workspace, then paste the "User OAuth Token" (xoxp-...) into Yottagram.
+#
+# Everyone needs their own app: a shared app would count as distributed outside
+# the Marketplace and get 1 conversations.history call per minute.
+display_information:
+  name: Yottagram
+  description: Slack on Sailfish OS through Yottagram
+oauth_config:
+  scopes:
+    user:
+      - channels:read
+      - groups:read
+      - im:read
+      - mpim:read
+      - channels:history
+      - groups:history
+      - im:history
+      - mpim:history
+      - users:read
+      - chat:write
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

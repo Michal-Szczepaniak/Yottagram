@@ -151,6 +151,21 @@ Page {
         }
     }
 
+    Notification {
+        id: sendFailedNotification
+
+        isTransient: true
+        previewSummary: qsTr("Message not sent")
+    }
+
+    Connections {
+        target: authorization
+        onMessageSendFailed: {
+            sendFailedNotification.previewBody = message
+            sendFailedNotification.publish()
+        }
+    }
+
     Connections {
         target: Qt.application
         onStateChanged: {
@@ -1229,7 +1244,7 @@ Page {
                     property real cellWidth: (width-Theme.paddingLarge*2)/columns
                     property int actualHeight: if (attachmentLoader.active) {
                                                    attachmentLoader.height - textInput.height
-                                                } else if (!textInput.enabled) {
+                                                } else if (!textInput.enabled || !visible) {
                                                    0
                                                 } else {
                                                    implicitHeight + Theme.paddingLarge

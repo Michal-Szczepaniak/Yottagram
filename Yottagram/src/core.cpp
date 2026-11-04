@@ -31,8 +31,12 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 
 Core::Core(QObject *parent) : QObject(parent)
 {
-    moveDataIfUnset();
-    moveDataIfNeeded();
+    // The Slack instance has its own settings, so files_directory is unset there
+    // and these would move the Telegram instance's files
+    if (!TelegramManager::isSlackMode()) {
+        moveDataIfUnset();
+        moveDataIfNeeded();
+    }
 
     _manager = make_shared<TelegramManager>();
     _chatList = make_shared<ChatList>();

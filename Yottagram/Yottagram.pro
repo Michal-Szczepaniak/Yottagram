@@ -86,6 +86,10 @@ SOURCES += src/core.cpp \
     src/authorization.cpp \
     src/core/telegramreceiver.cpp \
     src/core/telegrammanager.cpp \
+    src/core/tdlibbackend.cpp \
+    src/slack/slackbackend.cpp \
+    src/slack/slackmapper.cpp \
+    src/slack/slackreceiver.cpp \
     src/contacts.cpp \
     src/chatlist.cpp \
     src/chat.cpp \
@@ -94,6 +98,7 @@ SOURCES += src/core.cpp \
 DISTFILES += qml/yottagram.qml \
     com.verdanditeam.yottagram.calls.xml \
     com.verdanditeam.yottagram.service \
+    com.verdanditeam.yottagram.slack.service \
     qml/components/AnimationPicker.qml \
     qml/components/AnimationPreview.qml \
     qml/components/AutoDownloadSettings.qml \
@@ -159,6 +164,7 @@ DISTFILES += qml/yottagram.qml \
     qml/pages/AuthorizationCode.qml \
     qml/pages/AuthorizationNumber.qml \
     qml/pages/AuthorizationPassword.qml \
+    qml/pages/AuthorizationSlack.qml \
     qml/pages/Chat.qml \
     qml/pages/ChatList.qml \
     qml/pages/Contacts.qml \
@@ -169,7 +175,8 @@ DISTFILES += qml/yottagram.qml \
     sailjail/yottagram.desktop \
     translations/*.ts \
     emoji.json \
-    yottagram.desktop
+    yottagram.desktop \
+    yottagram-slack.desktop
 
 SAILFISHAPP_ICONS = 86x86 108x108 128x128 172x172
 
@@ -231,8 +238,14 @@ HEADERS += \
     src/notifications.h \
     src/overloaded.h \
     src/authorization.h \
+    src/core/backend.h \
     src/core/telegramreceiver.h \
     src/core/telegrammanager.h \
+    src/core/tdlibbackend.h \
+    src/slack/slackbackend.h \
+    src/slack/slacklibrary.h \
+    src/slack/slackmapper.h \
+    src/slack/slackreceiver.h \
     src/chatlist.h \
     src/chat.h \
     src/pimcontactsmodel.h \
@@ -253,13 +266,25 @@ RESOURCES += \
     qml/resources/icons.qrc \
     qml/resources/images.qrc \
 
-dbus.files = com.verdanditeam.yottagram.service
+dbus.files = com.verdanditeam.yottagram.service com.verdanditeam.yottagram.slack.service
 dbus.path = /usr/share/dbus-1/services/
 
 notificationcategories.files=x-verdanditeam.yottagram.im.conf
 notificationcategories.path=/usr/share/lipstick/notificationcategories
 
-INSTALLS += dbus notificationcategories
+slackdesktop.files = yottagram-slack.desktop
+slackdesktop.path = /usr/share/applications
+
+slackicon86.files = icons/86x86/yottagram-slack.png
+slackicon86.path = /usr/share/icons/hicolor/86x86/apps
+slackicon108.files = icons/108x108/yottagram-slack.png
+slackicon108.path = /usr/share/icons/hicolor/108x108/apps
+slackicon128.files = icons/128x128/yottagram-slack.png
+slackicon128.path = /usr/share/icons/hicolor/128x128/apps
+slackicon172.files = icons/172x172/yottagram-slack.png
+slackicon172.path = /usr/share/icons/hicolor/172x172/apps
+
+INSTALLS += dbus notificationcategories slackdesktop slackicon86 slackicon108 slackicon128 slackicon172
 
 DBUS_ADAPTORS += com.verdanditeam.yottagram.calls.xml
 DBUS_INTERFACES += com.verdanditeam.yottagram.calls.xml

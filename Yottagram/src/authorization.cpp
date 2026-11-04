@@ -39,6 +39,7 @@ void Authorization::setTelegramManager(shared_ptr<TelegramManager> manager)
     _manager = manager;
 
     connect(_manager.get(), SIGNAL(onMessageReceived(uint64_t,td_api::Object*)), this, SLOT(messageReceived(uint64_t,td_api::Object*)));
+    connect(_manager.get(), &TelegramManager::error, this, &Authorization::onError);
 }
 
 void Authorization::updateAuthorizationState(td_api::updateAuthorizationState &updateAuthorizationState)
@@ -74,6 +75,7 @@ void Authorization::updateAuthorizationState(td_api::updateAuthorizationState &u
             [this](td_api::authorizationStateWaitRegistration &) {
             },
             [this](td_api::authorizationStateWaitOtherDeviceConfirmation &) {
+                emit waitingForSlackToken();
             },
             [this](td_api::authorizationStateWaitPassword &) {
                 authorizationStateWaitPassword();
@@ -117,6 +119,24 @@ void Authorization::sendCode(QString code)
 void Authorization::sendPassword(QString password)
 {
     _manager->sendQuery(new td_api::checkAuthenticationPassword(password.toStdString()));
+}
+
+void Authorization::sendSlackToken(QString token)
+{
+    _manager->sendQuery(new td_api::checkAuthenticationBotToken(token.toStdString()));
+}
+
+void Authorization::onError(int64_t chatId, int32_t type, int32_t subType, int32_t code, QString message)
+{
+    Q_UNUSED(chatId)
+    Q_UNUSED(subType)
+    Q_UNUSED(code)
+
+    if (type == td_api::checkAuthenticationBotToken::ID) {
+        emit slackLoginFailed(message);
+    } else if (type == td_api::sendMessage::ID) {
+        emit messageSendFailed(message);
+    }
 }
 
 void Authorization::messageReceived(uint64_t id, td_api::Object *object)

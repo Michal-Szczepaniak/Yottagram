@@ -21,6 +21,7 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 #ifndef TELEGRAMSENDER_H
 #define TELEGRAMSENDER_H
 
+#include "backend.h"
 #include "telegramreceiver.h"
 #include <QObject>
 #include <QTimer>
@@ -33,6 +34,8 @@ class TelegramManager : public QObject
     Q_OBJECT
 public:
     TelegramManager();
+
+    static bool isSlackMode();
 
     struct MessageWithResponse {
         int64_t chatId;
@@ -53,7 +56,6 @@ public:
     void init();
     void sendQuery(td_api::Function* message);
     void sendQuerySync(td_api::Function* message);
-    td_api::object_ptr<td_api::Object> sendQuerySyncWithResponse(td_api::Function* message);
     void sendQueryWithResponse(int64_t chatId, int32_t type, int32_t subType, td_api::Function* message);
     void sendQueryWithResponse(int64_t chatId, int32_t type, int64_t messageId, td_api::Function* message);
     void sendQueryWithResponse(int64_t chatId, int32_t type, td_api::Function* message);
@@ -165,7 +167,7 @@ public slots:
     void updateConnectionState(td_api::updateConnectionState *updateConnectionState);
 
 private:
-    TelegramReceiver receiver;
+    unique_ptr<Backend> _backend;
     QThread receiverThread;
     QTimer incomingMessageCheckTimer;
     int32_t _myId;
