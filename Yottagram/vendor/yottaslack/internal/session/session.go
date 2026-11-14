@@ -125,7 +125,7 @@ type chat struct {
 	// Set for a thread's chat, whose slackID is its channel
 	threadTS string
 	title    string
-	dm           bool
+	dm       bool
 
 	lastRead int64
 	unread   []int64
@@ -835,9 +835,9 @@ func (s *Session) emitChats(conversations []api.Conversation) {
 		s.trackChat(entry, conversation.ID)
 	}
 
-	// The API doesn't expose the sidebar, so this is its default layout:
-	// channels, then direct messages. Chats keep these positions, activity
-	// doesn't reorder them.
+	// The API doesn't expose the sidebar. Category folders keep this stand-in:
+	// channels, then direct messages and bots, alphabetical. Activity does
+	// not change it. The main list is ordered by the latest message instead.
 	sort.SliceStable(chats, func(a, b int) bool {
 		if chats[a].dm != chats[b].dm {
 			return chats[b].dm
@@ -1040,7 +1040,12 @@ func (s *Session) emitLastMessage(m message) {
 	order := c.order
 	folder := 0
 	if c.threadTS != "" {
+		// Threads stay in their folder, ordered by the latest reply.
 		folder = folderThreads
+	} else {
+		// Main list only: recent channels, direct messages and bots.
+		// c.order is the category position and stays put.
+		order = m.ID
 	}
 	s.mu.Unlock()
 
@@ -1163,21 +1168,44 @@ func (s *Session) history(id uint64, chatID, from int64, offset, limit int) {
 }
 
 // loadPreviews fetches each chat's last message, as Slack's chat list doesn't
-// include it. It starts at the top of the list, which is what's on screen.
+// include it. That message is what places the chat in the main list. Channels
+// take turns with direct messages and bots, so one kind isn't stuck behind
+// the other; within a kind the higher category order still goes first.
 func (s *Session) loadPreviews() {
 	s.mu.Lock()
-	chats := make([]*chat, 0, len(s.chats))
+	channels := make([]*chat, 0, len(s.chats))
+	direct := make([]*chat, 0, len(s.chats))
 	for _, c := range s.chats {
-		chats = append(chats, c)
-	}
-	sort.Slice(chats, func(a, b int) bool { return chats[a].order > chats[b].order })
-	s.mu.Unlock()
-
-	for _, c := range chats {
 		if c.threadTS != "" {
 			continue
 		}
+		if c.dm {
+			direct = append(direct, c)
+		} else {
+			channels = append(channels, c)
+		}
+	}
+	s.mu.Unlock()
 
+	byOrder := func(list []*chat) {
+		sort.Slice(list, func(a, b int) bool { return list[a].order > list[b].order })
+	}
+	byOrder(channels)
+	byOrder(direct)
+
+	chats := make([]*chat, 0, len(channels)+len(direct))
+	for len(channels) > 0 || len(direct) > 0 {
+		if len(channels) > 0 {
+			chats = append(chats, channels[0])
+			channels = channels[1:]
+		}
+		if len(direct) > 0 {
+			chats = append(chats, direct[0])
+			direct = direct[1:]
+		}
+	}
+
+	for _, c := range chats {
 		select {
 		case <-time.After(s.previewInterval):
 		case <-s.ctx.Done():

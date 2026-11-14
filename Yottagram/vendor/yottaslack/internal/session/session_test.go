@@ -20,18 +20,20 @@ const testTimeout = 5 * time.Second
 
 // fakeSlack serves a tiny workspace. Set postGate to hold chat.postMessage open.
 type fakeSlack struct {
-	mu       sync.Mutex
-	history  []string
-	postGate chan struct{}
-	postTS   string
-	marked   string
-	scopes   string
-	replies  []string
-	threadTS string
-	reacted  string
-	uploaded string
-	comment  string
-	posted   string
+	mu            sync.Mutex
+	history       []string
+	postGate      chan struct{}
+	postTS        string
+	marked        string
+	scopes        string
+	replies       []string
+	extraUsers    string
+	extraChannels string
+	threadTS      string
+	reacted       string
+	uploaded      string
+	comment       string
+	posted        string
 }
 
 func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -46,12 +48,18 @@ func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "/users.info":
 		fmt.Fprintf(w, `{"ok":true,"user":{"id":%q,"name":%q}}`, r.Form.Get("user"), strings.ToLower(r.Form.Get("user")))
 	case "/users.list":
-		fmt.Fprint(w, `{"ok":true,"members":[{"id":"UME","name":"me"},{"id":"UANN","name":"ann","profile":{"display_name":"Ann"}}]}`)
+		f.mu.Lock()
+		extraUsers := f.extraUsers
+		f.mu.Unlock()
+		fmt.Fprintf(w, `{"ok":true,"members":[{"id":"UME","name":"me"},{"id":"UANN","name":"ann","profile":{"display_name":"Ann"}}%s]}`, extraUsers)
 	case "/users.conversations":
-		fmt.Fprint(w, `{"ok":true,"channels":[
+		f.mu.Lock()
+		extraChannels := f.extraChannels
+		f.mu.Unlock()
+		fmt.Fprintf(w, `{"ok":true,"channels":[
 			{"id":"CGEN","name":"general"},
 			{"id":"DANN","is_im":true,"user":"UANN"},
-			{"id":"GMP","name":"mpdm-ann--me-1","is_mpim":true}]}`)
+			{"id":"GMP","name":"mpdm-ann--me-1","is_mpim":true}%s]}`, extraChannels)
 	case "/conversations.info":
 		fmt.Fprintf(w, `{"ok":true,"channel":{"id":%q,"name":"new","num_members":42,"last_read":"1712345678.000100","purpose":{"value":"talk"}}}`, r.Form.Get("channel"))
 	case "/conversations.mark":
@@ -221,30 +229,73 @@ func TestLoginEventOrder(t *testing.T) {
 	}
 }
 
-func TestChatOrderIsFixed(t *testing.T) {
-	s, fake := newTestSession(t)
+func TestCategoryOrderStaysPut(t *testing.T) {
+	s, _ := newTestSession(t)
 	chats := login(t, s)
 	nextEvent(t, s, "ready")
 
 	orders := map[string]float64{}
+	folders := map[string]float64{}
 	for _, value := range chats["chats"].([]any) {
 		entry := value.(map[string]any)
-		orders[entry["type"].(string)] = entry["order"].(float64)
-		if entry["title"] == "#general" {
-			orders["general"] = entry["order"].(float64)
-		}
+		title := entry["title"].(string)
+		orders[title] = entry["order"].(float64)
+		folders[title] = entry["folder"].(float64)
 	}
-	if orders["general"] <= orders["private"] {
+	if orders["#general"] <= orders["Ann"] {
 		t.Fatalf("channels must come before direct messages, got %v", orders)
 	}
+	if folders["#general"] != float64(folderChannels) || folders["Ann"] != float64(folderDirect) {
+		t.Fatalf("categories changed, got %v", folders)
+	}
+}
 
+func TestMainListFollowsLatestMessage(t *testing.T) {
+	s, fake := newTestSession(t)
 	fake.mu.Lock()
-	fake.postTS = "1712345678.000300"
+	fake.extraUsers = `,{"id":"UBOT","name":"bot","is_bot":true,"profile":{"display_name":"Bot"}}`
+	fake.extraChannels = `,{"id":"DBOT","is_im":true,"user":"UBOT"}`
 	fake.mu.Unlock()
 
-	call(s, 8, "send", fmt.Sprintf(`{"chat":%d,"text":"hi"}`, chatID(t, chats, "#general")))
-	if last := nextEvent(t, s, "last_message"); last["order"] != orders["general"] {
-		t.Fatalf("activity moved the chat, got %v", last["order"])
+	chats := login(t, s)
+	nextEvent(t, s, "ready")
+
+	botFolder := float64(-1)
+	for _, value := range chats["chats"].([]any) {
+		entry := value.(map[string]any)
+		if entry["title"] == "Bot" {
+			botFolder = entry["folder"].(float64)
+		}
+	}
+	if botFolder != float64(folderApps) {
+		t.Fatalf("bots stay in Apps, got %v", botFolder)
+	}
+
+	s.handleEvent(messageEvent("1712345678.000100", "UANN", "channel"))
+	channel := nextEvent(t, s, "last_message")
+	if channel["chat"] != float64(chatID(t, chats, "#general")) || channel["folder"] != float64(0) {
+		t.Fatalf("channels belong on the main list, got %v", channel)
+	}
+	if channel["order"] != channel["message"].(map[string]any)["id"] {
+		t.Fatalf("main list should follow the message, got %v", channel)
+	}
+
+	s.handleEvent([]byte(`{"type":"message","channel":"DANN","user":"UANN","text":"dm","ts":"1712345678.000500"}`))
+	dm := nextEvent(t, s, "last_message")
+	if dm["chat"] != float64(chatID(t, chats, "Ann")) || dm["folder"] != float64(0) {
+		t.Fatalf("direct messages belong on the main list, got %v", dm)
+	}
+	if dm["order"].(float64) <= channel["order"].(float64) {
+		t.Fatalf("a newer DM should sort above an older channel, got %v then %v", channel["order"], dm["order"])
+	}
+
+	s.handleEvent([]byte(`{"type":"message","channel":"DBOT","user":"UBOT","text":"ping","ts":"1712345678.000900"}`))
+	bot := nextEvent(t, s, "last_message")
+	if bot["chat"] != float64(chatID(t, chats, "Bot")) || bot["folder"] != float64(0) {
+		t.Fatalf("bots belong on the main list, got %v", bot)
+	}
+	if bot["order"].(float64) <= dm["order"].(float64) {
+		t.Fatalf("a newer bot should sort above an older DM, got %v then %v", dm["order"], bot["order"])
 	}
 }
 
