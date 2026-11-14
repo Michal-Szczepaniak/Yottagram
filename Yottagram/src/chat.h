@@ -262,7 +262,7 @@ public:
     Q_INVOKABLE void sendMusics(QStringList paths, int64_t replyToMessageId);
     Q_INVOKABLE void sendVideo(QString path, int64_t replyToMessageId);
     Q_INVOKABLE void sendVideos(QStringList paths, int64_t replyToMessageId);
-    Q_INVOKABLE void sendPoll(QString question, QStringList options, bool anonymous, bool multipleAnswers, bool quizMode, int validAnswer);
+    Q_INVOKABLE void sendPoll(QString question, QStringList options, bool anonymous, bool multipleAnswers, bool quizMode, QVariantList validAnswers);
     Q_INVOKABLE void sendVoiceNote(QString path, QString waveform, int64_t duration, int64_t replyToMessageId);
     Q_INVOKABLE void sendSticker(int32_t fileId, int64_t replyToMessageId);
     Q_INVOKABLE void sendLocation(float latitude, float longitude, float horizontalAccuracy, int64_t replyToMessageId);
@@ -400,6 +400,7 @@ private:
     QList<int64_t> _recentBots{};
     QString _title;
     int64_t _currentTopicId = 0;
+    td_api::object_ptr<td_api::MessageTopic> currentTopic() const;
     ChatListTopics *_topicModel;
     TextEntityProcessor _textEntityProcessor;
     td_api::availableReactions *_availableReactions = nullptr;

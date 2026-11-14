@@ -627,43 +627,54 @@ void Chat::updatePosition(td_api::chatPosition *position)
     else (*listPosition) = position;
 }
 
+static td_api::formattedText *draftText(td_api::draftMessage *draft)
+{
+    if (!draft || !draft->content_ || draft->content_->get_id() != td_api::draftMessageContentText::ID) return nullptr;
+
+    return static_cast<td_api::draftMessageContentText*>(draft->content_.get())->text_.get();
+}
+
 QString Chat::draftMessage(bool formatted) const
 {
-    /*if (!_chat->draft_message_ || !_chat->draft_message_->input_message_text_) return "";
+    td_api::formattedText *text = draftText(_chat->draft_message_.get());
+    if (!text) return "";
 
     if (!formatted) {
-        return QString::fromStdString(static_cast<td_api::inputMessageText*>(_chat->draft_message_->input_message_text_.get())->text_->text_);
+        return QString::fromStdString(text->text_);
     }
 
-    QString result = ((Chat*)this)->_textEntityProcessor.formatTextAsHTML(static_cast<td_api::inputMessageText*>(_chat->draft_message_->input_message_text_.get())->text_.get(), true);
-    return result;*/
+    return ((Chat*)this)->_textEntityProcessor.formatTextAsHTML(text, true);
 }
 
 int64_t Chat::draftMessageReplyId() const
 {
-    if (!_chat->draft_message_ || !_chat->draft_message_->reply_to_ || _chat->draft_message_->reply_to_->get_id() == td_api::inputMessageReplyToMessage::ID) return 0;
+    if (!_chat->draft_message_ || !_chat->draft_message_->reply_to_ || _chat->draft_message_->reply_to_->get_id() != td_api::inputMessageReplyToMessage::ID) return 0;
 
     return static_cast<td_api::inputMessageReplyToMessage*>(_chat->draft_message_->reply_to_.get())->message_id_;
 }
 
 void Chat::setDraftMessage(QString message, int64_t replyMessageId)
 {
-    /*td_api::object_ptr<td_api::draftMessage> newMessage = td_api::make_object<td_api::draftMessage>();
-    auto messageContent = td_api::make_object<td_api::inputMessageText>();
-    messageContent->text_ = _textEntityProcessor.parseHTML(message);
-    newMessage->input_message_text_ = move(messageContent);
-    newMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyMessageId, nullptr, 0);
+    td_api::object_ptr<td_api::draftMessage> newMessage;
 
-    _manager->sendQuery(new td_api::setChatDraftMessage(getId(), _currentTopicId, move(newMessage)));*/
+    if (!message.isEmpty() || replyMessageId != 0) {
+        newMessage = td_api::make_object<td_api::draftMessage>();
+        newMessage->content_ = td_api::make_object<td_api::draftMessageContentText>(_textEntityProcessor.parseHTML(message), nullptr);
+        if (replyMessageId != 0) {
+            newMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyMessageId, nullptr, 0, "");
+        }
+    }
+
+    _manager->sendQuery(new td_api::setChatDraftMessage(getId(), currentTopic(), move(newMessage)));
 }
 
 void Chat::setDraftMessage(td_api::object_ptr<td_api::draftMessage> draftMessage)
 {
-/*    _chat->draft_message_ = move(draftMessage);
+    _chat->draft_message_ = move(draftMessage);
 
     std::vector<int64_t> customStickerIds;
-    if (_chat->draft_message_ && _chat->draft_message_->input_message_text_) {
-        for (td_api::object_ptr<td_api::textEntity> &entity : static_cast<td_api::inputMessageText*>(_chat->draft_message_->input_message_text_.get())->text_->entities_) {
+    if (td_api::formattedText *text = draftText(_chat->draft_message_.get())) {
+        for (td_api::object_ptr<td_api::textEntity> &entity : text->entities_) {
             if (entity->type_->get_id() == td_api::textEntityTypeCustomEmoji::ID) {
                 auto emojiId = static_cast<td_api::textEntityTypeCustomEmoji*>(entity->type_.get())->custom_emoji_id_;
                 if (_customEmojis->getCustomEmojiSticker(emojiId) == 0) {
@@ -681,7 +692,14 @@ void Chat::setDraftMessage(td_api::object_ptr<td_api::draftMessage> draftMessage
         _manager->sendQueryWithResponse(getId(), td_api::getCustomEmojiStickers::ID, 0, new td_api::getCustomEmojiStickers(move(customStickerIds)));
     }
 
-    emit draftMessageChanged();*/
+    emit draftMessageChanged();
+}
+
+td_api::object_ptr<td_api::MessageTopic> Chat::currentTopic() const
+{
+    if (_currentTopicId == 0) return nullptr;
+
+    return td_api::make_object<td_api::messageTopicForum>(static_cast<int32_t>(_currentTopicId));
 }
 
 QString Chat::actionText()
@@ -1298,7 +1316,7 @@ void Chat::sendMessage(QString message, int64_t replyToMessageId)
     sendMessage->chat_id_ = _chat->id_;
 
     if (_currentTopicId != 0 && !_isGeneralTopic) {
-        sendMessage->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+        sendMessage->topic_id_ = currentTopic();
     }
 
     if (replyToMessageId != 0) {
@@ -1370,7 +1388,7 @@ void Chat::sendPhoto(QString path, int64_t replyToMessageId)
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
-    sendMessage->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+    sendMessage->topic_id_ = currentTopic();
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0, "");
@@ -1394,7 +1412,7 @@ void Chat::sendPhotos(QStringList paths, int64_t replyToMessageId)
 
     auto sendMessage = new td_api::sendMessageAlbum();
     sendMessage->chat_id_ = _chat->id_;
-    sendMessage->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+    sendMessage->topic_id_ = currentTopic();
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0, "");
@@ -1420,7 +1438,7 @@ void Chat::sendFile(QString path, int64_t replyToMessageId)
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
-    sendMessage->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+    sendMessage->topic_id_ = currentTopic();
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0, "");
@@ -1442,7 +1460,7 @@ void Chat::sendMusic(QString path, int64_t replyToMessageId)
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
-    sendMessage->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+    sendMessage->topic_id_ = currentTopic();
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0, "");
@@ -1466,7 +1484,7 @@ void Chat::sendMusics(QStringList paths, int64_t replyToMessageId)
 
     auto sendMessage = new td_api::sendMessageAlbum();
     sendMessage->chat_id_ = _chat->id_;
-    sendMessage->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+    sendMessage->topic_id_ = currentTopic();
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0, "");
@@ -1492,7 +1510,7 @@ void Chat::sendVideo(QString path, int64_t replyToMessageId)
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
-    sendMessage->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+    sendMessage->topic_id_ = currentTopic();
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0, "");
@@ -1516,7 +1534,7 @@ void Chat::sendVideos(QStringList paths, int64_t replyToMessageId)
 
     auto sendMessage = new td_api::sendMessageAlbum();
     sendMessage->chat_id_ = _chat->id_;
-    sendMessage->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+    sendMessage->topic_id_ = currentTopic();
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0, "");
@@ -1538,11 +1556,11 @@ void Chat::sendVideos(QStringList paths, int64_t replyToMessageId)
     _manager->sendQuery(sendMessage);
 }
 
-void Chat::sendPoll(QString question, QStringList options, bool anonymous, bool multipleAnswers, bool quizMode, int validAnswer = -1)
+void Chat::sendPoll(QString question, QStringList options, bool anonymous, bool multipleAnswers, bool quizMode, QVariantList validAnswers)
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
-    sendMessage->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+    sendMessage->topic_id_ = currentTopic();
 
     auto poll = td_api::make_object<td_api::inputMessagePoll>();
     poll->question_ = td_api::make_object<td_api::formattedText>(question.toStdString(), std::vector<td_api::object_ptr<td_api::textEntity>>());
@@ -1551,12 +1569,18 @@ void Chat::sendPoll(QString question, QStringList options, bool anonymous, bool 
     for (auto option : options) vectorOptions.push_back(td_api::make_object<td_api::inputPollOption>(td_api::make_object<td_api::formattedText>(option.toStdString(), std::vector<td_api::object_ptr<td_api::textEntity>>()), nullptr));
     poll->options_ = move(vectorOptions);
     poll->is_anonymous_ = anonymous;
+    poll->allows_multiple_answers_ = multipleAnswers;
     if (quizMode) {
         td_api::object_ptr<td_api::formattedText> explanation = td_api::make_object<td_api::formattedText>();
-        td_api::array<int32_t> validAnswers = {validAnswer};
-        poll->type_ = td_api::make_object<td_api::inputPollTypeQuiz>(std::move(validAnswers), move(explanation), nullptr);
+        td_api::array<int32_t> correctOptionIds;
+        for (const QVariant &answer : validAnswers) {
+            int optionId = answer.toInt();
+            if (optionId >= 0 && optionId < options.size()) correctOptionIds.push_back(optionId);
+        }
+        if (correctOptionIds.size() > 1) poll->allows_multiple_answers_ = true;
+        poll->type_ = td_api::make_object<td_api::inputPollTypeQuiz>(std::move(correctOptionIds), move(explanation), nullptr);
     } else {
-        poll->type_ = td_api::make_object<td_api::inputPollTypeRegular>(multipleAnswers);
+        poll->type_ = td_api::make_object<td_api::inputPollTypeRegular>(false);
     }
 
     sendMessage->input_message_content_ = std::move(poll);
@@ -1567,7 +1591,7 @@ void Chat::sendVoiceNote(QString path, QString waveform, int64_t duration, int64
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
-    sendMessage->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+    sendMessage->topic_id_ = currentTopic();
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0, "");
@@ -1593,7 +1617,7 @@ void Chat::sendSticker(int32_t fileId, int64_t replyToMessageId)
 
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
-    sendMessage->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+    sendMessage->topic_id_ = currentTopic();
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0, "");
@@ -1616,7 +1640,7 @@ void Chat::sendLocation(float latitude, float longitude, float horizontalAccurac
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
-    sendMessage->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+    sendMessage->topic_id_ = currentTopic();
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0, "");
@@ -1634,7 +1658,7 @@ void Chat::sendAnimation(int32_t fileId, int32_t width, int32_t height, int64_t 
 {
     auto sendMessage = new td_api::sendMessage();
     sendMessage->chat_id_ = _chat->id_;
-    sendMessage->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+    sendMessage->topic_id_ = currentTopic();
 
     if (replyToMessageId != 0) {
         sendMessage->reply_to_ = td_api::make_object<td_api::inputMessageReplyToMessage>(replyToMessageId, nullptr, 0, "");
@@ -1660,7 +1684,7 @@ void Chat::sendForwardedMessages(QStringList forwardedMessages, int64_t forwarde
     for (QString message : forwardedMessages) {
         auto sendMessage = new td_api::sendMessage();
         sendMessage->chat_id_ = _chat->id_;
-        sendMessage->topic_id_ = td_api::make_object<td_api::messageTopicForum>(_currentTopicId);
+        sendMessage->topic_id_ = currentTopic();
 
         auto messageContent = td_api::make_object<td_api::inputMessageForwarded>();
         messageContent->from_chat_id_ = forwardedFrom;
@@ -1812,7 +1836,7 @@ void Chat::sendAction(ChatAction action)
         tdAction = td_api::make_object<td_api::chatActionWatchingAnimations>();
         break;
     }
-    _manager->sendQuery(new td_api::sendChatAction(getId(), td_api::make_object<td_api::messageTopicForum>(_currentTopicId), "", move(tdAction)));
+    _manager->sendQuery(new td_api::sendChatAction(getId(), currentTopic(), "", move(tdAction)));
 }
 
 void Chat::searchChatMembers(QString query)

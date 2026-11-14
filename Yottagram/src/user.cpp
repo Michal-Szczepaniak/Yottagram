@@ -172,7 +172,7 @@ bool User::isSupport() const
 
 QString User::getRestrictionReason() const
 {
-    if (_user == nullptr) return "";
+    if (_user == nullptr || !_user->restriction_info_) return "";
     return QString::fromStdString(_user->restriction_info_->restriction_reason_);
 }
 

@@ -90,7 +90,7 @@ Column {
 
                 GlassItem {
                     id: selectItem
-                    color: poll.typeName === "quiz" ? ((poll.correctOptionId === index) ? "green" : (isChosen ? "red" : "white")) : "white"
+                    color: poll.typeName === "quiz" ? ((poll.correctOptionIds.indexOf(String(index)) !== -1) ? "green" : (isChosen ? "red" : "white")) : "white"
                     enabled: !poll.isAnswered
                     dimmed: !isChosen && !item.selected
                     height: percentage.height

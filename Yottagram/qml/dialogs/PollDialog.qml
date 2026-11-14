@@ -24,12 +24,12 @@ import Sailfish.Silica 1.0
 Dialog {
     allowedOrientations: Orientation.All
 
-    canAccept: questionField.text !== "" && options.itemAt(0).text !== ""
+    canAccept: questionField.text !== "" && options.itemAt(0).text !== "" && (!quizMode.checked || getCorrectOptions().length > 0)
     property var chatObject
 
     onDone: {
         if (result == DialogResult.Accepted) {
-            chatObject.sendPoll(questionField.text, getOptions(), anonymous.checked, multipleAnswers.checked, quizMode.checked, options.checkedOption)
+            chatObject.sendPoll(questionField.text, getOptions(), anonymous.checked, multipleAnswers.checked, quizMode.checked, getCorrectOptions())
         }
     }
 
@@ -41,6 +41,21 @@ Dialog {
         }
 
         return selected
+    }
+
+    // Indices refer to the filtered list returned by getOptions(), not to Repeater rows
+    function getCorrectOptions() {
+        var correct = []
+        var position = 0
+
+        for(var i = 0; i < options.count; i++) {
+            var item = options.itemAt(i)
+            if (!item || item.text === "") continue;
+            if (item.correct) correct.push(position);
+            position++
+        }
+
+        return correct
     }
 
     SilicaFlickable {
@@ -73,24 +88,16 @@ Dialog {
                     id: listModel
                     ListElement { }
                 }
-                property int checkedOption: 0
                 delegate: Item {
                     property alias text: textField.text
+                    property bool correct: optionSwitch.checked && textField.text !== ""
                     width: parent.width
                     height: textField.height
-
-                    Connections {
-                        target: options
-                        onCheckedOptionChanged: optionSwitch.checked = (index === options.checkedOption)
-                    }
 
                     Switch {
                         id: optionSwitch
                         visible: quizMode.checked
                         enabled: textField.text !== ""
-                        onCheckedChanged: {
-                            if (checked) options.checkedOption = index
-                        }
                     }
 
                     TextField {
@@ -121,14 +128,12 @@ Dialog {
                 id: multipleAnswers
                 text: qsTr("Multiple answers")
                 width: parent.width
-                enabled: !quizMode.checked
             }
 
             TextSwitch {
                 id: quizMode
                 text: qsTr("Quiz mode")
                 width: parent.width
-                onCheckedChanged: multipleAnswers.checked = false
             }
         }
     }
