@@ -63,13 +63,13 @@ void Contacts::load()
 void Contacts::importJson(QString json)
 {
     QJsonDocument doc = QJsonDocument::fromJson(json.toLatin1());
-    td_api::array<td_api::object_ptr<td_api::contact>> importContactsArray;
+    td_api::array<td_api::object_ptr<td_api::importedContact>> importContactsArray;
 
 
     for (auto object : doc.array()) {
         QJsonObject obj = object.toObject();
 
-        td_api::object_ptr<td_api::contact> contact = td_api::make_object<td_api::contact>();
+        td_api::object_ptr<td_api::importedContact> contact = td_api::make_object<td_api::importedContact>();
         contact->first_name_ = obj["firstName"].toString().toStdString();
         contact->last_name_ = obj["lastName"].toString().toStdString();
         contact->phone_number_ = obj["phoneNumber"].toString().toStdString();

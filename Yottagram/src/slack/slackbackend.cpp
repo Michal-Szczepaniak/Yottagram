@@ -99,31 +99,31 @@ bool appendUpload(td_api::InputMessageContent *content, QJsonArray &files)
     switch (content->get_id()) {
     case td_api::inputMessagePhoto::ID: {
         auto input = static_cast<td_api::inputMessagePhoto*>(content);
-        file = input->photo_.get();
+        file = input->photo_->photo_.get();
         caption = input->caption_.get();
         break;
     }
     case td_api::inputMessageVideo::ID: {
         auto input = static_cast<td_api::inputMessageVideo*>(content);
-        file = input->video_.get();
+        file = input->video_->video_.get();
         caption = input->caption_.get();
         break;
     }
     case td_api::inputMessageAudio::ID: {
         auto input = static_cast<td_api::inputMessageAudio*>(content);
-        file = input->audio_.get();
+        file = input->audio_->audio_.get();
         caption = input->caption_.get();
         break;
     }
     case td_api::inputMessageDocument::ID: {
         auto input = static_cast<td_api::inputMessageDocument*>(content);
-        file = input->document_.get();
+        file = input->document_->document_.get();
         caption = input->caption_.get();
         break;
     }
     case td_api::inputMessageVoiceNote::ID: {
         auto input = static_cast<td_api::inputMessageVoiceNote*>(content);
-        file = input->voice_note_.get();
+        file = input->voice_note_->voice_note_.get();
         caption = input->caption_.get();
         break;
     }
@@ -333,10 +333,15 @@ void SlackBackend::handleSendMessage(uint64_t id, td_api::sendMessage *query)
         return;
     }
 
-    call(id, "send", {
+    QJsonObject params{
         {"chat", static_cast<double>(query->chat_id_)},
         {"text", toMrkdwn(*content->text_)}
-    });
+    };
+    if (query->reply_to_ && query->reply_to_->get_id() == td_api::inputMessageReplyToMessage::ID) {
+        params["reply_to"] = static_cast<double>(static_cast<td_api::inputMessageReplyToMessage*>(query->reply_to_.get())->message_id_);
+    }
+
+    call(id, "send", params);
 }
 
 void SlackBackend::handleSendAlbum(uint64_t id, td_api::sendMessageAlbum *query)

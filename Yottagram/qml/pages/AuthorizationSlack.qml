@@ -41,7 +41,7 @@ Page {
                     "channels:history", "groups:history", "im:history", "mpim:history",
                     "users:read", "chat:write",
                     "channels:write", "groups:write", "im:write", "mpim:write",
-                    "files:read", "files:write", "reactions:read", "reactions:write", "emoji:read"
+                    "files:read", "files:write", "reactions:read", "reactions:write", "emoji:read", "users:write"
                 ]
             }
         },
@@ -49,7 +49,7 @@ Page {
             event_subscriptions: {
                 user_events: [
                     "message.channels", "message.groups", "message.im", "message.mpim",
-                    "reaction_added", "reaction_removed"
+                    "reaction_added", "reaction_removed", "user_change"
                 ]
             },
             org_deploy_enabled: false,
@@ -139,8 +139,8 @@ Page {
                 width: column.width
                 echoMode: TextInput.Password
                 inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhSensitiveData
-                label: qsTr("User OAuth Token")
-                placeholderText: "xoxp-..."
+                label: qsTr("User OAuth Token, or browser session token")
+                placeholderText: "xoxp-... / xoxc-..."
                 Keys.onReturnPressed: page.submit()
             }
 
@@ -149,8 +149,8 @@ Page {
                 width: column.width
                 echoMode: TextInput.Password
                 inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhSensitiveData
-                label: qsTr("App token, optional")
-                placeholderText: "xapp-..."
+                label: qsTr("App token, optional, or browser d cookie")
+                placeholderText: "xapp-... / xoxd-..."
                 Keys.onReturnPressed: page.submit()
             }
 

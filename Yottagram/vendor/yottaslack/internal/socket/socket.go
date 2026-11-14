@@ -45,8 +45,8 @@ type Conn struct {
 }
 
 // Dial connects to a ws:// or wss:// URL. Read fails if nothing arrives for
-// readTimeout, so a dead network doesn't go unnoticed.
-func Dial(ctx context.Context, rawURL string, readTimeout time.Duration) (*Conn, error) {
+// readTimeout, so a dead network doesn't go unnoticed. cookie may be empty.
+func Dial(ctx context.Context, rawURL string, readTimeout time.Duration, cookie string) (*Conn, error) {
 	parsed, err := url.Parse(rawURL)
 	if err != nil {
 		return nil, errors.New("invalid socket url")
@@ -65,7 +65,7 @@ func Dial(ctx context.Context, rawURL string, readTimeout time.Duration) (*Conn,
 		return nil, err
 	}
 
-	reader, err := handshake(conn, parsed)
+	reader, err := handshake(conn, parsed, cookie)
 	if err != nil {
 		conn.Close()
 		return nil, err
@@ -80,7 +80,7 @@ func address(parsed *url.URL, defaultPort string) string {
 	return net.JoinHostPort(parsed.Hostname(), defaultPort)
 }
 
-func handshake(conn net.Conn, parsed *url.URL) (*bufio.Reader, error) {
+func handshake(conn net.Conn, parsed *url.URL, cookie string) (*bufio.Reader, error) {
 	nonce := make([]byte, 16)
 	if _, err := rand.Read(nonce); err != nil {
 		return nil, err
@@ -91,8 +91,13 @@ func handshake(conn net.Conn, parsed *url.URL) (*bufio.Reader, error) {
 		return nil, err
 	}
 
-	_, err := fmt.Fprintf(conn, "GET %s HTTP/1.1\r\nHost: %s\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: %s\r\nSec-WebSocket-Version: 13\r\n\r\n",
-		parsed.RequestURI(), parsed.Host, key)
+	extra := ""
+	if cookie != "" {
+		extra = "Cookie: " + cookie + "\r\n"
+	}
+
+	_, err := fmt.Fprintf(conn, "GET %s HTTP/1.1\r\nHost: %s\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: %s\r\nSec-WebSocket-Version: 13\r\n%s\r\n",
+		parsed.RequestURI(), parsed.Host, key, extra)
 	if err != nil {
 		return nil, err
 	}

@@ -38,7 +38,8 @@ const (
 	markDelay       = 2 * time.Second
 	offlineCheck    = 5 * time.Second
 
-	slackbotID = "USLACKBOT"
+	slackbotID         = "USLACKBOT"
+	sessionTokenPrefix = "xoxc-"
 
 	folderChannels = 1
 	folderDirect   = 2
@@ -85,6 +86,7 @@ type wireChat struct {
 	Order        int64  `json:"order"`
 	Folder       int    `json:"folder"`
 	ReadOnly     bool   `json:"read_only,omitempty"`
+	Thread       bool   `json:"thread,omitempty"`
 	dm           bool
 
 	Photo *wirePhoto `json:"photo,omitempty"`
@@ -118,6 +120,11 @@ type chat struct {
 
 	// 0 for direct messages
 	supergroupID int64
+	// The other person in a direct message, 0 elsewhere
+	userID int64
+	// Set for a thread's chat, whose slackID is its channel
+	threadTS string
+	title    string
 	dm           bool
 
 	lastRead int64
@@ -164,6 +171,8 @@ type Session struct {
 
 	bySlackID    map[string]*chat
 	own          map[int64]bool
+	threads      map[string]*chat
+	threadOf     map[int64]*chat
 	reactions    map[int64][]api.Reaction
 	customEmoji  map[string]customEmoji
 	customNames  map[int64]string
@@ -211,6 +220,8 @@ func New(dataDir string) (*Session, error) {
 		chats:           map[int64]*chat{},
 		bySlackID:       map[string]*chat{},
 		own:             map[int64]bool{},
+		threads:         map[string]*chat{},
+		threadOf:        map[int64]*chat{},
 		reactions:       map[int64][]api.Reaction{},
 		customEmoji:     map[string]customEmoji{},
 		customNames:     map[int64]string{},
@@ -333,11 +344,12 @@ func (s *Session) dispatch(r request) {
 		}
 	case "send":
 		var p struct {
-			Chat int64  `json:"chat"`
-			Text string `json:"text"`
+			Chat    int64  `json:"chat"`
+			Text    string `json:"text"`
+			ReplyTo int64  `json:"reply_to"`
 		}
 		if err = json.Unmarshal(r.Params, &p); err == nil {
-			s.send(r.ID, p.Chat, p.Text)
+			s.send(r.ID, p.Chat, p.Text, p.ReplyTo)
 		}
 	case "view":
 		var p struct {
@@ -452,6 +464,11 @@ func (s *Session) dispatch(r request) {
 func (s *Session) login(id uint64, token, appToken string, retry bool) {
 	s.api.SetToken(token)
 
+	// A browser session pairs its token with a cookie, in the app token's place
+	if strings.HasPrefix(token, sessionTokenPrefix) {
+		s.api.SetSessionCookie(appToken)
+	}
+
 	selfID, err := s.authTest(retry)
 	if err != nil {
 		s.replyLoginError(id, err)
@@ -474,7 +491,8 @@ func (s *Session) login(id uint64, token, appToken string, retry bool) {
 		s.log("token scopes: %s", scopes)
 
 		s.mu.Lock()
-		s.readOnly = !hasScope(scopes, "chat:write")
+		// A browser session isn't limited by scopes, whatever it reports
+		s.readOnly = s.api.Cookie() == "" && !hasScope(scopes, "chat:write")
 		s.mu.Unlock()
 	}
 
@@ -583,6 +601,7 @@ func (s *Session) sync() {
 		{"id": folderChannels, "name": "Channels", "icon": "Channels"},
 		{"id": folderDirect, "name": "Direct messages", "icon": "Private"},
 		{"id": folderApps, "name": "Apps", "icon": "Bots"},
+		{"id": folderThreads, "name": "Threads", "icon": "Custom"},
 	}})
 
 	if err := s.ids.Save(); err != nil {
@@ -668,6 +687,7 @@ func (s *Session) refreshUsers() error {
 	s.mu.Unlock()
 
 	s.emitUsers(changed)
+	s.retitle(changed)
 
 	content, err := json.Marshal(all)
 	if err != nil {
@@ -683,6 +703,65 @@ func (s *Session) emitUsers(users []*user) {
 			end = len(users)
 		}
 		s.emit(map[string]any{"event": "users", "users": users[start:end]})
+	}
+}
+
+// statusEmoji goes where the app shows a last name, as it has nowhere for a
+// status. Custom emoji are pictures, so they can't be part of a name.
+func statusEmoji(profile api.Profile, now time.Time) string {
+	if profile.StatusExpiration > 0 && int64(profile.StatusExpiration) < now.Unix() {
+		return ""
+	}
+
+	emoji, ok := text.Emoji(strings.Trim(profile.StatusEmoji, ":"))
+	if !ok {
+		return ""
+	}
+	return emoji
+}
+
+// updateUser applies a profile change from the socket.
+func (s *Session) updateUser(slackUser api.User) {
+	u := s.makeUser(slackUser)
+
+	s.mu.Lock()
+	if known := s.users[u.SlackID]; known != nil {
+		u.avatarSent = known.avatarSent
+	}
+	s.users[u.SlackID] = u
+	announced := *u
+	s.mu.Unlock()
+
+	if announced.avatarSent && announced.Avatar != "" {
+		announced.Photo = s.avatarPhoto(&announced)
+	}
+	s.emit(map[string]any{"event": "users", "users": []*user{&announced}})
+	s.retitle([]*user{u})
+}
+
+// userTitle names a direct message, with the person's status emoji if any.
+func userTitle(u *user) string {
+	return strings.TrimSpace(u.FirstName + " " + u.LastName)
+}
+
+// retitle renames the direct messages of users whose name or status changed.
+func (s *Session) retitle(users []*user) {
+	titles := map[int64]string{}
+	for _, u := range users {
+		titles[u.ID] = userTitle(u)
+	}
+
+	s.mu.Lock()
+	var renamed []map[string]any
+	for _, c := range s.chats {
+		if title, ok := titles[c.userID]; ok && c.userID != 0 {
+			renamed = append(renamed, map[string]any{"event": "chat_title", "chat": c.id, "title": title})
+		}
+	}
+	s.mu.Unlock()
+
+	for _, event := range renamed {
+		s.emit(event)
 	}
 }
 
@@ -708,6 +787,7 @@ func (s *Session) makeUser(slackUser api.User) *user {
 		SlackID:   slackUser.ID,
 		ID:        s.ids.User(slackUser.ID),
 		FirstName: name,
+		LastName:  statusEmoji(slackUser.Profile, time.Now()),
 		Username:  slackUser.Name,
 		Avatar:    uploadedAvatar(slackUser.Profile.Image72),
 		AvatarBig: uploadedAvatar(slackUser.Profile.Image192),
@@ -818,7 +898,7 @@ func (s *Session) trackChat(entry wireChat, slackID string) *chat {
 
 	c := s.chats[entry.ID]
 	if c == nil {
-		c = &chat{id: entry.ID, slackID: slackID, supergroupID: entry.SupergroupID, dm: entry.dm}
+		c = &chat{id: entry.ID, slackID: slackID, supergroupID: entry.SupergroupID, userID: entry.UserID, dm: entry.dm, title: entry.Title}
 		s.chats[entry.ID] = c
 		s.bySlackID[slackID] = c
 	}
@@ -828,7 +908,7 @@ func (s *Session) trackChat(entry wireChat, slackID string) *chat {
 func (s *Session) conversationTitle(conversation api.Conversation) string {
 	switch {
 	case conversation.IsIM:
-		return s.ensureUser(conversation.User).FirstName
+		return userTitle(s.ensureUser(conversation.User))
 	case conversation.IsMpim:
 		return mpimTitle(conversation.Name)
 	default:
@@ -919,6 +999,9 @@ func (s *Session) toMessage(c *chat, m api.Message) (message, error) {
 	} else {
 		delete(s.reactions, id)
 	}
+	if c.threadTS != "" && m.TS != c.threadTS {
+		s.threadOf[id] = c
+	}
 	s.mu.Unlock()
 
 	content := s.render(m)
@@ -955,9 +1038,13 @@ func (s *Session) emitLastMessage(m message) {
 
 	s.mu.Lock()
 	order := c.order
+	folder := 0
+	if c.threadTS != "" {
+		folder = folderThreads
+	}
 	s.mu.Unlock()
 
-	s.emit(map[string]any{"event": "last_message", "chat": m.Chat, "order": order, "message": m})
+	s.emit(map[string]any{"event": "last_message", "chat": m.Chat, "order": order, "folder": folder, "message": m})
 }
 
 // fetchNewer returns up to limit messages after oldest, oldest first. It sorts
@@ -967,7 +1054,7 @@ func (s *Session) fetchNewer(c *chat, oldest int64, limit int) ([]api.Message, e
 	cursor := ""
 
 	for page := 0; page < maxNewerPages; page++ {
-		result, err := s.api.History(s.ctx, c.slackID, api.HistoryParams{
+		result, err := s.historyPage(c, api.HistoryParams{
 			Oldest: ids.FormatTS(oldest),
 			Limit:  newerPageSize,
 			Cursor: cursor,
@@ -1008,7 +1095,7 @@ func clampLimit(limit int) int {
 
 func (s *Session) fetchHistory(c *chat, from int64, offset, limit int) ([]api.Message, error) {
 	if from < minPlausibleMessageID {
-		page, err := s.api.History(s.ctx, c.slackID, api.HistoryParams{Limit: clampLimit(limit)})
+		page, err := s.historyPage(c, api.HistoryParams{Limit: clampLimit(limit)})
 		return page.Messages, err
 	}
 
@@ -1026,7 +1113,7 @@ func (s *Session) fetchHistory(c *chat, from int64, offset, limit int) ([]api.Me
 	}
 
 	if older > 0 {
-		page, err := s.api.History(s.ctx, c.slackID, api.HistoryParams{
+		page, err := s.historyPage(c, api.HistoryParams{
 			Latest:    ids.FormatTS(from),
 			Inclusive: offset < 0,
 			Limit:     clampLimit(older),
@@ -1087,6 +1174,10 @@ func (s *Session) loadPreviews() {
 	s.mu.Unlock()
 
 	for _, c := range chats {
+		if c.threadTS != "" {
+			continue
+		}
+
 		select {
 		case <-time.After(s.previewInterval):
 		case <-s.ctx.Done():
@@ -1102,7 +1193,7 @@ func (s *Session) loadPreview(c *chat) {
 		s.log("loading read state failed: %v", err)
 	}
 
-	page, err := s.api.History(s.ctx, c.slackID, api.HistoryParams{Limit: previewLimit})
+	page, err := s.historyPage(c, api.HistoryParams{Limit: previewLimit})
 	if err != nil {
 		if !errors.Is(err, context.Canceled) {
 			s.log("loading preview failed: %v", err)
@@ -1134,9 +1225,10 @@ func (s *Session) loadPreview(c *chat) {
 		s.emitLastMessage(item)
 	}
 	s.applyHistoryReads(c, conversation.LastRead, page.Messages)
+	s.discoverThreads(c, page.Messages)
 }
 
-func (s *Session) send(id uint64, chatID int64, content string) {
+func (s *Session) send(id uint64, chatID int64, content string, replyTo int64) {
 	if s.refuseWrite(id) {
 		return
 	}
@@ -1145,6 +1237,16 @@ func (s *Session) send(id uint64, chatID int64, content string) {
 	if c == nil {
 		s.replyError(id, codeBadRequest, "unknown chat")
 		return
+	}
+
+	// Replying in a channel continues the message's thread, in its own chat
+	if replyTo != 0 && c.threadTS == "" {
+		thread := s.replyTarget(c, replyTo)
+		if thread == nil {
+			s.replyError(id, codeFailed, "couldn't open the thread")
+			return
+		}
+		c = thread
 	}
 
 	// TDLib does this for Telegram, the app relies on it
@@ -1183,7 +1285,7 @@ func (s *Session) send(id uint64, chatID int64, content string) {
 	s.emit(map[string]any{"event": "new_message", "message": temp})
 	s.emitLastMessage(temp)
 
-	posted, err := s.api.PostMessage(s.ctx, c.slackID, markup)
+	posted, err := s.api.PostMessage(s.ctx, c.slackID, markup, c.threadTS)
 
 	var sent message
 	if err == nil {
@@ -1197,6 +1299,9 @@ func (s *Session) send(id uint64, chatID int64, content string) {
 		s.own[sent.ID] = true
 		if sent.ID > c.newest {
 			c.newest = sent.ID
+		}
+		if c.threadTS != "" && sent.ID > c.order {
+			c.order = sent.ID
 		}
 	}
 	s.mu.Unlock()
@@ -1414,7 +1519,7 @@ func (s *Session) pollOnce(c *chat) error {
 
 	if newest == 0 {
 		var page api.HistoryPage
-		page, err = s.api.History(s.ctx, c.slackID, api.HistoryParams{Limit: pollFirstLimit})
+		page, err = s.historyPage(c, api.HistoryParams{Limit: pollFirstLimit})
 		fetched = page.Messages
 	} else {
 		fetched, err = s.fetchNewer(c, newest, maxHistoryLimit)

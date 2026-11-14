@@ -21,6 +21,17 @@ Slack support is packaged separately as `yottagram-slack`, which holds this libr
 3. Start it in Slack mode and paste the User OAuth Token (`xoxp-...`). It's stored in plaintext in `QSettings` under `slackToken`.
 4. For instant updates, create an app-level token (`xapp-...`) with the `connections:write` scope under Basic Information, and paste it on the login page or in the app's Settings. It's stored the same way under `slackAppToken`. Without it, the open chat is polled every 5 seconds.
 
+### Without an app
+
+Slack's web client logs in with an `xoxc-` token and a `d` cookie, and this library can do the same: paste the token in the first field of the login page and the cookie in the second. Nothing needs creating or installing, and realtime uses the classic RTM socket.
+
+In a browser logged in to the workspace, open the developer tools:
+
+- Token: in the console, run `Object.values(JSON.parse(localStorage.localConfig_v2).teams)[0].token`, and pick the right team if there are several.
+- Cookie: the value of `d` for `slack.com`, under Storage or Application.
+
+This is undocumented and can break or get logged out at any time. The session can do anything you can, with no scopes to limit it, so read-only mode doesn't apply. Both values are stored in plaintext like the other tokens.
+
 ## Testing
 
 ```sh
@@ -52,6 +63,6 @@ go test -race ./...
 
 Methods: `login`, `realtime`, `network`, `me`, `history`, `send`, `upload`, `react`, `available_reactions`, `custom_emojis`, `members`, `view`, `download`, `cancel_download`, `properties`, `edit`, `delete`, `open`, `close`.
 
-Events: `auth_ready`, `users`, `chats`, `ready`, `new_message`, `last_message`, `send_succeeded`, `message_content`, `delete_messages`, `member_count`, `reactions`, `read_inbox`, `notify`, `notify_clear`, `file`, `folders`, `log`.
+Events: `auth_ready`, `users`, `chats`, `ready`, `new_message`, `last_message`, `send_succeeded`, `message_content`, `delete_messages`, `chat_title`, `member_count`, `reactions`, `read_inbox`, `notify`, `notify_clear`, `file`, `folders`, `log`.
 
 The order of events matters; see the comment at the top of `internal/session/session.go`.

@@ -52,7 +52,8 @@ func (s *Session) readUpTo(c *chat, id int64, mark bool) {
 	notified := c.notified
 	c.notified = nil
 
-	startMark := mark && !c.marking && !s.readOnly
+	// Slack's API has no read state for threads
+	startMark := mark && !c.marking && !s.readOnly && c.threadTS == ""
 	if startMark {
 		c.marking = true
 	}
@@ -164,7 +165,7 @@ func (s *Session) notify(c *chat, item message, m api.Message) {
 	s.mu.Unlock()
 
 	mentioned := strings.Contains(m.Text, mine) || strings.Contains(m.Text, "<!here") || strings.Contains(m.Text, "<!channel")
-	if item.Outgoing || !c.dm && !mentioned {
+	if item.Outgoing || !c.dm && !mentioned && c.threadTS == "" {
 		return
 	}
 

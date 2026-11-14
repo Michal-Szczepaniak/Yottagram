@@ -39,7 +39,7 @@ func serve(t *testing.T, script func(conn net.Conn, reader *bufio.Reader)) strin
 func dial(t *testing.T, url string) *Conn {
 	t.Helper()
 
-	conn, err := Dial(context.Background(), url, testTimeout)
+	conn, err := Dial(context.Background(), url, testTimeout, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,6 +103,34 @@ func TestWriteTextIsMaskedForAllLengths(t *testing.T) {
 	}
 }
 
+func TestDialSendsCookie(t *testing.T) {
+	cookies := make(chan string, 1)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookies <- r.Header.Get("Cookie")
+
+		conn, _, err := w.(http.Hijacker).Hijack()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		defer conn.Close()
+
+		accept := AcceptKey(r.Header.Get("Sec-WebSocket-Key"))
+		io.WriteString(conn, "HTTP/1.1 101 Switching Protocols\r\nSec-WebSocket-Accept: "+accept+"\r\n\r\n")
+	}))
+	defer server.Close()
+
+	conn, err := Dial(context.Background(), "ws"+strings.TrimPrefix(server.URL, "http"), testTimeout, "d=value")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+
+	if got := <-cookies; got != "d=value" {
+		t.Fatalf("got %q", got)
+	}
+}
+
 func TestDialRejectsBadAcceptKey(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conn, _, err := w.(http.Hijacker).Hijack()
@@ -116,7 +144,7 @@ func TestDialRejectsBadAcceptKey(t *testing.T) {
 	defer server.Close()
 
 	url := "ws" + strings.TrimPrefix(server.URL, "http")
-	if _, err := Dial(context.Background(), url, testTimeout); err == nil {
+	if _, err := Dial(context.Background(), url, testTimeout, ""); err == nil {
 		t.Fatal("expected an error")
 	}
 }

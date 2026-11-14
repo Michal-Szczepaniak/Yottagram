@@ -165,6 +165,7 @@ void ChatList::createChat(td_api::chat *chat)
         newChat->initialize();
         QQmlEngine::setObjectOwnership(newChat, QQmlEngine::CppOwnership);
         connect(newChat, &Chat::chatPhotoChanged, this, &ChatList::onChatPhotoChanged);
+        connect(newChat, &Chat::titleChanged, this, [this, newChat]() { updateChat(newChat->getId(), {NameRole}); });
         connect(newChat, &Chat::unreadCountChanged, this, &ChatList::onUnreadCountChanged);
         connect(newChat, &Chat::secretChatChanged, this, &ChatList::secretChatStateChanged);
         connect(newChat, &Chat::lastReadInboxMessageIdChanged, this, &ChatList::lastReadInboxMessageIdChanged);

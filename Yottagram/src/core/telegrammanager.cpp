@@ -199,7 +199,7 @@ void TelegramManager::handleMessageWithResponse(uint64_t id, td_api::Object *mes
         emit gotMessage(static_cast<td_api::message*>(message));
         break;
     case td_api::getProxies::ID:
-        emit gotProxies(static_cast<td_api::proxies*>(message));
+        emit gotProxies(static_cast<td_api::addedProxies*>(message));
         break;
     case td_api::testProxy::ID:
         emit proxyTestSuccessful();

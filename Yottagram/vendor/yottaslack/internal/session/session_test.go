@@ -12,6 +12,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"yottaslack/internal/api"
 )
 
 const testTimeout = 5 * time.Second
@@ -24,6 +26,8 @@ type fakeSlack struct {
 	postTS   string
 	marked   string
 	scopes   string
+	replies  []string
+	threadTS string
 	reacted  string
 	uploaded string
 	comment  string
@@ -78,6 +82,11 @@ func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{"ok":true,"emoji":{"party_parrot":"https://emoji.example/p.gif","parrot":"alias:party_parrot","broken":"alias:missing"}}`)
 	case "/chat.delete":
 		fmt.Fprint(w, `{"ok":true}`)
+	case "/conversations.replies":
+		f.mu.Lock()
+		items := strings.Join(f.replies, ",")
+		f.mu.Unlock()
+		fmt.Fprintf(w, `{"ok":true,"messages":[%s]}`, items)
 	case "/conversations.history":
 		f.mu.Lock()
 		items := strings.Join(f.history, ",")
@@ -93,6 +102,7 @@ func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		f.mu.Lock()
 		f.posted = r.Form.Get("text")
+		f.threadTS = r.Form.Get("thread_ts")
 		f.mu.Unlock()
 		if ts == "" {
 			fmt.Fprint(w, `{"ok":false,"error":"channel_not_found"}`)
@@ -781,6 +791,111 @@ func TestReadOnlyTokenWritesNothing(t *testing.T) {
 	defer fake.mu.Unlock()
 	if fake.posted != "" || fake.reacted != "" || fake.uploaded != "" || fake.marked != "" {
 		t.Fatalf("a write reached Slack: %q %q %q %q", fake.posted, fake.reacted, fake.uploaded, fake.marked)
+	}
+}
+
+func TestStatusEmojiShowsAsLastName(t *testing.T) {
+	now := time.Unix(1000, 0)
+	cases := []struct {
+		profile api.Profile
+		want    string
+	}{
+		{api.Profile{StatusEmoji: ":palm_tree:"}, "🌴"},
+		{api.Profile{StatusEmoji: ":palm_tree:", StatusExpiration: 999}, ""},
+		{api.Profile{StatusEmoji: ":palm_tree:", StatusExpiration: 2000}, "🌴"},
+		{api.Profile{StatusEmoji: ":company_logo:"}, ""},
+		{api.Profile{}, ""},
+	}
+
+	for _, c := range cases {
+		if got := statusEmoji(c.profile, now); got != c.want {
+			t.Errorf("statusEmoji(%+v) = %q, want %q", c.profile, got, c.want)
+		}
+	}
+}
+
+func TestUserChangeUpdatesStatus(t *testing.T) {
+	s, _ := newTestSession(t)
+	login(t, s)
+	nextEvent(t, s, "ready")
+
+	s.handleEvent([]byte(`{"type":"user_change","user":{"id":"UANN","name":"ann","profile":{"display_name":"Ann","status_emoji":":coffee:"}}}`))
+
+	changed := nextEvent(t, s, "users")["users"].([]any)[0].(map[string]any)
+	if changed["first_name"] != "Ann" || changed["last_name"] != "☕" {
+		t.Fatalf("got %v", changed)
+	}
+
+	if renamed := nextEvent(t, s, "chat_title"); renamed["title"] != "Ann ☕" {
+		t.Fatalf("got %v", renamed)
+	}
+}
+
+const threadParent = `{"ts":"1712345678.000100","thread_ts":"1712345678.000100","user":"UANN","text":"question","reply_count":2,"reply_users":["UME"],"latest_reply":"1712345678.000300"}`
+
+func TestThreadsFromHistory(t *testing.T) {
+	s, fake := newTestSession(t)
+	s.previewInterval = time.Millisecond
+	fake.setHistory(threadParent, slackMessage("1712345678.000050", "UANN", "unrelated"))
+
+	login(t, s)
+
+	thread := nextEvent(t, s, "chats")["chats"].([]any)[0].(map[string]any)
+	if thread["title"] != "#general: question" || thread["thread"] != true || thread["folder"] != float64(folderThreads) {
+		t.Fatalf("got %v", thread)
+	}
+	if thread["order"] != float64(1712345678000300) {
+		t.Fatalf("threads sort by their latest reply, got %v", thread["order"])
+	}
+}
+
+func TestReplyFromChannelGoesToThread(t *testing.T) {
+	s, fake := newTestSession(t)
+	chats := login(t, s)
+	nextEvent(t, s, "ready")
+
+	fake.mu.Lock()
+	fake.replies = []string{threadParent}
+	fake.postTS = "1712345678.000400"
+	fake.mu.Unlock()
+
+	call(s, 8, "send", fmt.Sprintf(`{"chat":%d,"text":"answer","reply_to":1712345678000100}`, chatID(t, chats, "#general")))
+
+	thread := nextEvent(t, s, "chats")["chats"].([]any)[0].(map[string]any)
+	temp := nextEvent(t, s, "new_message")["message"].(map[string]any)
+	if temp["chat"] != thread["id"] || temp["text"] != "answer" {
+		t.Fatalf("the reply must go to the thread's chat, got %v in %v", temp, thread)
+	}
+	nextEvent(t, s, "send_succeeded")
+
+	fake.mu.Lock()
+	defer fake.mu.Unlock()
+	if fake.threadTS != "1712345678.000100" {
+		t.Fatalf("got %q", fake.threadTS)
+	}
+}
+
+func TestReplyEventGoesToThread(t *testing.T) {
+	s, fake := newTestSession(t)
+	login(t, s)
+	nextEvent(t, s, "ready")
+
+	fake.mu.Lock()
+	fake.replies = []string{threadParent}
+	fake.mu.Unlock()
+
+	s.handleEvent([]byte(`{"type":"message","channel":"CGEN","user":"UANN","text":"more","ts":"1712345678.000500",
+		"thread_ts":"1712345678.000100","parent_user_id":"UME"}`))
+
+	thread := nextEvent(t, s, "chats")["chats"].([]any)[0].(map[string]any)
+	for {
+		e := nextEvent(t, s, "new_message")["message"].(map[string]any)
+		if e["text"] == "more" {
+			if e["chat"] != thread["id"] {
+				t.Fatalf("got %v", e)
+			}
+			return
+		}
 	}
 }
 

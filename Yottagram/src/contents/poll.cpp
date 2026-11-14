@@ -138,20 +138,22 @@ bool Poll::isClosed() const
 
 bool Poll::getAllowMultipleAnswers() const
 {
-    if (getType() == PollTypes::Regular) {
-        return static_cast<const td_api::pollTypeRegular &>(*_poll->type_).allow_multiple_answers_;
-    }
-
-    return false;
+    return _poll->allows_multiple_answers_;
 }
 
-int32_t Poll::getCorrectOptionId() const
+QStringList Poll::getCorrectOptionIds() const
 {
     if (getType() == PollTypes::Quiz) {
-        return static_cast<const td_api::pollTypeQuiz &>(*_poll->type_).correct_option_id_;
+        QStringList result;
+
+        for (int32_t optionId : static_cast<const td_api::pollTypeQuiz &>(*_poll->type_).correct_option_ids_) {
+            result.append(QString::number(optionId));
+        }
+
+        return result;
     }
 
-    return -1;
+    return {};
 }
 
 bool Poll::isAnswered() const

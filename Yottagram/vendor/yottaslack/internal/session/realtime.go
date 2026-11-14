@@ -33,6 +33,7 @@ type slackEvent struct {
 	Hidden    bool        `json:"hidden"`
 	DeletedTS string      `json:"deleted_ts"`
 	Changed   api.Message `json:"message"`
+	Previous  api.Message `json:"previous_message"`
 	Reaction  string      `json:"reaction"`
 	Item      struct {
 		Type    string `json:"type"`
@@ -60,7 +61,11 @@ func (s *Session) startRealtime(token string) {
 	s.stopRealtime = cancel
 	s.mu.Unlock()
 
-	s.appAPI.SetToken(token)
+	// With a browser session the token here is its cookie, which the main client
+	// already has
+	if s.api.Cookie() == "" {
+		s.appAPI.SetToken(token)
+	}
 
 	events := make(chan json.RawMessage, eventBacklog)
 	s.spawn(func() { s.handleEvents(ctx, events) })
@@ -126,12 +131,21 @@ func (s *Session) realtime(ctx context.Context, events chan<- json.RawMessage) {
 // runSocket reads one connection until it ends, and reports whether Slack
 // accepted it.
 func (s *Session) runSocket(ctx context.Context, events chan<- json.RawMessage) (bool, error) {
-	url, err := s.appAPI.OpenSocket(ctx)
+	cookie := s.api.Cookie()
+	classic := cookie != ""
+
+	var url string
+	var err error
+	if classic {
+		url, err = s.api.ConnectRTM(ctx)
+	} else {
+		url, err = s.appAPI.OpenSocket(ctx)
+	}
 	if err != nil {
 		return false, err
 	}
 
-	conn, err := socket.Dial(ctx, url, socketReadTimeout)
+	conn, err := socket.Dial(ctx, url, socketReadTimeout, cookie)
 	if err != nil {
 		return false, err
 	}
@@ -139,7 +153,7 @@ func (s *Session) runSocket(ctx context.Context, events chan<- json.RawMessage) 
 
 	done := make(chan struct{})
 	defer close(done)
-	s.spawn(func() { s.keepAlive(ctx, conn, done) })
+	s.spawn(func() { s.keepAlive(ctx, conn, done, classic) })
 
 	connected := false
 	for {
@@ -165,17 +179,29 @@ func (s *Session) runSocket(ctx context.Context, events chan<- json.RawMessage) 
 			}
 		}
 
+		event := json.RawMessage(nil)
+
 		switch e.Type {
 		case "hello":
 			connected = true
 			s.setRealtimeUp(true)
 			s.log("realtime connected")
 			s.spawn(s.catchUp)
-		case "disconnect":
+			s.spawn(s.showPresence)
+		case "disconnect", "goodbye":
 			return connected, nil
 		case "events_api":
+			event = e.Payload.Event
+		default:
+			// The classic socket sends events bare, with no envelope
+			if classic {
+				event = raw
+			}
+		}
+
+		if event != nil {
 			select {
-			case events <- e.Payload.Event:
+			case events <- event:
 			case <-ctx.Done():
 				return connected, ctx.Err()
 			}
@@ -183,14 +209,19 @@ func (s *Session) runSocket(ctx context.Context, events chan<- json.RawMessage) 
 	}
 }
 
-func (s *Session) keepAlive(ctx context.Context, conn *socket.Conn, done <-chan struct{}) {
+func (s *Session) keepAlive(ctx context.Context, conn *socket.Conn, done <-chan struct{}, classic bool) {
 	ticker := time.NewTicker(socketPingInterval)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ticker.C:
-			if err := conn.Ping(); err != nil {
+			err := conn.Ping()
+			if err == nil && classic {
+				// It answers this rather than WebSocket pings
+				err = conn.WriteText([]byte(`{"id":1,"type":"ping"}`))
+			}
+			if err != nil {
 				conn.Close()
 				return
 			}
@@ -200,6 +231,17 @@ func (s *Session) keepAlive(ctx context.Context, conn *socket.Conn, done <-chan 
 		case <-done:
 			return
 		}
+	}
+}
+
+// showPresence lets Slack show us online while connected. Whether the
+// connection counts as activity is up to Slack.
+func (s *Session) showPresence() {
+	if s.isReadOnly() {
+		return
+	}
+	if err := s.api.SetPresence(s.ctx, "auto"); err != nil {
+		s.log("setting presence failed: %v", err)
 	}
 }
 
@@ -242,6 +284,16 @@ func (s *Session) handleEvent(raw []byte) {
 		}
 	}()
 
+	// These have a user object where other events have a user id
+	var kind struct {
+		Type string   `json:"type"`
+		User api.User `json:"user"`
+	}
+	if json.Unmarshal(raw, &kind) == nil && (kind.Type == "user_change" || kind.Type == "user_profile_changed") {
+		s.updateUser(kind.User)
+		return
+	}
+
 	var e slackEvent
 	if err := json.Unmarshal(raw, &e); err != nil {
 		s.log("invalid event: %v", err)
@@ -267,15 +319,31 @@ func (s *Session) handleEvent(raw []byte) {
 
 	switch e.Subtype {
 	case "message_changed":
-		s.changeMessage(c, e.Changed)
+		if target := s.replyChat(c, e.Changed); target != nil {
+			s.changeMessage(target, e.Changed)
+		}
 	case "message_deleted":
-		s.deleteMessage(c, e.DeletedTS)
+		if target := s.replyChat(c, e.Previous); target != nil {
+			s.deleteMessage(target, e.DeletedTS)
+		}
 	default:
-		isReply := e.ThreadTS != "" && e.ThreadTS != e.TS && e.Subtype != "thread_broadcast"
-		if !e.Hidden && !isReply {
+		switch {
+		case e.Hidden:
+		case e.ThreadTS != "" && e.ThreadTS != e.TS && e.Subtype != "thread_broadcast":
+			s.receiveReply(c, e.Message)
+		default:
 			s.receiveMessage(c, e.Message)
 		}
 	}
+}
+
+// replyChat is where an edit or delete goes: the channel, or a known thread
+// for a reply. Replies in threads nobody follows have nowhere to go.
+func (s *Session) replyChat(channel *chat, m api.Message) *chat {
+	if m.ThreadTS == "" || m.ThreadTS == m.TS {
+		return channel
+	}
+	return s.findThread(channel, m.ThreadTS)
 }
 
 func (s *Session) handleReaction(e slackEvent) {
@@ -290,7 +358,7 @@ func (s *Session) handleReaction(e slackEvent) {
 	}
 
 	if c := s.chatForSlackID(e.Item.Channel); c != nil {
-		s.changeReaction(c, id, e.Reaction, e.User, e.Type == "reaction_added")
+		s.changeReaction(s.chatOfMessage(c, id), id, e.Reaction, e.User, e.Type == "reaction_added")
 	}
 }
 
@@ -360,7 +428,7 @@ func (s *Session) deleteMessage(c *chat, ts string) {
 
 	// The app only shows new messages while its newest one is the chat's last.
 	// Right after a delete, Slack can still return the deleted message.
-	page, err := s.api.History(s.ctx, c.slackID, api.HistoryParams{Limit: 2})
+	page, err := s.historyPage(c, api.HistoryParams{Limit: 2})
 	if err != nil {
 		s.log("refreshing last message failed: %v", err)
 		return

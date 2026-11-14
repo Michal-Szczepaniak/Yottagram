@@ -69,7 +69,8 @@ void Authorization::updateAuthorizationState(td_api::updateAuthorizationState &u
             [this](td_api::authorizationStateWaitEmailCode &) {
 
             },
-            [this](td_api::authorizationStateWaitCode &) {
+            [this](td_api::authorizationStateWaitCode &info) {
+                qDebug() << "info.code_info_->type_->get_id() " << info.code_info_->type_->get_id();
                 authorizationStateWaitCode();
             },
             [this](td_api::authorizationStateWaitRegistration &) {

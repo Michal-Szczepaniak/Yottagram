@@ -117,7 +117,8 @@ void ProxyModel::test(int index)
 
     Proxy proxy = _proxyList[index];
 
-    _manager->sendQueryWithResponse(0, td_api::testProxy::ID, 0, new td_api::testProxy(proxy.server.toStdString(), proxy.port, getProxyType(proxy.type, proxy.username, proxy.password), -1, 5000));
+    auto tdProxy = td_api::make_object<td_api::proxy>(proxy.server.toStdString(), proxy.port, getProxyType(proxy.type, proxy.username, proxy.password));
+    _manager->sendQueryWithResponse(0, td_api::testProxy::ID, 0, new td_api::testProxy(std::move(tdProxy), -1, 5000));
 }
 
 TelegramManager::ConnectionState ProxyModel::connectionState() const
@@ -127,7 +128,7 @@ TelegramManager::ConnectionState ProxyModel::connectionState() const
 
 void ProxyModel::add()
 {
-    _manager->sendQueryWithResponse(0, td_api::addProxy::ID, 0, new td_api::addProxy("new proxy", 1234, false, td_api::make_object<td_api::proxyTypeSocks5>()));
+    _manager->sendQueryWithResponse(0, td_api::addProxy::ID, 0, new td_api::addProxy(td_api::make_object<td_api::proxy>("new proxy", 1234, td_api::make_object<td_api::proxyTypeSocks5>()), false, ""));
 }
 
 void ProxyModel::remove(int index)
@@ -148,26 +149,24 @@ void ProxyModel::update(int index)
     Proxy proxy = _proxyList[index];
     td_api::editProxy *req = new td_api::editProxy();
     req->proxy_id_ = proxy.id;
-    req->server_ = proxy.server.toStdString();
-    req->port_ = proxy.port;
-    req->type_ = getProxyType(proxy.type, proxy.username, proxy.password);
+    req->proxy_ = td_api::make_object<td_api::proxy>(proxy.server.toStdString(), proxy.port, getProxyType(proxy.type, proxy.username, proxy.password));
     _manager->sendQuery(req);
     getProxies();
 }
 
-void ProxyModel::gotProxies(td_api::proxies *proxies)
+void ProxyModel::gotProxies(td_api::addedProxies *proxies)
 {
     beginResetModel();
     _proxyList.clear();
-    for (td_api::object_ptr<td_api::proxy> &proxy : proxies->proxies_) {
+    for (td_api::object_ptr<td_api::addedProxy> &proxy : proxies->proxies_) {
         Proxy newProxy{};
         newProxy.id = proxy->id_;
-        newProxy.server = QString::fromStdString(proxy->server_);
-        newProxy.port = proxy->port_;
+        newProxy.server = QString::fromStdString(proxy->proxy_->server_);
+        newProxy.port = proxy->proxy_->port_;
         newProxy.enabled = proxy->is_enabled_;
 
         downcast_call(
-            *proxy->type_, overloaded(
+            *proxy->proxy_->type_, overloaded(
                [&](td_api::proxyTypeSocks5 &type) {
                    newProxy.type = ProxyType::Socks5;
                    newProxy.username = QString::fromStdString(type.username_);
@@ -181,6 +180,11 @@ void ProxyModel::gotProxies(td_api::proxies *proxies)
                [&](td_api::proxyTypeMtproto &type) {
                    newProxy.type = ProxyType::MTProto;
                    newProxy.username = QString::fromStdString(type.secret_);
+               },
+               [&](td_api::proxyTypeWeb &type) {
+                   newProxy.type = ProxyType::Web;
+                   newProxy.username = QString::fromStdString(type.path_);
+                   newProxy.password = QString::fromStdString(type.secret_);
                }
             )
         );
@@ -229,6 +233,14 @@ td_api::object_ptr<td_api::ProxyType> ProxyModel::getProxyType(ProxyType type, Q
     {
         td_api::object_ptr<td_api::proxyTypeMtproto> type = td_api::make_object<td_api::proxyTypeMtproto>();
         type->secret_ = username.toStdString();
+        newType = move(type);
+    }
+    break;
+    case ProxyType::Web:
+    {
+        td_api::object_ptr<td_api::proxyTypeWeb> type = td_api::make_object<td_api::proxyTypeWeb>();
+        type->path_ = username.toStdString();
+        type->secret_ = password.toStdString();
         newType = move(type);
     }
     break;

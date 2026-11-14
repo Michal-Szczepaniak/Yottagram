@@ -326,7 +326,13 @@ td_api::Object* makeLastMessage(const QJsonObject &object)
     auto update = new td_api::updateChatLastMessage();
     update->chat_id_ = toInt64(object["chat"]);
     update->last_message_ = makeMessage(object["message"].toObject());
-    update->positions_.push_back(makePosition(toInt64(object["order"])));
+    int32_t folder = object["folder"].toInt();
+    update->positions_.push_back(makePosition(toInt64(object["order"]), folder));
+
+    // Order 0 takes a chat out of a list, this keeps threads out of the main one
+    if (folder != 0) {
+        update->positions_.push_back(makePosition(0));
+    }
     return update;
 }
 
@@ -450,9 +456,11 @@ void mapEvent(const QJsonObject &object, vector<Output> &outputs)
             newChat->chat_ = makeChat(chat);
             outputs.push_back({0, newChat});
 
+            // Threads are only in their folder, the main list would drown in
+            // them. Order 0 takes a chat out of a list.
             auto position = new td_api::updateChatPosition();
             position->chat_id_ = toInt64(chat["id"]);
-            position->position_ = makePosition(toInt64(chat["order"]));
+            position->position_ = makePosition(chat["thread"].toBool() ? 0 : toInt64(chat["order"]));
             outputs.push_back({0, position});
 
             auto folderPosition = new td_api::updateChatPosition();
@@ -504,6 +512,11 @@ void mapEvent(const QJsonObject &object, vector<Output> &outputs)
         update->supergroup_full_info_ = td_api::make_object<td_api::supergroupFullInfo>();
         update->supergroup_full_info_->member_count_ = object["count"].toInt();
         update->supergroup_full_info_->description_ = toStdString(object["description"]);
+        outputs.push_back({0, update});
+    } else if (event == "chat_title") {
+        auto update = new td_api::updateChatTitle();
+        update->chat_id_ = toInt64(object["chat"]);
+        update->title_ = toStdString(object["title"]);
         outputs.push_back({0, update});
     } else if (event == "reactions") {
         auto update = new td_api::updateMessageInteractionInfo();

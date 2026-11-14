@@ -117,6 +117,28 @@
         <source>Submit</source>
         <translation type="unfinished">Skicka</translation>
     </message>
+    <message>
+        <source>1. Create the app below, then install it to your workspace.
+2. Copy the User OAuth Token from OAuth &amp; Permissions.
+3. For instant updates, generate an app-level token with the connections:write scope in Basic Information.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create Slack app</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create read-only Slack app</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>User OAuth Token, or browser session token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>App token, optional, or browser d cookie</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>AutoDownloadSettings</name>

@@ -1,5 +1,5 @@
 //
-// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2025
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2026
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -190,7 +190,7 @@ using tl_object_ptr = tl::unique_ptr<Type>;
  * auto get_me_request = td::make_tl_object<td::td_api::getMe>();
  * auto message_text = td::make_tl_object<td::td_api::formattedText>("Hello, world!!!",
  *                     td::td_api::array<td::tl_object_ptr<td::td_api::textEntity>>());
- * auto send_message_request = td::make_tl_object<td::td_api::sendMessage>(chat_id, 0, nullptr, nullptr, nullptr,
+ * auto send_message_request = td::make_tl_object<td::td_api::sendMessage>(chat_id, nullptr, nullptr, nullptr, nullptr,
  *      td::make_tl_object<td::td_api::inputMessageText>(std::move(message_text), nullptr, true));
  * \endcode
  *

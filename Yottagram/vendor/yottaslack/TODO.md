@@ -4,7 +4,7 @@
 
 - [x] Member count in the chat header
 - [x] Chat info page: topic and purpose
-- [ ] Replies: the input's reply is dropped today, decide between a thread reply and a quote
+- [x] Replies, sent into the message's thread
 - [ ] Failed send: put the text back in the input box
 - [x] Pause polling while offline
 - [x] Retry `users.conversations` instead of showing an empty list at once
@@ -30,8 +30,12 @@
 - [x] `:emoji:` names in messages, with the common emoji
 - [x] Custom workspace emoji, shown in text and reactions
 - [ ] Picking custom emoji in the app
-- [ ] Threads
+- [x] Threads, as chats in a Threads folder
+- [ ] Threads you follow beyond the last 50 messages of each channel
+- [ ] Unread counts for threads from before launch
 - [x] Avatars
+- [x] Status emoji, shown after the name
+- [ ] Custom emoji as status, and status text
 - [x] Link previews
 - [x] File layer: downloads reported to the app as TDLib files
 - [x] Huddles shown as call messages

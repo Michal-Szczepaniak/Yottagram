@@ -160,36 +160,36 @@ td_api::forumTopic* ChatListTopics::getTopic(int64_t topicId)
 
 void ChatListTopics::onUpdateForumTopic(td_api::updateForumTopic *updateForumTopic)
 {
-    if (!_topicIds.contains(updateForumTopic->message_thread_id_)) return;
+    if (!_topicIds.contains(updateForumTopic->forum_topic_id_)) return;
 
-    td_api::forumTopic* topic =_topics[updateForumTopic->message_thread_id_];
+    td_api::forumTopic* topic =_topics[updateForumTopic->forum_topic_id_];
     topic->is_pinned_ = updateForumTopic->is_pinned_;
     topic->last_read_inbox_message_id_ = updateForumTopic->last_read_inbox_message_id_;
     topic->last_read_outbox_message_id_ = updateForumTopic->last_read_outbox_message_id_;
     topic->unread_mention_count_ = updateForumTopic->unread_mention_count_;
     topic->unread_reaction_count_ = updateForumTopic->unread_reaction_count_;
 
-    int index = getTopicIndex(updateForumTopic->message_thread_id_);
+    int index = getTopicIndex(updateForumTopic->forum_topic_id_);
     emit dataChanged(createIndex(index, 0), createIndex(index, 0), {});
-    emit forumTopicUpdated(updateForumTopic->message_thread_id_);
+    emit forumTopicUpdated(updateForumTopic->forum_topic_id_);
 }
 
 void ChatListTopics::onUpdateForumTopicInfo(td_api::updateForumTopicInfo *updateForumTopicInfo)
 {
-    if (!updateForumTopicInfo->info_ || !_topicIds.contains(updateForumTopicInfo->info_->message_thread_id_)) return;
+    if (!updateForumTopicInfo->info_ || !_topicIds.contains(updateForumTopicInfo->info_->forum_topic_id_)) return;
 
-    td_api::forumTopic* topic =_topics[updateForumTopicInfo->info_->message_thread_id_];
+    td_api::forumTopic* topic =_topics[updateForumTopicInfo->info_->forum_topic_id_];
     if (topic->info_.get() == updateForumTopicInfo->info_.get()) return;
 
     topic->info_ = move(updateForumTopicInfo->info_);
 
-    int index = getTopicIndex(topic->info_->message_thread_id_);
+    int index = getTopicIndex(topic->info_->forum_topic_id_);
     emit dataChanged(createIndex(index, 0), createIndex(index, 0), {});
 }
 
 QString ChatListTopics::getLastMessage(td_api::forumTopic *topic) const
 {
-    return _messages[topic->info_->message_thread_id_]->getTypeText();
+    return _messages[topic->info_->forum_topic_id_]->getTypeText();
 }
 
 QString ChatListTopics::getLastMessageAuthor(td_api::forumTopic *topic) const

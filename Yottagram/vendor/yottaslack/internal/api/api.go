@@ -121,6 +121,7 @@ type Client struct {
 
 	mu          sync.Mutex
 	token       string
+	cookie      string
 	scopes      string
 	pausedUntil map[string]time.Time
 }
@@ -132,6 +133,27 @@ func New() *Client {
 		HTTP:        &http.Client{Timeout: requestTimeout},
 		pausedUntil: map[string]time.Time{},
 	}
+}
+
+// SetSessionCookie switches to a browser session: an xoxc- token, which only
+// works together with the d cookie. Browsers show it URL encoded, which is the
+// form Slack wants, so anything else gets encoded here.
+func (c *Client) SetSessionCookie(value string) {
+	value = strings.TrimPrefix(strings.TrimSpace(value), "d=")
+	if !strings.Contains(value, "%") {
+		value = url.QueryEscape(value)
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cookie = "d=" + value
+}
+
+// Cookie returns the session cookie header, if there is one.
+func (c *Client) Cookie() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.cookie
 }
 
 // Scopes returns what Slack last said the token can do.
@@ -181,17 +203,32 @@ func (c *Client) pause(method string, duration time.Duration) {
 }
 
 func (c *Client) post(ctx context.Context, method string, params url.Values) ([]byte, time.Duration, error) {
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, c.BaseURL+"/"+method, strings.NewReader(params.Encode()))
+	c.mu.Lock()
+	token := c.token
+	cookie := c.cookie
+	c.mu.Unlock()
+
+	form := params.Encode()
+	if cookie != "" {
+		// Session tokens go in the form, like Slack's own web client sends them
+		withToken := url.Values{"token": {token}}
+		for key, values := range params {
+			withToken[key] = values
+		}
+		form = withToken.Encode()
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, c.BaseURL+"/"+method, strings.NewReader(form))
 	if err != nil {
 		return nil, 0, err
 	}
 
-	c.mu.Lock()
-	token := c.token
-	c.mu.Unlock()
-
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	request.Header.Set("Authorization", "Bearer "+token)
+	if cookie != "" {
+		request.Header.Set("Cookie", cookie)
+	} else {
+		request.Header.Set("Authorization", "Bearer "+token)
+	}
 
 	response, err := c.HTTP.Do(request)
 	if err != nil {
@@ -272,6 +309,9 @@ type Profile struct {
 	RealName    string `json:"real_name"`
 	Image72     string `json:"image_72"`
 	Image192    string `json:"image_192"`
+
+	StatusEmoji      string `json:"status_emoji"`
+	StatusExpiration Number `json:"status_expiration"`
 }
 
 // Number accepts both forms Slack uses for some numbers, and treats anything
@@ -376,6 +416,11 @@ type Message struct {
 	ThreadTS    string       `json:"thread_ts"`
 	Subtype     string       `json:"subtype"`
 	Room        *Room        `json:"room"`
+
+	ReplyCount   Number   `json:"reply_count"`
+	ReplyUsers   []string `json:"reply_users"`
+	LatestReply  string   `json:"latest_reply"`
+	ParentUserID string   `json:"parent_user_id"`
 	User        string       `json:"user"`
 	BotID       string       `json:"bot_id"`
 	Username    string       `json:"username"`
@@ -483,6 +528,22 @@ type HistoryPage struct {
 }
 
 // History fetches one page of a conversation.
+// SetPresence sets presence to "auto", where Slack decides from activity, or
+// "away". Slack has no way to force being online.
+func (c *Client) SetPresence(ctx context.Context, presence string) error {
+	return c.Call(ctx, "users.setPresence", url.Values{"presence": {presence}}, nil)
+}
+
+// ConnectRTM returns a URL for the classic socket, which is what a browser
+// session has instead of Socket Mode.
+func (c *Client) ConnectRTM(ctx context.Context) (string, error) {
+	var response struct {
+		URL string `json:"url"`
+	}
+	err := c.Call(ctx, "rtm.connect", url.Values{}, &response)
+	return response.URL, err
+}
+
 // OpenSocket returns a Socket Mode URL. It needs the app-level token.
 func (c *Client) OpenSocket(ctx context.Context) (string, error) {
 	var response struct {
@@ -573,8 +634,8 @@ func (c *Client) RemoveReaction(ctx context.Context, channel, ts, name string) e
 	return c.Call(ctx, "reactions.remove", url.Values{"channel": {channel}, "timestamp": {ts}, "name": {name}}, nil)
 }
 
-// Upload posts a file to a conversation.
-func (c *Client) Upload(ctx context.Context, channel, path, comment string) error {
+// Upload posts a file to a conversation, into a thread if threadTS isn't empty.
+func (c *Client) Upload(ctx context.Context, channel, path, comment, threadTS string) error {
 	file, err := os.Open(path)
 	if err != nil {
 		return err
@@ -621,6 +682,9 @@ func (c *Client) Upload(ctx context.Context, channel, path, comment string) erro
 	if comment != "" {
 		params.Set("initial_comment", comment)
 	}
+	if threadTS != "" {
+		params.Set("thread_ts", threadTS)
+	}
 	return c.Call(ctx, "files.completeUploadExternal", params, nil)
 }
 
@@ -657,8 +721,13 @@ func (c *Client) Download(ctx context.Context, address string, auth bool, path s
 	if auth {
 		c.mu.Lock()
 		token := c.token
+		cookie := c.cookie
 		c.mu.Unlock()
+
 		request.Header.Set("Authorization", "Bearer "+token)
+		if cookie != "" {
+			request.Header.Set("Cookie", cookie)
+		}
 	}
 
 	response, err := (&http.Client{}).Do(request)
@@ -695,12 +764,43 @@ func (c *Client) Download(ctx context.Context, address string, auth bool, path s
 	return size, nil
 }
 
-func (c *Client) PostMessage(ctx context.Context, channel, text string) (Message, error) {
+// Replies reads a thread, oldest first, starting with its parent.
+func (c *Client) Replies(ctx context.Context, channel, ts string, p HistoryParams) (HistoryPage, error) {
+	params := url.Values{"channel": {channel}, "ts": {ts}, "limit": {strconv.Itoa(p.Limit)}}
+	if p.Oldest != "" {
+		params.Set("oldest", p.Oldest)
+	}
+	if p.Latest != "" {
+		params.Set("latest", p.Latest)
+	}
+	if p.Inclusive {
+		params.Set("inclusive", "true")
+	}
+	if p.Cursor != "" {
+		params.Set("cursor", p.Cursor)
+	}
+
+	var response struct {
+		Messages []Message        `json:"messages"`
+		Metadata responseMetadata `json:"response_metadata"`
+	}
+	if err := c.Call(ctx, "conversations.replies", params, &response); err != nil {
+		return HistoryPage{}, err
+	}
+	return HistoryPage{Messages: response.Messages, NextCursor: response.Metadata.NextCursor}, nil
+}
+
+// PostMessage sends a message, into a thread if threadTS isn't empty.
+func (c *Client) PostMessage(ctx context.Context, channel, text, threadTS string) (Message, error) {
 	var response struct {
 		TS      string  `json:"ts"`
 		Message Message `json:"message"`
 	}
-	err := c.Call(ctx, "chat.postMessage", url.Values{"channel": {channel}, "text": {text}}, &response)
+	params := url.Values{"channel": {channel}, "text": {text}}
+	if threadTS != "" {
+		params.Set("thread_ts", threadTS)
+	}
+	err := c.Call(ctx, "chat.postMessage", params, &response)
 	if err != nil {
 		return Message{}, err
 	}

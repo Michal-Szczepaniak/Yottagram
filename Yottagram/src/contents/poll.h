@@ -37,7 +37,7 @@ class Poll : public QAbstractListModel, public ContentInterface
     Q_PROPERTY(QString typeName READ getTypeName NOTIFY pollChanged)
     Q_PROPERTY(bool isClosed READ isClosed NOTIFY pollChanged)
     Q_PROPERTY(bool allowMultipleAnswers READ getAllowMultipleAnswers NOTIFY pollChanged)
-    Q_PROPERTY(int32_t correctOptionId READ getCorrectOptionId NOTIFY pollChanged)
+    Q_PROPERTY(QStringList correctOptionIds READ getCorrectOptionIds NOTIFY pollChanged)
     Q_PROPERTY(bool isAnswered READ isAnswered NOTIFY pollChanged)
     Q_PROPERTY(QString recentVoters READ getRecentVotersString NOTIFY pollChanged)
 public:
@@ -70,7 +70,7 @@ public:
     QString getTypeName() const;
     bool isClosed() const;
     bool getAllowMultipleAnswers() const;
-    int32_t getCorrectOptionId() const;
+    QStringList getCorrectOptionIds() const;
     bool isAnswered() const;
     QString getRecentVotersString() const;
 

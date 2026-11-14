@@ -22,7 +22,8 @@ public:
     enum ProxyType {
         Socks5,
         HTTP,
-        MTProto
+        MTProto,
+        Web,
     };
     Q_ENUMS(ProxyType)
 
@@ -54,7 +55,7 @@ public:
     TelegramManager::ConnectionState connectionState() const;
 
 public slots:
-    void gotProxies(td_api::proxies *proxies);
+    void gotProxies(td_api::addedProxies *proxies);
     void onError(int64_t chatId, int32_t type, int32_t subType, int32_t code, QString message);
 
 signals:

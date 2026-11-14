@@ -102,6 +102,35 @@ func TestDownloadReportsProgress(t *testing.T) {
 	}
 }
 
+func TestSessionCookieLogin(t *testing.T) {
+	var cookie, token, authorization string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		cookie = r.Header.Get("Cookie")
+		token = r.Form.Get("token")
+		authorization = r.Header.Get("Authorization")
+		w.Write([]byte(`{"ok":true,"user_id":"U1"}`))
+	}))
+	defer server.Close()
+
+	client := New()
+	client.BaseURL = server.URL
+	client.SetToken("xoxc-1")
+	client.SetSessionCookie("xoxd-a+b/c=")
+
+	if _, err := client.AuthTest(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if cookie != "d=xoxd-a%2Bb%2Fc%3D" || token != "xoxc-1" || authorization != "" {
+		t.Fatalf("got %q, %q, %q", cookie, token, authorization)
+	}
+
+	client.SetSessionCookie("d=xoxd-a%2Bb")
+	if got := client.Cookie(); got != "d=xoxd-a%2Bb" {
+		t.Fatalf("an encoded cookie must stay as it is, got %q", got)
+	}
+}
+
 func TestAuthErrors(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"ok":false,"error":"invalid_auth"}`))

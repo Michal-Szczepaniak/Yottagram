@@ -324,7 +324,7 @@ func (s *Session) sendFiles(id uint64, chatID int64, files []upload) {
 
 	for _, file := range files {
 		_, caption := s.withMentions(strings.TrimSpace(file.Caption))
-		if err := s.api.Upload(s.ctx, c.slackID, file.Path, caption); err != nil {
+		if err := s.api.Upload(s.ctx, c.slackID, file.Path, caption, c.threadTS); err != nil {
 			s.log("upload failed: %v", err)
 			s.replyError(id, codeFailed, err.Error())
 			return
