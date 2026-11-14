@@ -4,8 +4,8 @@ INCLUDEPATH += \
     $$PWD/../tg_owt/upstream/src \
 
 DEFINES += \
-    TGCALLS_USE_STD_OPTIONAL
-    DEBUG
+    TGCALLS_USE_STD_OPTIONAL \
+    NDEBUG
 
 SOURCES += \
     $$PWD/upstream/tgcalls/AudioDeviceHelper.cpp \

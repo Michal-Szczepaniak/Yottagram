@@ -1284,6 +1284,12 @@ func (s *Session) send(id uint64, chatID int64, content string, replyTo int64) {
 		return
 	}
 
+	// "/bye" and the like run as Slack slash commands, like in the Slack client
+	if command, args, ok := parseCommand(markup); ok {
+		s.runCommand(id, c, command, args)
+		return
+	}
+
 	c.sending.Lock()
 	defer c.sending.Unlock()
 

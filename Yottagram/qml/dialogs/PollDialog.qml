@@ -43,7 +43,6 @@ Dialog {
         return selected
     }
 
-    // Indices refer to the filtered list returned by getOptions(), not to Repeater rows
     function getCorrectOptions() {
         var correct = []
         var position = 0

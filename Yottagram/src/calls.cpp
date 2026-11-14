@@ -130,6 +130,7 @@ void Calls::updateCall(td_api::object_ptr<td_api::call> call)
     td_api::bytes encryption_key = callStateReady->encryption_key_;
     td_api::array<string> emojis = callStateReady->emojis_;
     bool allow_p2p = callStateReady->allow_p2p_;
+    string customParameters = callStateReady->custom_parameters_;
     qDebug() << allow_p2p;
 
     auto encryptionKeyValue = std::make_shared<std::array<uint8_t, 256>>();
@@ -183,6 +184,8 @@ void Calls::updateCall(td_api::object_ptr<td_api::call> call)
             }
         };
 
+    descriptor.config.customParameters = customParameters;
+
     const auto callLogPath = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/last_call_log.txt";
     const auto callLogNative = QDir::toNativeSeparators(callLogPath);
     const auto callLogUtf = QFile::encodeName(callLogNative);
@@ -190,21 +193,44 @@ void Calls::updateCall(td_api::object_ptr<td_api::call> call)
     //    descriptor.config.statsLogPath.data = (QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/stats.txt").toStdString();
 
     for (td_api::object_ptr<td_api::callServer> &server : servers) {
-        if (static_cast<const td_api::callServerTypeTelegramReflector&>(*server->type_).peer_tag_.size() == 16) qDebug() << "peer tag";
         if (server->type_->get_id() == td_api::callServerTypeTelegramReflector::ID) {
-            qDebug() << "callServerTypeTelegramReflector";
+            auto reflector = static_cast<td_api::callServerTypeTelegramReflector*>(server->type_.get());
+            const auto &tag = reflector->peer_tag_;
+
+            // Legacy (InstanceImpl, <= 5.0.0) uses endpoints
             tgcalls::Endpoint endpoint = {
                 .endpointId = server->id_,
                 .host = tgcalls::EndpointHost{ server->ip_address_, server->ipv6_address_ },
                 .port = static_cast<uint16_t>(server->port_),
-                .type = static_cast<td_api::callServerTypeTelegramReflector*>(server->type_.get())->is_tcp_ ? tgcalls::EndpointType::TcpRelay : tgcalls::EndpointType::UdpRelay
+                .type = reflector->is_tcp_ ? tgcalls::EndpointType::TcpRelay : tgcalls::EndpointType::UdpRelay
             };
-
-            const auto tag = static_cast<td_api::callServerTypeTelegramReflector*>(server->type_.get())->peer_tag_;
             if (tag.size() >= 16) {
                 memcpy(endpoint.peerTag, tag.data(), 16);
             }
             descriptor.endpoints.push_back(endpoint);
+
+            // V2 (>= 7.0.0) only looks at rtcServers; reflectors go in as "reflector" TURN servers
+            // with the peer tag hex-encoded in the password (see v2/ReflectorPort.cpp)
+            static const char hexDigits[] = "0123456789abcdef";
+            std::string peerTagHex;
+            peerTagHex.reserve(tag.size() * 2);
+            for (unsigned char c : tag) {
+                peerTagHex.push_back(hexDigits[c >> 4]);
+                peerTagHex.push_back(hexDigits[c & 0x0f]);
+            }
+
+            for (const std::string &host : { server->ip_address_, server->ipv6_address_ }) {
+                if (host.empty()) continue;
+                descriptor.rtcServers.push_back(tgcalls::RtcServer{
+                    .id = static_cast<uint8_t>(server->id_),
+                    .host = host,
+                    .port = static_cast<uint16_t>(server->port_),
+                    .login = "reflector",
+                    .password = peerTagHex,
+                    .isTurn = true,
+                    .isTcp = reflector->is_tcp_
+                });
+            }
         }
 
 

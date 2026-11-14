@@ -790,6 +790,22 @@ func (c *Client) Replies(ctx context.Context, channel, ts string, p HistoryParam
 	return HistoryPage{Messages: response.Messages, NextCursor: response.Metadata.NextCursor}, nil
 }
 
+// Command runs a slash command such as "/remind" in a channel, like typing it
+// in the Slack client. It returns the reply that only the sender sees, if any.
+func (c *Client) Command(ctx context.Context, channel, command, text, threadTS string) (string, error) {
+	var response struct {
+		Response string `json:"response"`
+	}
+	params := url.Values{"channel": {channel}, "command": {command}, "disp": {command}, "text": {text}}
+	if threadTS != "" {
+		params.Set("thread_ts", threadTS)
+	}
+	if err := c.Call(ctx, "chat.command", params, &response); err != nil {
+		return "", err
+	}
+	return response.Response, nil
+}
+
 // PostMessage sends a message, into a thread if threadTS isn't empty.
 func (c *Client) PostMessage(ctx context.Context, channel, text, threadTS string) (Message, error) {
 	var response struct {
