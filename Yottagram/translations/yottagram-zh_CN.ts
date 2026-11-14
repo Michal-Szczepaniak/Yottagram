@@ -591,6 +591,11 @@
         <source>New messages: %L1</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Yottagram
+Slack</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Loading</name>

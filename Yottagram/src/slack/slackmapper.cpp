@@ -457,10 +457,12 @@ void mapEvent(const QJsonObject &object, vector<Output> &outputs)
             outputs.push_back({0, newChat});
 
             // Threads are only in their folder, the main list would drown in
-            // them. Order 0 takes a chat out of a list.
+            // them, and it only has chats with recent activity. Order 0 takes
+            // a chat out of a list.
+            bool inMain = !chat["thread"].toBool() && chat["recent"].toBool();
             auto position = new td_api::updateChatPosition();
             position->chat_id_ = toInt64(chat["id"]);
-            position->position_ = makePosition(chat["thread"].toBool() ? 0 : toInt64(chat["order"]));
+            position->position_ = makePosition(inMain ? toInt64(chat["order"]) : 0);
             outputs.push_back({0, position});
 
             auto folderPosition = new td_api::updateChatPosition();
@@ -468,6 +470,11 @@ void mapEvent(const QJsonObject &object, vector<Output> &outputs)
             folderPosition->position_ = makePosition(toInt64(chat["order"]), chat["folder"].toInt());
             outputs.push_back({0, folderPosition});
         }
+    } else if (event == "chat_position") {
+        auto update = new td_api::updateChatPosition();
+        update->chat_id_ = toInt64(object["chat"]);
+        update->position_ = makePosition(toInt64(object["order"]), object["folder"].toInt());
+        outputs.push_back({0, update});
     } else if (event == "ready") {
         auto update = new td_api::updateConnectionState();
         update->state_ = td_api::make_object<td_api::connectionStateReady>();

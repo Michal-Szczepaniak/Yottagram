@@ -37,9 +37,13 @@ CoverBackground {
         Label {
             id: label
             anchors.horizontalCenter: parent.horizontalCenter
-            text: qsTr("Yottagram")
+            text: slackMode ? qsTr("Yottagram\nSlack") : qsTr("Yottagram")
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
             font.bold: true
             font.pixelSize: Theme.fontSizeLarge
+            fontSizeMode: Text.HorizontalFit
+            minimumPixelSize: Theme.fontSizeSmall
         }
 
         Item {

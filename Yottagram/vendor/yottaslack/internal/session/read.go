@@ -117,12 +117,22 @@ func (s *Session) emitRead(c *chat) {
 		}
 	}
 	total := len(s.chats)
+
+	unreadChanged := c.inUnread != (unread > 0)
+	c.inUnread = unread > 0
+	unreadOrder := int64(0)
+	if c.inUnread {
+		unreadOrder = c.order
+	}
 	s.mu.Unlock()
 
 	s.emit(map[string]any{
 		"event": "read_inbox", "chat": c.id, "last_read": lastRead, "unread": unread,
 		"unread_messages": messages, "unread_chats": chats, "total_chats": total,
 	})
+	if unreadChanged {
+		s.emit(map[string]any{"event": "chat_position", "chat": c.id, "folder": folderUnread, "order": unreadOrder})
+	}
 }
 
 // applyHistoryReads takes what Slack says was read, and counts the messages

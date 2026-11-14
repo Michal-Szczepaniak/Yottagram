@@ -478,6 +478,8 @@ func (s *Session) chatForSlackID(slackID string) *chat {
 	s.nextOrder++
 	entry.Order = s.nextOrder
 	c.order = entry.Order
+	c.inMain = s.mainOrderLocked(c) != 0
+	entry.Recent = c.inMain
 	s.mu.Unlock()
 
 	s.emit(map[string]any{"event": "chats", "chats": []wireChat{entry}})

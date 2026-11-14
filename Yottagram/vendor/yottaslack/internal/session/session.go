@@ -87,7 +87,9 @@ type wireChat struct {
 	Folder       int    `json:"folder"`
 	ReadOnly     bool   `json:"read_only,omitempty"`
 	Thread       bool   `json:"thread,omitempty"`
-	dm           bool
+	// In the main list, see recent.go
+	Recent bool `json:"recent"`
+	dm     bool
 
 	Photo *wirePhoto `json:"photo,omitempty"`
 }
@@ -125,12 +127,18 @@ type chat struct {
 	// Set for a thread's chat, whose slackID is its channel
 	threadTS string
 	title    string
-	dm           bool
+	dm       bool
 
 	lastRead int64
 	unread   []int64
-	notified []int32
-	marking  bool
+
+	// Date of the newest message, see recent.go
+	lastActivity  int64
+	activityKnown bool
+	inMain        bool
+	inUnread      bool
+	notified      []int32
+	marking       bool
 
 	// Held for writing during a send and for reading during a history request.
 	// A history reply during a send can contain the message under its real id
@@ -146,6 +154,11 @@ type Session struct {
 	ids          *ids.Store
 	usersPath    string
 	pollInterval time.Duration
+	now          func() time.Time
+
+	activityPath  string
+	activity      map[int64]int64
+	activityDirty bool
 
 	ctx      context.Context
 	cancel   context.CancelFunc
@@ -206,6 +219,9 @@ func New(dataDir string) (*Session, error) {
 		appAPI:          api.New(),
 		ids:             store,
 		usersPath:       filepath.Join(dataDir, "users.json"),
+		now:             time.Now,
+		activityPath:    filepath.Join(dataDir, "activity.json"),
+		activity:        map[int64]int64{},
 		pollInterval:    pollInterval,
 		previewInterval: previewInterval,
 		markDelay:       markDelay,
@@ -511,6 +527,7 @@ func (s *Session) login(id uint64, token, appToken string, retry bool) {
 
 	s.startRealtime(appToken)
 	s.spawn(s.loadPreviews)
+	s.spawn(s.watchActivity)
 }
 
 func hasScope(scopes, scope string) bool {
@@ -595,9 +612,11 @@ func (s *Session) sync() {
 		s.log("users.list failed: %v", err)
 	}
 
+	s.loadActivity()
 	s.emitChats(s.loadConversations())
 	s.emit(map[string]any{"event": "ready"})
 	s.emit(map[string]any{"event": "folders", "folders": []map[string]any{
+		{"id": folderUnread, "name": "Unread", "icon": "Unread"},
 		{"id": folderChannels, "name": "Channels", "icon": "Channels"},
 		{"id": folderDirect, "name": "Direct messages", "icon": "Private"},
 		{"id": folderApps, "name": "Apps", "icon": "Bots"},
@@ -848,7 +867,11 @@ func (s *Session) emitChats(conversations []api.Conversation) {
 	s.mu.Lock()
 	for i := range chats {
 		chats[i].Order = int64(len(chats) - i)
-		s.chats[chats[i].ID].order = chats[i].Order
+		c := s.chats[chats[i].ID]
+		c.order = chats[i].Order
+		s.applyCachedActivityLocked(c)
+		c.inMain = s.mainOrderLocked(c) != 0
+		chats[i].Recent = c.inMain
 	}
 	s.nextOrder = int64(len(chats))
 	s.mu.Unlock()
@@ -1037,10 +1060,14 @@ func (s *Session) emitLastMessage(m message) {
 	c := s.findChat(m.Chat)
 
 	s.mu.Lock()
+	s.noteActivityLocked(c, m.Date)
 	order := c.order
 	folder := 0
 	if c.threadTS != "" {
 		folder = folderThreads
+	} else {
+		order = s.mainOrderLocked(c)
+		c.inMain = order != 0
 	}
 	s.mu.Unlock()
 
@@ -1201,6 +1228,10 @@ func (s *Session) loadPreview(c *chat) {
 		return
 	}
 	if len(page.Messages) == 0 {
+		s.mu.Lock()
+		s.noteActivityLocked(c, 0)
+		s.mu.Unlock()
+		s.updateMainPosition(c)
 		return
 	}
 
