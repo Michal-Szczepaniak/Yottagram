@@ -21,9 +21,9 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 function format(duration) {
     if (duration === 0) return "";
     var formatted = "";
-    if (duration % 60) formatted = " " + qsTr("%L1 s").arg(duration);
+    if (duration % 60) formatted = " " + qsTr("%L1 s").arg(duration % 60);
     var minuteduration = Math.floor(duration/60);
-    if (minuteduration % 60) formatted = " " + qsTr("%L1 min").arg(minuteduration) + formatted;
+    if (minuteduration % 60) formatted = " " + qsTr("%L1 min").arg(minuteduration % 60) + formatted;
     var hourduration = Math.floor(minuteduration/60);
     if (hourduration) formatted = qsTr("%L1 h").arg(hourduration) + formatted;
 

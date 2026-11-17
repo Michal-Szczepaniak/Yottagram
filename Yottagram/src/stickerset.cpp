@@ -113,6 +113,7 @@ shared_ptr<File> StickerSet::getThumbnail()
     }
 
     if (!_stickerSet->thumbnail_) {
+        if (_stickerIds.isEmpty()) return {};
         return _files->getFile(_stickerIds[0]);
     }
 

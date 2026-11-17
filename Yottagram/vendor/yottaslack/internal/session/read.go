@@ -53,7 +53,7 @@ func (s *Session) readUpTo(c *chat, id int64, mark bool) {
 	c.notified = nil
 
 	// Slack's API has no read state for threads
-	startMark := mark && !c.marking && !s.readOnly && c.threadTS == ""
+	startMark := mark && !c.marking && c.threadTS == ""
 	if startMark {
 		c.marking = true
 	}

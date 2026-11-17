@@ -216,6 +216,17 @@ td_api::object_ptr<td_api::message> makeMessage(const QJsonObject &object)
     return message;
 }
 
+// The app follows installed sets through this update, whether it asked or not
+td_api::updateInstalledStickerSets *makeEmojiSetsUpdate(const QJsonArray &sets)
+{
+    auto update = new td_api::updateInstalledStickerSets();
+    update->sticker_type_ = td_api::make_object<td_api::stickerTypeCustomEmoji>();
+    for (const QJsonValue &set : sets) {
+        update->sticker_set_ids_.push_back(toInt64(set.toObject()["id"]));
+    }
+    return update;
+}
+
 td_api::object_ptr<td_api::user> makeUser(const QJsonObject &object)
 {
     auto user = td_api::make_object<td_api::user>();
@@ -272,15 +283,13 @@ td_api::object_ptr<td_api::chatPhotoInfo> makeChatPhoto(const QJsonObject &objec
 
 td_api::object_ptr<td_api::chat> makeChat(const QJsonObject &object)
 {
-    bool canSend = !object["read_only"].toBool();
-
     auto permissions = td_api::make_object<td_api::chatPermissions>();
-    permissions->can_send_basic_messages_ = canSend;
-    permissions->can_send_audios_ = canSend;
-    permissions->can_send_documents_ = canSend;
-    permissions->can_send_photos_ = canSend;
-    permissions->can_send_videos_ = canSend;
-    permissions->can_send_voice_notes_ = canSend;
+    permissions->can_send_basic_messages_ = true;
+    permissions->can_send_audios_ = true;
+    permissions->can_send_documents_ = true;
+    permissions->can_send_photos_ = true;
+    permissions->can_send_videos_ = true;
+    permissions->can_send_voice_notes_ = true;
 
     auto chat = td_api::make_object<td_api::chat>();
     chat->id_ = toInt64(object["id"]);
@@ -361,7 +370,11 @@ void mapReply(uint64_t id, const QJsonObject &object, vector<Output> &outputs)
         }
         outputs.push_back({id, reply});
     } else if (type == "user") {
-        outputs.push_back({id, makeUser(result["user"].toObject()).release()});
+        auto user = makeUser(result["user"].toObject());
+        // The app offers custom emoji to premium users only, and on Slack
+        // everyone can use the workspace's
+        user->is_premium_ = true;
+        outputs.push_back({id, user.release()});
     } else if (type == "available_reactions") {
         auto reply = new td_api::availableReactions();
         for (const QJsonValue &emoji : result["emojis"].toArray()) {
@@ -382,6 +395,44 @@ void mapReply(uint64_t id, const QJsonObject &object, vector<Output> &outputs)
             thumbnail->file_ = makeFile(emoji["file"].toObject());
 
             auto sticker = td_api::make_object<td_api::sticker>();
+            sticker->emoji_ = toStdString(emoji["name"]);
+            sticker->full_type_ = std::move(fullType);
+            sticker->thumbnail_ = std::move(thumbnail);
+            sticker->sticker_ = makeFile(emoji["file"].toObject());
+            reply->stickers_.push_back(std::move(sticker));
+        }
+        outputs.push_back({id, reply});
+    } else if (type == "custom_emoji_sets") {
+        outputs.push_back({0, makeEmojiSetsUpdate(result["sets"].toArray())});
+        outputs.push_back({id, new td_api::ok()});
+    } else if (type == "custom_emoji_set") {
+        int64_t setId = toInt64(result["id"]);
+
+        auto reply = new td_api::stickerSet();
+        reply->id_ = setId;
+        reply->title_ = toStdString(result["title"]);
+        reply->name_ = "slack_" + std::to_string(setId);
+        // The set's icon in the picker, Slackbot's picture for the workspace's
+        if (result["icon"].isObject()) {
+            reply->thumbnail_ = td_api::make_object<td_api::thumbnail>();
+            reply->thumbnail_->format_ = td_api::make_object<td_api::thumbnailFormatPng>();
+            reply->thumbnail_->file_ = makeFile(result["icon"].toObject());
+        }
+        reply->is_installed_ = true;
+        reply->sticker_type_ = td_api::make_object<td_api::stickerTypeCustomEmoji>();
+        for (const QJsonValue &value : result["emojis"].toArray()) {
+            QJsonObject emoji = value.toObject();
+
+            auto fullType = td_api::make_object<td_api::stickerFullTypeCustomEmoji>();
+            fullType->custom_emoji_id_ = toInt64(emoji["id"]);
+
+            auto thumbnail = td_api::make_object<td_api::thumbnail>();
+            thumbnail->file_ = makeFile(emoji["file"].toObject());
+
+            // The id is the custom emoji id, the picker inserts it into text
+            auto sticker = td_api::make_object<td_api::sticker>();
+            sticker->id_ = toInt64(emoji["id"]);
+            sticker->set_id_ = setId;
             sticker->emoji_ = toStdString(emoji["name"]);
             sticker->full_type_ = std::move(fullType);
             sticker->thumbnail_ = std::move(thumbnail);
@@ -589,6 +640,8 @@ void mapEvent(const QJsonObject &object, vector<Output> &outputs)
             update->chat_folders_.push_back(std::move(info));
         }
         outputs.push_back({0, update});
+    } else if (event == "custom_emoji_sets") {
+        outputs.push_back({0, makeEmojiSetsUpdate(object["sets"].toArray())});
     } else if (event == "log") {
         qWarning() << "yottaslack:" << object["message"].toString();
     } else {

@@ -6,16 +6,17 @@ import (
 	"strconv"
 	"time"
 
+	"yottaslack/internal/api"
 	"yottaslack/internal/ids"
 )
 
-// The main list only shows chats with activity in the last week, like the
+// The main list only shows chats with activity in the last month, like the
 // desktop sidebar's recent filter. The per-type folders keep every chat, and
 // the Unread folder shows chats with unread messages.
 
 const (
 	folderUnread = 5
-	recentWindow = 7 * 24 * time.Hour
+	recentWindow = 30 * 24 * time.Hour
 	recentCheck  = time.Minute
 )
 
@@ -136,5 +137,45 @@ func (s *Session) saveActivity() {
 	}
 	if err := ids.WriteFile(s.activityPath, content); err != nil {
 		s.log("saving activity failed: %v", err)
+	}
+}
+
+// loadCounts gets every chat's latest message in one call, which otherwise
+// only arrives with each chat's preview.
+func (s *Session) loadCounts() map[string]api.ConversationCount {
+	counts, err := s.api.Counts(s.ctx)
+	if err != nil {
+		s.log("client.counts failed, previews will fill the list in: %v", err)
+		return nil
+	}
+
+	bySlackID := make(map[string]api.ConversationCount, len(counts))
+	for _, count := range counts {
+		bySlackID[count.ID] = count
+	}
+	return bySlackID
+}
+
+// applyCountLocked takes a chat's entry from client.counts. An empty latest
+// stays unknown rather than hiding the chat. Callers hold s.mu.
+func (s *Session) applyCountLocked(c *chat, count api.ConversationCount) {
+	c.hasUnreads = count.HasUnreads
+	if latest, err := ids.ParseTS(count.Latest); err == nil && latest > 0 {
+		s.noteActivityLocked(c, latest/1000000)
+	}
+}
+
+// previewRank orders preview loading: unread chats, then recent ones, then
+// ones not known yet, then quiet ones, which only their folders show.
+func (s *Session) previewRankLocked(c *chat) int {
+	switch {
+	case c.hasUnreads:
+		return 0
+	case !c.activityKnown:
+		return 2
+	case s.mainOrderLocked(c) != 0:
+		return 1
+	default:
+		return 3
 	}
 }

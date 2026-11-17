@@ -110,33 +110,31 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Slack user token</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Submit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>1. Create the app below, then install it to your workspace.
-2. Copy the User OAuth Token from OAuth &amp; Permissions.
-3. For instant updates, generate an app-level token with the connections:write scope in Basic Information.</source>
+        <source>The session token starts with xoxc-</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Create Slack app</source>
+        <source>Slack browser session</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Create read-only Slack app</source>
+        <source>1. Log in to your workspace at app.slack.com in a desktop browser.
+2. In the developer tools console, run:
+Object.values(JSON.parse(localStorage.localConfig_v2).teams).map(t =&gt; t.name + &quot;: &quot; + t.token)
+and copy your workspace&apos;s xoxc- token.
+3. In the developer tools storage tab, copy the value of the cookie named d for slack.com. It starts with xoxd-.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>User OAuth Token, or browser session token</source>
+        <source>Session token</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>App token, optional, or browser d cookie</source>
+        <source>d cookie</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1099,10 +1097,6 @@ Slack</source>
     </message>
     <message>
         <source>Voice message volume boost</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Slack app token, leave empty to turn instant updates off</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

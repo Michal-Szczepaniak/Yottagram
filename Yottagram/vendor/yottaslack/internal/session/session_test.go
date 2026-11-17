@@ -25,13 +25,13 @@ type fakeSlack struct {
 	postGate chan struct{}
 	postTS   string
 	marked   string
-	scopes   string
 	replies  []string
 	threadTS string
 	reacted  string
 	uploaded string
 	comment  string
 	posted   string
+	counts   string
 }
 
 func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -39,9 +39,6 @@ func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch r.URL.Path {
 	case "/auth.test":
-		f.mu.Lock()
-		w.Header().Set("X-OAuth-Scopes", f.scopes)
-		f.mu.Unlock()
 		fmt.Fprint(w, `{"ok":true,"user_id":"UME"}`)
 	case "/users.info":
 		fmt.Fprintf(w, `{"ok":true,"user":{"id":%q,"name":%q}}`, r.Form.Get("user"), strings.ToLower(r.Form.Get("user")))
@@ -80,6 +77,8 @@ func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{"ok":true}`)
 	case "/emoji.list":
 		fmt.Fprint(w, `{"ok":true,"emoji":{"party_parrot":"https://emoji.example/p.gif","parrot":"alias:party_parrot","broken":"alias:missing"}}`)
+	case "/emoji.adminList":
+		fmt.Fprint(w, `{"ok":true,"emoji":[]}`)
 	case "/chat.delete":
 		fmt.Fprint(w, `{"ok":true}`)
 	case "/conversations.replies":
@@ -109,6 +108,19 @@ func (f *fakeSlack) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fmt.Fprintf(w, `{"ok":true,"ts":%q,"message":{"ts":%q,"user":"UME","text":%q}}`, ts, ts, r.Form.Get("text"))
+	case "/rtm.connect":
+		// Never connects and never fails, so realtime adds no events of its own;
+		// tests drive it through handleEvent
+		<-r.Context().Done()
+	case "/client.counts":
+		f.mu.Lock()
+		counts := f.counts
+		f.mu.Unlock()
+		if counts == "" {
+			fmt.Fprint(w, `{"ok":false,"error":"not_allowed_token_type"}`)
+			return
+		}
+		fmt.Fprint(w, counts)
 	default:
 		http.NotFound(w, r)
 	}
@@ -138,7 +150,6 @@ func newTestSession(t *testing.T) (*Session, *fakeSlack) {
 	t.Cleanup(s.Close)
 
 	s.api.BaseURL = server.URL
-	s.appAPI.BaseURL = server.URL
 	s.pollInterval = time.Hour
 	s.previewInterval = time.Hour
 	s.markDelay = time.Millisecond
@@ -179,9 +190,11 @@ func call(s *Session, id int, method string, params string) {
 	s.Handle([]byte(fmt.Sprintf(`{"id":%d,"method":%q,"params":%s}`, id, method, params)))
 }
 
+const testLogin = `{"token":"xoxc-test","cookie":"xoxd-test"}`
+
 func login(t *testing.T, s *Session) event {
 	t.Helper()
-	call(s, 2, "login", `{"token":"xoxp-test"}`)
+	call(s, 2, "login", testLogin)
 	return nextEvent(t, s, "chats")
 }
 
@@ -200,7 +213,7 @@ func chatID(t *testing.T, chats event, title string) int64 {
 func TestLoginEventOrder(t *testing.T) {
 	s, _ := newTestSession(t)
 
-	call(s, 2, "login", `{"token":"xoxp-test"}`)
+	call(s, 2, "login", testLogin)
 
 	var order []string
 	for len(order) == 0 || order[len(order)-1] != "ready" {
@@ -725,75 +738,6 @@ func TestCustomEmoji(t *testing.T) {
 	}
 }
 
-func TestAppTokenWaitsForLogin(t *testing.T) {
-	s, _ := newTestSession(t)
-
-	s.setAppToken("xapp-test")
-
-	s.mu.Lock()
-	started := s.stopRealtime != nil
-	s.mu.Unlock()
-	if started {
-		t.Fatal("realtime must wait for the chat list")
-	}
-}
-
-func TestReadOnlyTokenWritesNothing(t *testing.T) {
-	s, fake := newTestSession(t)
-	fake.mu.Lock()
-	fake.scopes = "channels:read,channels:history"
-	fake.postTS = "1712345678.000300"
-	fake.mu.Unlock()
-
-	chats := login(t, s)
-	nextEvent(t, s, "ready")
-
-	for _, entry := range chats["chats"].([]any) {
-		if entry.(map[string]any)["read_only"] != true {
-			t.Fatalf("got %v", entry)
-		}
-	}
-
-	id := chatID(t, chats, "#general")
-	s.handleEvent(messageEvent("1712345678.000300", "UME", "mine"))
-
-	requests := []string{
-		fmt.Sprintf(`{"id":8,"method":"send","params":{"chat":%d,"text":"hi"}}`, id),
-		fmt.Sprintf(`{"id":9,"method":"edit","params":{"chat":%d,"message":1712345678000300,"text":"hi"}}`, id),
-		fmt.Sprintf(`{"id":10,"method":"delete","params":{"chat":%d,"messages":[1712345678000300]}}`, id),
-		fmt.Sprintf(`{"id":11,"method":"react","params":{"chat":%d,"message":1712345678000300,"emoji":"👍","add":true}}`, id),
-		fmt.Sprintf(`{"id":12,"method":"upload","params":{"chat":%d,"files":[{"path":"/nonexistent"}]}}`, id),
-		`{"id":13,"method":"properties","params":{"message":1712345678000300}}`,
-	}
-	for _, request := range requests {
-		s.Handle([]byte(request))
-	}
-
-	refused := map[float64]bool{}
-	for len(refused) < len(requests) {
-		e := next(t, s)
-		if id, ok := e["id"].(float64); ok && id >= 8 {
-			if e["error"] == nil {
-				t.Fatalf("got %v", e)
-			}
-			refused[id] = true
-		}
-	}
-
-	// Reading only changes what's shown here, Slack isn't told
-	s.handleEvent(messageEvent("1712345678.000400", "UANN", "theirs"))
-	call(s, 14, "view", fmt.Sprintf(`{"chat":%d,"message":1712345678000400}`, id))
-	for next(t, s)["id"] != float64(14) {
-	}
-	time.Sleep(50 * time.Millisecond)
-
-	fake.mu.Lock()
-	defer fake.mu.Unlock()
-	if fake.posted != "" || fake.reacted != "" || fake.uploaded != "" || fake.marked != "" {
-		t.Fatalf("a write reached Slack: %q %q %q %q", fake.posted, fake.reacted, fake.uploaded, fake.marked)
-	}
-}
-
 func TestStatusEmojiShowsAsLastName(t *testing.T) {
 	now := time.Unix(1000, 0)
 	cases := []struct {
@@ -1137,5 +1081,19 @@ func TestPollDeliversNewMessagesInOrder(t *testing.T) {
 func TestMpimTitle(t *testing.T) {
 	if got := mpimTitle("mpdm-ann--bob--cid-1"); got != "ann, bob, cid" {
 		t.Fatalf("got %q", got)
+	}
+}
+
+func TestLoginNeedsBrowserSession(t *testing.T) {
+	s, _ := newTestSession(t)
+
+	for i, params := range []string{
+		`{"token":"xoxp-test","cookie":"xoxd-test"}`,
+		`{"token":"xoxc-test"}`,
+	} {
+		call(s, 2+i, "login", params)
+		if reply := next(t, s); reply["error"] == nil {
+			t.Fatalf("%s must be refused, got %v", params, reply)
+		}
 	}
 }

@@ -12,7 +12,7 @@
 
 ## Core
 
-- [x] Realtime updates over Socket Mode
+- [x] Realtime updates over the RTM socket
 - [x] Unread counts and marking as read (`conversations.mark`)
 - [ ] Reads made in other clients, Slack only reports them at the next launch
 - [x] Notifications for direct messages and mentions

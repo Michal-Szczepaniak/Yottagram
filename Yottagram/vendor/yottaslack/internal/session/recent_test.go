@@ -60,16 +60,16 @@ func TestQuietChatLeavesMainList(t *testing.T) {
 		t.Fatalf("a day old message keeps the chat in the main list, got %v", last)
 	}
 
-	clock.Store(testMessageDate + int64(8*24*time.Hour/time.Second))
+	clock.Store(testMessageDate + int64(31*24*time.Hour/time.Second))
 	s.updateMainPosition(s.findChat(int64(general["id"].(float64))))
 	if position := nextPosition(t, s, 0); position["order"] != float64(0) {
-		t.Fatalf("a week quiet chat leaves the main list, got %v", position)
+		t.Fatalf("a month quiet chat leaves the main list, got %v", position)
 	}
 }
 
 func TestOldMessageKeepsChatOutOfMainList(t *testing.T) {
 	s, _ := newTestSession(t)
-	fakeClock(s, testMessageDate+int64(30*24*time.Hour/time.Second))
+	fakeClock(s, testMessageDate+int64(31*24*time.Hour/time.Second))
 	login(t, s)
 	nextEvent(t, s, "ready")
 
@@ -81,7 +81,7 @@ func TestOldMessageKeepsChatOutOfMainList(t *testing.T) {
 
 func TestCachedActivityAppliesAtLogin(t *testing.T) {
 	s, _ := newTestSession(t)
-	fakeClock(s, testMessageDate+int64(30*24*time.Hour/time.Second))
+	fakeClock(s, testMessageDate+int64(31*24*time.Hour/time.Second))
 
 	id := s.ids.Chat("CGEN")
 	content := fmt.Sprintf(`{"%d":%d}`, id, testMessageDate)
@@ -113,5 +113,46 @@ func TestUnreadFolder(t *testing.T) {
 	call(s, 8, "view", fmt.Sprintf(`{"chat":%d,"message":1712345678000300}`, int64(general["id"].(float64))))
 	if removed := nextPosition(t, s, folderUnread); removed["order"] != float64(0) {
 		t.Fatalf("reading it takes the chat out of the Unread folder, got %v", removed)
+	}
+}
+
+func TestCountsSetMainListAtLogin(t *testing.T) {
+	s, fake := newTestSession(t)
+	now := int64(testMessageDate + 30*24*60*60)
+	fakeClock(s, now)
+
+	fake.mu.Lock()
+	fake.counts = fmt.Sprintf(`{"ok":true,
+		"channels":[{"id":"CGEN","latest":"%d.000100","has_unreads":false}],
+		"ims":[{"id":"DANN","latest":"%d.000100","has_unreads":true}]}`, testMessageDate, now-60*60)
+	fake.mu.Unlock()
+
+	call(s, 2, "login", testLogin)
+	chats := nextEvent(t, s, "chats")
+
+	if general := chatEntry(t, chats, "#general"); general["recent"] != false {
+		t.Fatalf("a channel quiet for a month starts out of the main list, got %v", general)
+	}
+	if ann := chatEntry(t, chats, "Ann"); ann["recent"] != true {
+		t.Fatalf("a DM from an hour ago is in the main list, got %v", ann)
+	}
+
+	s.mu.Lock()
+	ann := s.bySlackID["DANN"]
+	general := s.bySlackID["CGEN"]
+	unreadFirst := s.previewRankLocked(ann) < s.previewRankLocked(general)
+	s.mu.Unlock()
+	if !unreadFirst {
+		t.Fatal("previews must load unread chats first")
+	}
+}
+
+func TestCountsFailureKeepsPreviewPath(t *testing.T) {
+	s, _ := newTestSession(t)
+	call(s, 2, "login", testLogin)
+	chats := nextEvent(t, s, "chats")
+
+	if general := chatEntry(t, chats, "#general"); general["recent"] != true {
+		t.Fatalf("without counts a chat waits for its preview in the main list, got %v", general)
 	}
 }

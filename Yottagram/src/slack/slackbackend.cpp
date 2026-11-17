@@ -31,10 +31,18 @@ along with Yottagram. If not, see <http://www.gnu.org/licenses/>.
 namespace {
 
 const char *TOKEN_KEY = "slackToken";
-const char *APP_TOKEN_KEY = "slackAppToken";
-const char *APP_TOKEN_OPTION = "slack_app_token";
+const char *COOKIE_KEY = "slackCookie";
+// Logins from before the app token was dropped kept the cookie here
+const char *LEGACY_COOKIE_KEY = "slackAppToken";
+const char *COOKIE_OPTION = "slack_cookie";
 const int INVALID_TOKEN_CODE = 401;
 const unsigned long CLOSE_TIMEOUT = 3000;
+
+QString storedCookie()
+{
+    QSettings settings;
+    return settings.value(COOKIE_KEY, settings.value(LEGACY_COOKIE_KEY)).toString();
+}
 
 const QString MENTION_START = QString(QChar(0xE000));
 const QString MENTION_END = QString(QChar(0xE001));
@@ -193,7 +201,7 @@ void SlackBackend::start()
         return;
     }
 
-    call(STORED_TOKEN_LOGIN_ID, "login", {{"token", token}, {"app_token", QSettings().value(APP_TOKEN_KEY).toString()}, {"retry", true}});
+    call(STORED_TOKEN_LOGIN_ID, "login", {{"token", token}, {"cookie", storedCookie()}, {"retry", true}});
 }
 
 void SlackBackend::send(uint64_t id, td_api::object_ptr<td_api::Function> function)
@@ -202,7 +210,7 @@ void SlackBackend::send(uint64_t id, td_api::object_ptr<td_api::Function> functi
     case td_api::checkAuthenticationBotToken::ID:
         _pendingToken = QString::fromStdString(static_cast<td_api::checkAuthenticationBotToken*>(function.get())->token_).trimmed();
         _loginRequestId = id;
-        call(id, "login", {{"token", _pendingToken}, {"app_token", QSettings().value(APP_TOKEN_KEY).toString()}});
+        call(id, "login", {{"token", _pendingToken}, {"cookie", storedCookie()}});
         break;
     case td_api::getMe::ID:
         call(id, "me");
@@ -241,6 +249,19 @@ void SlackBackend::send(uint64_t id, td_api::object_ptr<td_api::Function> functi
         call(id, "custom_emojis", {{"ids", ids}});
         break;
     }
+    case td_api::getInstalledStickerSets::ID: {
+        auto query = static_cast<td_api::getInstalledStickerSets*>(function.get());
+        if (!query->sticker_type_ || query->sticker_type_->get_id() != td_api::stickerTypeCustomEmoji::ID) {
+            replyError(id, 400, "Slack has no sticker sets");
+            break;
+        }
+
+        call(id, "custom_emoji_sets");
+        break;
+    }
+    case td_api::getStickerSet::ID:
+        call(id, "custom_emoji_set", {{"set", static_cast<double>(static_cast<td_api::getStickerSet*>(function.get())->set_id_)}});
+        break;
     case td_api::getMessageAvailableReactions::ID:
         call(id, "available_reactions");
         break;
@@ -275,13 +296,13 @@ void SlackBackend::send(uint64_t id, td_api::object_ptr<td_api::Function> functi
     }
     case td_api::setOption::ID: {
         auto query = static_cast<td_api::setOption*>(function.get());
-        if (query->name_ == APP_TOKEN_OPTION && query->value_ && query->value_->get_id() == td_api::optionValueString::ID) {
-            QString token = QString::fromStdString(static_cast<td_api::optionValueString*>(query->value_.get())->value_).trimmed();
-            QSettings().setValue(APP_TOKEN_KEY, token);
-            call(id, "realtime", {{"token", token}});
-        } else {
-            reply(id, new td_api::ok());
+        if (query->name_ == COOKIE_OPTION && query->value_ && query->value_->get_id() == td_api::optionValueString::ID) {
+            QString cookie = QString::fromStdString(static_cast<td_api::optionValueString*>(query->value_.get())->value_).trimmed();
+            QSettings settings;
+            settings.setValue(COOKIE_KEY, cookie);
+            settings.remove(LEGACY_COOKIE_KEY);
         }
+        reply(id, new td_api::ok());
         break;
     }
     case td_api::setNetworkType::ID: {

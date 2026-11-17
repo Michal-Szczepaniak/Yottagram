@@ -127,10 +127,10 @@ void Authorization::sendSlackToken(QString token)
     _manager->sendQuery(new td_api::checkAuthenticationBotToken(token.toStdString()));
 }
 
-void Authorization::setSlackAppToken(QString token)
+void Authorization::setSlackCookie(QString cookie)
 {
-    auto value = td_api::make_object<td_api::optionValueString>(token.toStdString());
-    _manager->sendQuery(new td_api::setOption("slack_app_token", std::move(value)));
+    auto value = td_api::make_object<td_api::optionValueString>(cookie.toStdString());
+    _manager->sendQuery(new td_api::setOption("slack_cookie", std::move(value)));
 }
 
 void Authorization::onError(int64_t chatId, int32_t type, int32_t subType, int32_t code, QString message)

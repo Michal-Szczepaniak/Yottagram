@@ -78,7 +78,7 @@ void Chat::initialize()
     if (_chat->last_message_) setLastMessage(move(_chat->last_message_));
 
     for (td_api::object_ptr<td_api::chatPosition> &position: _chat->positions_) {
-        if(!position && position != nullptr) updatePosition(position.release());
+        if(position) updatePosition(position.release());
     }
 
     if (hasPhoto()) {

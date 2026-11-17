@@ -1,4 +1,4 @@
-// Package socket is a minimal WebSocket client, enough for Slack's Socket Mode.
+// Package socket is a minimal WebSocket client, enough for Slack's RTM socket.
 // It lives here so that the library keeps building without any dependencies.
 package socket
 

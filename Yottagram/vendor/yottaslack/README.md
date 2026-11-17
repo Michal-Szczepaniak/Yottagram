@@ -6,9 +6,7 @@ Slack support is packaged separately as `yottagram-slack`, which holds this libr
 
 ## Setup
 
-1. Tap **Create Slack app** on the login page, or create one from `slack-app-manifest.yml`, and install it to your workspace. Everyone needs their own app: a shared one counts as distributed outside the Marketplace, which limits `conversations.history` to 1 call a minute.
-   For an account you can't risk, use **Create read-only Slack app** instead. Its token has no write scopes, so Slack itself refuses any write, and the app hides what it can't do.
-2. Build the app as usual. `yottaslack.pri` runs `build.sh` before linking and installs the library to `/usr/share/yottagram/lib`. The build target needs one of:
+1. Build the app as usual. `yottaslack.pri` runs `build.sh` before linking and installs the library to `/usr/share/yottagram/lib`. The build target needs one of:
 
    - `go` installed in it, which compiles with the target's `gcc`. Go runs under `qemu` there, so `build.sh` turns its garbage collector off and uses one thread, otherwise it crashes. The first build takes a while.
    - `prebuilds/<QT_ARCH>/libyottaslack.so`, tracked by Git LFS and used when `go` isn't found. Fill it from the host with cross compilers built against glibc 2.30 or older:
@@ -18,19 +16,14 @@ Slack support is packaged separately as `yottagram-slack`, which holds this libr
      ```
 
    With neither, the build stops with an error.
-3. Start it in Slack mode and paste the User OAuth Token (`xoxp-...`). It's stored in plaintext in `QSettings` under `slackToken`.
-4. For instant updates, create an app-level token (`xapp-...`) with the `connections:write` scope under Basic Information, and paste it on the login page or in the app's Settings. It's stored the same way under `slackAppToken`. Without it, the open chat is polled every 5 seconds.
+2. Start it in Slack mode and log in with a browser session, the way Slack's web client does: an `xoxc-` token and the `d` cookie. Nothing needs creating or installing, and realtime uses the classic RTM socket. In a browser logged in to the workspace, open the developer tools:
 
-### Without an app
+   - Token: in the console, run `Object.values(JSON.parse(localStorage.localConfig_v2).teams).map(t => t.name + ": " + t.token)` and copy your workspace's.
+   - Cookie: the value of `d` for `slack.com`, under Storage or Application. It starts with `xoxd-`.
 
-Slack's web client logs in with an `xoxc-` token and a `d` cookie, and this library can do the same: paste the token in the first field of the login page and the cookie in the second. Nothing needs creating or installing, and realtime uses the classic RTM socket.
+   Both are stored in plaintext in `QSettings`, under `slackToken` and `slackCookie`.
 
-In a browser logged in to the workspace, open the developer tools:
-
-- Token: in the console, run `Object.values(JSON.parse(localStorage.localConfig_v2).teams)[0].token`, and pick the right team if there are several.
-- Cookie: the value of `d` for `slack.com`, under Storage or Application.
-
-This is undocumented and can break or get logged out at any time. The session can do anything you can, with no scopes to limit it, so read-only mode doesn't apply. Both values are stored in plaintext like the other tokens.
+This is undocumented and can break or get logged out at any time. The session can do anything you can.
 
 ## Testing
 
@@ -61,8 +54,8 @@ go test -race ./...
 {"event":"new_message","message":{}}
 ```
 
-Methods: `login`, `realtime`, `network`, `me`, `history`, `send`, `upload`, `react`, `available_reactions`, `custom_emojis`, `members`, `view`, `download`, `cancel_download`, `properties`, `edit`, `delete`, `open`, `close`.
+Methods: `login`, `network`, `me`, `history`, `send`, `upload`, `react`, `available_reactions`, `custom_emojis`, `members`, `view`, `download`, `cancel_download`, `properties`, `edit`, `delete`, `open`, `close`.
 
-Events: `auth_ready`, `users`, `chats`, `ready`, `new_message`, `last_message`, `send_succeeded`, `message_content`, `delete_messages`, `chat_title`, `member_count`, `reactions`, `read_inbox`, `notify`, `notify_clear`, `file`, `folders`, `log`.
+Events: `auth_ready`, `users`, `chats`, `ready`, `new_message`, `last_message`, `send_succeeded`, `message_content`, `delete_messages`, `chat_title`, `member_count`, `reactions`, `read_inbox`, `notify`, `notify_clear`, `file`, `folders`, `chat_position`, `log`.
 
 The order of events matters; see the comment at the top of `internal/session/session.go`.

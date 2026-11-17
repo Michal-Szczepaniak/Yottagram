@@ -58,7 +58,10 @@ Item {
         filters: [
             RegExpFilter {
                 roleName: "emoji"
-                pattern: chat.availableReactions.length === 0 ? "0" : chat.availableReactions.join('|')
+                // Escaped: Slack's list has the keycap *⃣, a bare * breaks the whole pattern
+                pattern: chat.availableReactions.length === 0 ? "0" : chat.availableReactions.map(function (emoji) {
+                    return emoji.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+                }).join('|')
                 enabled: reactionMessage != 0
             },
             ValueFilter {
@@ -161,6 +164,7 @@ Item {
                 }
 
                 Image {
+                    id: emojiImage
                     anchors.centerIn: parent
                     width: parent.width - Theme.paddingLarge
                     height: parent.width - Theme.paddingLarge
@@ -170,6 +174,22 @@ Item {
                     fillMode: Image.PreserveAspectFit
                     asynchronous: true
                     source: type === "customEmoji" ? thumbnail.localPath : 'qrc:///emoji/' + Twemoji.emojifyRaw(emoji) + '.svg'
+                }
+
+                // Qt can't decode some custom emoji, animated WebP on Slack,
+                // so they show their name and can still be picked
+                Label {
+                    anchors.fill: parent
+                    anchors.margins: Theme.paddingSmall / 2
+                    visible: type === "customEmoji" && emojiImage.status === Image.Error
+                    text: emoji.replace(/^:|:$/g, "")
+                    font.pixelSize: Theme.fontSizeTiny
+                    fontSizeMode: Text.Fit
+                    minimumPixelSize: Theme.fontSizeTiny / 2
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    wrapMode: Text.WrapAnywhere
+                    color: Theme.secondaryColor
                 }
             }
         }

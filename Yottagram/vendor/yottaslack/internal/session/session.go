@@ -85,7 +85,6 @@ type wireChat struct {
 	SupergroupID int64  `json:"supergroup_id,omitempty"`
 	Order        int64  `json:"order"`
 	Folder       int    `json:"folder"`
-	ReadOnly     bool   `json:"read_only,omitempty"`
 	Thread       bool   `json:"thread,omitempty"`
 	// In the main list, see recent.go
 	Recent bool `json:"recent"`
@@ -137,8 +136,10 @@ type chat struct {
 	activityKnown bool
 	inMain        bool
 	inUnread      bool
-	notified      []int32
-	marking       bool
+	// From client.counts, only for ordering previews
+	hasUnreads bool
+	notified   []int32
+	marking    bool
 
 	// Held for writing during a send and for reading during a history request.
 	// A history reply during a send can contain the message under its real id
@@ -150,7 +151,6 @@ type chat struct {
 // Session is one logged-in Slack account.
 type Session struct {
 	api          *api.Client
-	appAPI       *api.Client
 	ids          *ids.Store
 	usersPath    string
 	pollInterval time.Duration
@@ -192,9 +192,6 @@ type Session struct {
 	nextOrder    int64
 	stopRealtime context.CancelFunc
 	realtimeUp   bool
-	synced       bool
-	appToken     string
-	readOnly     bool
 }
 
 // New creates a session storing its state in dataDir.
@@ -216,7 +213,6 @@ func New(dataDir string) (*Session, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	s := &Session{
 		api:             api.New(),
-		appAPI:          api.New(),
 		ids:             store,
 		usersPath:       filepath.Join(dataDir, "users.json"),
 		now:             time.Now,
@@ -331,20 +327,12 @@ func (s *Session) dispatch(r request) {
 	switch r.Method {
 	case "login":
 		var p struct {
-			Token    string `json:"token"`
-			AppToken string `json:"app_token"`
-			Retry    bool   `json:"retry"`
+			Token  string `json:"token"`
+			Cookie string `json:"cookie"`
+			Retry  bool   `json:"retry"`
 		}
 		if err = json.Unmarshal(r.Params, &p); err == nil {
-			s.login(r.ID, p.Token, p.AppToken, p.Retry)
-		}
-	case "realtime":
-		var p struct {
-			Token string `json:"token"`
-		}
-		if err = json.Unmarshal(r.Params, &p); err == nil {
-			s.setAppToken(p.Token)
-			s.replyOK(r.ID)
+			s.login(r.ID, p.Token, p.Cookie, p.Retry)
 		}
 	case "me":
 		s.getMe(r.ID)
@@ -416,6 +404,15 @@ func (s *Session) dispatch(r request) {
 		}
 	case "available_reactions":
 		s.availableReactions(r.ID)
+	case "custom_emoji_sets":
+		s.customEmojiSets(r.ID)
+	case "custom_emoji_set":
+		var p struct {
+			Set int64 `json:"set"`
+		}
+		if err = json.Unmarshal(r.Params, &p); err == nil {
+			s.customEmojiSet(r.ID, p.Set)
+		}
 	case "members":
 		var p struct {
 			Query string `json:"query"`
@@ -477,13 +474,16 @@ func (s *Session) dispatch(r request) {
 	}
 }
 
-func (s *Session) login(id uint64, token, appToken string, retry bool) {
-	s.api.SetToken(token)
-
-	// A browser session pairs its token with a cookie, in the app token's place
-	if strings.HasPrefix(token, sessionTokenPrefix) {
-		s.api.SetSessionCookie(appToken)
+// login takes a browser session: an xoxc- token, which only works together
+// with the d cookie.
+func (s *Session) login(id uint64, token, cookie string, retry bool) {
+	if !strings.HasPrefix(token, sessionTokenPrefix) || cookie == "" {
+		s.replyError(id, codeUnauthorized, "Log in with a browser session: an xoxc- token and its d cookie")
+		return
 	}
+
+	s.api.SetToken(token)
+	s.api.SetSessionCookie(cookie)
 
 	selfID, err := s.authTest(retry)
 	if err != nil {
@@ -503,69 +503,17 @@ func (s *Session) login(id uint64, token, appToken string, retry bool) {
 	s.users[me.SlackID] = me
 	s.mu.Unlock()
 
-	if scopes := s.api.Scopes(); scopes != "" {
-		s.log("token scopes: %s", scopes)
-
-		s.mu.Lock()
-		// A browser session isn't limited by scopes, whatever it reports
-		s.readOnly = s.api.Cookie() == "" && !hasScope(scopes, "chat:write")
-		s.mu.Unlock()
-	}
-
 	s.replyOK(id)
 	s.emit(map[string]any{"event": "auth_ready", "my_id": me.ID})
 	s.emit(map[string]any{"event": "users", "users": []*user{me}})
 
 	s.sync()
 
-	s.mu.Lock()
-	s.synced = true
-	if appToken == "" {
-		appToken = s.appToken
-	}
-	s.mu.Unlock()
-
-	s.startRealtime(appToken)
+	// Only after the chats are known, as events for them would otherwise look
+	// like new chats
+	s.startRealtime()
 	s.spawn(s.loadPreviews)
 	s.spawn(s.watchActivity)
-}
-
-func hasScope(scopes, scope string) bool {
-	for _, item := range strings.Split(scopes, ",") {
-		if strings.TrimSpace(item) == scope {
-			return true
-		}
-	}
-	return false
-}
-
-func (s *Session) isReadOnly() bool {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.readOnly
-}
-
-// refuseWrite is for a token without write scopes. Slack would refuse too, this
-// gives a clear answer and never lets a request leave the phone.
-func (s *Session) refuseWrite(id uint64) bool {
-	if s.isReadOnly() {
-		s.replyError(id, codeBadRequest, "This workspace is connected read-only")
-		return true
-	}
-	return false
-}
-
-// setAppToken holds a token set during login until the chats are known, as
-// events for them would otherwise look like new chats.
-func (s *Session) setAppToken(token string) {
-	s.mu.Lock()
-	s.appToken = token
-	synced := s.synced
-	s.mu.Unlock()
-
-	if synced {
-		s.startRealtime(token)
-	}
 }
 
 // authTest retries network failures when logging in with a stored token, as
@@ -613,7 +561,7 @@ func (s *Session) sync() {
 	}
 
 	s.loadActivity()
-	s.emitChats(s.loadConversations())
+	s.emitChats(s.loadConversations(), s.loadCounts())
 	s.emit(map[string]any{"event": "ready"})
 	s.emit(map[string]any{"event": "folders", "folders": []map[string]any{
 		{"id": folderUnread, "name": "Unread", "icon": "Unread"},
@@ -622,6 +570,8 @@ func (s *Session) sync() {
 		{"id": folderApps, "name": "Apps", "icon": "Bots"},
 		{"id": folderThreads, "name": "Threads", "icon": "Custom"},
 	}})
+	s.emitEmojiSets()
+	s.spawn(s.logEmojiObjects)
 
 	if err := s.ids.Save(); err != nil {
 		s.log("saving ids failed: %v", err)
@@ -845,7 +795,7 @@ func (s *Session) addUser(u *user) *user {
 	return u
 }
 
-func (s *Session) emitChats(conversations []api.Conversation) {
+func (s *Session) emitChats(conversations []api.Conversation, counts map[string]api.ConversationCount) {
 	chats := make([]wireChat, 0, len(conversations))
 
 	for _, conversation := range conversations {
@@ -870,6 +820,9 @@ func (s *Session) emitChats(conversations []api.Conversation) {
 		c := s.chats[chats[i].ID]
 		c.order = chats[i].Order
 		s.applyCachedActivityLocked(c)
+		if count, ok := counts[c.slackID]; ok {
+			s.applyCountLocked(c, count)
+		}
 		c.inMain = s.mainOrderLocked(c) != 0
 		chats[i].Recent = c.inMain
 	}
@@ -887,10 +840,9 @@ func (s *Session) emitChats(conversations []api.Conversation) {
 
 func (s *Session) makeWireChat(conversation api.Conversation) wireChat {
 	entry := wireChat{
-		ID:       s.ids.Chat(conversation.ID),
-		Title:    s.conversationTitle(conversation),
-		ReadOnly: s.isReadOnly(),
-		dm:       conversation.IsIM || conversation.IsMpim,
+		ID:    s.ids.Chat(conversation.ID),
+		Title: s.conversationTitle(conversation),
+		dm:    conversation.IsIM || conversation.IsMpim,
 	}
 
 	entry.Folder = folderChannels
@@ -968,14 +920,28 @@ func (s *Session) findChat(id int64) *chat {
 
 // sender returns the app user for a message, inventing one for bots and
 // integrations, which have no Slack user.
+//
+// A bot can post each message under a different name and picture, often the
+// person who triggered it. Each of those gets a user of its own, so the name
+// and picture are right and the app groups messages by who they're for.
 func (s *Session) sender(m api.Message) *user {
 	if m.User != "" {
 		return s.ensureUser(m.User)
 	}
 
-	key := m.BotID
-	if key == "" {
-		key = "unknown"
+	bot := m.BotID
+	if bot == "" {
+		bot = "unknown"
+	}
+
+	small, big := m.Icons.Small(), m.Icons.Big()
+	if small == "" && m.BotProfile != nil {
+		small, big = m.BotProfile.Icons.Small(), m.BotProfile.Icons.Big()
+	}
+
+	key := bot
+	if m.Username != "" || m.Icons.Small() != "" {
+		key = bot + "|" + m.Username + "|" + m.Icons.Small()
 	}
 
 	name := m.Username
@@ -986,7 +952,7 @@ func (s *Session) sender(m api.Message) *user {
 		name = "Bot"
 	}
 
-	return s.addUser(&user{SlackID: key, ID: s.ids.User(key), FirstName: name})
+	return s.addUser(&user{SlackID: key, ID: s.ids.User(key), FirstName: name, Avatar: small, AvatarBig: big})
 }
 
 func (s *Session) userName(slackID string) string {
@@ -1197,7 +1163,16 @@ func (s *Session) loadPreviews() {
 	for _, c := range s.chats {
 		chats = append(chats, c)
 	}
-	sort.Slice(chats, func(a, b int) bool { return chats[a].order > chats[b].order })
+	sort.Slice(chats, func(a, b int) bool {
+		rankA, rankB := s.previewRankLocked(chats[a]), s.previewRankLocked(chats[b])
+		if rankA != rankB {
+			return rankA < rankB
+		}
+		if chats[a].lastActivity != chats[b].lastActivity {
+			return chats[a].lastActivity > chats[b].lastActivity
+		}
+		return chats[a].order > chats[b].order
+	})
 	s.mu.Unlock()
 
 	for _, c := range chats {
@@ -1260,10 +1235,6 @@ func (s *Session) loadPreview(c *chat) {
 }
 
 func (s *Session) send(id uint64, chatID int64, content string, replyTo int64) {
-	if s.refuseWrite(id) {
-		return
-	}
-
 	c := s.findChat(chatID)
 	if c == nil {
 		s.replyError(id, codeBadRequest, "unknown chat")
@@ -1362,7 +1333,7 @@ func (s *Session) send(id uint64, chatID int64, content string, replyTo int64) {
 // them without the edit and delete actions.
 func (s *Session) properties(id uint64, messageID int64) {
 	s.mu.Lock()
-	own := s.own[messageID] && !s.readOnly
+	own := s.own[messageID]
 	s.mu.Unlock()
 
 	if !own {
@@ -1373,10 +1344,6 @@ func (s *Session) properties(id uint64, messageID int64) {
 }
 
 func (s *Session) edit(id uint64, chatID, messageID int64, content string) {
-	if s.refuseWrite(id) {
-		return
-	}
-
 	c := s.findChat(chatID)
 	if c == nil {
 		s.replyError(id, codeBadRequest, "unknown chat")
@@ -1410,10 +1377,6 @@ func (s *Session) edit(id uint64, chatID, messageID int64, content string) {
 }
 
 func (s *Session) deleteMessages(id uint64, chatID int64, messageIDs []int64) {
-	if s.refuseWrite(id) {
-		return
-	}
-
 	c := s.findChat(chatID)
 	if c == nil {
 		s.replyError(id, codeBadRequest, "unknown chat")

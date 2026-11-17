@@ -31,8 +31,9 @@ type wireReaction struct {
 }
 
 type customEmoji struct {
-	id  int64
-	url string
+	id    int64
+	url   string
+	alias bool
 }
 
 // loadCustomEmoji is best effort, without it they stay as :names:.
@@ -54,6 +55,7 @@ func (s *Session) loadCustomEmoji() {
 
 	for i, name := range names {
 		address := list[name]
+		alias := strings.HasPrefix(address, "alias:")
 		for hops := 0; hops < maxEmojiAliases && strings.HasPrefix(address, "alias:"); hops++ {
 			address = list[strings.TrimPrefix(address, "alias:")]
 		}
@@ -62,9 +64,34 @@ func (s *Session) loadCustomEmoji() {
 		}
 
 		id := int64(i + 1)
-		s.customEmoji[name] = customEmoji{id: id, url: address}
+		s.customEmoji[name] = customEmoji{id: id, url: address, alias: alias}
 		s.customNames[id] = name
 	}
+}
+
+// logEmojiObjects writes every custom emoji to the log as Slack describes it,
+// one line each, to find what tells the workspace's own from the packs Slack
+// adds. Nothing uses them otherwise.
+func (s *Session) logEmojiObjects() {
+	emojis, err := s.api.AdminEmoji(s.ctx)
+	if err != nil {
+		s.log("emoji.adminList failed: %v", err)
+		return
+	}
+	if len(emojis) == 0 {
+		return
+	}
+
+	s.log("emoji.adminList: %d emoji", len(emojis))
+	for _, emoji := range emojis {
+		s.log("emoji: %s", emoji)
+	}
+}
+
+// emitEmojiSets tells the app which custom emoji sets there are. The app asks
+// at login, before the emoji are loaded, so this follows the load.
+func (s *Session) emitEmojiSets() {
+	s.emit(map[string]any{"event": "custom_emoji_sets", "sets": s.emojiSets(s.pickerEmojis())})
 }
 
 func (s *Session) customEmojiID(name string) int64 {
@@ -84,7 +111,7 @@ func (s *Session) customEmojis(id uint64, emojiIDs []int64) {
 		s.mu.Unlock()
 
 		if address != "" {
-			emojis = append(emojis, map[string]any{"id": emojiID, "name": ":" + name + ":", "file": s.fileFor(address, "", 0, false)})
+			emojis = append(emojis, map[string]any{"id": emojiID, "name": ":" + name + ":", "file": s.imageFile(address)})
 		}
 	}
 	s.reply(id, map[string]any{"type": "custom_emojis", "emojis": emojis})
@@ -180,10 +207,6 @@ func (s *Session) reactionName(messageID int64, emoji string) string {
 }
 
 func (s *Session) react(id uint64, chatID, messageID int64, emoji string, custom int64, add bool) {
-	if s.refuseWrite(id) {
-		return
-	}
-
 	c := s.findChat(chatID)
 	if c == nil {
 		s.replyError(id, codeBadRequest, "unknown chat")
@@ -224,8 +247,94 @@ func (s *Session) react(id uint64, chatID, messageID int64, emoji string, custom
 	s.replyOK(id)
 }
 
+// availableReactions lists the standard emoji, then the workspace's own by
+// :name:, which is how the picker shows them.
 func (s *Session) availableReactions(id uint64) {
-	s.reply(id, map[string]any{"type": "available_reactions", "emojis": text.Emojis()})
+	emojis := text.Emojis()
+	for _, emoji := range s.pickerEmojis() {
+		emojis = append(emojis, ":"+emoji.name+":")
+	}
+	s.reply(id, map[string]any{"type": "available_reactions", "emojis": emojis})
+}
+
+type pickerEmoji struct {
+	id   int64
+	name string
+	url  string
+}
+
+// pickerEmojis are the workspace's custom emoji by name, without aliases,
+// which would show the same picture twice.
+func (s *Session) pickerEmojis() []pickerEmoji {
+	s.mu.Lock()
+	emojis := make([]pickerEmoji, 0, len(s.customEmoji))
+	for name, emoji := range s.customEmoji {
+		if !emoji.alias {
+			emojis = append(emojis, pickerEmoji{id: emoji.id, name: name, url: emoji.url})
+		}
+	}
+	s.mu.Unlock()
+
+	sort.Slice(emojis, func(a, b int) bool { return emojis[a].name < emojis[b].name })
+	return emojis
+}
+
+const workspaceEmojiSet = 1
+
+type emojiSet struct {
+	ID    int64  `json:"id"`
+	Title string `json:"title"`
+}
+
+// emojiSets are the picker's custom emoji sets: one with all of the
+// workspace's, once there are any.
+func (s *Session) emojiSets(emojis []pickerEmoji) []emojiSet {
+	if len(emojis) == 0 {
+		return []emojiSet{}
+	}
+	return []emojiSet{{ID: workspaceEmojiSet, Title: "Workspace"}}
+}
+
+// customEmojiSets answers which custom emoji sets the picker has.
+func (s *Session) customEmojiSets(id uint64) {
+	s.reply(id, map[string]any{"type": "custom_emoji_sets", "sets": s.emojiSets(s.pickerEmojis())})
+}
+
+// customEmojiSet answers the app's request for one of those sets, which the
+// app treats as a custom emoji sticker set.
+func (s *Session) customEmojiSet(id uint64, setID int64) {
+	if setID != workspaceEmojiSet {
+		s.replyError(id, codeBadRequest, "unknown emoji set")
+		return
+	}
+
+	picker := s.pickerEmojis()
+	emojis := make([]map[string]any, 0, len(picker))
+	for _, emoji := range picker {
+		emojis = append(emojis, map[string]any{"id": emoji.id, "name": ":" + emoji.name + ":", "file": s.imageFile(emoji.url)})
+	}
+
+	reply := map[string]any{"type": "custom_emoji_set", "id": setID, "title": "Workspace", "emojis": emojis}
+	if icon := s.slackbotIcon(); icon != "" {
+		reply["icon"] = s.imageFile(icon)
+	}
+	s.reply(id, reply)
+}
+
+// slackbotIcon is Slackbot's picture, which the workspace's emoji set shows as
+// its icon. users.list includes Slackbot, so there's no need to fetch it.
+func (s *Session) slackbotIcon() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	bot := s.users[slackbotID]
+	if bot == nil {
+		return ""
+	}
+	if bot.AvatarBig != "" {
+		return bot.AvatarBig
+	}
+	return bot.Avatar
 }
 
 // searchMembers looks through the workspace, not only the chat. Asking Slack
@@ -312,10 +421,6 @@ type upload struct {
 // sendFiles uploads to Slack, which posts the messages itself. They arrive like
 // anyone else's.
 func (s *Session) sendFiles(id uint64, chatID int64, files []upload) {
-	if s.refuseWrite(id) {
-		return
-	}
-
 	c := s.findChat(chatID)
 	if c == nil {
 		s.replyError(id, codeBadRequest, "unknown chat")

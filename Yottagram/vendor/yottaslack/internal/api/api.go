@@ -122,7 +122,6 @@ type Client struct {
 	mu          sync.Mutex
 	token       string
 	cookie      string
-	scopes      string
 	pausedUntil map[string]time.Time
 }
 
@@ -154,13 +153,6 @@ func (c *Client) Cookie() string {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.cookie
-}
-
-// Scopes returns what Slack last said the token can do.
-func (c *Client) Scopes() string {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.scopes
 }
 
 // SetToken sets the token used for every call.
@@ -235,12 +227,6 @@ func (c *Client) post(ctx context.Context, method string, params url.Values) ([]
 		return nil, 0, err
 	}
 	defer response.Body.Close()
-
-	if scopes := response.Header.Get("X-OAuth-Scopes"); scopes != "" {
-		c.mu.Lock()
-		c.scopes = scopes
-		c.mu.Unlock()
-	}
 
 	if response.StatusCode == http.StatusTooManyRequests {
 		retryAfter := defaultRetryAfter
@@ -395,7 +381,41 @@ type Attachment struct {
 
 // BotProfile names the integration that posted a message.
 type BotProfile struct {
-	Name string `json:"name"`
+	Name  string `json:"name"`
+	Icons *Icons `json:"icons"`
+}
+
+// Icons are the images a bot posted with, its own or one set per message.
+type Icons struct {
+	Image36  string `json:"image_36"`
+	Image48  string `json:"image_48"`
+	Image72  string `json:"image_72"`
+	Image192 string `json:"image_192"`
+	Image512 string `json:"image_512"`
+}
+
+// Small is the image for a list, Big the one for a profile.
+func (i *Icons) Small() string {
+	if i == nil {
+		return ""
+	}
+	return firstOf(i.Image72, i.Image48, i.Image36, i.Image192, i.Image512)
+}
+
+func (i *Icons) Big() string {
+	if i == nil {
+		return ""
+	}
+	return firstOf(i.Image192, i.Image512, i.Image72, i.Image48, i.Image36)
+}
+
+func firstOf(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 // Edited marks a message as changed after it was posted.
@@ -428,6 +448,7 @@ type Message struct {
 	Files       []File       `json:"files"`
 	Attachments []Attachment `json:"attachments"`
 	BotProfile  *BotProfile  `json:"bot_profile"`
+	Icons       *Icons       `json:"icons"`
 	Edited      *Edited      `json:"edited"`
 	Reactions   []Reaction   `json:"reactions"`
 }
@@ -535,21 +556,12 @@ func (c *Client) SetPresence(ctx context.Context, presence string) error {
 }
 
 // ConnectRTM returns a URL for the classic socket, which is what a browser
-// session has instead of Socket Mode.
+// session uses.
 func (c *Client) ConnectRTM(ctx context.Context) (string, error) {
 	var response struct {
 		URL string `json:"url"`
 	}
 	err := c.Call(ctx, "rtm.connect", url.Values{}, &response)
-	return response.URL, err
-}
-
-// OpenSocket returns a Socket Mode URL. It needs the app-level token.
-func (c *Client) OpenSocket(ctx context.Context) (string, error) {
-	var response struct {
-		URL string `json:"url"`
-	}
-	err := c.Call(ctx, "apps.connections.open", url.Values{}, &response)
 	return response.URL, err
 }
 
@@ -560,6 +572,28 @@ func (c *Client) ConversationInfo(ctx context.Context, channel string) (Conversa
 	params := url.Values{"channel": {channel}, "include_num_members": {"true"}}
 	err := c.Call(ctx, "conversations.info", params, &response)
 	return response.Channel, err
+}
+
+// ConversationCount is one chat's entry in client.counts.
+type ConversationCount struct {
+	ID         string `json:"id"`
+	LastRead   string `json:"last_read"`
+	Latest     string `json:"latest"`
+	HasUnreads bool   `json:"has_unreads"`
+}
+
+// Counts returns every chat's latest message and read state in one call. It's
+// what the web client uses, undocumented and only for browser sessions.
+func (c *Client) Counts(ctx context.Context) ([]ConversationCount, error) {
+	var response struct {
+		Channels []ConversationCount `json:"channels"`
+		MPIMs    []ConversationCount `json:"mpims"`
+		IMs      []ConversationCount `json:"ims"`
+	}
+	err := c.Call(ctx, "client.counts", url.Values{}, &response)
+
+	counts := append(response.Channels, response.MPIMs...)
+	return append(counts, response.IMs...), err
 }
 
 func (c *Client) History(ctx context.Context, channel string, p HistoryParams) (HistoryPage, error) {
@@ -622,6 +656,35 @@ func (c *Client) CustomEmoji(ctx context.Context) (map[string]string, error) {
 	}
 	err := c.Call(ctx, "emoji.list", nil, &response)
 	return response.Emoji, err
+}
+
+// AdminEmoji returns every custom emoji as Slack describes it, unparsed. It
+// isn't documented and may be refused, so callers treat it as optional.
+func (c *Client) AdminEmoji(ctx context.Context) ([]json.RawMessage, error) {
+	const pageSize = 500
+	const maxPages = 50
+
+	var all []json.RawMessage
+	for page := 1; page <= maxPages; page++ {
+		var response struct {
+			Emoji  []json.RawMessage `json:"emoji"`
+			Paging struct {
+				Pages Number `json:"pages"`
+			} `json:"paging"`
+		}
+		params := url.Values{"count": {strconv.Itoa(pageSize)}, "page": {strconv.Itoa(page)}}
+		if err := c.Call(ctx, "emoji.adminList", params, &response); err != nil {
+			return nil, err
+		}
+
+		all = append(all, response.Emoji...)
+
+		// Paging may be missing, a short page is the last either way
+		if len(response.Emoji) < pageSize || (response.Paging.Pages > 0 && Number(page) >= response.Paging.Pages) {
+			break
+		}
+	}
+	return all, nil
 }
 
 // AddReaction adds an emoji to a message.

@@ -83,7 +83,6 @@ func (s *Session) threadChat(channel *chat, parent api.Message) *chat {
 		Order:        order,
 		Folder:       folderThreads,
 		Thread:       true,
-		ReadOnly:     s.isReadOnly(),
 	}
 
 	s.mu.Lock()

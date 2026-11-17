@@ -28,55 +28,20 @@ Page {
 
     property bool busy: false
 
-    // Keep in sync with vendor/yottaslack/slack-app-manifest.yml
-    readonly property var manifest: ({
-        display_information: {
-            name: "Yottagram",
-            description: "Slack on Sailfish OS through Yottagram"
-        },
-        oauth_config: {
-            scopes: {
-                user: [
-                    "channels:read", "groups:read", "im:read", "mpim:read",
-                    "channels:history", "groups:history", "im:history", "mpim:history",
-                    "users:read", "chat:write",
-                    "channels:write", "groups:write", "im:write", "mpim:write",
-                    "files:read", "files:write", "reactions:read", "reactions:write", "emoji:read", "users:write"
-                ]
-            }
-        },
-        settings: {
-            event_subscriptions: {
-                user_events: [
-                    "message.channels", "message.groups", "message.im", "message.mpim",
-                    "reaction_added", "reaction_removed", "user_change"
-                ]
-            },
-            org_deploy_enabled: false,
-            socket_mode_enabled: true,
-            token_rotation_enabled: false
-        }
-    })
-
-    function createApp(readOnly) {
-        var app = JSON.parse(JSON.stringify(manifest))
-        if (readOnly) {
-            app.display_information.name = "Yottagram read-only"
-            app.oauth_config.scopes.user = app.oauth_config.scopes.user.filter(function(scope) {
-                return scope.indexOf(":write") === -1
-            })
-        }
-
-        Qt.openUrlExternally("https://api.slack.com/apps?new_app=1&manifest_json=" + encodeURIComponent(JSON.stringify(app)))
-    }
-
     function submit() {
-        if (token.text.trim() === "") return
+        var sessionToken = token.text.trim()
+        var sessionCookie = cookie.text.trim()
+        if (sessionToken === "" || sessionCookie === "") return
+
+        if (sessionToken.indexOf("xoxc-") !== 0) {
+            errorLabel.text = qsTr("The session token starts with xoxc-")
+            return
+        }
 
         errorLabel.text = ""
         busy = true
-        if (appToken.text.trim() !== "") authorization.setSlackAppToken(appToken.text)
-        authorization.sendSlackToken(token.text)
+        authorization.setSlackCookie(sessionCookie)
+        authorization.sendSlackToken(sessionToken)
     }
 
     Connections {
@@ -108,7 +73,7 @@ Page {
 
             Label {
                 x: Theme.horizontalPageMargin
-                text: qsTr("Slack user token")
+                text: qsTr("Slack browser session")
                 color: Theme.secondaryHighlightColor
                 font.pixelSize: Theme.fontSizeExtraLarge
             }
@@ -119,19 +84,7 @@ Page {
                 wrapMode: Text.Wrap
                 color: Theme.highlightColor
                 font.pixelSize: Theme.fontSizeSmall
-                text: qsTr("1. Create the app below, then install it to your workspace.\n2. Copy the User OAuth Token from OAuth & Permissions.\n3. For instant updates, generate an app-level token with the connections:write scope in Basic Information.")
-            }
-
-            Button {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: qsTr("Create Slack app")
-                onClicked: page.createApp(false)
-            }
-
-            Button {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: qsTr("Create read-only Slack app")
-                onClicked: page.createApp(true)
+                text: qsTr("1. Log in to your workspace at app.slack.com in a desktop browser.\n2. In the developer tools console, run:\nObject.values(JSON.parse(localStorage.localConfig_v2).teams).map(t => t.name + \": \" + t.token)\nand copy your workspace's xoxc- token.\n3. In the developer tools storage tab, copy the value of the cookie named d for slack.com. It starts with xoxd-.")
             }
 
             TextField {
@@ -139,19 +92,21 @@ Page {
                 width: column.width
                 echoMode: TextInput.Password
                 inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhSensitiveData
-                label: qsTr("User OAuth Token, or browser session token")
-                placeholderText: "xoxp-... / xoxc-..."
-                Keys.onReturnPressed: page.submit()
+                label: qsTr("Session token")
+                placeholderText: "xoxc-..."
+                EnterKey.iconSource: "image://theme/icon-m-enter-next"
+                EnterKey.onClicked: cookie.focus = true
             }
 
             TextField {
-                id: appToken
+                id: cookie
                 width: column.width
                 echoMode: TextInput.Password
                 inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhSensitiveData
-                label: qsTr("App token, optional, or browser d cookie")
-                placeholderText: "xapp-... / xoxd-..."
-                Keys.onReturnPressed: page.submit()
+                label: qsTr("d cookie")
+                placeholderText: "xoxd-..."
+                EnterKey.iconSource: "image://theme/icon-m-enter-accept"
+                EnterKey.onClicked: page.submit()
             }
 
             Label {
@@ -166,7 +121,7 @@ Page {
             Button {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: qsTr("Submit")
-                enabled: !page.busy
+                enabled: !page.busy && token.text.trim() !== "" && cookie.text.trim() !== ""
                 onClicked: page.submit()
             }
         }

@@ -75,6 +75,17 @@ var huddleLength = regexp.MustCompile(`in the huddle for (?:(\d+)h)? ?(?:(\d+)m)
 // fileFor returns the file for a URL. auth is for Slack's own files, which
 // need the token, while avatars and link images are public.
 func (s *Session) fileFor(address, name string, size int64, auth bool) wireFile {
+	return s.trackFile(address, fileExtension(address, name), size, auth)
+}
+
+// imageFile is for pictures from URLs that don't match their format, avatars
+// and custom emoji: a URL can end in .png but serve a JPEG, and Qt trusts the
+// extension over the content when there is one. Without one, Qt looks inside.
+func (s *Session) imageFile(address string) wireFile {
+	return s.trackFile(address, "", 0, false)
+}
+
+func (s *Session) trackFile(address, extension string, size int64, auth bool) wireFile {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -83,7 +94,7 @@ func (s *Session) fileFor(address, name string, size int64, auth bool) wireFile 
 	}
 
 	sum := sha1.Sum([]byte(address))
-	local := filepath.Join(s.filesDir, hex.EncodeToString(sum[:])+fileExtension(address, name))
+	local := filepath.Join(s.filesDir, hex.EncodeToString(sum[:])+extension)
 
 	s.nextFile++
 	entry := &fileEntry{wireFile: wireFile{ID: s.nextFile, Size: size, Path: local}, url: address, auth: auth}
@@ -199,8 +210,8 @@ func (s *Session) avatarPhoto(u *user) *wirePhoto {
 		big = u.Avatar
 	}
 	return &wirePhoto{
-		Small: s.fileFor(u.Avatar, "", 0, false),
-		Big:   s.fileFor(big, "", 0, false),
+		Small: s.imageFile(u.Avatar),
+		Big:   s.imageFile(big),
 	}
 }
 

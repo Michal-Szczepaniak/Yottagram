@@ -19,11 +19,7 @@ const (
 )
 
 type envelope struct {
-	EnvelopeID string `json:"envelope_id"`
-	Type       string `json:"type"`
-	Payload    struct {
-		Event json.RawMessage `json:"event"`
-	} `json:"payload"`
+	Type string `json:"type"`
 }
 
 type slackEvent struct {
@@ -42,9 +38,8 @@ type slackEvent struct {
 	} `json:"item"`
 }
 
-// startRealtime replaces the running connection, if any. An empty token leaves
-// the session on polling.
-func (s *Session) startRealtime(token string) {
+// startRealtime replaces the running connection, if any.
+func (s *Session) startRealtime() {
 	s.mu.Lock()
 	if s.stopRealtime != nil {
 		s.stopRealtime()
@@ -52,20 +47,9 @@ func (s *Session) startRealtime(token string) {
 	}
 	s.realtimeUp = false
 
-	if token == "" {
-		s.mu.Unlock()
-		return
-	}
-
 	ctx, cancel := context.WithCancel(s.ctx)
 	s.stopRealtime = cancel
 	s.mu.Unlock()
-
-	// With a browser session the token here is its cookie, which the main client
-	// already has
-	if s.api.Cookie() == "" {
-		s.appAPI.SetToken(token)
-	}
 
 	events := make(chan json.RawMessage, eventBacklog)
 	s.spawn(func() { s.handleEvents(ctx, events) })
@@ -131,21 +115,12 @@ func (s *Session) realtime(ctx context.Context, events chan<- json.RawMessage) {
 // runSocket reads one connection until it ends, and reports whether Slack
 // accepted it.
 func (s *Session) runSocket(ctx context.Context, events chan<- json.RawMessage) (bool, error) {
-	cookie := s.api.Cookie()
-	classic := cookie != ""
-
-	var url string
-	var err error
-	if classic {
-		url, err = s.api.ConnectRTM(ctx)
-	} else {
-		url, err = s.appAPI.OpenSocket(ctx)
-	}
+	url, err := s.api.ConnectRTM(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	conn, err := socket.Dial(ctx, url, socketReadTimeout, cookie)
+	conn, err := socket.Dial(ctx, url, socketReadTimeout, s.api.Cookie())
 	if err != nil {
 		return false, err
 	}
@@ -153,7 +128,7 @@ func (s *Session) runSocket(ctx context.Context, events chan<- json.RawMessage) 
 
 	done := make(chan struct{})
 	defer close(done)
-	s.spawn(func() { s.keepAlive(ctx, conn, done, classic) })
+	s.spawn(func() { s.keepAlive(ctx, conn, done) })
 
 	connected := false
 	for {
@@ -168,17 +143,6 @@ func (s *Session) runSocket(ctx context.Context, events chan<- json.RawMessage) 
 			continue
 		}
 
-		// Slack resends what isn't acknowledged within seconds
-		if e.EnvelopeID != "" {
-			ack, err := json.Marshal(map[string]string{"envelope_id": e.EnvelopeID})
-			if err != nil {
-				return connected, err
-			}
-			if err := conn.WriteText(ack); err != nil {
-				return connected, err
-			}
-		}
-
 		event := json.RawMessage(nil)
 
 		switch e.Type {
@@ -190,13 +154,8 @@ func (s *Session) runSocket(ctx context.Context, events chan<- json.RawMessage) 
 			s.spawn(s.showPresence)
 		case "disconnect", "goodbye":
 			return connected, nil
-		case "events_api":
-			event = e.Payload.Event
 		default:
-			// The classic socket sends events bare, with no envelope
-			if classic {
-				event = raw
-			}
+			event = raw
 		}
 
 		if event != nil {
@@ -209,7 +168,7 @@ func (s *Session) runSocket(ctx context.Context, events chan<- json.RawMessage) 
 	}
 }
 
-func (s *Session) keepAlive(ctx context.Context, conn *socket.Conn, done <-chan struct{}, classic bool) {
+func (s *Session) keepAlive(ctx context.Context, conn *socket.Conn, done <-chan struct{}) {
 	ticker := time.NewTicker(socketPingInterval)
 	defer ticker.Stop()
 
@@ -217,7 +176,7 @@ func (s *Session) keepAlive(ctx context.Context, conn *socket.Conn, done <-chan 
 		select {
 		case <-ticker.C:
 			err := conn.Ping()
-			if err == nil && classic {
+			if err == nil {
 				// It answers this rather than WebSocket pings
 				err = conn.WriteText([]byte(`{"id":1,"type":"ping"}`))
 			}
@@ -237,9 +196,6 @@ func (s *Session) keepAlive(ctx context.Context, conn *socket.Conn, done <-chan 
 // showPresence lets Slack show us online while connected. Whether the
 // connection counts as activity is up to Slack.
 func (s *Session) showPresence() {
-	if s.isReadOnly() {
-		return
-	}
 	if err := s.api.SetPresence(s.ctx, "auto"); err != nil {
 		s.log("setting presence failed: %v", err)
 	}
